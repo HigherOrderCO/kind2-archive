@@ -114,67 +114,145 @@ data Term
 (Compare (Var a.idx)       (Var b.idx)       dep) = (match (== a.idx b.idx) { 0: False; +: True })
 (Compare a                 b                 dep) = False
 
+// Logger
+// -------
+
+//Logger r = ∀(logs: [String]) ([String], (Maybe r))
+
+(pure x) = λlogs (logs, (Some x))
+
+(bind a b) = λlogs
+  let (a_logs, a_result) = (a logs)
+  match a_result {
+    None: (a_logs, None)
+    Some: (b a_result.value a_logs)
+  }
+
+(exit) = λlogs (logs, None)
+
+(log msg) = λlogs ((LCons msg logs), (Some 0))
+
 // Type-Checking
 // -------------
 
-(Infer term dep) = match term {
-  All: match inp_ty = (Check term.inp Set dep) {
-    None: None
-    Some: match bod_ty = (Check (term.bod (Ann (Var dep) term.inp)) Set (+ 1 dep)) {
-      None: None
-      Some: (Some Set)
-    }
-  }
-  Lam: None
-  App: match fun_ty = (Infer term.fun dep) {
-    None: None
-    Some: match fun_ty = (Fst (Reduce fun_ty.value)) {
-      All: match val_ty = (Check term.arg fun_ty.inp dep) {
-        None: None
-        Some: (Some (fun_ty.bod term.arg))
-      }
-      val: None
-    }
-  }
-  Ann: (Some term.typ)
-  Slf: match slf = (Check (term.bod (Ann (Var dep) term)) Set dep) {
-    Some: Set
-    None: None
-  }
-  Ins: match val_ty = (Infer term.val dep) {
-    Some: match val_ty = (Fst (Reduce val_ty)) {
-      Slf: (val_ty.bod term)
-      var: None
-    }
-    None: None
-  }
-  Ref: (Infer term.val dep)
-  Set: (Some Set)
-  Var: None
-}
-
-(Check term type dep) = match term {
-  Lam: match type = (Fst (Reduce type)) {
+(Infer term dep) =
+  //(bind (log (Join ["Infer: " (Show term dep)])) λx
+  match term {
     All:
-      let bind = (Ann (Var dep) type.inp)
-      let term = (term.bod bind)
-      let type = (type.bod bind)
-      (Check term type (+ dep 1))
-    val: None
+      (bind (Check term.inp Set dep) λinp_ty
+      (bind (Check (term.bod (Ann (Var dep) term.inp)) Set (+ 1 dep)) λbod_ty
+      (pure Set)))
+    Lam:
+      exit
+    App:
+      (bind (Infer term.fun dep) λfun_ty
+      match fun_ty = (Fst (Reduce fun_ty)) {
+        All:
+          (bind (Check term.arg fun_ty.inp dep) λval_ty
+          (pure (fun_ty.bod term.arg)))
+        Val:
+          exit
+      })
+    Ann: (pure term.typ)
+    Slf:
+      (bind (Check (term.bod (Ann (Var dep) term)) Set dep) λslf
+      (pure Set))
+    Ins:
+      (bind (Infer term.val dep) λval_ty
+      match val_ty = (Fst (Reduce val_ty)) {
+        Slf: (val_ty.bod term)
+        var: exit
+      })
+    Ref: (Infer term.val dep)
+    Set: (pure Set)
+    Var: exit
   }
-  Ins: match type = (Fst (Reduce type)) {
-    Slf: (Check term.val (type.bod term) dep)
-    val: None
-  }
-  Ref: (Check term.val type dep)
-  val: match infer = (Infer val dep) {
-    None: None
-    Some: match eql = (Equal type infer.value dep) {
-      False: None
-      True: (Some (Ref "OK" (Var 0)))
+  //)
+
+(Check term type dep) =
+  (bind (log (Join ["Check:" (Show term dep) " :: " (Show type dep)])) λx
+  match term {
+    Lam: match type = (Fst (Reduce type)) {
+      All:
+        let ann  = (Ann (Var dep) type.inp)
+        let term = (term.bod ann)
+        let type = (type.bod ann)
+        (Check term type (+ dep 1))
+      val:
+        exit
     }
+    Ins: match type = (Fst (Reduce type)) {
+      Slf: (Check term.val (type.bod term) dep)
+      val: exit
+    }
+    Ref: (Check term.val type dep)
+    val: 
+      (bind (Infer val dep) λinfer
+      match eql = (Equal type infer dep) {
+        False: exit
+        True: (pure (Ref "OK" (Var 0)))
+      })
   }
-}
+  )
+
+//(Infer term dep) = match term {
+  //All: match inp_ty = (Check term.inp Set dep) {
+    //None: None
+    //Some: match bod_ty = (Check (term.bod (Ann (Var dep) term.inp)) Set (+ 1 dep)) {
+      //None: None
+      //Some: (Some Set)
+    //}
+  //}
+  //Lam: None
+  //App: match fun_ty = (Infer term.fun dep) {
+    //None: None
+    //Some: match fun_ty = (Fst (Reduce fun_ty.value)) {
+      //All: match val_ty = (Check term.arg fun_ty.inp dep) {
+        //None: None
+        //Some: (Some (fun_ty.bod term.arg))
+      //}
+      //val: None
+    //}
+  //}
+  //Ann: (Some term.typ)
+  //Slf: match slf = (Check (term.bod (Ann (Var dep) term)) Set dep) {
+    //Some: Set
+    //None: None
+  //}
+  //Ins: match val_ty = (Infer term.val dep) {
+    //Some: match val_ty = (Fst (Reduce val_ty)) {
+      //Slf: (val_ty.bod term)
+      //var: None
+    //}
+    //None: None
+  //}
+  //Ref: (Infer term.val dep)
+  //Set: (Some Set)
+  //Var: None
+//}
+
+//(Check term type dep) = match term {
+  //Lam: match type = (Fst (Reduce type)) {
+    //All:
+      //let bind = (Ann (Var dep) type.inp)
+      //let term = (term.bod bind)
+      //let type = (type.bod bind)
+      //(Check term type (+ dep 1))
+    //val: None
+  //}
+  //Ins: match type = (Fst (Reduce type)) {
+    //Slf: (Check term.val (type.bod term) dep)
+    //val: None
+  //}
+  //Ref: (Check term.val type dep)
+  //val: match infer = (Infer val dep) {
+    //None: None
+    //Some: match eql = (Equal type infer.value dep) {
+      //False: None
+      //True: (Some (Ref "OK" (Var 0)))
+    //}
+  //}
+//}
 
 // Syntax
 // ------
@@ -311,36 +389,41 @@ data Term
 // Search
 // ------
 
-(Fix f) = (f (Fix f))
+//(Fix f) = (f (Fix f))
 
-(Superpose LNil)           = 0
-(Superpose (LCons x LNil)) = x
-(Superpose (LCons x xs))   = {x (Superpose xs)}
+//(Superpose LNil)           = 0
+//(Superpose (LCons x LNil)) = x
+//(Superpose (LCons x xs))   = {x (Superpose xs)}
 
-(Compact LNil)                = LNil
-(Compact (LCons None     xs)) = (Compact xs)
-(Compact (LCons (Some x) xs)) = (LCons x (Compact xs))
+//(Compact LNil)                = LNil
+//(Compact (LCons None     xs)) = (Compact xs)
+//(Compact (LCons (Some x) xs)) = (LCons x (Compact xs))
 
-(Enum (Slf bod)     ctx dep) = (Ins (Enum (bod Set) ctx dep))
-(Enum (All inp out) ctx dep) = (Lam λx(Enum (out (Var dep)) (LCons (x,inp) ctx) (+ dep 1)))
-(Enum (Ann val typ) ctx dep) = (Enum val ctx dep)
-(Enum (Ref nam val) ctx dep) = (Enum val ctx dep)
-(Enum goal          ctx dep) = (Superpose (Compact (Pick goal ctx λx(x) dep)))
+//(Enum (Slf bod)     ctx dep) = (Ins (Enum (bod Set) ctx dep))
+//(Enum (All inp out) ctx dep) = (Lam λx(Enum (out (Var dep)) (LCons (x,inp) ctx) (+ dep 1)))
+//(Enum (Ann val typ) ctx dep) = (Enum val ctx dep)
+//(Enum (Ref nam val) ctx dep) = (Enum val ctx dep)
+//(Enum goal          ctx dep) = (Superpose (Compact (Pick goal ctx λx(x) dep)))
 
-(Pick goal LNil             lft dep) = LNil
-//(Pick goal (LCons (x,t) xs) lft dep) = (LCons (Call goal x t (lft xs) dep) (Pick goal xs λk(lft (LCons (x,t) k)) dep))
-(Pick goal (LCons (x,t) xs) lft dep) = (LCons goal (Pick goal xs λk(lft (LCons (x,t) k)) dep))
+//(Pick goal LNil             lft dep) = LNil
+////(Pick goal (LCons (x,t) xs) lft dep) = (LCons (Call goal x t (lft xs) dep) (Pick goal xs λk(lft (LCons (x,t) k)) dep))
+//(Pick goal (LCons (x,t) xs) lft dep) = (LCons goal (Pick goal xs λk(lft (LCons (x,t) k)) dep))
 
-//(Call goal fn (All inp out) ctx dep) = let arg = (Enum inp ctx); (Call goal (App fn arg) (out arg) ctx dep)
-//(Call goal fn typ           ctx dep) = match (Equal typ goal dep) { True: (Some fn); False: None }
+////(Call goal fn (All inp out) ctx dep) = let arg = (Enum inp ctx); (Call goal (App fn arg) (out arg) ctx dep)
+////(Call goal fn typ           ctx dep) = match (Equal typ goal dep) { True: (Some fn); False: None }
 
 // API
 // ---
 
 (Checker def) = match def {
   Ref: (Checker def.val)
-  Ann: (Check def.val def.typ 0)
-  val: None
+  Ann:
+    let (logs, result) = ((Check def.val def.typ 0) [])
+    match result {
+      None: [logs, 0]
+      Some: [logs, 1]
+    }
+  val: "untyped"
 }
 
 // Tests
