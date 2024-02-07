@@ -1,0 +1,22 @@
+{
+  "name": "bend",
+  "version": "0.1.0",
+  "description": "",
+  "main": "main.ts",
+  "bin": {
+    "bend": "./main.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victortaelin/bend.git"
+  },
+  "author": "VictorTaelin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/victortaelin/bend/issues"
+  },
+  "homepage": "https://github.com/victortaelin/bend#readme"
+}
