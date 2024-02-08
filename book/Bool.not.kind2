@@ -1,4 +1,6 @@
 Bool.not
 : ∀(x: Bool) Bool
 = λx
-  (~x λx(Bool) Bool.false Bool.true)
+  (~x λx(Bool)
+    Bool.false
+    Bool.true)

@@ -1,0 +1,11 @@
+// a == b -> (f a) == (f b)
+Equal.apply
+: ∀(A: *)
+  ∀(B: *)
+  ∀(f: ∀(x: A) B)
+  ∀(a: A)
+  ∀(b: A)
+  ∀(e: (Equal A a b))
+  (Equal B (f a) (f b))
+= λA λB λf λa λb λe
+  (e λx(Equal B (f a) (f x)) λP λx x)

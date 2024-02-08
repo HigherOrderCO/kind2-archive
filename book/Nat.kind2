@@ -1,0 +1,7 @@
+Nat
+: *
+= $self
+  ∀(P: ∀(n: Nat) *)
+  ∀(s: ∀(n: Nat) (P (Nat.succ n)))
+  ∀(z: (P Nat.zero))
+  (P self)

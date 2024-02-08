@@ -1,0 +1,7 @@
+Nat.lemma.bft
+: ∀(n: Nat)
+  (Equal Nat (Nat.half (Nat.double n)) n)
+= λn (~n λx(Equal Nat (Nat.half (Nat.double x)) x)
+  λn(Equal.apply Nat Nat Nat.succ (Nat.half (Nat.double n)) n
+    (Nat.lemma.bft n))
+  λP λa a)

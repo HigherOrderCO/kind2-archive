@@ -1,8 +1,6 @@
 #!/usr/bin/env ts-node
 
-// NOTE FOR GPT: the file below has been refactored in order to add a "nam"
-// field to the All, Lam, Slf and Var constructors. not all functions were
-// updated. your task is to update these functions when asked.
+// TODO: move the parser to HVM
 
 // ICC: Parser, Stringifier and CLI
 // ================================
