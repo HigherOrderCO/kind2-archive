@@ -1,22 +1,22 @@
 {
-  "name": "bend",
+  "name": "kind2",
   "version": "0.1.0",
   "description": "",
   "main": "main.ts",
   "bin": {
-    "bend": "./main.ts"
+    "kind2": "./main.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/victortaelin/bend.git"
+    "url": "git+https://github.com/victortaelin/kind2.git"
   },
   "author": "VictorTaelin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/victortaelin/bend/issues"
+    "url": "https://github.com/victortaelin/kind2/issues"
   },
-  "homepage": "https://github.com/victortaelin/bend#readme"
+  "homepage": "https://github.com/victortaelin/kind2#readme"
 }
