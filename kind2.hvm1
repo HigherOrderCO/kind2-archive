@@ -127,10 +127,6 @@
 (Compare a                       (Ann b.val b.typ)       dep) = (Equal a b.val dep)
 (Compare (Hol a.nam a.ctx)       b                       dep) = (Debug ["Found: ?" a.nam " = " (Show b dep)] 1)
 (Compare a                       (Hol b.nam b.ctx)       dep) = (Debug ["Found: ?" b.nam " = " (Show a dep)] 1)
-//(Compare (App a.fun a.arg)       b                       dep) = (Compare.app.l (Reduce 1 (App a.fun a.arg)) b dep)
-//(Compare a                       (App b.fun b.arg)       dep) = (Compare.app.r a (Reduce 1 (App b.fun b.arg)) dep)
-//(Compare (Lam a.nam a.bod)       b                       dep) = (Compare (Lam a.nam a.bod) (Lam a.nam λx(App b x)) dep)
-//(Compare a                       (Lam b.nam b.bod)       dep) = (Compare (Lam b.nam λx(App a x)) (Lam b.nam b.bod) dep)
 (Compare a                       b                       dep) = 0
 
 // Logger
