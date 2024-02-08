@@ -192,7 +192,7 @@
     (Check term type (+ dep 1))
   (Infer (Lam term.nam term.bod) dep))
 (Check.match (Ins term.val) type dep) =
-  (IfSlf type λtype.nam λtype.bod
+  (IfSlf (Reduce 1 type) λtype.nam λtype.bod
     (Check term.val (type.bod (Ins term.val)) dep)
     (Infer (Ins term.val) dep))
 (Check.match (Ref term.nam term.val) type dep) =
