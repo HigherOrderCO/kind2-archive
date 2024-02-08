@@ -91,7 +91,7 @@ export const compile = (term: Term, dep: number = 0): string => {
     case "Ins": return `(Ins ${compile(term.val, dep)})`;
     case "Set": return `(Set)`;
     case "Var": return name(term.idx);
-    case "Ref": return "_" + term.nam;
+    case "Ref": return "T_" + term.nam;
   }
 };
 
@@ -258,7 +258,7 @@ import { execSync } from "child_process";
 
 export function main() {
   // Loads Bend's HVM checker.
-  var bend_hvml = fs.readFileSync(__dirname + "/bend.hvml", "utf8");
+  var bend_hvm1 = fs.readFileSync(__dirname + "/bend.hvm1", "utf8");
 
   // Loads all local ".bend" files.
   const code = fs.readdirSync(".")
@@ -269,11 +269,12 @@ export function main() {
   // Parses into book.
   const book = do_parse_book(code);
 
-  // Compiles book to HVML.
-  var book_hvml = "Names = [" + Object.keys(book).map(x => '"'+x+'"').join(",") + "]\n";
-  var ref_count = 0;
+  // Compiles book to hvm1.
+  //var book_hvm1 = "Names = [" + Object.keys(book).map(x => '"'+x+'"').join(",") + "]\n";
+  //var ref_count = 0;
+  var book_hvm1 = "";
   for (let name in book) {
-    book_hvml += "_" + name + " = (Ref " + (ref_count++) + ' ' + compile(book[name]) + ")\n";
+    book_hvm1 += "T_" + name + " = (Ref \"" + name + "\" " + compile(book[name]) + ")\n";
   }
 
   // Gets arguments.
@@ -282,14 +283,14 @@ export function main() {
   const name = args[1];
 
   // Creates main.
-  var main_hvml = "";
+  var main_hvm1 = "";
   switch (func) {
     case "check": {
-      main_hvml = "main = (Checker _" + name + ")\n";
+      main_hvm1 = "Main = (Checker T_" + name + ")\n";
       break;
     }
     case "run": {
-      main_hvml = "main = (Normalizer _" + name + ")\n";
+      main_hvm1 = "Main = (Normalizer T_" + name + ")\n";
       break;
     }
     default: {
@@ -297,15 +298,16 @@ export function main() {
     }
   }
 
-  // Generates the 'bend.hvml' file.
-  var checker_hvml = [bend_hvml, book_hvml, main_hvml].join("\n\n");
+  // Generates the 'bend.hvm1' file.
+  var checker_hvm1 = [bend_hvm1, book_hvm1, main_hvm1].join("\n\n");
 
   // Saves locally.
-  fs.writeFileSync("./.bend.hvml", checker_hvml);
+  fs.writeFileSync("./.bend.hvm1", checker_hvm1);
 
-  // Runs 'hvml bend.hvml -s -L -1'
+  // Runs 'hvm1 bend.hvm1 -s -L -1'
 
-  const output = execSync("hvml run .bend.hvml -s -L -1").toString();
+  //const output = execSync("hvm1 run .bend.hvm1 -s -L -1").toString();
+  const output = execSync("hvm1 run -t 1 -c -f .bend.hvm1 \"(Main)\"").toString();
   try {
     var check_text = output.slice(output.indexOf("[["), output.indexOf("RWTS")).trim();
     var stats_text = output.slice(output.indexOf("RWTS"));

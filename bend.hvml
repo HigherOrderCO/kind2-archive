@@ -39,15 +39,10 @@ data Term
   +: (SCons (+ '0' n) res)
 }
 
-(U60.to_bool n) = match n {
-  0: False
-  +: True
-}
-
-(Same SNil         SNil)         = True
-(Same SNil         (SCons y ys)) = False
-(Same (SCons x xs) SNil)         = False
-(Same (SCons x xs) (SCons y ys)) = (And (U60.to_bool (== x y)) (Same xs ys))
+(Same SNil         SNil)         = 1
+(Same SNil         (SCons y ys)) = 0
+(Same (SCons x xs) SNil)         = 0
+(Same (SCons x xs) (SCons y ys)) = (& (== x y) (Same xs ys))
 
 (Find name LNil)                   = None
 (Find name (LCons (nam,val) tail)) = match (Same nam name) { True: (Some val); False: (Find name tail) }
@@ -65,17 +60,19 @@ data Term
 // ----------
 
 (Reduce x) = match x {
-  App: match f = (Fst (Reduce x.fun)) {
-    Lam: ((Fst (Reduce (f.bod (Fst (Reduce x.arg))))), True)
-    val: ((App val x.arg), False)
-  }
-  Ann: ((Fst (Reduce x.val)), True)
-  Ins: ((Fst (Reduce x.val)), True)
-  Ref: ((Fst (Reduce x.val)), True)
-  val: (val, False)
+  App: (APP x.fun x.arg)
+  Ann: (Reduce x.val)
+  Ins: (Reduce x.val)
+  Ref: (Reduce x.val)
+  val: val
 }
 
-(Normal term dep) = (Normal.go (Fst (Reduce term)) dep)
+(APP fun arg) = match fun = (Reduce fun) {
+  Lam: (Reduce (fun.bod arg))
+  fun: (App fun arg)
+}
+
+(Normal term dep) = (Normal.go (Reduce term) dep)
 
 (Normal.go term dep) = match term {
   All: (All (Normal term.inp dep) λx (Normal (term.bod (Var dep)) (+ dep 1)))
@@ -84,7 +81,7 @@ data Term
   Ann: (Ann (Normal term.val dep) (Normal term.typ dep))
   Slf: (Slf λx (Normal (term.bod (Var dep)) (+ 1 dep)))
   Ins: (Ins (Normal term.val dep))
-  Ref: (Ref (Normal term.val dep))
+  Ref: (Ref term.nam (Normal term.val dep))
   Set: Set
   Var: (Var term.idx)
 }
@@ -92,27 +89,69 @@ data Term
 // Equality
 // --------
 
-(Equal a b dep) = match equal = (Compare a b dep) {
-  True: True
-  False:
-    let (a2, a2_changed) = (Reduce a)
-    let (b2, b2_changed) = (Reduce b)
-    match changed = (Or a2_changed b2_changed) {
-      True: (Equal a2 b2 dep)
-      False: False
-    }
-}
+// This linear equality attempts to avoid reducing the term to normal form, and
+// cloning it, while still being able to identify as many terms as possible.
 
-(Compare (All a.inp a.bod) (All b.inp b.bod) dep) = (And (Equal a.inp b.inp dep) (Equal (a.bod (Var dep)) (b.bod (Var dep)) dep))
-(Compare (Lam a.bod)       (Lam b.bod)       dep) = (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep))
-(Compare (App a.fun a.arg) (App b.fun b.arg) dep) = (And (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
-(Compare (Ann a.val a.typ) (Ann b.val b.typ) dep) = (And (Equal a.val b.val dep) (Equal a.typ b.typ dep))
-(Compare (Slf a.bod)       (Slf b.bod)       dep) = (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep))
-(Compare (Ins a.val)       (Ins b.val)       dep) = (Equal a.val b.val dep)
-(Compare (Ref a.nam a.val) (Ref b.nam b.val) dep) = (Same a.nam b.nam) // TODO: use IDs
-(Compare Set               Set               dep) = True
-(Compare (Var a.idx)       (Var b.idx)       dep) = (match (== a.idx b.idx) { 0: False; +: True })
-(Compare a                 b                 dep) = False
+(Equal a b dep) = match a {
+  All: match b {
+    All: (And (Equal a.inp b.inp dep) (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep)))
+    Ann: (Equal (All a.inp a.bod) b.val dep)
+    Ref: (Equal (All a.inp a.bod) b.val dep)
+    App: (Equal (App b.fun b.arg) (All a.inp a.bod) dep)
+    exp: 0
+  }
+  Lam: match b {
+    Lam: (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep))
+    Ann: (Equal (Lam a.bod) b.val dep)
+    Ref: (Equal (Lam a.bod) b.val dep)
+    App: (Equal (App b.fun b.arg) (Lam a.bod) dep)
+    exp: 0
+  }
+  App: match a = (APP a.fun a.arg) {
+    App: match b {
+      App: (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
+      Ann: (Equal (App a.fun a.arg) b.val dep)
+      Ref: (Equal (App a.fun a.arg) b.val dep)
+      exp: 0
+    }
+    exp: (Equal exp b dep)
+  }
+  Ann: (Equal a.val b dep)
+  Slf: match b {
+    Slf: (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep))
+    Ann: (Equal (Slf a.bod) b.val dep)
+    Ref: (Equal (Slf a.bod) b.val dep)
+    App: (Equal (App b.fun b.arg) (Slf a.bod) dep)
+    exp: 0
+  }
+  Ins: match b {
+    Ins: (Equal a.val b.val dep)
+    Ann: (Equal (Ins a.val) b.val dep)
+    Ref: (Equal (Ins a.val) b.val dep)
+    App: (Equal (App b.fun b.arg) (Ins a.val) dep)
+    exp: 0
+  }
+  Ref: match b {
+    Ref: (Same a.nam b.nam) // TODO: use uids
+    Ann: (Equal (Ref a.nam a.val) b.val dep)
+    App: (Equal (App b.fun b.arg) (Ref a.nam a.val) dep)
+    exp: (Equal a.val exp dep)
+  }
+  Set: match b {
+    Set: True
+    Ann: (Equal Set b.val dep)
+    Ref: (Equal Set b.val dep)
+    App: (Equal (App b.fun b.arg) Set dep)
+    exp: 0
+  }
+  Var: match b {
+    Var: (== a.idx b.idx)
+    Ann: (Equal (Var a.idx) b.val dep)
+    Ref: (Equal (Var a.idx) b.val dep)
+    App: (Equal (App b.fun b.arg) (Var a.idx) dep)
+    exp: 0
+  }
+}
 
 // Logger
 // -------
@@ -146,7 +185,7 @@ data Term
       exit
     App:
       (bind (Infer term.fun dep) λfun_ty
-      match fun_ty = (Fst (Reduce fun_ty)) {
+      match fun_ty = (Reduce fun_ty) {
         All:
           (bind (Check term.arg fun_ty.inp dep) λval_ty
           (pure (fun_ty.bod term.arg)))
@@ -155,12 +194,12 @@ data Term
       })
     Ann: (pure term.typ)
     Slf:
-      (bind (Check (term.bod (Ann (Var dep) term)) Set dep) λslf
+      (bind (Check (term.bod (Ann (Var dep) (Slf term.bod))) Set (+ dep 1)) λslf
       (pure Set))
     Ins:
       (bind (Infer term.val dep) λval_ty
-      match val_ty = (Fst (Reduce val_ty)) {
-        Slf: (val_ty.bod term)
+      match val_ty = (Reduce val_ty) {
+        Slf: (val_ty.bod (Ins term.va))
         var: exit
       })
     Ref: (Infer term.val dep)
@@ -170,9 +209,9 @@ data Term
   //)
 
 (Check term type dep) =
-  (bind (log (Join ["Check:" (Show term dep) " :: " (Show type dep)])) λx
+  (bind (log (Join ["Check: " (Show term dep) " :: " (Show type dep)])) λx
   match term {
-    Lam: match type = (Fst (Reduce type)) {
+    Lam: match type = (Reduce type) {
       All:
         let ann  = (Ann (Var dep) type.inp)
         let term = (term.bod ann)
@@ -181,78 +220,21 @@ data Term
       val:
         exit
     }
-    Ins: match type = (Fst (Reduce type)) {
-      Slf: (Check term.val (type.bod term) dep)
+    Ins: match type = (Reduce type) {
+      Slf: (Check term.val (type.bod (Ins term.val)) dep)
       val: exit
     }
     Ref: (Check term.val type dep)
     val: 
       (bind (Infer val dep) λinfer
-      match eql = (Equal type infer dep) {
-        False: exit
-        True: (pure (Ref "OK" (Var 0)))
-      })
+      (bind (log (Join ["Equal: " (Show type dep) " == " (Show infer dep) " at " (U60.show dep)])) λx
+      match (Equal type infer dep) {
+      //match 1 {
+        0: exit
+        +: (pure (Ref "OK" (Var 0)))
+      }))
   }
   )
-
-//(Infer term dep) = match term {
-  //All: match inp_ty = (Check term.inp Set dep) {
-    //None: None
-    //Some: match bod_ty = (Check (term.bod (Ann (Var dep) term.inp)) Set (+ 1 dep)) {
-      //None: None
-      //Some: (Some Set)
-    //}
-  //}
-  //Lam: None
-  //App: match fun_ty = (Infer term.fun dep) {
-    //None: None
-    //Some: match fun_ty = (Fst (Reduce fun_ty.value)) {
-      //All: match val_ty = (Check term.arg fun_ty.inp dep) {
-        //None: None
-        //Some: (Some (fun_ty.bod term.arg))
-      //}
-      //val: None
-    //}
-  //}
-  //Ann: (Some term.typ)
-  //Slf: match slf = (Check (term.bod (Ann (Var dep) term)) Set dep) {
-    //Some: Set
-    //None: None
-  //}
-  //Ins: match val_ty = (Infer term.val dep) {
-    //Some: match val_ty = (Fst (Reduce val_ty)) {
-      //Slf: (val_ty.bod term)
-      //var: None
-    //}
-    //None: None
-  //}
-  //Ref: (Infer term.val dep)
-  //Set: (Some Set)
-  //Var: None
-//}
-
-//(Check term type dep) = match term {
-  //Lam: match type = (Fst (Reduce type)) {
-    //All:
-      //let bind = (Ann (Var dep) type.inp)
-      //let term = (term.bod bind)
-      //let type = (type.bod bind)
-      //(Check term type (+ dep 1))
-    //val: None
-  //}
-  //Ins: match type = (Fst (Reduce type)) {
-    //Slf: (Check term.val (type.bod term) dep)
-    //val: None
-  //}
-  //Ref: (Check term.val type dep)
-  //val: match infer = (Infer val dep) {
-    //None: None
-    //Some: match eql = (Equal type infer.value dep) {
-      //False: None
-      //True: (Some (Ref "OK" (Var 0)))
-    //}
-  //}
-//}
 
 // Syntax
 // ------
@@ -262,7 +244,7 @@ data Term
   Lam: (Join ["λx" (U60.show dep) " " (Show (term.bod (Var dep)) (+ dep 1))])
   App: (Join ["(" (Show term.fun dep) " " (Show term.arg dep) ")"])
   Ann: (Join ["{" (Show term.val dep) ":" (Show term.typ dep) "}"])
-  Slf: (Join ["$x" (U60.show dep) ": " (Show (term.bod (Var dep)) (+ dep 1))])
+  Slf: (Join ["$x" (U60.show dep) " " (Show (term.bod (Var dep)) (+ dep 1))])
   Ins: (Join ["~" (Show term.val dep)])
   Ref: term.nam
   Set: (Join ["*"])
@@ -519,3 +501,9 @@ data Term
   //(Ann term type)
 
 //main = (Checker true)
+
+
+//T = (Lam λt (Lam λf (t)))
+//F = (Lam λt (Lam λf (f)))
+
+//main = (Equal F F 0)
