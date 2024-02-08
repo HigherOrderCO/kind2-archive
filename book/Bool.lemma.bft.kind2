@@ -1,0 +1,6 @@
+Bool.lemma.bft
+: ∀(b: Bool)
+  (Equal Bool (Bool.not (Bool.not b)) b)
+= λb (~b λx(Equal Bool (Bool.not (Bool.not x)) x)
+  (Equal.refl Bool Bool.true)
+  (Equal.refl Bool Bool.false))
