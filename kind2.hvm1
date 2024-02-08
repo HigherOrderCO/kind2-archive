@@ -27,9 +27,9 @@
 // Prelude
 // -------
 
-(Debug msg value) = value
-//(Debug []  value) = value
-//(Debug msg value) = (HVM.print (Join msg) value)
+//(Debug msg value) = value
+(Debug []  value) = value
+(Debug msg value) = (HVM.print (Join msg) value)
 
 (NewLine) = (String.cons 10 String.nil)
 
@@ -83,7 +83,7 @@
 // Evaluation
 // ----------
 
-(Reduce r (App fun arg)) = (Reduce.app r fun arg)
+(Reduce r (App fun arg)) = (Reduce.app r (Reduce r fun) arg)
 (Reduce r (Ann val typ)) = (Reduce r val)
 (Reduce r (Ins val))     = (Reduce r val)
 (Reduce 1 (Ref nam val)) = (Reduce 1 val)
@@ -124,8 +124,10 @@
 (Compare a                       (Ref b.nam b.val)       dep) = (Equal a b.val dep)
 (Compare (Ann a.val a.typ)       b                       dep) = (Equal a.val b dep)
 (Compare a                       (Ann b.val b.typ)       dep) = (Equal a b.val dep)
-(Compare (Hol a.nam a.ctx)       b                       dep) = 1
-(Compare a                       (Hol b.nam b.ctx)       dep) = 1
+(Compare (Hol a.nam a.ctx)       b                       dep) = (Debug ["Equal: ?" a.nam " == " (Show b dep)] 1)
+(Compare a                       (Hol b.nam b.ctx)       dep) = (Debug ["Equal: ?" b.nam " == " (Show a dep)] 1)
+(Compare (Lam a.nam a.bod)       b                       dep) = (Compare (Lam a.nam a.bod) (Lam a.nam λx(App b x)) dep)
+(Compare a                       (Lam b.nam b.bod)       dep) = (Compare (Lam b.nam λx(App a x)) (Lam b.nam b.bod) dep)
 (Compare a                       b                       dep) = 0
 
 // Logger
@@ -141,7 +143,8 @@
 // Type-Checking
 // -------------
 
-(Infer term dep) = (Debug ["Infer: " (Show term dep)] (Infer.match term dep))
+//(Infer term dep) = (Debug ["Infer: " (Show term dep)] (Infer.match term dep))
+(Infer term dep) = (Infer.match term dep)
 
 (Infer.match (All nam inp bod) dep) =
   (Bind (Check inp Set dep) λinp_ty
@@ -170,12 +173,13 @@
   (Infer val dep)
 (Infer.match Set dep) =
   (Pure Set)
+(Infer.match (Hol nam ctx) dep) =
+  (Debug ["Error: NonAnnHol " (Show (Hol nam ctx) dep)] None)
 (Infer.match (Var nam idx) dep) =
   (Debug ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
 
-(Check term type dep) = (Debug
-  ["Check: " (Show term dep) " :: " (Show (Reduce 1 type) dep)]
-  (Check.match term (Reduce 1 type) dep))
+(Check term type dep) = (Debug ["Check: " (Show term dep) " :: " (Show (Reduce 1 type) dep)] (Check.match term (Reduce 1 type) dep))
+//(Check term type dep) = (Check.match term (Reduce 1 type) dep)
 
 (Check.match (Lam term.nam term.bod) (All type.nam type.inp type.bod) dep) =
   let ann  = (Ann (Var term.nam dep) type.inp)
@@ -187,7 +191,7 @@
 (Check.match (Ref term.nam term.val) type dep) =
   (Check term.val type dep)
 (Check.match (Hol term.nam term.ctx) type dep) =
-  (HVM.print (Join ["HOLE!: ?" term.nam " :: " (Show type dep) (Context.show term.ctx dep)])
+  (Debug ["HOLE!: ?" term.nam " :: " (Show (Normal 0 type dep) dep) (Context.show term.ctx dep)]
   (Pure 0))
 (Check.match val term.type dep) =
   (Bind (Infer val dep) λinfer
@@ -202,8 +206,8 @@
 
 (Show.match (All nam inp bod) dep) = (Join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
 (Show.match (Lam nam bod)     dep) = (Join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show.match (App fun arg)     dep) = (Join ["(" (Show fun dep) " " (Show arg dep) ")"])
-(Show.match (Ann val typ)     dep) = (Join ["{" (Show val dep) " : " (Show typ dep) "}"])
+(Show.match (App fun arg)     dep) = (Join ["(" (Show.prune (Show fun dep)) " " (Show arg dep) ")"])
+(Show.match (Ann val typ)     dep) = (Join ["{" (Show val dep) ": " (Show typ dep) "}"])
 (Show.match (Slf nam bod)     dep) = (Join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
 (Show.match (Ins val)         dep) = (Join ["~" (Show val dep)])
 (Show.match (Ref nam val)     dep) = nam
@@ -211,8 +215,18 @@
 (Show.match (Hol nam ctx)     dep) = (Join ["?" nam])
 (Show.match (Var nam idx)     dep) = nam
 
+(Show.prune (String.cons '(' xs)) = (Show.begin xs)
+(Show.prune str)                  = str
+
+(Show.begin (String.cons x (String.cons y String.nil))) = (String.cons x String.nil)
+(Show.begin (String.cons x xs))                         = (String.cons x (Show.begin xs))
+(Show.begin String.nil)                                 = String.nil
+
 (Context.show List.nil         dep) = ""
-(Context.show (List.cons x xs) dep) = (Join [NewLine "- " (Show x dep) (Context.show xs dep)])
+(Context.show (List.cons x xs) dep) = (Join [NewLine "- " (Context.show.ann x dep) (Context.show xs dep)])
+
+(Context.show.ann (Ann val typ) dep) = (Join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
+(Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
 
 // API
 // ---

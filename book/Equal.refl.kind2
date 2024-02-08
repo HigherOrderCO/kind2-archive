@@ -1,0 +1,6 @@
+Equal.refl
+: ∀(A: *)
+  ∀(a: A)
+  (Equal A a a)
+= λA λa
+  λP λp p
