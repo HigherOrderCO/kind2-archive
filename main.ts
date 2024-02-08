@@ -257,12 +257,12 @@ import * as fs from "fs";
 import { execSync } from "child_process";
 
 export function main() {
-  // Loads Bend's HVM checker.
-  var bend_hvm1 = fs.readFileSync(__dirname + "/bend.hvm1", "utf8");
+  // Loads Kind's HVM checker.
+  var kind2_hvm1 = fs.readFileSync(__dirname + "/kind2.hvm1", "utf8");
 
-  // Loads all local ".bend" files.
+  // Loads all local ".kind2" files.
   const code = fs.readdirSync(".")
-    .filter(file => file.endsWith(".bend"))
+    .filter(file => file.endsWith(".kind2"))
     .map(file => fs.readFileSync("./"+file, "utf8"))
     .join("\n");
 
@@ -294,20 +294,20 @@ export function main() {
       break;
     }
     default: {
-      console.log("Usage: bend [check|run] <name>");
+      console.log("Usage: kind2 [check|run] <name>");
     }
   }
 
-  // Generates the 'bend.hvm1' file.
-  var checker_hvm1 = [bend_hvm1, book_hvm1, main_hvm1].join("\n\n");
+  // Generates the 'kind2.hvm1' file.
+  var checker_hvm1 = [kind2_hvm1, book_hvm1, main_hvm1].join("\n\n");
 
   // Saves locally.
-  fs.writeFileSync("./.bend.hvm1", checker_hvm1);
+  fs.writeFileSync("./.kind2.hvm1", checker_hvm1);
 
-  // Runs 'hvm1 bend.hvm1 -s -L -1'
+  // Runs 'hvm1 kind2.hvm1 -s -L -1'
 
-  //const output = execSync("hvm1 run .bend.hvm1 -s -L -1").toString();
-  const output = execSync("hvm1 run -t 1 -c -f .bend.hvm1 \"(Main)\"").toString();
+  //const output = execSync("hvm1 run .kind2.hvm1 -s -L -1").toString();
+  const output = execSync("hvm1 run -t 1 -c -f .kind2.hvm1 \"(Main)\"").toString();
   try {
     var check_text = output.slice(output.indexOf("[["), output.indexOf("RWTS")).trim();
     var stats_text = output.slice(output.indexOf("RWTS"));
