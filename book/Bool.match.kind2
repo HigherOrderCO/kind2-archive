@@ -1,0 +1,9 @@
+Bool.match
+: ∀(b: Bool)
+  ∀(P: ∀(x: Bool) *)
+  ∀(t: (P Bool.true))
+  ∀(f: (P Bool.false))
+  (P b)
+= λb λP λt λf
+  (~b P t f)
+

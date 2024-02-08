@@ -1,0 +1,3 @@
+Bool.false
+: Bool
+= ~ λP λt λf f

@@ -81,17 +81,17 @@ export const show = (term: Term, dep: number = 0): string => {
   }
 };
 
-export const compile = (term: Term, dep: number = 0): string => {
+export const compile = (term: Term, used_refs: any, dep: number = 0): string => {
   switch (term.$) {
-    case "All": return `(All ${compile(term.inp, dep)} λ${name(dep)} ${compile(term.bod(Var(dep)), dep + 1)})`;
-    case "Lam": return `(Lam λ${name(dep)} ${compile(term.bod(Var(dep)), dep + 1)})`;
-    case "App": return `(App ${compile(term.fun, dep)} ${compile(term.arg, dep)})`;
-    case "Ann": return `(Ann ${compile(term.val, dep)} ${compile(term.typ, dep)})`;
-    case "Slf": return `(Slf λ${name(dep)} ${compile(term.bod(Var(dep)), dep + 1)})`;
-    case "Ins": return `(Ins ${compile(term.val, dep)})`;
+    case "All": return `(All ${compile(term.inp, used_refs, dep)} λ${name(dep)} ${compile(term.bod(Var(dep)), used_refs, dep + 1)})`;
+    case "Lam": return `(Lam λ${name(dep)} ${compile(term.bod(Var(dep)), used_refs, dep + 1)})`;
+    case "App": return `(App ${compile(term.fun, used_refs, dep)} ${compile(term.arg, used_refs, dep)})`;
+    case "Ann": return `(Ann ${compile(term.val, used_refs, dep)} ${compile(term.typ, used_refs, dep)})`;
+    case "Slf": return `(Slf λ${name(dep)} ${compile(term.bod(Var(dep)), used_refs, dep + 1)})`;
+    case "Ins": return `(Ins ${compile(term.val, used_refs, dep)})`;
     case "Set": return `(Set)`;
     case "Var": return name(term.idx);
-    case "Ref": return "T_" + term.nam;
+    case "Ref": return (used_refs[term.nam] = 1), ("Book." + term.nam);
   }
 };
 
@@ -269,12 +269,21 @@ export function main() {
   // Parses into book.
   const book = do_parse_book(code);
 
+
   // Compiles book to hvm1.
   //var book_hvm1 = "Names = [" + Object.keys(book).map(x => '"'+x+'"').join(",") + "]\n";
   //var ref_count = 0;
+  var used_refs = {};
   var book_hvm1 = "";
   for (let name in book) {
-    book_hvm1 += "T_" + name + " = (Ref \"" + name + "\" " + compile(book[name]) + ")\n";
+    book_hvm1 += "Book." + name + " = (Ref \"" + name + "\" " + compile(book[name], used_refs) + ")\n";
+  }
+
+  // Checks for unbound definitions
+  for (var ref_name in used_refs) {
+    if (!book[ref_name]) {
+      throw "Unbound definition: " + ref_name;
+    }
   }
 
   // Gets arguments.
@@ -286,11 +295,11 @@ export function main() {
   var main_hvm1 = "";
   switch (func) {
     case "check": {
-      main_hvm1 = "Main = (Checker T_" + name + ")\n";
+      main_hvm1 = "Main = (Checker Book." + name + ")\n";
       break;
     }
     case "run": {
-      main_hvm1 = "Main = (Normalizer T_" + name + ")\n";
+      main_hvm1 = "Main = (Normalizer Book." + name + ")\n";
       break;
     }
     default: {
