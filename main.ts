@@ -1,5 +1,9 @@
 #!/usr/bin/env ts-node
 
+// NOTE FOR GPT: the file below has been refactored in order to add a "nam"
+// field to the All, Lam, Slf and Var constructors. not all functions were
+// updated. your task is to update these functions when asked.
+
 // ICC: Parser, Stringifier and CLI
 // ================================
 
@@ -19,26 +23,28 @@ const Nil  = <A>(): List<A>                       => ({ tag: "Nil" });
 
 // NEW TERM TYPE
 type Term =
-  | { $: "All"; inp: Term; bod: (x:Term)=> Term } // ∀(x: inp) bod
-  | { $: "Lam"; bod: (x:Term)=> Term } // λx bod
+  | { $: "All"; nam: string; inp: Term; bod: (x:Term)=> Term } // ∀(x: inp) bod
+  | { $: "Lam"; nam: string; bod: (x:Term)=> Term } // λx bod
   | { $: "App"; fun: Term; arg: Term } // (fun arg)
   | { $: "Ann"; val: Term; typ: Term } // {val:typ}
-  | { $: "Slf"; bod: (x:Term)=> Term } // $x bod
+  | { $: "Slf"; nam: string; bod: (x:Term)=> Term } // $x bod
   | { $: "Ins"; val: Term } // ~val
   | { $: "Set" } // *
   | { $: "Ref"; nam: string; val?: Term }
-  | { $: "Var"; idx: number };
+  | { $: "Hol"; nam: string }
+  | { $: "Var"; nam: string; idx: number };
 
 // Constructors
-export const All = (inp: Term, bod: (x:Term)=> Term): Term => ({ $: "All", inp, bod });
-export const Lam = (bod: (x:Term)=> Term): Term => ({ $: "Lam", bod });
+export const All = (nam: string, inp: Term, bod: (x:Term)=> Term): Term => ({ $: "All", nam, inp, bod });
+export const Lam = (nam: string, bod: (x:Term)=> Term): Term => ({ $: "Lam", nam, bod });
 export const App = (fun: Term, arg: Term): Term => ({ $: "App", fun, arg });
 export const Ann = (val: Term, typ: Term): Term => ({ $: "Ann", val, typ });
-export const Slf = (bod: (x:Term)=> Term): Term => ({ $: "Slf", bod });
+export const Slf = (nam: string, bod: (x:Term)=> Term): Term => ({ $: "Slf", nam, bod });
 export const Ins = (val: Term): Term => ({ $: "Ins", val });
 export const Set = (): Term => ({ $: "Set" });
 export const Ref = (nam: string, val?: Term): Term => ({ $: "Ref", nam, val });
-export const Var = (idx: number): Term => ({ $: "Var", idx });
+export const Hol = (nam: string): Term => ({ $: "Hol", nam });
+export const Var = (nam: string, idx: number): Term => ({ $: "Var", nam, idx });
 
 // Book
 // ----
@@ -67,29 +73,24 @@ export const name = (numb: number): string => {
   return name;
 }
 
-export const show = (term: Term, dep: number = 0): string => {
-  switch (term.$) {
-    case "All": return `∀(${name(dep)}: ${show(term.inp, dep)}) ${show(term.bod(Var(dep)), dep + 1)}`;
-    case "Lam": return `λ${name(dep)} ${show(term.bod(Var(dep)), dep + 1)}`;
-    case "App": return `(${show(term.fun, dep)} ${show(term.arg, dep)})`;
-    case "Ann": return `{${show(term.val, dep)} : ${show(term.typ, dep)}}`;
-    case "Slf": return `${name(dep)} ${show(term.bod(Var(dep)), dep + 1)}`;
-    case "Ins": return `~${show(term.val, dep)}`;
-    case "Set": return `*`;
-    case "Var": return term.idx === -1 ? "*" : name(term.idx);
-    case "Ref": return term.nam;
+export const context = (numb: number): string => {
+  var names = [];
+  for (var i = 0; i < numb; ++i) {
+    names.push(name(i));
   }
-};
+  return "["+names.join(",")+"]";
+}
 
 export const compile = (term: Term, used_refs: any, dep: number = 0): string => {
   switch (term.$) {
-    case "All": return `(All ${compile(term.inp, used_refs, dep)} λ${name(dep)} ${compile(term.bod(Var(dep)), used_refs, dep + 1)})`;
-    case "Lam": return `(Lam λ${name(dep)} ${compile(term.bod(Var(dep)), used_refs, dep + 1)})`;
+    case "All": return `(All "${term.nam}" ${compile(term.inp, used_refs, dep)} λ${name(dep)} ${compile(term.bod(Var(term.nam,dep)), used_refs, dep + 1)})`;
+    case "Lam": return `(Lam "${term.nam}" λ${name(dep)} ${compile(term.bod(Var(term.nam,dep)), used_refs, dep + 1)})`;
     case "App": return `(App ${compile(term.fun, used_refs, dep)} ${compile(term.arg, used_refs, dep)})`;
     case "Ann": return `(Ann ${compile(term.val, used_refs, dep)} ${compile(term.typ, used_refs, dep)})`;
-    case "Slf": return `(Slf λ${name(dep)} ${compile(term.bod(Var(dep)), used_refs, dep + 1)})`;
+    case "Slf": return `(Slf "${term.nam}" λ${name(dep)} ${compile(term.bod(Var(term.nam,dep)), used_refs, dep + 1)})`;
     case "Ins": return `(Ins ${compile(term.val, used_refs, dep)})`;
     case "Set": return `(Set)`;
+    case "Hol": return `(Hol "${term.nam}" ${context(dep)})`;
     case "Var": return name(term.idx);
     case "Ref": return (used_refs[term.nam] = 1), ("Book." + term.nam);
   }
@@ -166,13 +167,13 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
     var [code, inp] = parse_term(code);
     var [code, __ ] = parse_text(code, ")");
     var [code, bod] = parse_term(code);
-    return [code, ctx => All(inp(ctx), x => bod(Cons([nam, x], ctx)))];
+    return [code, ctx => All(nam, inp(ctx), x => bod(Cons([nam, x], ctx)))];
   }
   // LAM: `λx f`
   if (code[0] === "λ") {
     var [code, nam] = parse_name(code.slice(1));
     var [code, bod] = parse_term(code);
-    return [code, ctx => Lam(x => bod(Cons([nam, x], ctx)))];
+    return [code, ctx => Lam(nam, x => bod(Cons([nam, x], ctx)))];
   }
   // APP: `(f x y z ...)`
   if (code[0] === "(") {
@@ -198,7 +199,7 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
   if (code[0] === "$") {
     var [code, nam] = parse_name(code.slice(1));
     var [code, bod] = parse_term(code);
-    return [code, ctx => Slf(x => bod(Cons([nam, x], ctx)))];
+    return [code, ctx => Slf(nam, x => bod(Cons([nam, x], ctx)))];
   }
   // INS: `~x`
   if (code[0] === "~") {
@@ -208,6 +209,11 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
   // SET: `*`
   if (code[0] === "*") {
     return [code.slice(1), ctx => Set()];
+  }
+  // HOL: `?name`
+  if (code[0] === "?") {
+    var [code, nam] = parse_name(code.slice(1));
+    return [code, ctx => Hol(nam)];
   }
   // VAR: `name`
   var [code, nam] = parse_name(code);
@@ -268,7 +274,6 @@ export function main() {
 
   // Parses into book.
   const book = do_parse_book(code);
-
 
   // Compiles book to hvm1.
   //var book_hvm1 = "Names = [" + Object.keys(book).map(x => '"'+x+'"').join(",") + "]\n";

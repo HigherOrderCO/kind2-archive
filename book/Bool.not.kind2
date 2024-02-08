@@ -1,3 +1,4 @@
 Bool.not
-: ∀(b: Bool) Bool
-= λb b
+: ∀(x: Bool) Bool
+= λx ~ λP λt λf
+  ?foo

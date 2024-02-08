@@ -13,22 +13,25 @@
   //= (Pair fst snd)
 
 //data Term
-  //= (All inp bod)
-  //| (Lam bod)
+  //= (All nam inp bod)
+  //| (Lam nam bod)
   //| (App fun arg)
   //| (Ann val typ)
-  //| (Slf bod)
+  //| (Slf nam bod)
   //| (Ins val)
   //| (Ref nam val)
   //| (Set)
-  //| (Hol 
-  //| (Var idx) 
+  //| (Hol nam ctx)
+  //| (Var nam idx) 
 
 // Prelude
 // -------
 
-(Debug []  value) = value
-(Debug msg value) = (HVM.print (Join msg) value)
+(Debug msg value) = value
+//(Debug []  value) = value
+//(Debug msg value) = (HVM.print (Join msg) value)
+
+(NewLine) = (String.cons 10 String.nil)
 
 (And True  b) = b
 (And False b) = False
@@ -71,11 +74,11 @@
 // Term
 // ----
 
-(IfAll (All inp bod) yep nop) = (yep inp bod)
-(IfAll other         yep nop) = nop
+(IfAll (All nam inp bod) yep nop) = (yep nam inp bod)
+(IfAll other             yep nop) = nop
 
-(IfSlf (Slf bod) yep nop) = (yep bod)
-(IfSlf other     yep nop) = nop
+(IfSlf (Slf nam bod) yep nop) = (yep nam bod)
+(IfSlf other         yep nop) = nop
 
 // Evaluation
 // ----------
@@ -86,47 +89,44 @@
 (Reduce 1 (Ref nam val)) = (Reduce 1 val)
 (Reduce r val)           = val
 
-(Reduce.app r (Lam bod) arg) = (Reduce r (bod (Reduce r arg)))
-(Reduce.app r fun       arg) = (App fun arg)
+(Reduce.app r (Lam nam bod) arg) = (Reduce r (bod (Reduce r arg)))
+(Reduce.app r fun           arg) = (App fun arg)
 
 (Normal r term dep) = (Normal.term r (Reduce r term) dep)
 
-(Normal.term r (All inp bod) dep) = (All (Normal r inp dep) λx (Normal r (bod (Var dep)) (+ dep 1)))
-(Normal.term r (Lam bod)     dep) = (Lam λx (Normal r (bod (Var dep)) (+ 1 dep)))
-(Normal.term r (App fun arg) dep) = (App (Normal r fun dep) (Normal r arg dep))
-(Normal.term r (Ann val typ) dep) = (Ann (Normal r val dep) (Normal r typ dep))
-(Normal.term r (Slf bod)     dep) = (Slf λx (Normal r (bod (Var dep)) (+ 1 dep)))
-(Normal.term r (Ins val)     dep) = (Ins (Normal r val dep))
-(Normal.term r (Ref nam val) dep) = (Ref nam (Normal r val dep))
-(Normal.term r Set           dep) = Set
-(Normal.term r (Var idx)     dep) = (Var idx)
+(Normal.term r (All nam inp bod) dep) = (All nam (Normal r inp dep) λx (Normal r (bod (Var nam dep)) (+ dep 1)))
+(Normal.term r (Lam nam bod)     dep) = (Lam nam λx(Normal r (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term r (App fun arg)     dep) = (App (Normal r fun dep) (Normal r arg dep))
+(Normal.term r (Ann val typ)     dep) = (Ann (Normal r val dep) (Normal r typ dep))
+(Normal.term r (Slf nam bod)     dep) = (Slf nam λx (Normal r (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term r (Ins val)         dep) = (Ins (Normal r val dep))
+(Normal.term r (Ref nam val)     dep) = (Ref nam (Normal r val dep))
+(Normal.term r (Hol nam ctx)     dep) = (Hol nam ctx)
+(Normal.term r Set               dep) = Set
+(Normal.term r (Var nam idx)     dep) = (Var nam idx)
 
 // Equality
 // --------
 
 (Equal a b dep) = (Compare a b dep)
 
-// Note: this is a simpler equality function than the original one.
-(Compare (All a.inp a.bod) (All b.inp b.bod) dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep)))
-(Compare (Lam a.bod)       (Lam b.bod)       dep) = (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep))
-(Compare (App a.fun a.arg) (App b.fun b.arg) dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
-(Compare (Ann a.val a.typ) (Ann b.val b.typ) dep) = (& (Equal a.val b.val dep) (Equal a.typ b.typ dep))
-(Compare (Slf a.bod)       (Slf b.bod)       dep) = (Equal (a.bod (Var dep)) (b.bod (Var dep)) (+ 1 dep))
-(Compare (Ins a.val)       b                 dep) = (Equal a.val b dep)
-(Compare a                 (Ins b.val)       dep) = (Equal a b.val dep)
-(Compare (Ref a.nam a.val) (Ref b.nam b.val) dep) = (Same a.nam b.nam)
-(Compare Set               Set               dep) = 1
-(Compare (Var a.idx)       (Var b.idx)       dep) = (== a.idx b.idx)
-(Compare (Ref a.nam a.val) b                 dep) = (Equal a.val b dep)
-(Compare a                 (Ref b.nam b.val) dep) = (Equal a b.val dep)
-(Compare (Ann a.val a.typ) b                 dep) = (Equal a.val b dep)
-(Compare a                 (Ann b.val b.typ) dep) = (Equal a b.val dep)
-(Compare a                 b                 dep) = 0
-
-C0 = (Lam λf(Lam λx(x)))
-C1 = (Lam λf(Lam λx(App f x)))
-C2 = (Lam λf(Lam λx(App f (App f x))))
-C3 = (Lam λf(Lam λx(App f (App f (App f x)))))
+(Compare (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+(Compare (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Compare (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
+(Compare (Ann a.val a.typ)       (Ann b.val b.typ)       dep) = (& (Equal a.val b.val dep) (Equal a.typ b.typ dep))
+(Compare (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Compare (Ins a.val)             b                       dep) = (Equal a.val b dep)
+(Compare a                       (Ins b.val)             dep) = (Equal a b.val dep)
+(Compare (Ref a.nam a.val)       (Ref b.nam b.val)       dep) = (Same a.nam b.nam)
+(Compare Set                     Set                     dep) = 1
+(Compare (Var a.nam a.idx)       (Var b.nam b.idx)       dep) = (== a.idx b.idx)
+(Compare (Ref a.nam a.val)       b                       dep) = (Equal a.val b dep)
+(Compare a                       (Ref b.nam b.val)       dep) = (Equal a b.val dep)
+(Compare (Ann a.val a.typ)       b                       dep) = (Equal a.val b dep)
+(Compare a                       (Ann b.val b.typ)       dep) = (Equal a b.val dep)
+(Compare (Hol a.nam a.ctx)       b                       dep) = 1
+(Compare a                       (Hol b.nam b.ctx)       dep) = 1
+(Compare a                       b                       dep) = 0
 
 // Logger
 // -------
@@ -143,49 +143,52 @@ C3 = (Lam λf(Lam λx(App f (App f (App f x)))))
 
 (Infer term dep) = (Debug ["Infer: " (Show term dep)] (Infer.match term dep))
 
-(Infer.match (All term.inp term.bod) dep) =
-  (Bind (Check term.inp Set dep) λinp_ty
-  (Bind (Check (term.bod (Ann (Var dep) term.inp)) Set (+ 1 dep)) λbod_ty
+(Infer.match (All nam inp bod) dep) =
+  (Bind (Check inp Set dep) λinp_ty
+  (Bind (Check (bod (Ann (Var nam dep) inp)) Set (+ 1 dep)) λbod_ty
   (Pure Set)))
-(Infer.match (Lam term.bod) dep) =
-  (Debug ["Error: NonFunLam " (Show (Lam term.bod) dep)] (None))
-(Infer.match (App term.fun term.arg) dep) =
-  (Bind (Infer term.fun dep) λfun_ty
+(Infer.match (Lam nam bod) dep) =
+  (Debug ["Error: NonFunLam " (Show (Lam nam bod) dep)] (None))
+(Infer.match (App fun arg) dep) =
+  (Bind (Infer fun dep) λfun_ty
   (IfAll (Reduce 1 fun_ty)
-    λfun_ty.inp λfun_ty.bod
-      (Bind (Check term.arg fun_ty.inp dep) λval_ty
-      (Pure (fun_ty.bod term.arg)))
-    (Debug ["Error: NonFunApp " (Show (App term.fun term.arg) dep)] None)))
-(Infer.match (Ann term.val term.typ) dep) =
-  (Pure term.typ)
-(Infer.match (Slf term.bod) dep) =
-  (Bind (Check (term.bod (Ann (Var dep) (Slf term.bod))) Set (+ dep 1)) λslf
+    λfun_nam λfun_ty.inp λfun_ty.bod
+      (Bind (Check arg fun_ty.inp dep) λval_ty
+      (Pure (fun_ty.bod arg)))
+    (Debug ["Error: NonFunApp " (Show (App fun arg) dep)] None)))
+(Infer.match (Ann val typ) dep) =
+  (Pure typ)
+(Infer.match (Slf nam bod) dep) =
+  (Bind (Check (bod (Ann (Var nam dep) (Slf nam bod))) Set (+ dep 1)) λslf
   (Pure Set))
-(Infer.match (Ins term.val) dep) =
-  (Bind (Infer term.val dep) λval_ty
+(Infer.match (Ins val) dep) =
+  (Bind (Infer val dep) λval_ty
   (IfSlf (Reduce 1 val_ty)
-    λval_ty.bod (Pure (val_ty.bod (Ins term.val)))
-    (Debug ["Error: NonSlfIns " (Show (Ins term.val) dep)] None)))
-(Infer.match (Ref term.nam term.val) dep) = 
-  (Infer term.val dep)
+    λval_nam λval_ty.bod (Pure (val_ty.bod (Ins val)))
+    (Debug ["Error: NonSlfIns " (Show (Ins val) dep)] None)))
+(Infer.match (Ref nam val) dep) = 
+  (Infer val dep)
 (Infer.match Set dep) =
   (Pure Set)
-(Infer.match (Var term.idx) dep) =
-  (Debug ["Error: NonAnnVar " (Show (Var term.idx) dep)] None)
+(Infer.match (Var nam idx) dep) =
+  (Debug ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
 
 (Check term type dep) = (Debug
   ["Check: " (Show term dep) " :: " (Show (Reduce 1 type) dep)]
   (Check.match term (Reduce 1 type) dep))
 
-(Check.match (Lam term.bod) (All type.inp type.bod) dep) =
-  let ann  = (Ann (Var dep) type.inp)
+(Check.match (Lam term.nam term.bod) (All type.nam type.inp type.bod) dep) =
+  let ann  = (Ann (Var term.nam dep) type.inp)
   let term = (term.bod ann)
   let type = (type.bod ann)
   (Check term type (+ dep 1))
-(Check.match (Ins term.val) (Slf type.bod) dep) =
+(Check.match (Ins term.val) (Slf type.nam type.bod) dep) =
   (Check term.val (type.bod (Ins term.val)) dep)
 (Check.match (Ref term.nam term.val) type dep) =
   (Check term.val type dep)
+(Check.match (Hol term.nam term.ctx) type dep) =
+  (HVM.print (Join ["HOLE!: ?" term.nam " :: " (Show type dep) (Context.show term.ctx dep)])
+  (Pure 0))
 (Check.match val term.type dep) =
   (Bind (Infer val dep) λinfer
   (If (Equal term.type infer dep)
@@ -197,32 +200,26 @@ C3 = (Lam λf(Lam λx(App f (App f (App f x)))))
 
 (Show term dep) = (Show.match term dep)
 
-(Show.match (All term.inp term.bod) dep) = (Join ["∀(x" (U60.show dep) ":" (Show term.inp dep) ") " (Show (term.bod (Var dep)) (+ dep 1))])
-(Show.match (Lam term.bod)          dep) = (Join ["λx" (U60.show dep) " " (Show (term.bod (Var dep)) (+ dep 1))])
-(Show.match (App term.fun term.arg) dep) = (Join ["(" (Show term.fun dep) " " (Show term.arg dep) ")"])
-(Show.match (Ann term.val term.typ) dep) = (Join ["{" (Show term.val dep) ":" (Show term.typ dep) "}"])
-(Show.match (Slf term.bod)          dep) = (Join ["$x" (U60.show dep) " " (Show (term.bod (Var dep)) (+ dep 1))])
-(Show.match (Ins term.val)          dep) = (Join ["~" (Show term.val dep)])
-(Show.match (Ref term.nam term.val) dep) = term.nam
-(Show.match Set                     dep) = (Join ["*"])
-(Show.match (Var term.idx)          dep) = (Join ["x" (U60.show term.idx)])
+(Show.match (All nam inp bod) dep) = (Join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show.match (Lam nam bod)     dep) = (Join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show.match (App fun arg)     dep) = (Join ["(" (Show fun dep) " " (Show arg dep) ")"])
+(Show.match (Ann val typ)     dep) = (Join ["{" (Show val dep) " : " (Show typ dep) "}"])
+(Show.match (Slf nam bod)     dep) = (Join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show.match (Ins val)         dep) = (Join ["~" (Show val dep)])
+(Show.match (Ref nam val)     dep) = nam
+(Show.match Set               dep) = (Join ["*"])
+(Show.match (Hol nam ctx)     dep) = (Join ["?" nam])
+(Show.match (Var nam idx)     dep) = nam
+
+(Context.show List.nil         dep) = ""
+(Context.show (List.cons x xs) dep) = (Join [NewLine "- " (Show x dep) (Context.show xs dep)])
 
 // API
 // ---
 
 (Checker (Ref nam val)) = (Checker val)
-(Checker (Ann val typ)) = (Check val typ 0)
-(Checker val)           = "untyped"
+(Checker (Ann val typ)) = (Checker.report (Check val typ 0))
+(Checker val)           = (HVM.print "Untyped." 1)
 
-// Tests
-// -----
-
-//T_Bool  = (Ref "Bool" (Ann (Slf λa (All (All T_Bool λb (Set)) λb (All (App b T_true) λc (All (App b T_false) λd (App b a))))) (Set)))
-//T_false = (Ref "false" (Ann (Lam λa (Lam λb (Lam λc c))) T_Bool))
-//T_true  = (Ref "true" (Ann (Lam λa (Lam λb (Lam λc b))) T_Bool))
-//T_BoolB = (All (All T_Bool λb (Set)) λb (All (App b T_true) λc (All (App b T_false) λd (App b (Var 0)))))
-
-//Main = (Checker T_Bool)
-//Main = ((Check (Slf λa (All (All T_Bool λb (Set)) λb (All (App b T_true) λc (All (App b T_false) λd (App b a))))) Set 0) List.nil)
-
-//([(Ref "OK" (Var 0)), 1] [logs])
+(Checker.report (Some x)) = (HVM.print "Check!" 1)
+(Checker.report None)     = (HVM.print "Error." 0)
