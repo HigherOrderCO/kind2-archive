@@ -1,0 +1,7 @@
+List.Concatenator.concat
+: ∀(T: *)
+  ∀(xs: (List.Concatenator T))
+  ∀(ys: (List.Concatenator T))
+  (List.Concatenator T)
+= λT λxs λys
+  λnil (xs (ys nil))

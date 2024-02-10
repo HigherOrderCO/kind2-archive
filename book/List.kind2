@@ -1,0 +1,9 @@
+List
+: ∀(T: *)
+  *
+= λT
+  $self
+  ∀(P: ∀(xs: (List T)) *)
+  ∀(cons: ∀(head: T) ∀(tail: (List T)) (P (List.cons T head tail)))
+  ∀(nil: (P (List.nil T)))
+  (P self)

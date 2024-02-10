@@ -1,0 +1,11 @@
+List.fold
+: ∀(T: *)
+  ∀(list: (List T))
+  (List.Folder T)
+= λT λlist
+  λP λcons λnil
+  (~list λxs(P)
+    λhead λtail (cons head ((List.fold T tail) P cons nil))
+    nil)
+    
+

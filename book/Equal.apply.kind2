@@ -1,4 +1,3 @@
-// a == b -> (f a) == (f b)
 Equal.apply
 : ∀(A: *)
   ∀(B: *)

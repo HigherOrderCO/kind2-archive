@@ -20,18 +20,24 @@
   //| (Slf nam bod)
   //| (Ins val)
   //| (Ref nam val)
+  //| (Let nam val bod)
   //| (Set)
+  //| (U60)
+  //| (Num val)
+  //| (Op2 op2 fst snd)
+  //| (Txt txt)
   //| (Hol nam ctx)
   //| (Var nam idx) 
 
 // Prelude
 // -------
 
-(Debug dep msg value) = value
-//(Debug dep []  value) = value
-//(Debug dep msg value) = (HVM.print (Join msg) value)
+//(Debug dep msg value) = value
+(Debug dep []  value) = value
+(Debug dep msg value) = (HVM.print (Join msg) value)
 
 (NewLine) = (String.cons 10 String.nil)
+(Quote)   = (String.cons 34 String.nil)
 
 (And True  b) = b
 (And False b) = False
@@ -85,7 +91,9 @@
 (Reduce r (Ann val typ))     = (Reduce r val)
 (Reduce r (Ins val))         = (Reduce r val)
 (Reduce 1 (Ref nam val))     = (Reduce 1 val)
+(Reduce r (Let nam val bod)) = (Reduce r (bod val))
 (Reduce r (Op2 op2 fst snd)) = (Reduce.op2 op2 fst snd)
+(Reduce 1 (Txt txt))         = (Reduce.txt txt)
 (Reduce r val)               = val
 
 (Reduce.app r (Lam nam bod) arg) = (Reduce r (bod (Reduce r arg)))
@@ -97,6 +105,10 @@
 (Reduce.op2 DIV (Num fst) (Num snd)) = (Num (/ fst snd))
 (Reduce.op2 op2 fst snd)             = (Op2 op2 fst snd)
 
+(Reduce.txt (String.cons x xs)) = (Reduce 1 (App (App Book.String.cons (Num x)) (Txt xs)))
+(Reduce.txt String.nil)         = (Reduce 1 Book.String.nil)
+(Reduce.txt val)                = val
+
 (Normal r term dep) = (Normal.term r (Reduce r term) dep)
 
 (Normal.term r (All nam inp bod) dep) = (All nam (Normal r inp dep) λx (Normal r (bod (Var nam dep)) (+ dep 1)))
@@ -106,10 +118,12 @@
 (Normal.term r (Slf nam bod)     dep) = (Slf nam λx (Normal r (bod (Var nam dep)) (+ 1 dep)))
 (Normal.term r (Ins val)         dep) = (Ins (Normal r val dep))
 (Normal.term r (Ref nam val)     dep) = (Ref nam (Normal r val dep))
+(Normal.term r (Let nam val bod) dep) = (Let nam (Normal r val bod) λx(Normal r (bod (Var nam dep)) (+ 1 dep)))
 (Normal.term r (Hol nam ctx)     dep) = (Hol nam ctx)
 (Normal.term r Set               dep) = Set
 (Normal.term r U60               dep) = U60
 (Normal.term r (Num val)         dep) = (Num val)
+(Normal.term r (Txt val)         dep) = (Txt val)
 (Normal.term r (Op2 op2 fst snd) dep) = (Op2 op2 (Normal.term r fst dep) (Normal.term r snd dep))
 (Normal.term r (Var nam idx)     dep) = (Var nam idx)
 
@@ -127,6 +141,8 @@
 (Compare (Ins a.val)             b                       dep) = (Equal a.val b dep)
 (Compare a                       (Ins b.val)             dep) = (Equal a b.val dep)
 (Compare (Ref a.nam a.val)       (Ref b.nam b.val)       dep) = (Same a.nam b.nam)
+(Compare (Let a.nam a.val a.bod) b                       dep) = (Compare (a.bod a.val) b dep)
+(Compare a                       (Let b.nam b.val b.bod) dep) = (Compare a (b.bod b.val) dep)
 (Compare Set                     Set                     dep) = 1
 (Compare (Var a.nam a.idx)       (Var b.nam b.idx)       dep) = (== a.idx b.idx)
 //(Compare (Ref a.nam a.val)       b                       dep) = (Equal a.val b dep)
@@ -137,6 +153,7 @@
 (Compare a                       (Hol b.nam b.ctx)       dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
 (Compare U60                     U60                     dep) = 1
 (Compare (Num a.val)             (Num b.val)             dep) = (== a.val b.val)
+(Comapre (Txt a.txt)             (Txt b.txt)             dep) = (Same a.txt b.txt)
 (Compare (Op2 a.op2 a.fst a.snd) (Op2 b.op2 b.fst b.snd) dep) = (& (Equal a.fst a.snd dep) (Equal b.fst b.snd dep))
 (Compare a                       b                       dep) = 0
 
@@ -149,8 +166,8 @@
 (IfSlf (Slf nam bod) yep nop) = (yep nam bod)
 (IfSlf other         yep nop) = nop
 
-//(Infer term dep) = (Debug dep ["Infer: " (Show term dep)] (Infer.match term dep))
-(Infer term dep) = (Infer.match term dep)
+(Infer term dep) = (Debug dep ["Infer: " (Show term dep)] (Infer.match term dep))
+//(Infer term dep) = (Infer.match term dep)
 
 (Infer.match (All nam inp bod) dep) =
   (Bind (Check inp Set dep) λinp_ty
@@ -177,12 +194,16 @@
     (Debug dep ["Error: NonSlfIns " (Show (Ins val) dep)] None)))
 (Infer.match (Ref nam val) dep) = 
   (Infer val dep)
+(Infer.match (Let nam val bod) dep) =
+  (Debug dep ["Error: NonAnnLet " (Show (Let nam val bod) dep)] (None))
 (Infer.match Set dep) =
   (Pure Set)
 (Infer.match U60 dep) =
   (Pure Set)
 (Infer.match (Num num) dep) =
   (Pure U60)
+(Infer.match (Txt txt) dep) =
+  (Pure Book.String)
 (Infer.match (Op2 op2 fst snd) dep) =
   (Bind (Check fst U60 dep) λfst
   (Bind (Check snd U60 dep) λsnd
@@ -192,20 +213,24 @@
 (Infer.match (Var nam idx) dep) =
   (Debug dep ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
 
-//(Check term type dep) = (Debug ["Check: " (Show term dep) " :: " (Show (Reduce 1 type) dep)] (Check.match term (Reduce 1 type) dep))
-(Check term type dep) = (Check.match term type dep)
+(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show (Reduce 0 type) dep)] (Check.match term type dep))
+//(Check term type dep) = (Check.match term type dep)
 
 (Check.match (Lam term.nam term.bod) type dep) =
-  (IfAll (Reduce 1 type) λtype.nam λtype.inp λtype.bod
+  ((IfAll (Reduce 1 type) λtype.nam λtype.inp λtype.bod λterm.bod
     let ann  = (Ann (Var term.nam dep) type.inp)
     let term = (term.bod ann)
     let type = (type.bod ann)
     (Check term type (+ dep 1))
-  (Infer (Lam term.nam term.bod) dep))
+  λterm.bod
+    (Infer (Lam term.nam term.bod) dep))
+  term.bod)
 (Check.match (Ins term.val) type dep) =
   (IfSlf (Reduce 1 type) λtype.nam λtype.bod
     (Check term.val (type.bod (Ins term.val)) dep)
     (Infer (Ins term.val) dep))
+(Check.match (Let term.nam term.val term.bod) type dep) =
+  (Check (term.bod term.val) type (+ 1 dep))
 (Check.match (Ref term.nam term.val) type dep) =
   (Check term.val type dep)
 (Check.match (Hol term.nam term.ctx) type dep) =
@@ -213,9 +238,17 @@
   (Pure 0))
 (Check.match val term.type dep) =
   (Bind (Infer val dep) λinfer
-  (If (Equal term.type infer dep)
+  (If (Equal (Reduce 1 term.type) infer dep)
     (Pure 0)
-    (Debug dep ["Error: " (Show (Normal 0 infer dep) dep) NewLine "    != " (Show (Normal 0 term.type dep) dep)] None)))
+    (Debug dep [
+      "Error: "
+        (Show (Normal 0 infer dep) dep)
+        NewLine "    != "
+        (Show (Normal 0 term.type dep) dep)
+        NewLine "    in "
+        (Show (Normal 0 val dep) dep)
+      ]
+      None)))
 
 // Syntax
 // ------
@@ -229,10 +262,12 @@
 (Show.match (Slf nam bod)     dep) = (Join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
 (Show.match (Ins val)         dep) = (Join ["~" (Show val dep)])
 (Show.match (Ref nam val)     dep) = nam
+(Show.match (Let nam val bod) dep) = (Join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
 (Show.match Set               dep) = (Join ["*"])
 (Show.match U60               dep) = "#U60"
 (Show.match (Num val)         dep) = (Join ["#" (U60.show val)])
 (Show.match (Op2 op2 fst snd) dep) = (Join ["#(" (Op2.show op2) " " (Show fst dep) " " (Show snd dep) ")"])
+(Show.match (Txt txt)         dep) = (Join [Quote txt Quote])
 (Show.match (Hol nam ctx)     dep) = (Join ["?" nam])
 (Show.match (Var nam idx)     dep) = nam
 
@@ -257,7 +292,9 @@
 // API
 // ---
 
-(Normalizer term) = (HVM.print (Show (Normal 1 term 0) 0) OK)
+(Normalizer (Ref nam val)) = (Normalizer val)
+(Normalizer (Ann val typ)) = (Normalizer val)
+(Normalizer val)           = (HVM.print (Show (Normal 1 val 0) 0) OK)
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))

@@ -1,0 +1,10 @@
+List.concat
+: ∀(T: *)
+  ∀(xs: (List T))
+  ∀(ys: (List T))
+  (List T)
+= λT λxs λys
+  let P    = λxs ∀(ys: (List T)) (List T)
+  let cons = λhead λtail λys (List.cons T head (List.concat T tail ys))
+  let nil  = λys ys
+  (~xs P cons nil ys)

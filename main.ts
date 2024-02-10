@@ -31,7 +31,9 @@ type Term =
   | { $: "U60" } // #U60
   | { $: "Num"; val: BigInt } // #num
   | { $: "Op2"; op2: string; fst: Term; snd: Term } // #(<op2> fst snd)
+  | { $: "Txt"; txt: string } // "text"
   | { $: "Ref"; nam: string; val?: Term }
+  | { $: "Let"; nam: string; val: Term; bod: (x:Term)=> Term }
   | { $: "Hol"; nam: string }
   | { $: "Var"; nam: string; idx: number };
 
@@ -46,7 +48,9 @@ export const Set = (): Term => ({ $: "Set" });
 export const U60 = (): Term => ({ $: "U60" });
 export const Num = (val: BigInt): Term => ({ $: "Num", val });
 export const Op2 = (op2: string, fst: Term, snd: Term): Term => ({ $: "Op2", op2, fst, snd });
+export const Txt = (txt: string): Term => ({ $: "Txt", txt });
 export const Ref = (nam: string, val?: Term): Term => ({ $: "Ref", nam, val });
+export const Let = (nam: string, val: Term, bod: (x:Term)=> Term): Term => ({ $: "Let", nam, val, bod });
 export const Hol = (nam: string): Term => ({ $: "Hol", nam });
 export const Var = (nam: string, idx: number): Term => ({ $: "Var", nam, idx });
 
@@ -114,9 +118,11 @@ export const compile = (term: Term, used_refs: any, dep: number = 0): string => 
     case "U60": return `(U60)`;
     case "Num": return `(Num ${term.val.toString()})`;
     case "Op2": return `(Op2 ${compile_oper(term.op2)} ${compile(term.fst, used_refs, dep)} ${compile(term.snd, used_refs, dep)})`;
+    case "Txt": return `(Txt "${term.txt}")`;
     case "Hol": return `(Hol "${term.nam}" ${context(dep)})`;
     case "Var": return name(term.idx);
     case "Ref": return (used_refs[term.nam] = 1), ("Book." + term.nam);
+    case "Let": return `(Let "${term.nam}" ${compile(term.val, used_refs, dep)} λ${name(dep)} ${compile(term.bod(Var(term.nam,dep)), used_refs, dep + 1)})`;
   }
 };
 
@@ -246,6 +252,14 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
   if (code[0] === "*") {
     return [code.slice(1), ctx => Set()];
   }
+  // LET: `let x = A in B`
+  if (code.slice(0,4) === "let ") {
+    var [code, nam] = parse_name(code.slice(4));
+    var [code, _  ] = parse_text(code, "=");
+    var [code, val] = parse_term(code);
+    var [code, bod] = parse_term(code);
+    return [code, ctx => Let(nam, val(ctx), x => bod(Cons([nam, x], ctx)))];
+  }
   // U60: `#U60`
   if (code.slice(0,4) === "#U60") {
     return [code.slice(4), ctx => U60()];
@@ -262,6 +276,17 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
   if (code[0] === "#") {
     var [code, num] = parse_name(code.slice(1));
     return [code, ctx => Num(BigInt(num))];
+  }
+  // STR: `"text"` -- string syntax sugar
+  if (code[0] === "\"") {
+    var str = "";
+    code = code.slice(1);
+    while (code[0] !== "\"") {
+      str += code[0];
+      code = code.slice(1);
+    }
+    code = code.slice(1);
+    return [code, ctx => Txt(str)];
   }
   // HOL: `?name`
   if (code[0] === "?") {

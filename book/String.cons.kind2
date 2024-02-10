@@ -1,0 +1,7 @@
+String.cons
+: ∀(head: Char)
+  ∀(tail: String)
+  String
+= λhead λtail
+  ~λP λcons λnil
+  (cons head tail)

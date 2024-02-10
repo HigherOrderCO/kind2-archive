@@ -1,0 +1,4 @@
+String.Concatenator.join
+: ∀(xs: (List String.Concatenator))
+  String.Concatenator
+= (List.Concatenator.join Char)

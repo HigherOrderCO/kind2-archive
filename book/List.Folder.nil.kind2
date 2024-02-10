@@ -1,0 +1,6 @@
+List.Folder.nil
+: ∀(T: *)
+  (List.Folder T)
+= λT
+  λP λcons λnil
+  nil

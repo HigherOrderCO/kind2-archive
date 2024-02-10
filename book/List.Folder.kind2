@@ -1,0 +1,8 @@
+List.Folder
+: ∀(T: *)
+  *
+= λT
+  ∀(P: *)
+  ∀(cons: ∀(head: T) ∀(tail: P) P)
+  ∀(nil: P)
+  P
