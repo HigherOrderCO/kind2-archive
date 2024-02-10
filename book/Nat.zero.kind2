@@ -1,5 +1,5 @@
 Nat.zero
 : Nat
-= ~λP λs λz
-  z
+= ~λP λsucc λzero
+  zero
   

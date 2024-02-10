@@ -28,6 +28,9 @@ type Term =
   | { $: "Slf"; nam: string; bod: (x:Term)=> Term } // $x bod
   | { $: "Ins"; val: Term } // ~val
   | { $: "Set" } // *
+  | { $: "U60" } // #U60
+  | { $: "Num"; val: BigInt } // #num
+  | { $: "Op2"; op2: string; fst: Term; snd: Term } // #(<op2> fst snd)
   | { $: "Ref"; nam: string; val?: Term }
   | { $: "Hol"; nam: string }
   | { $: "Var"; nam: string; idx: number };
@@ -40,6 +43,9 @@ export const Ann = (val: Term, typ: Term): Term => ({ $: "Ann", val, typ });
 export const Slf = (nam: string, bod: (x:Term)=> Term): Term => ({ $: "Slf", nam, bod });
 export const Ins = (val: Term): Term => ({ $: "Ins", val });
 export const Set = (): Term => ({ $: "Set" });
+export const U60 = (): Term => ({ $: "U60" });
+export const Num = (val: BigInt): Term => ({ $: "Num", val });
+export const Op2 = (op2: string, fst: Term, snd: Term): Term => ({ $: "Op2", op2, fst, snd });
 export const Ref = (nam: string, val?: Term): Term => ({ $: "Ref", nam, val });
 export const Hol = (nam: string): Term => ({ $: "Hol", nam });
 export const Var = (nam: string, idx: number): Term => ({ $: "Var", nam, idx });
@@ -79,6 +85,23 @@ export const context = (numb: number): string => {
   return "["+names.join(",")+"]";
 }
 
+const compile_oper = (op2: string): string => {
+  switch (op2) {
+    case "+" : return "ADD";
+    case "-" : return "SUB";
+    case "*" : return "MUL";
+    case "/" : return "DIV";
+    case "%" : return "MOD";
+    case "==": return "EQ";
+    case "!=": return "NEQ";
+    case "<" : return "LT";
+    case "<=": return "LTE";
+    case ">" : return "GT";
+    case ">=": return "GTE";
+    default: throw new Error("Unknown operator: " + op2);
+  }
+};
+
 export const compile = (term: Term, used_refs: any, dep: number = 0): string => {
   switch (term.$) {
     case "All": return `(All "${term.nam}" ${compile(term.inp, used_refs, dep)} λ${name(dep)} ${compile(term.bod(Var(term.nam,dep)), used_refs, dep + 1)})`;
@@ -88,6 +111,9 @@ export const compile = (term: Term, used_refs: any, dep: number = 0): string => 
     case "Slf": return `(Slf "${term.nam}" λ${name(dep)} ${compile(term.bod(Var(term.nam,dep)), used_refs, dep + 1)})`;
     case "Ins": return `(Ins ${compile(term.val, used_refs, dep)})`;
     case "Set": return `(Set)`;
+    case "U60": return `(U60)`;
+    case "Num": return `(Num ${term.val.toString()})`;
+    case "Op2": return `(Op2 ${compile_oper(term.op2)} ${compile(term.fst, used_refs, dep)} ${compile(term.snd, used_refs, dep)})`;
     case "Hol": return `(Hol "${term.nam}" ${context(dep)})`;
     case "Var": return name(term.idx);
     case "Ref": return (used_refs[term.nam] = 1), ("Book." + term.nam);
@@ -135,14 +161,26 @@ export function is_name_char(c: string): boolean {
   return /[a-zA-Z0-9_.]/.test(c);
 }
 
-export function parse_name(code: string): [string, string] {
+export function is_oper_char(c: string): boolean {
+  return /[+\-*/%<>=&|^!~]/.test(c);
+}
+
+export function parse_word(is_letter: (c: string) => boolean, code: string): [string, string] {
   code = skip(code);
   var name = "";
-  while (is_name_char(code[0]||"")) {
+  while (is_letter(code[0]||"")) {
     name = name + code[0];
     code = code.slice(1);
   }
   return [code, name];
+}
+
+export function parse_name(code: string): [string, string] {
+  return parse_word(is_name_char, code);
+}
+
+export function parse_oper(code: string): [string, string] {
+  return parse_word(is_oper_char, code);
 }
 
 export function parse_text(code: string, text: string): [string, null] {
@@ -207,6 +245,23 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
   // SET: `*`
   if (code[0] === "*") {
     return [code.slice(1), ctx => Set()];
+  }
+  // U60: `#U60`
+  if (code.slice(0,4) === "#U60") {
+    return [code.slice(4), ctx => U60()];
+  }
+  // OP2: `#(<op2> fst snd)`
+  if (code.slice(0,2) === "#(") {
+    var [code, op2] = parse_oper(code.slice(2));
+    var [code, fst] = parse_term(code);
+    var [code, snd] = parse_term(code);
+    var [code, _]   = parse_text(code, ")");
+    return [code, ctx => Op2(op2, fst(ctx), snd(ctx))];
+  }
+  // NUM: `#num`
+  if (code[0] === "#") {
+    var [code, num] = parse_name(code.slice(1));
+    return [code, ctx => Num(BigInt(num))];
   }
   // HOL: `?name`
   if (code[0] === "?") {
