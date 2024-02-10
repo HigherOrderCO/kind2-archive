@@ -394,10 +394,6 @@ Kind.Text.shower
   String.Concatenator
 = String.Concatenator.from_string
 
-Kind.Text.TODO
-: Kind.Text
-= (String.cons #65 String.nil)
-
 Kind.Term.shower
 : ∀(term: Kind.Term)
   ∀(clen: Nat)
@@ -466,6 +462,4 @@ Kind.Term.shower
   (~term P all lam app ann slf ins ref def set hol var)
 
 Kind
-: String
-= let term = (Kind.Term.lam "f" λf(Kind.Term.lam "x" λx(Kind.Term.app f x)))
-  ((Kind.Term.shower term Nat.zero) String.nil)
+= Kind.Term.shower

@@ -1,4 +1,4 @@
 List.Concatenator.nil
 : ∀(T: *)
   (List.Concatenator T)
-= λx x
+= λT λx x
