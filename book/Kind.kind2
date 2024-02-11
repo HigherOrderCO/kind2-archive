@@ -1,4 +1,7 @@
-//// KIND2 PROOF ASSISTANT - UNTYPED HVM IMPLEMENTATION (OLD VERSION)
+// ============================
+//    KIND2 PROOF ASSISTANT
+// OLD IMPLEMENTATION (UNTYPED)
+// ============================
 
 //// Types
 //// -----
@@ -24,17 +27,23 @@
   ////| (Ref nam val)
   ////| (Let nam val bod)
   ////| (Set)
+  ////| (U60)
+  ////| (Num val)
+  ////| (Op2 opr fst snd)
+  ////| (Txt txt)
   ////| (Hol nam ctx)
   ////| (Var nam idx) 
 
 //// Prelude
 //// -------
 
-////(Debug dep msg value) = value
 //(Debug dep []  value) = value
 //(Debug dep msg value) = (HVM.print (Join msg) value)
+////(Debug dep []  value) = value
+////(Debug dep msg value) = (If (> dep 10) 1 (HVM.print (Join msg) value))
 
 //(NewLine) = (String.cons 10 String.nil)
+//(Quote)   = (String.cons 34 String.nil)
 
 //(And True  b) = b
 //(And False b) = False
@@ -89,7 +98,8 @@
 //(Reduce r (Ins val))         = (Reduce r val)
 //(Reduce 1 (Ref nam val))     = (Reduce 1 val)
 //(Reduce r (Let nam val bod)) = (Reduce r (bod val))
-//(Reduce r (Op2 op2 fst snd)) = (Reduce.op2 op2 fst snd)
+//(Reduce r (Op2 opr fst snd)) = (Reduce.op2 opr fst snd)
+//(Reduce 1 (Txt txt))         = (Reduce.txt txt)
 //(Reduce r val)               = val
 
 //(Reduce.app r (Lam nam bod) arg) = (Reduce r (bod (Reduce r arg)))
@@ -99,7 +109,11 @@
 //(Reduce.op2 SUB (Num fst) (Num snd)) = (Num (- fst snd))
 //(Reduce.op2 MUL (Num fst) (Num snd)) = (Num (* fst snd))
 //(Reduce.op2 DIV (Num fst) (Num snd)) = (Num (/ fst snd))
-//(Reduce.op2 op2 fst snd)             = (Op2 op2 fst snd)
+//(Reduce.op2 opr fst snd)             = (Op2 opr fst snd)
+
+//(Reduce.txt (String.cons x xs)) = (Reduce 1 (App (App Book.String.cons (Num x)) (Txt xs)))
+//(Reduce.txt String.nil)         = (Reduce 1 Book.String.nil)
+//(Reduce.txt val)                = val
 
 //(Normal r term dep) = (Normal.term r (Reduce r term) dep)
 
@@ -115,37 +129,55 @@
 //(Normal.term r Set               dep) = Set
 //(Normal.term r U60               dep) = U60
 //(Normal.term r (Num val)         dep) = (Num val)
-//(Normal.term r (Op2 op2 fst snd) dep) = (Op2 op2 (Normal.term r fst dep) (Normal.term r snd dep))
+//(Normal.term r (Txt val)         dep) = (Txt val)
+//(Normal.term r (Op2 opr fst snd) dep) = (Op2 opr (Normal.term r fst dep) (Normal.term r snd dep))
 //(Normal.term r (Var nam idx)     dep) = (Var nam idx)
 
 //// Equality
 //// --------
 
-//(Equal a b dep) = (If (Compare a b dep) 1 (Compare (Reduce 1 a) (Reduce 1 b) dep))
-////(Equal a b dep) = (Debug dep ["Equal: " (Show a dep) NewLine "    == " (Show b dep)] (If (Compare a b dep) 1 (Compare (Reduce 1 a) (Reduce 1 b) dep)))
+//// Check if two terms are identical. If not...
+//(Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
 
-//(Compare (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
-//(Compare (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-//(Compare (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
-//(Compare (Ann a.val a.typ)       (Ann b.val b.typ)       dep) = (& (Equal a.val b.val dep) (Equal a.typ b.typ dep))
-//(Compare (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-//(Compare (Ins a.val)             b                       dep) = (Equal a.val b dep)
-//(Compare a                       (Ins b.val)             dep) = (Equal a b.val dep)
-//(Compare (Ref a.nam a.val)       (Ref b.nam b.val)       dep) = (Same a.nam b.nam)
-//(Compare (Let a.nam a.val a.bod) b                       dep) = (Compare (a.bod a.val) b dep)
-//(Compare a                       (Let b.nam b.val b.bod) dep) = (Compare a (b.bod b.val) dep)
-//(Compare Set                     Set                     dep) = 1
-//(Compare (Var a.nam a.idx)       (Var b.nam b.idx)       dep) = (== a.idx b.idx)
-////(Compare (Ref a.nam a.val)       b                       dep) = (Equal a.val b dep)
-////(Compare a                       (Ref b.nam b.val)       dep) = (Equal a b.val dep)
-//(Compare (Ann a.val a.typ)       b                       dep) = (Equal a.val b dep)
-//(Compare a                       (Ann b.val b.typ)       dep) = (Equal a b.val dep)
-//(Compare (Hol a.nam a.ctx)       b                       dep) = (Debug dep ["Found: ?" a.nam " = " (Show b dep)] 1)
-//(Compare a                       (Hol b.nam b.ctx)       dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
-//(Compare U60                     U60                     dep) = 1
-//(Compare (Num a.val)             (Num b.val)             dep) = (== a.val b.val)
-//(Compare (Op2 a.op2 a.fst a.snd) (Op2 b.op2 b.fst b.snd) dep) = (& (Equal a.fst a.snd dep) (Equal b.fst b.snd dep))
-//(Compare a                       b                       dep) = 0
+//// Check if they're identical after a minor weak reduction. If not...
+//(Equal.minor 0 a b dep) = (Equal.major (Identical (Reduce 0 a) (Reduce 0 b) dep) a b dep)
+//(Equal.minor 1 a b dep) = 1
+
+//// Check if they're identical after a major weak reduction. If not...
+//(Equal.major 0 a b dep) = (Equal.enter (Identical (Reduce 1 a) (Reduce 1 b) dep) a b dep)
+//(Equal.major 1 a b dep) = 1
+
+//// Check if they become identical after reducing fields.
+//(Equal.enter 0 (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ dep 1)))
+//(Equal.enter 0 (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+//(Equal.enter 0 (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
+//(Equal.enter 0 (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+//(Equal.enter 0 (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) = (& (Equal a.fst b.fst dep) (Equal a.snd b.snd dep))
+//(Equal.enter 0 a                       b                       dep) = 0
+//(Equal.enter 1 a                       b                       dep) = 1
+
+//// Checks if two terms are identical, without reductions.
+//(Identical (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (Identical a.inp b.inp dep) (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+//(Identical (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+//(Identical (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (Identical a.fun b.fun dep) (Identical a.arg b.arg dep))
+//(Identical (Ann a.val a.typ)       (Ann b.val b.typ)       dep) = (& (Identical a.val b.val dep) (Identical a.typ b.typ dep))
+//(Identical (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+//(Identical (Ins a.val)             b                       dep) = (Identical a.val b dep)
+//(Identical a                       (Ins b.val)             dep) = (Identical a b.val dep)
+//(Identical (Ref a.nam a.val)       (Ref b.nam b.val)       dep) = (Same a.nam b.nam)
+//(Identical (Let a.nam a.val a.bod) b                       dep) = (Identical (a.bod a.val) b dep)
+//(Identical a                       (Let b.nam b.val b.bod) dep) = (Identical a (b.bod b.val) dep)
+//(Identical Set                     Set                     dep) = 1
+//(Identical (Var a.nam a.idx)       (Var b.nam b.idx)       dep) = (== a.idx b.idx)
+//(Identical (Ann a.val a.typ)       b                       dep) = (Identical a.val b dep)
+//(Identical a                       (Ann b.val b.typ)       dep) = (Identical a b.val dep)
+//(Identical (Hol a.nam a.ctx)       b                       dep) = (Debug dep ["Found: ?" a.nam " = " (Show b dep)] 1)
+//(Identical a                       (Hol b.nam b.ctx)       dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
+//(Identical U60                     U60                     dep) = 1
+//(Identical (Num a.val)             (Num b.val)             dep) = (== a.val b.val)
+//(Identical (Txt a.txt)             (Txt b.txt)             dep) = (Same a.txt b.txt)
+//(Identical (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) = (& (Identical a.fst a.snd dep) (Identical b.fst b.snd dep))
+//(Identical a                       b                       dep) = 0
 
 //// Type-Checking
 //// -------------
@@ -156,8 +188,8 @@
 //(IfSlf (Slf nam bod) yep nop) = (yep nam bod)
 //(IfSlf other         yep nop) = nop
 
-//(Infer term dep) = (Debug dep ["Infer: " (Show term dep)] (Infer.match term dep))
-////(Infer term dep) = (Infer.match term dep)
+////(Infer term dep) = (Debug dep ["Infer: " (Show term dep)] (Infer.match term dep))
+//(Infer term dep) = (Infer.match term dep)
 
 //(Infer.match (All nam inp bod) dep) =
   //(Bind (Check inp Set dep) λinp_ty
@@ -167,11 +199,13 @@
   //(Debug dep ["Error: NonFunLam " (Show (Lam nam bod) dep)] (None))
 //(Infer.match (App fun arg) dep) =
   //(Bind (Infer fun dep) λfun_ty
-  //(IfAll (Reduce 1 fun_ty)
-    //λfun_nam λfun_ty.inp λfun_ty.bod
+  //((IfAll (Reduce 1 fun_ty)
+    //λfun_nam λfun_ty.inp λfun_ty.bod λfun λarg
       //(Bind (Check arg fun_ty.inp dep) λval_ty
       //(Pure (fun_ty.bod arg)))
-    //(Debug dep ["Error: NonFunApp " (Show (App fun arg) dep)] None)))
+    //λfun λarg
+      //(Debug dep ["Error: NonFunApp " (Show (App fun arg) dep)] None))
+    //fun arg))
 //(Infer.match (Ann val typ) dep) =
   //(Pure typ)
 //(Infer.match (Slf nam bod) dep) =
@@ -179,9 +213,10 @@
   //(Pure Set))
 //(Infer.match (Ins val) dep) =
   //(Bind (Infer val dep) λval_ty
-  //(IfSlf (Reduce 1 val_ty)
-    //λval_nam λval_ty.bod (Pure (val_ty.bod (Ins val)))
-    //(Debug dep ["Error: NonSlfIns " (Show (Ins val) dep)] None)))
+  //((IfSlf (Reduce 1 val_ty)
+    //λval_nam λval_ty.bod λval (Pure (val_ty.bod (Ins val)))
+    //λval (Debug dep ["Error: NonSlfIns " (Show (Ins val) dep)] None))
+    //val))
 //(Infer.match (Ref nam val) dep) = 
   //(Infer val dep)
 //(Infer.match (Let nam val bod) dep) =
@@ -192,7 +227,9 @@
   //(Pure Set)
 //(Infer.match (Num num) dep) =
   //(Pure U60)
-//(Infer.match (Op2 op2 fst snd) dep) =
+//(Infer.match (Txt txt) dep) =
+  //(Pure Book.String)
+//(Infer.match (Op2 opr fst snd) dep) =
   //(Bind (Check fst U60 dep) λfst
   //(Bind (Check snd U60 dep) λsnd
   //(Pure U60)))
@@ -201,8 +238,8 @@
 //(Infer.match (Var nam idx) dep) =
   //(Debug dep ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
 
-//(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show (Reduce 0 type) dep)] (Check.match term type dep))
-////(Check term type dep) = (Check.match term type dep)
+////(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show (Reduce 0 type) dep)] (Check.match term type dep))
+//(Check term type dep) = (Check.match term type dep)
 
 //(Check.match (Lam term.nam term.bod) type dep) =
   //((IfAll (Reduce 1 type) λtype.nam λtype.inp λtype.bod λterm.bod
@@ -224,31 +261,36 @@
 //(Check.match (Hol term.nam term.ctx) type dep) =
   //(Debug dep ["HOLE!: ?" term.nam " :: " (Show (Normal 0 type dep) dep) (Context.show term.ctx dep)]
   //(Pure 0))
-//(Check.match val term.type dep) =
-  //(Bind (Infer val dep) λinfer
-  //(If (Equal (Reduce 1 term.type) infer dep)
-    //(Pure 0)
-    //(Debug dep ["Error: " (Show (Normal 0 infer dep) dep) NewLine "    != " (Show (Normal 0 term.type dep) dep)] None)))
+//(Check.match term type dep) =
+  //(Bind (Infer term dep) λinfer
+  //(Check.report (Equal type infer dep) infer type term dep))
+
+//(Check.report 0 inferred expected value dep) =
+  //let inf = (Show (Normal 0 inferred dep) dep)
+  //let exp = (Show (Normal 0 expected dep) dep)
+  //let val = (Show (Normal 0 value dep) dep)
+  //(Debug dep ["Error: " inf NewLine "    != " exp NewLine "    in " val] None)
+//(Check.report n inferred expected value dep) =
+  //(Pure 0)
 
 //// Syntax
 //// ------
 
-//(Show term dep) = (Show.match term dep)
-
-//(Show.match (All nam inp bod) dep) = (Join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
-//(Show.match (Lam nam bod)     dep) = (Join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
-//(Show.match (App fun arg)     dep) = (Join ["(" (Show.prune (Show fun dep)) " " (Show arg dep) ")"])
-//(Show.match (Ann val typ)     dep) = (Join ["{" (Show val dep) ": " (Show typ dep) "}"])
-//(Show.match (Slf nam bod)     dep) = (Join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
-//(Show.match (Ins val)         dep) = (Join ["~" (Show val dep)])
-//(Show.match (Ref nam val)     dep) = nam
-//(Show.match (Let nam val bod) dep) = (Join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
-//(Show.match Set               dep) = (Join ["*"])
-//(Show.match U60               dep) = "#U60"
-//(Show.match (Num val)         dep) = (Join ["#" (U60.show val)])
-//(Show.match (Op2 op2 fst snd) dep) = (Join ["#(" (Op2.show op2) " " (Show fst dep) " " (Show snd dep) ")"])
-//(Show.match (Hol nam ctx)     dep) = (Join ["?" nam])
-//(Show.match (Var nam idx)     dep) = nam
+//(Show (All nam inp bod) dep) = (Join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
+//(Show (Lam nam bod)     dep) = (Join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+//(Show (App fun arg)     dep) = (Join ["(" (Show.prune (Show fun dep)) " " (Show arg dep) ")"])
+//(Show (Ann val typ)     dep) = (Join ["{" (Show val dep) ": " (Show typ dep) "}"])
+//(Show (Slf nam bod)     dep) = (Join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+//(Show (Ins val)         dep) = (Join ["~" (Show val dep)])
+//(Show (Ref nam val)     dep) = nam
+//(Show (Let nam val bod) dep) = (Join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
+//(Show Set               dep) = (Join ["*"])
+//(Show U60               dep) = "#U60"
+//(Show (Num val)         dep) = (Join ["#" (U60.show val)])
+//(Show (Op2 opr fst snd) dep) = (Join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
+//(Show (Txt txt)         dep) = (Join [Quote txt Quote])
+//(Show (Hol nam ctx)     dep) = (Join ["?" nam])
+//(Show (Var nam idx)     dep) = (Join [nam "'" (U60.show idx)])
 
 //(Show.prune (String.cons '(' xs)) = (Show.begin xs)
 //(Show.prune str)                  = str
@@ -271,7 +313,9 @@
 //// API
 //// ---
 
-//(Normalizer term) = (HVM.print (Show (Normal 1 term 0) 0) OK)
+//(Normalizer (Ref nam val)) = (Normalizer val)
+//(Normalizer (Ann val typ)) = (Normalizer val)
+//(Normalizer val)           = (HVM.print (Show (Normal 1 val 0) 0) OK)
 
 //(Checker (Ref nam val)) = (Checker val)
 //(Checker (Ann val typ)) = (Checker.report (Check val typ 0))
@@ -280,7 +324,13 @@
 //(Checker.report (Some x)) = (HVM.print "Check!" OK)
 //(Checker.report None)     = (HVM.print "Error." ERR)
 
-// KIND2 PROOF ASSISTANT - TYPED KIND2 IMPLEMENTATION (NEW VERSION - BOOTSTRAPPED)
+// ==========================
+//   KIND2 PROOF ASSISTANT
+// NEW IMPLEMENTATION (TYPED)
+// ==========================
+
+// Term Type
+// ---------
 
 Kind.Term
 : *
@@ -295,9 +345,16 @@ Kind.Term
   ∀(ref: ∀(nam: String) ∀(val: Kind.Term) (P (Kind.Term.ref nam val)))
   ∀(def: ∀(nam: String) ∀(val: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.Term.def nam val bod)))
   ∀(set: (P Kind.Term.set))
+  ∀(u60: (P Kind.Term.u60))
+  ∀(num: ∀(val: #U60) (P (Kind.Term.num val)))
+  ∀(op2: ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term) (P (Kind.Term.op2 opr fst snd)))
+  ∀(txt: ∀(lit: Kind.Text) (P (Kind.Term.txt lit)))
   ∀(hol: ∀(nam: String) ∀(ctx: Kind.Term) (P (Kind.Term.hol nam ctx)))
   ∀(var: ∀(nam: String) ∀(idx: Nat) (P (Kind.Term.var nam idx)))
   (P self)
+
+// Term Constructors
+// -----------------
 
 Kind.Term.all
 : ∀(nam: String)
@@ -305,7 +362,7 @@ Kind.Term.all
   ∀(bod: ∀(x: Kind.Term) Kind.Term)
   Kind.Term
 = λnam λinp λbod
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (all nam inp bod)
 
 Kind.Term.lam
@@ -313,7 +370,7 @@ Kind.Term.lam
   ∀(bod: ∀(x: Kind.Term) Kind.Term)
   Kind.Term
 = λnam λbod
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (lam nam bod)
   
 Kind.Term.app
@@ -321,7 +378,7 @@ Kind.Term.app
   ∀(arg: Kind.Term)
   Kind.Term
 = λfun λarg
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (app fun arg)
 
 Kind.Term.ann
@@ -329,7 +386,7 @@ Kind.Term.ann
   ∀(typ: Kind.Term)
   Kind.Term
 = λval λtyp
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (ann val typ)
 
 Kind.Term.slf
@@ -337,14 +394,14 @@ Kind.Term.slf
   ∀(bod: ∀(x: Kind.Term) Kind.Term)
   Kind.Term
 = λnam λbod
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (slf nam bod)
 
 Kind.Term.ins
 : ∀(val: Kind.Term)
   Kind.Term
 = λval
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (ins val)
 
 Kind.Term.ref
@@ -352,7 +409,7 @@ Kind.Term.ref
   ∀(val: Kind.Term)
   Kind.Term
 = λnam λval
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (ref nam val)
 
 Kind.Term.def
@@ -361,20 +418,47 @@ Kind.Term.def
   ∀(bod: ∀(x: Kind.Term) Kind.Term)
   Kind.Term
 = λnam λval λbod
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (def nam val bod)
 
 Kind.Term.set
 : Kind.Term
-= ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+= ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (set)
+
+Kind.Term.u60
+: Kind.Term
+= ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
+  u60
+
+Kind.Term.num
+: ∀(val: #U60)
+  Kind.Term
+= λval
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
+  (num val)
+
+Kind.Term.op2
+: ∀(opr: Kind.Oper)
+  ∀(fst: Kind.Term)
+  ∀(snd: Kind.Term)
+  Kind.Term
+= λopr λfst λsnd
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
+  (op2 opr fst snd)
+
+Kind.Term.txt
+: ∀(lit: Kind.Text)
+  Kind.Term
+= λlit
+  ?oxi
 
 Kind.Term.hol
 : ∀(nam: String)
   ∀(ctx: Kind.Term)
   Kind.Term
 = λnam λctx
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (hol nam ctx)
 
 Kind.Term.var
@@ -382,8 +466,425 @@ Kind.Term.var
   ∀(idx: Nat)
   Kind.Term
 = λnam λidx
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λhol λvar
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (var nam idx)
+
+// Term Selectors
+// --------------
+
+Kind.Term.if.all
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(inp: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(inp: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (Y nam inp bod)
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.lam
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (Y nam bod)
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.app
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(fun: Kind.Term) ∀(arg: Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(fun: Kind.Term) ∀(arg: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (Y fun arg)
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.ann
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(val: Kind.Term) ∀(typ: Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(val: Kind.Term) ∀(typ: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (Y val typ)
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.slf
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (Y nam bod)
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.ins
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(val: Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(val: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (Y val)
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.ref
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(val: Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(val: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (Y nam val)
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.def
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(val: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(val: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (Y nam val bod)
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.set
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (Y)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.u60
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (Y)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.num
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(val: #U60) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(val: #U60) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (Y val)
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.op2
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (Y opr fst snd)
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.txt
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(lit: Kind.Text) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(lit: Kind.Text) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (Y lit)
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.hol
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(ctx: Kind.Term) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(ctx: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (Y nam ctx)
+  let var = λnam λidx λY λN (N (Kind.Term.var nam idx))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+Kind.Term.if.var
+: ∀(term: Kind.Term)
+  ∀(P: *)
+  ∀(Y: ∀(nam: String) ∀(idx: Nat) P)
+  ∀(N: ∀(val: Kind.Term) P)
+  P
+= λterm λP λY λN
+  let P   = λx ∀(Y: ∀(nam: String) ∀(idx: Nat) P) ∀(N: ∀(val: Kind.Term) P) P
+  let all = λnam λinp λbod λY λN (N (Kind.Term.all nam inp bod))
+  let lam = λnam λbod λY λN (N (Kind.Term.lam nam bod))
+  let app = λfun λarg λY λN (N (Kind.Term.app fun arg))
+  let ann = λval λtyp λY λN (N (Kind.Term.ann val typ))
+  let slf = λnam λbod λY λN (N (Kind.Term.slf nam bod))
+  let ins = λval λY λN (N (Kind.Term.ins val))
+  let ref = λnam λval λY λN (N (Kind.Term.ref nam val))
+  let def = λnam λval λbod λY λN (N (Kind.Term.def nam val bod))
+  let set = λY λN (N Kind.Term.set)
+  let u60 = λY λN (N Kind.Term.u60)
+  let num = λval λY λN (N (Kind.Term.num val))
+  let op2 = λopr λfst λsnd λY λN (N (Kind.Term.op2 opr fst snd))
+  let txt = λlit λY λN (N (Kind.Term.txt lit))
+  let hol = λnam λctx λY λN (N (Kind.Term.hol nam ctx))
+  let var = λnam λidx λY λN (Y nam idx)
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
+
+// Operator Type
+// -------------
+
+Kind.Oper
+: *
+= $self
+  ∀(P: ∀(x: Kind.Term) *)
+  ∀(add: (P Kind.Oper.add))
+  ∀(mul: (P Kind.Oper.mul))
+  ∀(sub: (P Kind.Oper.sub))
+  ∀(div: (P Kind.Oper.div))
+  (P self)
+
+// Operator Constructors
+// ---------------------
+
+Kind.Oper.add
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (add)
+
+Kind.Oper.mul
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (mul)
+
+Kind.Oper.sub
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (sub)
+
+Kind.Oper.div
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (div)
+
+// Syntax
+// ------
 
 Kind.Text
 : *
@@ -452,6 +953,27 @@ Kind.Term.shower
   let set = λnil
     ((Kind.Text.shower "*")
     nil)
+  let u60 = λnil
+    ((Kind.Text.shower "#U60")
+    nil)
+  let num = λval λnil
+    ((Kind.Text.shower "#")
+    ((U60.shower val)
+    nil))
+  let op2 = λopr λfst λsnd λnil
+    ((Kind.Text.shower "#(")
+    ((Kind.Oper.shower opr)
+    ((Kind.Text.shower " ")
+    ((Kind.Term.shower fst clen)
+    ((Kind.Text.shower " ")
+    ((Kind.Term.shower snd clen)
+    ((Kind.Text.shower ")")
+    nil)))))))
+  let txt = λtext λnil
+    ((Kind.Text.shower String.quote)
+    ((Kind.Text.shower text)
+    ((Kind.Text.shower String.quote)
+    nil)))
   let hol = λnam λctx λnil
     ((Kind.Text.shower "?")
     ((Kind.Text.shower nam)
@@ -459,7 +981,286 @@ Kind.Term.shower
   let var = λnam λidx λnil
     ((Kind.Text.shower nam)
     nil)
-  (~term P all lam app ann slf ins ref def set hol var)
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var)
 
-Kind
-= Kind.Term.shower
+Kind.Term.show
+: ∀(term: Kind.Term)
+  String
+= λterm (String.Concatenator.build (Kind.Term.shower term))
+
+Kind.Oper.shower
+: ∀(oper: Kind.Oper)
+  String.Concatenator
+= λoper
+  let P   = λX(String.Concatenator)
+  let add = (Kind.Text.shower "+")
+  let mul = (Kind.Text.shower "*")
+  let sub = (Kind.Text.shower "-")
+  let div = (Kind.Text.shower "/")
+  (~oper P add mul sub div)
+
+Kind.Oper.show
+: ∀(oper: Kind.Oper)
+  String
+= λoper (String.Concatenator.build (Kind.Oper.shower oper))
+
+// Evaluation
+// ----------
+
+Kind.Term.reduce
+: ∀(major: Bool)
+  ∀(term: Kind.Term)
+  Kind.Term
+= λmajor λterm
+  let P   = λx(Kind.Term)
+  let all = Kind.Term.all
+  let lam = Kind.Term.lam
+  let app = λfun λarg (Kind.Term.reduce.app major (Kind.Term.reduce major fun) arg)
+  let slf = Kind.Term.slf
+  let ann = λval λtyp (Kind.Term.reduce major val)
+  let ins = λval (Kind.Term.reduce major val)
+  let ref = λnam λval (Kind.Term.reduce.ref major nam val)
+  let def = λnam λval λbod (Kind.Term.reduce major (bod val))
+  let set = Kind.Term.set
+  let u60 = Kind.Term.u60
+  let num = Kind.Term.num
+  let op2 = λopr λfst λsnd (Kind.Term.reduce.op2 opr fst snd)
+  let txt = λtxt (Kind.Term.reduce.txt txt)
+  let hol = Kind.Term.hol
+  let var = Kind.Term.var
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var)
+
+Kind.Term.reduce.app
+: ∀(major: Bool)
+  ∀(fun: Kind.Term)
+  ∀(arg: Kind.Term)
+  Kind.Term
+= λmajor λfun λarg
+  let P = ∀(arg: Kind.Term) Kind.Term
+  let Y = λnam λbod λarg (Kind.Term.reduce major (bod (Kind.Term.reduce major arg)))
+  let N = λfun λarg (Kind.Term.app fun arg)
+  (Kind.Term.if.lam fun P Y N arg)
+
+Kind.Term.reduce.ref
+: ∀(major: Bool)
+  ∀(nam: String)
+  ∀(val: Kind.Term)
+  Kind.Term
+= λmajor λnam λval
+  let P     = λx ∀(nam: String) ∀(val: Kind.Term) Kind.Term
+  let true  = λnam λval (Kind.Term.reduce major val)
+  let false = Kind.Term.ref
+  (~major P true false nam val)
+
+Kind.Term.reduce.op2
+: ∀(opr: Kind.Oper)
+  ∀(fst: Kind.Term)
+  ∀(snd: Kind.Term)
+  Kind.Term
+= λopr λfst λsnd
+  let P = ∀(snd: Kind.Term) Kind.Term
+  let Y = λfst_val λsnd
+    let P = ∀(fst_val: #U60) Kind.Term
+    let Y = λsnd_val λfst_val
+      let P   = λx ∀(fst_val: #U60) ∀(snd_val: #U60) Kind.Term
+      let add = λfst_val λsnd_val (Kind.Term.num #(+ fst_val snd_val))
+      let mul = λfst_val λsnd_val (Kind.Term.num #(* fst_val snd_val))
+      let sub = λfst_val λsnd_val (Kind.Term.num #(- fst_val snd_val))
+      let div = λfst_val λsnd_val (Kind.Term.num #(/ fst_val snd_val))
+      (~opr P add mul sub div fst_val snd_val)
+    let N = λsnd λfst_val (Kind.Term.op2 opr (Kind.Term.num fst_val) snd)
+    (Kind.Term.if.num snd P Y N fst_val)
+  let N = λfst λsnd (Kind.Term.op2 opr fst snd)
+  (Kind.Term.if.num fst P Y N snd)
+
+Kind.Term.reduce.txt
+: ∀(txt: Kind.Text)
+  Kind.Term
+= λtxt
+  let P    = λx Kind.Term
+  let cons = λx λxs (Kind.Term.reduce Bool.true (Kind.Term.app (Kind.Term.app Kind.Book.String.cons (Kind.Term.num x)) (Kind.Term.txt xs)))
+  let nil  = (Kind.Term.reduce Bool.true Kind.Book.String.nil)
+  (~txt P cons nil)
+
+Kind.Book.String.cons
+: Kind.Term
+= (Kind.Term.hol "TODO" (List.nil Kind.Term))
+
+Kind.Book.String.nil
+: Kind.Term
+= (Kind.Term.hol "TODO" (List.nil Kind.Term))
+
+// Normalization
+// -------------
+
+Kind.Term.normal
+: ∀(major: Bool)
+  ∀(term: Kind.Term)
+  ∀(dep: Nat)
+  Kind.Term
+= λmajor λterm λdep
+  (Kind.Term.normal.go major (Kind.Term.reduce major term) dep)
+
+Kind.Term.normal.go
+: ∀(major: Bool)
+  ∀(term: Kind.Term)
+  ∀(dep: Nat)
+  Kind.Term
+= λmajor λterm λdep
+  let P   = λx Kind.Term
+  let all = λnam λinp λbod (Kind.Term.all nam (Kind.Term.normal.go major inp dep) λx (Kind.Term.normal.go major (bod (Kind.Term.var nam dep)) (Nat.succ dep)))
+  let lam = λnam λbod (Kind.Term.lam nam λx (Kind.Term.normal.go major (bod (Kind.Term.var nam dep)) (Nat.succ dep)))
+  let app = λfun λarg (Kind.Term.app (Kind.Term.normal.go major fun dep) (Kind.Term.normal.go major arg dep))
+  let ann = λval λtyp (Kind.Term.ann (Kind.Term.normal.go major val dep) (Kind.Term.normal.go major typ dep))
+  let slf = λnam λbod (Kind.Term.slf nam λx (Kind.Term.normal.go major (bod (Kind.Term.var nam dep)) (Nat.succ dep)))
+  let ins = λval (Kind.Term.ins (Kind.Term.normal.go major val dep))
+  let ref = λnam λval (Kind.Term.ref nam (Kind.Term.normal.go major val dep))
+  let def = λnam λval λbod (Kind.Term.def nam (Kind.Term.normal.go major val dep) λx (Kind.Term.normal.go major (bod (Kind.Term.var nam dep)) (Nat.succ dep)))
+  let set = Kind.Term.set
+  let u60 = Kind.Term.u60
+  let num = Kind.Term.num
+  let op2 = λopr λfst λsnd (Kind.Term.op2 opr (Kind.Term.normal.go major fst dep) (Kind.Term.normal.go major snd dep))
+  let txt = λtxt (Kind.Term.txt txt)
+  let hol = λnam λctx (Kind.Term.hol nam ctx)
+  let var = λnam λidx (Kind.Term.var nam idx)
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var)
+
+// Equality
+// --------
+
+Kind.Term.equal
+: ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
+  ∀(dep: Nat)
+  Bool
+= λa λb λdep
+  (Kind.Term.equal.minor (Kind.Term.identical a b dep) a b dep)
+
+Kind.Term.equal.minor
+: ∀(e: Bool)
+  ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
+  ∀(dep: Nat)
+  Bool
+= λe λa λb λdep
+  let P     = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  let true  = λa λb λdep Bool.true
+  let false = λa λb λdep (Kind.Term.equal.major (Kind.Term.identical (Kind.Term.reduce Bool.false a) (Kind.Term.reduce Bool.false b) dep) a b dep)
+  (~e P true false a b dep)
+
+Kind.Term.equal.major
+: ∀(e: Bool)
+  ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
+  ∀(dep: Nat)
+  Bool
+= λe λa λb λdep
+  let P     = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  let true  = λa λb λdep Bool.true
+  let false = λa λb λdep (Kind.Term.equal.enter (Kind.Term.identical (Kind.Term.reduce Bool.true a) (Kind.Term.reduce Bool.true b) dep) a b dep)
+  (~e P true false a b dep)
+
+// Equal.enter
+Kind.Term.equal.enter
+: ∀(e: Bool)
+  ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
+  ∀(dep: Nat)
+  Bool
+= λe λa λb λdep
+  ?TODO
+
+Kind.Term.identical
+: ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
+  ∀(dep: Nat)
+  Bool
+= λa λb λdep
+  let P   = λx ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  let all = λa.nam λa.inp λa.bod λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.nam λb.inp λb.bod λdep
+      let inp_eq = (Kind.Term.equal a.inp b.inp dep)
+      let bod_eq = (Kind.Term.equal (a.bod (Kind.Term.var a.nam dep)) (b.bod (Kind.Term.var b.nam dep)) (Nat.succ dep))
+      (Bool.and inp_eq bod_eq)
+    let N = λval λdep Bool.false
+    (Kind.Term.if.all b P Y N dep)
+  let lam = λa.nam λa.bod λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.nam λb.bod λdep
+      let bod_eq = (Kind.Term.equal (a.bod (Kind.Term.var a.nam dep)) (b.bod (Kind.Term.var b.nam dep)) (Nat.succ dep))
+      bod_eq
+    let N = λval λdep Bool.false
+    (Kind.Term.if.lam b P Y N dep)
+  let app = λa.fun λa.arg λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.fun λb.arg λdep
+      let fun_eq = (Kind.Term.equal a.fun b.fun dep)
+      let arg_eq = (Kind.Term.equal a.arg b.arg dep)
+      (Bool.and fun_eq arg_eq)
+    let N = λval λdep Bool.false
+    (Kind.Term.if.app b P Y N dep)
+  let ann = λa.val λa.typ λb λdep
+    Bool.false // unreachable
+  let slf = λa.nam λa.bod λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.nam λb.bod λdep
+      let bod_eq = (Kind.Term.equal (a.bod (Kind.Term.var a.nam dep)) (b.bod (Kind.Term.var b.nam dep)) (Nat.succ dep))
+      bod_eq
+    let N = λval λdep Bool.false
+    (Kind.Term.if.slf b P Y N dep)
+  let ins = λa.val λb λdep
+    Bool.false // unreachable
+  let ref = λa.nam λa.val λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.nam λb.val λdep (String.equal a.nam b.nam)
+    let N = λval λdep Bool.false
+    (Kind.Term.if.ref b P Y N dep)
+  let def = λa.nam λa.val λa.bod λb λdep
+    Bool.false // unreachable
+  let set = λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λdep Bool.true
+    let F = λval λdep Bool.false
+    (Kind.Term.if.set b P Y F dep)
+  let u60 = λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λdep Bool.true
+    let N = λval λdep Bool.false
+    (Kind.Term.if.u60 b P Y N dep)
+  let num = λa.val λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.val λdep ?TODO
+    let N = λval λdep Bool.false
+    (Kind.Term.if.num b P Y N dep)
+  let op2 = λa.opr λa.fst λa.snd λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.opr λb.fst λb.snd λdep
+      let opr_eq = ?TODO
+      let fst_eq = (Kind.Term.equal a.fst b.fst dep)
+      let snd_eq = (Kind.Term.equal a.snd b.snd dep)
+      (Bool.and fst_eq snd_eq)
+    let N = λval λdep Bool.false
+    (Kind.Term.if.op2 b P Y N dep)
+  let txt = λa.txt λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.txt λdep (String.equal a.txt b.txt)
+    let N = λval λdep Bool.false
+    (Kind.Term.if.txt b P Y N dep)
+  let hol = λa.nam λa.ctx λb λdep
+    ?TODO
+  let var = λa.nam λa.idx λb λdep
+    let P = ∀(dep:Nat) Bool
+    let Y = λb.nam λb.idx λdep (Nat.equal a.idx b.idx)
+    let N = λval λdep Bool.false
+    (Kind.Term.if.var b P Y N dep)
+  let a = (Kind.Term.skip a)
+  let b = (Kind.Term.skip b)
+  (~a P all lam app ann slf ins ref def set u60 num op2 txt hol var b dep)
+
+Kind.Term.skip
+: ∀(a: Kind.Term)
+  Kind.Term
+= ?TODO
+
+Kind = Kind.Term.identical

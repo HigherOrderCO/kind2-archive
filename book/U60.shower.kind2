@@ -1,0 +1,5 @@
+U60.shower
+: ∀(n: #U60)
+  String.Concatenator
+= ?TODO
+

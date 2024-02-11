@@ -1,0 +1,5 @@
+Nat.equal
+: ∀(a: Nat)
+  ∀(b: Nat)
+  Bool
+= ?TODO

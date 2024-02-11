@@ -1,0 +1,9 @@
+Bool.and
+: ∀(a: Bool)
+  ∀(b: Bool)
+  Bool
+= λa
+  let P     = λa ∀(b:Bool) Bool
+  let true  = λb b
+  let false = λb Bool.false
+  (~a P true false)

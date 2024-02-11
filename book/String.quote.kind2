@@ -1,0 +1,3 @@
+String.quote
+: String
+= (String.cons #32 String.nil)

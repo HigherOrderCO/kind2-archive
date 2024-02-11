@@ -24,7 +24,7 @@
   //| (Set)
   //| (U60)
   //| (Num val)
-  //| (Op2 op2 fst snd)
+  //| (Op2 opr fst snd)
   //| (Txt txt)
   //| (Hol nam ctx)
   //| (Var nam idx) 
@@ -93,7 +93,7 @@
 (Reduce r (Ins val))         = (Reduce r val)
 (Reduce 1 (Ref nam val))     = (Reduce 1 val)
 (Reduce r (Let nam val bod)) = (Reduce r (bod val))
-(Reduce r (Op2 op2 fst snd)) = (Reduce.op2 op2 fst snd)
+(Reduce r (Op2 opr fst snd)) = (Reduce.op2 opr fst snd)
 (Reduce 1 (Txt txt))         = (Reduce.txt txt)
 (Reduce r val)               = val
 
@@ -104,7 +104,7 @@
 (Reduce.op2 SUB (Num fst) (Num snd)) = (Num (- fst snd))
 (Reduce.op2 MUL (Num fst) (Num snd)) = (Num (* fst snd))
 (Reduce.op2 DIV (Num fst) (Num snd)) = (Num (/ fst snd))
-(Reduce.op2 op2 fst snd)             = (Op2 op2 fst snd)
+(Reduce.op2 opr fst snd)             = (Op2 opr fst snd)
 
 (Reduce.txt (String.cons x xs)) = (Reduce 1 (App (App Book.String.cons (Num x)) (Txt xs)))
 (Reduce.txt String.nil)         = (Reduce 1 Book.String.nil)
@@ -125,7 +125,7 @@
 (Normal.term r U60               dep) = U60
 (Normal.term r (Num val)         dep) = (Num val)
 (Normal.term r (Txt val)         dep) = (Txt val)
-(Normal.term r (Op2 op2 fst snd) dep) = (Op2 op2 (Normal.term r fst dep) (Normal.term r snd dep))
+(Normal.term r (Op2 opr fst snd) dep) = (Op2 opr (Normal.term r fst dep) (Normal.term r snd dep))
 (Normal.term r (Var nam idx)     dep) = (Var nam idx)
 
 // Equality
@@ -143,36 +143,33 @@
 (Equal.major 1 a b dep) = 1
 
 // Check if they become identical after reducing fields.
-(Equal.enter 0 (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
-(Equal.enter 0 (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Equal.enter 0 (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Equal.enter 0 (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ dep 1)))
-(Equal.enter 0 (Op2 a.op2 a.fst a.snd) (Op2 b.op2 b.fst b.snd) dep) = (& (Equal a.fst b.fst dep) (Equal a.snd b.snd dep))
-(Equal.enter 0 a                       b                       dep) = 0
-(Equal.enter 1 a                       b                       dep) = 1
+(Equal.enter 0 a b dep) = (Comparer λaλbλdep(Equal a b dep) a b dep)
+(Equal.enter 1 a b dep) = 1
 
 // Checks if two terms are identical, without reductions.
-(Identical (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (Identical a.inp b.inp dep) (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
-(Identical (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Identical (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (Identical a.fun b.fun dep) (Identical a.arg b.arg dep))
-(Identical (Ann a.val a.typ)       (Ann b.val b.typ)       dep) = (& (Identical a.val b.val dep) (Identical a.typ b.typ dep))
-(Identical (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Identical (Ins a.val)             b                       dep) = (Identical a.val b dep)
-(Identical a                       (Ins b.val)             dep) = (Identical a b.val dep)
-(Identical (Ref a.nam a.val)       (Ref b.nam b.val)       dep) = (Same a.nam b.nam)
-(Identical (Let a.nam a.val a.bod) b                       dep) = (Identical (a.bod a.val) b dep)
-(Identical a                       (Let b.nam b.val b.bod) dep) = (Identical a (b.bod b.val) dep)
-(Identical Set                     Set                     dep) = 1
-(Identical (Var a.nam a.idx)       (Var b.nam b.idx)       dep) = (== a.idx b.idx)
-(Identical (Ann a.val a.typ)       b                       dep) = (Identical a.val b dep)
-(Identical a                       (Ann b.val b.typ)       dep) = (Identical a b.val dep)
-(Identical (Hol a.nam a.ctx)       b                       dep) = (Debug dep ["Found: ?" a.nam " = " (Show b dep)] 1)
-(Identical a                       (Hol b.nam b.ctx)       dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
-(Identical U60                     U60                     dep) = 1
-(Identical (Num a.val)             (Num b.val)             dep) = (== a.val b.val)
-(Identical (Txt a.txt)             (Txt b.txt)             dep) = (Same a.txt b.txt)
-(Identical (Op2 a.op2 a.fst a.snd) (Op2 b.op2 b.fst b.snd) dep) = (& (Identical a.fst a.snd dep) (Identical b.fst b.snd dep))
-(Identical a                       b                       dep) = 0
+(Identical a b dep) = (Comparer λaλbλdep(Identical a b dep) a b dep)
+
+// Generic comparer.
+(Comparer rec (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) = (& (rec a.inp b.inp dep) (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+(Comparer rec (Lam a.nam a.bod)       (Lam b.nam b.bod)       dep) = (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Comparer rec (App a.fun a.arg)       (App b.fun b.arg)       dep) = (& (rec a.fun b.fun dep) (rec a.arg b.arg dep))
+(Comparer rec (Slf a.nam a.bod)       (Slf b.nam b.bod)       dep) = (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Comparer rec (Ins a.val)             b                       dep) = (rec a.val b dep)
+(Comparer rec a                       (Ins b.val)             dep) = (rec a b.val dep)
+(Comparer rec (Ref a.nam a.val)       (Ref b.nam b.val)       dep) = (Same a.nam b.nam)
+(Comparer rec (Let a.nam a.val a.bod) b                       dep) = (rec (a.bod a.val) b dep)
+(Comparer rec a                       (Let b.nam b.val b.bod) dep) = (rec a (b.bod b.val) dep)
+(Comparer rec Set                     Set                     dep) = 1
+(Comparer rec (Var a.nam a.idx)       (Var b.nam b.idx)       dep) = (== a.idx b.idx)
+(Comparer rec (Ann a.val a.typ)       b                       dep) = (rec a.val b dep)
+(Comparer rec a                       (Ann b.val b.typ)       dep) = (rec a b.val dep)
+(Comparer rec (Hol a.nam a.ctx)       b                       dep) = (Debug dep ["Found: ?" a.nam " = " (Show b dep)] 1)
+(Comparer rec a                       (Hol b.nam b.ctx)       dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
+(Comparer rec U60                     U60                     dep) = 1
+(Comparer rec (Num a.val)             (Num b.val)             dep) = (== a.val b.val)
+(Comparer rec (Txt a.txt)             (Txt b.txt)             dep) = (Same a.txt b.txt)
+(Comparer rec (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) = (& (rec a.fst a.snd dep) (rec b.fst b.snd dep))
+(Comparer rec a                       b                       dep) = 0
 
 // Type-Checking
 // -------------
@@ -224,7 +221,7 @@
   (Pure U60)
 (Infer.match (Txt txt) dep) =
   (Pure Book.String)
-(Infer.match (Op2 op2 fst snd) dep) =
+(Infer.match (Op2 opr fst snd) dep) =
   (Bind (Check fst U60 dep) λfst
   (Bind (Check snd U60 dep) λsnd
   (Pure U60)))
@@ -282,10 +279,10 @@
 (Show Set               dep) = (Join ["*"])
 (Show U60               dep) = "#U60"
 (Show (Num val)         dep) = (Join ["#" (U60.show val)])
-(Show (Op2 op2 fst snd) dep) = (Join ["#(" (Op2.show op2) " " (Show fst dep) " " (Show snd dep) ")"])
+(Show (Op2 opr fst snd) dep) = (Join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
 (Show (Txt txt)         dep) = (Join [Quote txt Quote])
 (Show (Hol nam ctx)     dep) = (Join ["?" nam])
-(Show (Var nam idx)     dep) = (Join [nam "^" (U60.show idx)])
+(Show (Var nam idx)     dep) = (Join [nam "'" (U60.show idx)])
 
 (Show.prune (String.cons '(' xs)) = (Show.begin xs)
 (Show.prune str)                  = str
