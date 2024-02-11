@@ -1,0 +1,5 @@
+U60.equal
+: ∀(a: #U60)
+  ∀(b: #U60)
+  Bool
+= ?TODO

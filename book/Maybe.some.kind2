@@ -1,0 +1,8 @@
+Maybe.some
+: ∀(T: *)
+  ∀(value: T)
+  (Maybe T) 
+= λT λvalue
+  ~λP λsome λnone
+  (some value)
+  

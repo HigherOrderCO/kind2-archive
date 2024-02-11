@@ -167,8 +167,8 @@
 (Comparer rec a                       (Hol b.nam b.ctx)       dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
 (Comparer rec U60                     U60                     dep) = 1
 (Comparer rec (Num a.val)             (Num b.val)             dep) = (== a.val b.val)
-(Comparer rec (Txt a.txt)             (Txt b.txt)             dep) = (Same a.txt b.txt)
 (Comparer rec (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) = (& (rec a.fst a.snd dep) (rec b.fst b.snd dep))
+(Comparer rec (Txt a.txt)             (Txt b.txt)             dep) = (Same a.txt b.txt)
 (Comparer rec a                       b                       dep) = 0
 
 // Type-Checking
@@ -230,30 +230,37 @@
 (Infer.match (Var nam idx) dep) =
   (Debug dep ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
 
-//(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show (Reduce 0 type) dep)] (Check.match term type dep))
+//(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep)] (Check.match term type dep))
 (Check term type dep) = (Check.match term type dep)
 
 (Check.match (Lam term.nam term.bod) type dep) =
-  ((IfAll (Reduce 1 type) λtype.nam λtype.inp λtype.bod λterm.bod
-    let ann  = (Ann (Var term.nam dep) type.inp)
-    let term = (term.bod ann)
-    let type = (type.bod ann)
-    (Check term type (+ dep 1))
-  λterm.bod
-    (Infer (Lam term.nam term.bod) dep))
-  term.bod)
+  ((IfAll (Reduce 1 type)
+    λtype.nam λtype.inp λtype.bod λterm.bod
+      let ann  = (Ann (Var term.nam dep) type.inp)
+      let term = (term.bod ann)
+      let type = (type.bod ann)
+      (Check term type (+ dep 1))
+    λterm.bod
+      (Infer (Lam term.nam term.bod) dep))
+    term.bod)
 (Check.match (Ins term.val) type dep) =
-  (IfSlf (Reduce 1 type) λtype.nam λtype.bod
-    (Check term.val (type.bod (Ins term.val)) dep)
-    (Infer (Ins term.val) dep))
+  ((IfSlf (Reduce 1 type)
+    λtype.nam λtype.bod λterm.val (Check term.val (type.bod (Ins term.val)) dep)
+    λterm.val (Infer (Ins term.val) dep))
+    term.val)
 (Check.match (Let term.nam term.val term.bod) type dep) =
   (Check (term.bod term.val) type (+ 1 dep))
-(Check.match (Ref term.nam term.val) type dep) =
-  (Check term.val type dep)
 (Check.match (Hol term.nam term.ctx) type dep) =
   (Debug dep ["HOLE!: ?" term.nam " :: " (Show (Normal 0 type dep) dep) (Context.show term.ctx dep)]
   (Pure 0))
+(Check.match (Ref term.nam (Ann term.val term.typ)) type dep) = // better printing
+  (Check.report (Equal type term.typ dep) term.typ type (Ref term.nam term.val) dep)
+//(Check.match (Ref term.nam term.val) type dep) =
+  //(Check term.val type dep)
 (Check.match term type dep) =
+  (Check.verify term type dep)
+
+(Check.verify term type dep) =
   (Bind (Infer term dep) λinfer
   (Check.report (Equal type infer dep) infer type term dep))
 
@@ -282,7 +289,8 @@
 (Show (Op2 opr fst snd) dep) = (Join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
 (Show (Txt txt)         dep) = (Join [Quote txt Quote])
 (Show (Hol nam ctx)     dep) = (Join ["?" nam])
-(Show (Var nam idx)     dep) = (Join [nam "'" (U60.show idx)])
+(Show (Var nam idx)     dep) = (Join [nam])
+//(Show (Var nam idx)     dep) = (Join [nam "'" (U60.show idx)])
 
 (Show.prune (String.cons '(' xs)) = (Show.begin xs)
 (Show.prune str)                  = str

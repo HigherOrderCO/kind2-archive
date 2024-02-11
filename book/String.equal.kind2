@@ -1,5 +1,6 @@
+// TODO
 String.equal
 : ∀(xs: String)
   ∀(ys: String)
   Bool
-= ?TODO
+= Bool.true

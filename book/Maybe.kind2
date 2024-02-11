@@ -1,0 +1,9 @@
+Maybe
+: ∀(T: *)
+  *
+= λT
+  $self
+  ∀(P: ∀(x: (Maybe T)) *)
+  ∀(some: ∀(value: T) (P (Maybe.some T value)))
+  ∀(none: (P (Maybe.none T)))
+  (P self)

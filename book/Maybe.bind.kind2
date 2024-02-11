@@ -1,0 +1,11 @@
+Maybe.bind
+: ∀(T: *)
+  ∀(U: *)
+  ∀(a: (Maybe T))
+  ∀(b: ∀(x: T) (Maybe U))
+  (Maybe U)
+= λT λU λa λb
+  (~a λx∀(b:∀(x: T)(Maybe U))(Maybe U)
+    λvalueλb(b value)
+    λb(Maybe.none U)
+    b)
