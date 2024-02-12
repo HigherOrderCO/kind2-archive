@@ -310,12 +310,45 @@
 (Context.show.ann (Ann val typ) dep) = (Join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
 (Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
 
+// Compilation
+// -----------
+
+(Compile (All nam inp bod)) = 0
+(Compile (Lam nam bod))     = λx(Compile (bod (Var "" x)))
+(Compile (App fun arg))     = ((Compile fun) (Compile arg))
+(Compile (Ann val typ))     = (Compile val)
+(Compile (Slf nam bod))     = 0
+(Compile (Ins val))         = (Compile val)
+(Compile (Ref nam val))     = (Compile val)
+(Compile (Let nam val bod)) = (Compile (bod val))
+(Compile Set)               = 0
+(Compile U60)               = 0
+(Compile (Num val))         = val
+(Compile (Op2 opr fst snd)) = (Compile.op2 opr (Compile fst) (Compile snd))
+(Compile (Txt txt))         = (Compile (Compile.txt txt))
+(Compile (Hol nam ctx))     = 0
+(Compile (Var nam val))     = val
+
+(Compile.txt (String.cons x xs)) = (App (App Book.String.cons (Num x)) (Compile.txt xs))
+(Compile.txt String.nil)         = Book.String.nil
+
+(Compile.op2 ADD fst snd) = (+ fst snd)
+(Compile.op2 SUB fst snd) = (- fst snd)
+(Compile.op2 MUL fst snd) = (* fst snd)
+(Compile.op2 DIV fst snd) = (/ fst snd)
+
 // API
 // ---
 
+(Read str) = (str 0 λheadλtail(String.cons head (Read tail)) String.nil)
+
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
-(Normalizer val)           = (HVM.print (Show (Normal 1 val 0) 0) OK)
+//(Normalizer val)           = (Normal 1 val 0)
+//(Normalizer val)           = val
+(Normalizer val)           = (Read (Compile val))
+//(Normalizer val)           = ((Compile val))
+      //(HVM.print (Show (Normal 1 val 0) 0) OK)
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))

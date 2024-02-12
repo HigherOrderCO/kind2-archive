@@ -786,18 +786,18 @@ Kind.normal.go
   Kind.Term
 = λmajor λterm λdep
   let P   = λx Kind.Term
-  let all = λnam λinp λbod (Kind.all nam (Kind.normal.go major inp dep) λx (Kind.normal.go major (bod (Kind.var nam dep)) (Nat.succ dep)))
-  let lam = λnam λbod (Kind.lam nam λx (Kind.normal.go major (bod (Kind.var nam dep)) (Nat.succ dep)))
-  let app = λfun λarg (Kind.app (Kind.normal.go major fun dep) (Kind.normal.go major arg dep))
-  let ann = λval λtyp (Kind.ann (Kind.normal.go major val dep) (Kind.normal.go major typ dep))
-  let slf = λnam λbod (Kind.slf nam λx (Kind.normal.go major (bod (Kind.var nam dep)) (Nat.succ dep)))
-  let ins = λval (Kind.ins (Kind.normal.go major val dep))
-  let ref = λnam λval (Kind.ref nam (Kind.normal.go major val dep))
-  let def = λnam λval λbod (Kind.def nam (Kind.normal.go major val dep) λx (Kind.normal.go major (bod (Kind.var nam dep)) (Nat.succ dep)))
+  let all = λnam λinp λbod (Kind.all nam (Kind.normal major inp dep) λx (Kind.normal major (bod (Kind.var nam dep)) (Nat.succ dep)))
+  let lam = λnam λbod (Kind.lam nam λx (Kind.normal major (bod (Kind.var nam dep)) (Nat.succ dep)))
+  let app = λfun λarg (Kind.app (Kind.normal major fun dep) (Kind.normal major arg dep))
+  let ann = λval λtyp (Kind.ann (Kind.normal major val dep) (Kind.normal major typ dep))
+  let slf = λnam λbod (Kind.slf nam λx (Kind.normal major (bod (Kind.var nam dep)) (Nat.succ dep)))
+  let ins = λval (Kind.ins (Kind.normal major val dep))
+  let ref = λnam λval (Kind.ref nam (Kind.normal major val dep))
+  let def = λnam λval λbod (Kind.def nam (Kind.normal major val dep) λx (Kind.normal major (bod (Kind.var nam dep)) (Nat.succ dep)))
   let set = Kind.set
   let u60 = Kind.u60
   let num = Kind.num
-  let op2 = λopr λfst λsnd (Kind.op2 opr (Kind.normal.go major fst dep) (Kind.normal.go major snd dep))
+  let op2 = λopr λfst λsnd (Kind.op2 opr (Kind.normal major fst dep) (Kind.normal major snd dep))
   let txt = λtxt (Kind.txt txt)
   let hol = λnam λctx (Kind.hol nam ctx)
   let var = λnam λidx (Kind.var nam idx)
@@ -1037,7 +1037,7 @@ Kind.infer
   let var = λnam λidx λdep
     none
   (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var dep)
-  
+
 Kind.check
 : ∀(term: Kind.Term)
   ∀(type: Kind.Term)
@@ -1124,6 +1124,30 @@ Kind.report
 
 // Tests
 // -----
+
+Kind
+: String
+= let a = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))
+  let b = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))
+
+  let Test =
+    (Kind.all "A" Kind.set λA
+    (Kind.all "B" Kind.set λB
+    (Kind.all "a" A λa
+    (Kind.all "b" B λb
+    B))))
+  let test =
+    (Kind.lam "A" λA
+    (Kind.lam "B" λB
+    (Kind.lam "a" λa
+    (Kind.lam "b" λb
+    b))))
+
+  let P    = λx(String)
+  let some = λvalue (Kind.show value Nat.zero)
+  let none = "error"
+  let chk  = (Kind.check test Test Nat.zero)
+  (~chk P some none)
 
 //Kind = Kind.Term
 //Kind = Kind.all

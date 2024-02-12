@@ -2,4 +2,16 @@ Nat.equal
 : ∀(a: Nat)
   ∀(b: Nat)
   Bool
-= ?TODO
+= λa λb
+  let P    = λx ∀(b: Nat) (Bool)
+  let succ = λa.pred λb
+    let P    = λx ∀(a: Nat) (Bool)
+    let succ = λb.pred λa.pred (Nat.equal a.pred b.pred)
+    let zero = λa.pred Bool.false
+    (~b P succ zero a.pred)
+  let zero = λb
+    let P    = λx Bool
+    let succ = λb.pred Bool.false
+    let zero = Bool.true
+    (~b P succ zero)
+  (~a P succ zero b)
