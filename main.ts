@@ -30,7 +30,8 @@ type Term =
   | { $: "Set" } // *
   | { $: "U60" } // #U60
   | { $: "Num"; val: BigInt } // #num
-  | { $: "Op2"; op2: string; fst: Term; snd: Term } // #(<op2> fst snd)
+  | { $: "Op2"; opr: string; fst: Term; snd: Term } // #(<opr> fst snd)
+  | { $: "Mat"; nam: string; x: Term; z: Term; s: (x:Term) => Term; p: (x: Term) => Term } // #match k = x { zero: z; succ: s }: p
   | { $: "Txt"; txt: string } // "text"
   | { $: "Ref"; nam: string; val?: Term }
   | { $: "Let"; nam: string; val: Term; bod: (x:Term)=> Term }
@@ -47,7 +48,8 @@ export const Ins = (val: Term): Term => ({ $: "Ins", val });
 export const Set = (): Term => ({ $: "Set" });
 export const U60 = (): Term => ({ $: "U60" });
 export const Num = (val: BigInt): Term => ({ $: "Num", val });
-export const Op2 = (op2: string, fst: Term, snd: Term): Term => ({ $: "Op2", op2, fst, snd });
+export const Op2 = (opr: string, fst: Term, snd: Term): Term => ({ $: "Op2", opr, fst, snd });
+export const Mat = (nam: string, x: Term, z: Term, s: (x:Term) => Term, p: (x:Term) => Term): Term => ({ $: "Mat", nam, x, z, s, p });
 export const Txt = (txt: string): Term => ({ $: "Txt", txt });
 export const Ref = (nam: string, val?: Term): Term => ({ $: "Ref", nam, val });
 export const Let = (nam: string, val: Term, bod: (x:Term)=> Term): Term => ({ $: "Let", nam, val, bod });
@@ -62,15 +64,15 @@ type Book = {[name: string]: Term};
 // Stringifier
 // -----------
 
-export const num_to_name = (num: number): string => {
-  var nam = "";
-  while (num >= 26) {
-    nam += String.fromCharCode("a".charCodeAt(0) + (num % 26));
-    num = Math.floor(num / 26);
-  }
-  nam += String.fromCharCode("a".charCodeAt(0) + num);
-  return nam.split("").reverse().join("");
-};
+//export const num_to_name = (num: number): string => {
+  //var nam = "";
+  //while (num >= 26) {
+    //nam += String.fromCharCode("a".charCodeAt(0) + (num % 26));
+    //num = Math.floor(num / 26);
+  //}
+  //nam += String.fromCharCode("a".charCodeAt(0) + num);
+  //return nam.split("").reverse().join("");
+//};
 
 export const name = (numb: number): string => {
   let name = '';
@@ -89,20 +91,25 @@ export const context = (numb: number): string => {
   return "["+names.join(",")+"]";
 }
 
-const compile_oper = (op2: string): string => {
-  switch (op2) {
-    case "+" : return "ADD";
-    case "-" : return "SUB";
-    case "*" : return "MUL";
-    case "/" : return "DIV";
-    case "%" : return "MOD";
-    case "==": return "EQ";
-    case "!=": return "NEQ";
-    case "<" : return "LT";
-    case "<=": return "LTE";
-    case ">" : return "GT";
-    case ">=": return "GTE";
-    default: throw new Error("Unknown operator: " + op2);
+const compile_oper = (opr: string): string => {
+  switch (opr) {
+    case "+"  : return "ADD";
+    case "-"  : return "SUB";
+    case "*"  : return "MUL";
+    case "/"  : return "DIV";
+    case "%"  : return "MOD";
+    case "==" : return "EQ";
+    case "!=" : return "NE";
+    case "<"  : return "LT";
+    case ">"  : return "GT";
+    case "<=" : return "LTE";
+    case ">=" : return "GTE";
+    case "&"  : return "AND";
+    case "|"  : return "OR";
+    case "^"  : return "XOR";
+    case "<<" : return "LSH";
+    case ">>" : return "RSH";
+    default: throw new Error("Unknown operator: " + opr);
   }
 };
 
@@ -117,7 +124,8 @@ export const compile = (term: Term, used_refs: any, dep: number = 0): string => 
     case "Set": return `(Set)`;
     case "U60": return `(U60)`;
     case "Num": return `(Num ${term.val.toString()})`;
-    case "Op2": return `(Op2 ${compile_oper(term.op2)} ${compile(term.fst, used_refs, dep)} ${compile(term.snd, used_refs, dep)})`;
+    case "Op2": return `(Op2 ${compile_oper(term.opr)} ${compile(term.fst, used_refs, dep)} ${compile(term.snd, used_refs, dep)})`;
+    case "Mat": return `(Mat "${term.nam}" ${compile(term.x, used_refs, dep)} ${compile(term.z, used_refs, dep)} λ${name(dep)} ${compile(term.s(Var(term.nam,dep)), used_refs, dep + 1)} λ${name(dep)} ${compile(term.p(Var(term.nam,dep)), used_refs, dep + 1)})`;
     case "Txt": return `(Txt "${term.txt}")`;
     case "Hol": return `(Hol "${term.nam}" ${context(dep)})`;
     case "Var": return name(term.idx);
@@ -131,15 +139,15 @@ export const compile = (term: Term, used_refs: any, dep: number = 0): string => 
 
 export type Scope = List<[string, Term]>;
 
-export function num_to_str(num: number): string {
-  let txt = '';
-  num += 1;
-  while (num > 0) {
-    txt += String.fromCharCode(((num-1) % 26) + 'a'.charCodeAt(0));
-    num  = Math.floor((num-1) / 26);
-  }
-  return txt.split('').reverse().join('');
-}
+//export function num_to_str(num: number): string {
+  //let txt = '';
+  //num += 1;
+  //while (num > 0) {
+    //txt += String.fromCharCode(((num-1) % 26) + 'a'.charCodeAt(0));
+    //num  = Math.floor((num-1) / 26);
+  //}
+  //return txt.split('').reverse().join('');
+//}
 
 export function find<A>(list: Scope, nam: string): Term {
   switch (list.tag) {
@@ -164,7 +172,7 @@ export function skip(code: string): string {
 }
 
 export function is_name_char(c: string): boolean {
-  return /[a-zA-Z0-9_.]/.test(c);
+  return /[a-zA-Z0-9_.-]/.test(c);
 }
 
 export function is_oper_char(c: string): boolean {
@@ -264,18 +272,39 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
   if (code.slice(0,4) === "#U60") {
     return [code.slice(4), ctx => U60()];
   }
-  // OP2: `#(<op2> fst snd)`
+  // OP2: `#(<opr> fst snd)`
   if (code.slice(0,2) === "#(") {
-    var [code, op2] = parse_oper(code.slice(2));
+    var [code, opr] = parse_oper(code.slice(2));
     var [code, fst] = parse_term(code);
     var [code, snd] = parse_term(code);
     var [code, _]   = parse_text(code, ")");
-    return [code, ctx => Op2(op2, fst(ctx), snd(ctx))];
+    return [code, ctx => Op2(opr, fst(ctx), snd(ctx))];
+  }
+  // MAT: `#match x = val { #0: z; #+: s }: p`
+  if (code.slice(0,7) === "#match ") {
+    var [code, nam] = parse_name(code.slice(7));
+    var [code, _  ] = parse_text(code, "=");
+    var [code, x]   = parse_term(code);
+    var [code, _  ] = parse_text(code, "{");
+    var [code, _  ] = parse_text(code, "#0:");
+    var [code, z] = parse_term(code);
+    var [code, _  ] = parse_text(code, "#+:");
+    var [code, s] = parse_term(code);
+    var [code, _  ] = parse_text(code, "}");
+    var [code, _  ] = parse_text(code, ":");
+    var [code, p]   = parse_term(code);
+    return [code, ctx => Mat(nam, x(ctx), z(ctx), k => s(Cons([nam+"-1", k], ctx)), k => p(Cons([nam, k], ctx)))];
   }
   // NUM: `#num`
   if (code[0] === "#") {
     var [code, num] = parse_name(code.slice(1));
     return [code, ctx => Num(BigInt(num))];
+  }
+  // CHR: `'a'` -- char syntax sugar
+  if (code[0] === "'") {
+    var [code, chr] = [code.slice(2), code[1]];
+    var [code, _]   = parse_text(code, "'");
+    return [code, ctx => Num(BigInt(chr.charCodeAt(0)))];
   }
   // STR: `"text"` -- string syntax sugar
   if (code[0] === "\"") {

@@ -2,4 +2,7 @@ U60.equal
 : ∀(a: #U60)
   ∀(b: #U60)
   Bool
-= ?TODO
+= λa λb #match x = #(== a b) {
+  #0: Bool.false
+  #+: Bool.true
+}: Bool

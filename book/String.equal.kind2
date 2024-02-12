@@ -1,6 +1,17 @@
-// TODO
 String.equal
-: ∀(xs: String)
-  ∀(ys: String)
+: ∀(a: String)
+  ∀(b: String)
   Bool
-= Bool.true
+= λa λb
+  let P    = λx ∀(b: String) (Bool)
+  let cons = λa.head λa.tail λb
+    let P    = λx ∀(a.head: Char) ∀(a.tail: String) (Bool)
+    let cons = λb.head λb.tail λa.head λa.tail (Bool.and (U60.equal a.head b.head) (String.equal a.tail b.tail))
+    let nil  = λa.head λa.tail Bool.false
+    (~b P cons nil a.head a.tail)
+  let nil  = λb
+    let P    = λx Bool
+    let cons = λb.head λb.tail Bool.false
+    let nil  = Bool.true
+    (~b P cons nil)
+  (~a P cons nil b)

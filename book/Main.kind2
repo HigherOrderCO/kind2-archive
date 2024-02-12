@@ -1,3 +1,41 @@
 Main
 : Bool
-= (Nat.equal (Nat.succ Nat.zero) (Nat.succ Nat.zero))
+= (Char.is_name 'D')
+
+//Main
+//: String
+//= (String.cons 'a' String.nil)
+
+//Main
+//: String
+//= let str = "    foo bar"
+  //(String.skip str)
+
+//Main
+//: (Maybe #U60)
+//= let list =
+    //(List.cons #U60 #10
+    //(List.cons #U60 #20
+    //(List.cons #U60 #30
+    //(List.cons #U60 #40
+    //(List.cons #U60 #50
+    //(List.nil #U60))))))
+  //(List.find #U60 (U60.equal #30) list)
+
+//Main
+//: Bool
+//= (String.equal "abcd" "abcd")
+
+//Main
+//: String
+//= (U60.name #703)
+
+//Main
+//: String
+//= #match x = #2 {
+  //#0: "0"
+  //#+: #match y = x-1 {
+    //#0: "1"
+    //#+: ">"
+  //}: String
+//}: String

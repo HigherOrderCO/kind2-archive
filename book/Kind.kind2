@@ -575,96 +575,96 @@ Kind.Text
 : *
 = String
 
-Kind.Text.shower
+Kind.Text.show.go
 : ∀(text: Kind.Text)
   String.Concatenator
 = String.Concatenator.from_string
 
-Kind.shower
+Kind.show.go
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
   String.Concatenator
 = λterm λdep
   let P   = λX(String.Concatenator)
   let all = λnam λinp λbod λnil
-    ((Kind.Text.shower "∀(")
-    ((Kind.Text.shower nam)
-    ((Kind.Text.shower ": ")
-    ((Kind.shower inp dep)
-    ((Kind.Text.shower ") ")
-    ((Kind.shower (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Text.show.go "∀(")
+    ((Kind.Text.show.go nam)
+    ((Kind.Text.show.go ": ")
+    ((Kind.show.go inp dep)
+    ((Kind.Text.show.go ") ")
+    ((Kind.show.go (bod (Kind.var nam dep)) (Nat.succ dep))
     nil))))))
   let lam = λnam λbod λnil
-    ((Kind.Text.shower "λ")
-    ((Kind.Text.shower nam)
-    ((Kind.Text.shower " ")
-    ((Kind.shower (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Text.show.go "λ")
+    ((Kind.Text.show.go nam)
+    ((Kind.Text.show.go " ")
+    ((Kind.show.go (bod (Kind.var nam dep)) (Nat.succ dep))
     nil))))
   let app = λfun λarg λnil
-    ((Kind.Text.shower "(")
-    ((Kind.shower fun dep)
-    ((Kind.Text.shower " ")
-    ((Kind.shower arg dep)
-    ((Kind.Text.shower ")")
+    ((Kind.Text.show.go "(")
+    ((Kind.show.go fun dep)
+    ((Kind.Text.show.go " ")
+    ((Kind.show.go arg dep)
+    ((Kind.Text.show.go ")")
     nil)))))
   let ann = λval λtyp λnil
-    ((Kind.Text.shower "{")
-    ((Kind.shower val dep)
-    ((Kind.Text.shower ": ")
-    ((Kind.shower typ dep)
-    ((Kind.Text.shower "}")
+    ((Kind.Text.show.go "{")
+    ((Kind.show.go val dep)
+    ((Kind.Text.show.go ": ")
+    ((Kind.show.go typ dep)
+    ((Kind.Text.show.go "}")
     nil)))))
   let slf = λnam λbod λnil
-    ((Kind.Text.shower "$")
-    ((Kind.Text.shower nam)
-    ((Kind.Text.shower " ")
-    ((Kind.shower (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Text.show.go "$")
+    ((Kind.Text.show.go nam)
+    ((Kind.Text.show.go " ")
+    ((Kind.show.go (bod (Kind.var nam dep)) (Nat.succ dep))
     nil))))
   let ins = λval λnil
-    ((Kind.Text.shower "~")
-    ((Kind.shower val dep)
+    ((Kind.Text.show.go "~")
+    ((Kind.show.go val dep)
     nil))
   let ref = λnam λval λnil
-    ((Kind.Text.shower nam)
+    ((Kind.Text.show.go nam)
     nil)
   let def = λnam λval λbod λnil
-    ((Kind.Text.shower "let ")
-    ((Kind.Text.shower nam)
-    ((Kind.Text.shower " = ")
-    ((Kind.shower val dep)
-    ((Kind.Text.shower "; ")
-    ((Kind.shower (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Text.show.go "let ")
+    ((Kind.Text.show.go nam)
+    ((Kind.Text.show.go " = ")
+    ((Kind.show.go val dep)
+    ((Kind.Text.show.go "; ")
+    ((Kind.show.go (bod (Kind.var nam dep)) (Nat.succ dep))
     nil))))))
   let set = λnil
-    ((Kind.Text.shower "*")
+    ((Kind.Text.show.go "*")
     nil)
   let u60 = λnil
-    ((Kind.Text.shower "#U60")
+    ((Kind.Text.show.go "#U60")
     nil)
   let num = λval λnil
-    ((Kind.Text.shower "#")
-    ((U60.shower val)
+    ((Kind.Text.show.go "#")
+    ((U60.show.go val)
     nil))
   let op2 = λopr λfst λsnd λnil
-    ((Kind.Text.shower "#(")
-    ((Kind.Oper.shower opr)
-    ((Kind.Text.shower " ")
-    ((Kind.shower fst dep)
-    ((Kind.Text.shower " ")
-    ((Kind.shower snd dep)
-    ((Kind.Text.shower ")")
+    ((Kind.Text.show.go "#(")
+    ((Kind.Oper.show.go opr)
+    ((Kind.Text.show.go " ")
+    ((Kind.show.go fst dep)
+    ((Kind.Text.show.go " ")
+    ((Kind.show.go snd dep)
+    ((Kind.Text.show.go ")")
     nil)))))))
   let txt = λtext λnil
-    ((Kind.Text.shower String.quote)
-    ((Kind.Text.shower text)
-    ((Kind.Text.shower String.quote)
+    ((Kind.Text.show.go String.quote)
+    ((Kind.Text.show.go text)
+    ((Kind.Text.show.go String.quote)
     nil)))
   let hol = λnam λctx λnil
-    ((Kind.Text.shower "?")
-    ((Kind.Text.shower nam)
+    ((Kind.Text.show.go "?")
+    ((Kind.Text.show.go nam)
     nil))
   let var = λnam λidx λnil
-    ((Kind.Text.shower nam)
+    ((Kind.Text.show.go nam)
     nil)
   (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var)
 
@@ -672,23 +672,23 @@ Kind.show
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
   String
-= λterm λdep (String.Concatenator.build (Kind.shower term dep))
+= λterm λdep (String.Concatenator.build (Kind.show.go term dep))
 
-Kind.Oper.shower
+Kind.Oper.show.go
 : ∀(oper: Kind.Oper)
   String.Concatenator
 = λoper
   let P   = λX(String.Concatenator)
-  let add = (Kind.Text.shower "+")
-  let mul = (Kind.Text.shower "*")
-  let sub = (Kind.Text.shower "-")
-  let div = (Kind.Text.shower "/")
+  let add = (Kind.Text.show.go "+")
+  let mul = (Kind.Text.show.go "*")
+  let sub = (Kind.Text.show.go "-")
+  let div = (Kind.Text.show.go "/")
   (~oper P add mul sub div)
 
 Kind.Oper.show
 : ∀(oper: Kind.Oper)
   String
-= λoper (String.Concatenator.build (Kind.Oper.shower oper))
+= λoper (String.Concatenator.build (Kind.Oper.show.go oper))
 
 // Evaluation
 // ----------
@@ -1186,10 +1186,10 @@ Kind
 //Kind = Kind.Oper.sub
 //Kind = Kind.Oper.div
 //Kind = Kind.Text
-//Kind = Kind.Text.shower
-//Kind = Kind.shower
+//Kind = Kind.Text.show.go
+//Kind = Kind.show.go
 //Kind = Kind.show
-//Kind = Kind.Oper.shower
+//Kind = Kind.Oper.show.go
 //Kind = Kind.Oper.show
 //Kind = Kind.reduce
 //Kind = Kind.reduce.app
