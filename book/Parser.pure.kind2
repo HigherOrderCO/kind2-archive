@@ -1,6 +1,0 @@
-Parser.pure
-: ∀(A: *)
-  ∀(value: A)
-  (Parser A)
-= λA λvalue λcode
-  (Parser.Result.done A code value)

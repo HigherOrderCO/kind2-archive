@@ -1,5 +1,63 @@
+//CON = String.concat
+
+//Main = Parser.text
 Main = Kind.Term.parser
+
+
+
+//Main
+//: String
+//= let CON   = String.concat
+  //let P     = λx(String)
+  //let done  = λcode λvalue (CON "done: " (CON code (CON " ## RESULT={{" (CON value "}}"))))
+  //let fail  = λcode λvalue (CON "fail: " code)
+  //let parse = (Parser.until Char (Parser.text "ABC") Parser.take)
+  ////let parse = (Parser.bind Unit String (Parser.text "ABC") λx(Parser.pure String "ok"))
+  //(~(parse "oi tudo bem bar aaaaaaaa    tic tac") P done fail)
+
+//Main = Parser.until
+
+//Main
+//: String
+//= let CON  = String.concat
+  //let parse = (Parser.char.escaped 'n' #32)
+  //let P    = λx(String)
+  //let done = λcode λvalue (CON code (CON " || " (String.cons value String.nil)))
+  //let fail = λcode λvalue "fail"
+  //(~(parse "\nfoo") P done fail)
+
+//Main = Parser.char
+
+//Main 
+//: String
+//= let OPT  = (List.cons (Parser String))
+  //let END  = (List.nil (Parser String))
+  //let CON  = String.concat
+  //let P    = λx(String)
+  //let done = λcode λvalue (CON "done: " (CON (String.cons value String.nil) (CON " ## left: " code)))
+  //let fail = λcode λvalue (CON "fail: " code)
+  //(~(Parser.char "\\bc") P done fail)
+
+//Main = Parser.until
+//Main = Char.escapes
+//Main = Kind.Term.parser
 //Main = Kind.Scope.find
+
+//Main = List.fold
+
+//Main
+//: (List.Folder #U60)
+//= λP λcons λnil (cons #0 (cons #1 (cons #2 nil)))
+
+//Main
+//: #U60
+//= let list =
+    //(List.cons #U60 #1 
+    //(List.cons #U60 #2
+    //(List.cons #U60 #3 
+    //(List.nil #U60))))
+  //((List.fold #U60 list) #U60 λhλt#(+ h t) #0)
+
 
 //Main
 //: String
@@ -11,22 +69,22 @@ Main = Kind.Term.parser
   //let done = λcode λvalue (CON "done: " (CON value (CON " ## left: " code)))
   //let fail = λcode λerror (CON "fail: " code)
   //let opts =
-    //(OPT (Parser.bind Unit String (Parser.text "abathur") λx
+    //(OPT (Parser.bind Unit String (Parser.text (String.cons Char.slash (String.cons 'n' String.nil))) λx
          //(Parser.pure String "parsed_0"))
     //(OPT (Parser.bind Unit String (Parser.text "farinha") λx
          //(Parser.pure String "parsed_1"))
     //(OPT (Parser.bind Unit String (Parser.text "alpiste") λx
          //(Parser.pure String "parsed_2"))
     //END))) 
-  //let text = "alpiste medula oblongata"
+  //let text = "\nalpiste medula oblongata"
   //(~(Parser.options String opts text) P done fail)
 
 //Main
 //: String
 //= let P    = λx(String)
-  //let done = λcode λvalue (String.concat "done: ##" code)
-  //let fail = λcode λerror (String.concat "fail: ##" code)
-  //(~(Parser.text "foodtX" "foodtruck") P done fail)
+  //let done = λcode λvalue (CON "done: " (CON (Bool.if value String "Y" "N") (CON " ## left: " code)))
+  //let fail = λerror (CON "fail: " error)
+  //(~(Parser.test "testador de" "testador de testes") P done fail)
 
 //Main
 //: String

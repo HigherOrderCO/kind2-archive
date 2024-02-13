@@ -46,7 +46,7 @@ Kind.Scope
 : *
 = (List Kind.Binder)
 
-Kind.Term.Pre
+Kind.PreTerm
 : *
 = ∀(ctx: Kind.Scope)
   Kind.Term
@@ -756,139 +756,172 @@ Kind.Oper.show
 Kind.Term.parser.bind
 : ∀(A: *)
   ∀(a: (Parser A))
-  ∀(b: ∀(x: A) (Parser Kind.Term.Pre))
-  (Parser Kind.Term.Pre)
-= λA (Parser.bind A Kind.Term.Pre)
+  ∀(b: ∀(x: A) (Parser Kind.PreTerm))
+  (Parser Kind.PreTerm)
+= λA (Parser.bind A Kind.PreTerm)
 
 Kind.Term.parser.pure
-: ∀(value: Kind.Term.Pre)
-  (Parser Kind.Term.Pre)
-= λA (Parser.pure Kind.Term.Pre)
+: ∀(value: Kind.PreTerm)
+  (Parser Kind.PreTerm)
+= (Parser.pure Kind.PreTerm)
 
+// ∀(x: inp) bod
 Kind.Term.parser.all 
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "∀") λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "∀"
+  (Kind.Term.parser.bind Unit          (Parser.text "∀") λ_
   (Kind.Term.parser.bind String        Parser.name       λnam
   (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λinp
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λinp
   (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λbod
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λbod
   (Kind.Term.parser.pure λscp 
-  (Kind.all nam (inp scp) λx(bod (Kind.Scope.extend nam x scp))))))))))
+  (Kind.all nam (inp scp) λx(bod (Kind.Scope.extend nam x scp)))))))))))
 
+// λx bod
 Kind.Term.parser.lam
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "λ") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λbod
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "λ"
+  (Kind.Term.parser.bind Unit         (Parser.text "λ") λ_
+  (Kind.Term.parser.bind String       Parser.name       λnam
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λbod
   (Kind.Term.parser.pure λscp 
-  (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp)))))))
+  (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp))))))))
 
+// (f x)
 Kind.Term.parser.app
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "(") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λfun
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λarg
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "("
+  (Kind.Term.parser.bind Unit          (Parser.text "(") λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λfun
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λarg
   (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
   (Kind.Term.parser.pure λscp 
-  (Kind.app (fun scp) (arg scp)))))))
+  (Kind.app (fun scp) (arg scp))))))))
 
+// {x: T}
 Kind.Term.parser.ann
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "{") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λval
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "{"
+  (Kind.Term.parser.bind Unit          (Parser.text "{") λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λval
   (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λtyp
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λtyp
   (Kind.Term.parser.bind Unit          (Parser.text "}") λ_
   (Kind.Term.parser.pure λscp 
-  (Kind.ann (val scp) (typ scp))))))))
+  (Kind.ann (val scp) (typ scp)))))))))
 
+// $x bod
 Kind.Term.parser.slf
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "$") λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "$"
+  (Kind.Term.parser.bind Unit          (Parser.text "$") λ_
   (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λbod
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λbod
   (Kind.Term.parser.pure λscp 
-  (Kind.slf nam λx(bod (Kind.Scope.extend nam x scp)))))))
+  (Kind.slf nam λx(bod (Kind.Scope.extend nam x scp))))))))
 
+// ~val
 Kind.Term.parser.ins
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "~") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λval
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "~"
+  (Kind.Term.parser.bind Unit          (Parser.text "~") λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λval
   (Kind.Term.parser.pure λscp 
-  (Kind.ins (val scp)))))
+  (Kind.ins (val scp))))))
 
+// *
 Kind.Term.parser.set
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit (Parser.text "*") λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "*"
+  (Kind.Term.parser.bind Unit (Parser.text "*") λ_
   (Kind.Term.parser.pure λscp 
-  Kind.set))
+  Kind.set)))
 
+// let x = val; bod
 Kind.Term.parser.def
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "let ") λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "let "
+  (Kind.Term.parser.bind Unit          (Parser.text "let ") λ_
   (Kind.Term.parser.bind String        Parser.name          λnam
   (Kind.Term.parser.bind Unit          (Parser.text "=")    λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser     λval
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser     λbod
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser     λval
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser     λbod
   (Kind.Term.parser.pure λscp 
-  (Kind.def nam (val scp) λx(bod (Kind.Scope.extend nam x scp)))))))))
+  (Kind.def nam (val scp) λx(bod (Kind.Scope.extend nam x scp))))))))))
 
+// #U60
 Kind.Term.parser.u60
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit (Parser.text "#U60") λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "#U60"
+  (Kind.Term.parser.bind Unit (Parser.text "#U60") λ_
   (Kind.Term.parser.pure λscp 
-  Kind.u60))
+  Kind.u60)))
 
+// #(OP fst snd)
 Kind.Term.parser.op2
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "#(") λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "#("
+  (Kind.Term.parser.bind Unit          (Parser.text "#(") λ_
   (Kind.Term.parser.bind Kind.Oper     Kind.Oper.parser   λopr
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser   λfst
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser   λsnd
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λfst
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λsnd
   (Kind.Term.parser.bind Unit          (Parser.text ")")  λ_
   (Kind.Term.parser.pure λscp 
-  (Kind.op2 opr (fst scp) (snd scp))))))))
+  (Kind.op2 opr (fst scp) (snd scp)))))))))
 
-// TODO: the MAT constructor hasn't been added yet
-
+// #num
 Kind.Term.parser.num
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit (Parser.text "#")  λ_
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "#"
+  (Kind.Term.parser.bind Unit (Parser.text "#")  λ_
   (Kind.Term.parser.bind #U60 U60.parser.decimal λnum
   (Kind.Term.parser.pure λscp 
-  (Kind.num num))))
+  (Kind.num num)))))
 
+// 'c'
 Kind.Term.parser.chr
-: (Parser Kind.Term.Pre)
+: (Parser Kind.PreTerm)
 = ?TODO
+//Kind.Term.parser.chr
+//: (Parser Kind.PreTerm)
+//= (Kind.Term.parser.bind Unit (Parser.text "'") λ_
+  //(Kind.Term.parser.bind #U60 ?TODO             λchr
+  //(Kind.Term.parser.bind Unit (Parser.text "'") λ_
+  //(Kind.Term.parser.pure λscp 
+  //(Kind.num chr)))))
 
+// "string"
 Kind.Term.parser.str
-: (Parser Kind.Term.Pre)
+: (Parser Kind.PreTerm)
 = ?TODO
 
+// ?nam
 Kind.Term.parser.hol
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "?") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.pure λscp 
-  (Kind.hol nam))))
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "?"
+  (Kind.Term.parser.bind Unit   (Parser.text "?") λ_
+  (Kind.Term.parser.bind String Parser.name       λnam
+  (Kind.Term.parser.pure λscp
+  (Kind.hol nam (List.nil Kind.Term)))))) // TODO: build context
 
+// x
 Kind.Term.parser.var
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind String Parser.name λnam
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.pass Kind.PreTerm
+  (Kind.Term.parser.bind String Parser.name λnam
   (Kind.Term.parser.pure λscp 
-  (Kind.Scope.find nam scp)))
+  (Kind.Scope.find nam scp))))
 
 Kind.Oper.parser
 : (Parser Kind.Oper)
 = ?TODO
 
 Kind.Term.parser
-: (Parser Kind.Term.Pre)
-= let TRY = (List.cons (Parser Kind.Term.Pre))
-  let END = (List.nil (Parser Kind.Term.Pre))
-  (Parser.options Kind.Term.Pre
+: (Parser Kind.PreTerm)
+= let TRY = (List.cons (Parser.Guard Kind.PreTerm))
+  let END = (List.nil (Parser.Guard Kind.PreTerm))
+  (Parser.variant Kind.PreTerm
   (TRY Kind.Term.parser.all
   (TRY Kind.Term.parser.lam
   (TRY Kind.Term.parser.app

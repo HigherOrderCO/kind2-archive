@@ -405,25 +405,3 @@
 (Checker.report (Some x)) = (HVM.print "Check!" OK)
 (Checker.report None)     = (HVM.print "Error." ERR)
 
-//function new_num_to_str_go(num: number): string {
-  //if (num === 0) {
-    //return "";
-  //} else {
-    //return new_num_to_str_go(Math.floor((num - 1) / 26)) + String.fromCharCode(97 + ((num - 1) % 26));
-  //}
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,0 +1,3 @@
+Char.slash 
+: Char
+= #92

@@ -4,8 +4,32 @@ List.fold
   (List.Folder T)
 = λT λlist
   λP λcons λnil
-  (~list λxs(P)
-    λhead λtail (cons head ((List.fold T tail) P cons nil))
-    nil)
-    
+  let fold_P    = λxs(P)
+  let fold_cons = λhead λtail (cons head ((List.fold T tail) P cons nil))
+  let fold_nil  = nil
+  (~list fold_P fold_cons fold_nil)
+
+// old version:
+
+//List.fold
+//: ∀(T: *)
+  //∀(list: (List T))
+  //(List.Folder T)
+//= λT λlist
+  //λP λcons λnil
+  //(~list λxs(P)
+    //λhead λtail (cons head ((List.fold T tail) P cons nil))
+    //nil)
+
+// non-fusible version:
+
+//List.fold
+//: ∀(T: *)
+  //∀(list: (List T))
+  //(List.Folder T)
+//= λT λlist
+  //let P    = λxs(List.Folder T)
+  //let cons = λhead λtail (List.Folder.cons T head (List.fold T tail))
+  //let nil  = (List.Folder.nil T)
+  //(~list P cons nil)
 

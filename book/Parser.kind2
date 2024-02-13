@@ -4,12 +4,104 @@ Parser
   ∀(code: String)
   (Parser.Result A)
 
-Parser.word
+// TODO: abstract error type
+Parser.Result
+: ∀(T: *)
+  *
+= λT
+  $self
+  ∀(P: ∀(x: (Parser.Result T)) *)
+  ∀(done: ∀(code: String) ∀(value: T) (P (Parser.Result.done T code value)))
+  ∀(fail: ∀(error: String) (P (Parser.Result.fail T error)))
+  (P self)
+
+Parser.Result.done
+: ∀(T: *)
+  ∀(code: String)
+  ∀(value: T)
+  (Parser.Result T)
+= λT λcode λvalue
+  ~λP λdone λfail
+  (done code value)
+
+Parser.Result.fail
+: ∀(T: *)
+  ∀(error: String)
+  (Parser.Result T)
+= λT λerror
+  ~λP λdone λfail
+  (fail error)
+
+Parser.Guard
+: ∀(A: *) *
+= λA (Pair (Parser Bool) (Parser A))
+
+Parser.Guard.new
+: ∀(A: *)
+  ∀(guard: (Parser Bool))
+  ∀(value: (Parser A))
+  (Parser.Guard A)
+= λA (Pair.new (Parser Bool) (Parser A))
+
+Parser.Guard.get
+: ∀(A: *)
+  ∀(p: (Parser.Guard A))
+  ∀(P: *)
+  ∀(f: ∀(a: (Parser Bool)) ∀(b: (Parser A)) P)
+  P
+= λA (Pair.get (Parser Bool) (Parser A))
+
+// Creates a guard that skips the condition.
+Parser.Guard.pass
+: ∀(A: *)
+  ∀(then: (Parser A))
+  (Parser.Guard A)
+= λA λthen
+  (Parser.Guard.new A (Parser.pure Bool Bool.true) then)
+
+// Guards a parser with a simple text.
+Parser.Guard.text
+: ∀(A: *)
+  ∀(text: String)
+  ∀(then: (Parser A))
+  (Parser.Guard A)
+= λA λtext λthen
+  (Parser.Guard.new A (Parser.test text) then)
+
+Parser.pure
+: ∀(A: *)
+  ∀(value: A)
+  (Parser A)
+= λA λvalue λcode
+  (Parser.Result.done A code value)
+
+Parser.bind
+: ∀(A: *)
+  ∀(B: *)
+  ∀(a: (Parser A))
+  ∀(b: ∀(x: A) (Parser B))
+  (Parser B)
+= λA λB λa λb
+  λcode
+  let P    = λx ∀(b: ∀(x: A) (Parser B)) (Parser.Result B)
+  let done = λa.code λa.value λb (b a.value a.code)
+  let fail = λa.error λb (Parser.Result.fail B a.error)
+  (~(a code) P done fail b)
+
+Parser.fail
+: ∀(A: *)
+  ∀(error: String)
+  (Parser A)
+= λT λerror λcode
+  (Parser.Result.fail T error)
+
+// Takes characters while a condition is true.
+Parser.pick_while
 : ∀(cond: ∀(chr: Char) Bool)
   (Parser String)
-= λcond λcode (Parser.word.go cond (String.skip code))
+= λcond λcode (Parser.pick_while.go cond (String.skip code))
 
-Parser.word.go
+Parser.pick_while.go
 : ∀(cond: ∀(chr: Char) Bool)
   (Parser String)
 = λcond λcode
@@ -19,8 +111,8 @@ Parser.word.go
     let true  = λhead λtail
       let P    = λx (Parser.Result String)
       let done = λcode λvalue (Parser.Result.done String code (String.cons head value))
-      let fail = λcode λerror (Parser.Result.fail String code error)
-      (~(Parser.word.go cond tail) P done fail) 
+      let fail = λerror (Parser.Result.fail String error)
+      (~(Parser.pick_while.go cond tail) P done fail) 
     let false = λhead λtail
       (Parser.Result.done String tail String.nil)
     (~(cond head) P true false head tail)
@@ -28,206 +120,159 @@ Parser.word.go
     (Parser.Result.done String String.nil String.nil)
   (~code P cons nil)
 
+// Parses a sequence of name-valid characters.
 Parser.name
 : (Parser String)
-= (Parser.word Char.is_name)
+= (Parser.pick_while Char.is_name)
 
+// Parses a sequence of oper-valid characters.
 Parser.oper
 : (Parser String)
-= (Parser.word Char.is_oper)
+= (Parser.pick_while Char.is_oper)
 
+// Checks if the next characteres match given text.
+Parser.test
+: ∀(test: String)
+  (Parser Bool)
+= λtest λcode
+  // Gets the first expected character.
+  let P    = λx ∀(code: String) (Parser.Result Bool)
+  let cons = λtest.head λtest.tail λcode
+    // Gets the first detected character.
+    let P    = λx (Parser.Result Bool)
+    let cons = λcode.head λcode.tail
+      // Checks if expected == detected.
+      let P     = λx ∀(code.head: Char) ∀(code.tail: String) (Parser.Result Bool)
+      let true  = λcode.head λcode.tail
+        // If so, parses the next character and reconstructs the original code.
+        let P    = λx(Parser.Result Bool)
+        let done = λcode λvalue (Parser.Result.done Bool (String.cons code.head code) value)
+        let fail = λerror (Parser.Result.fail Bool error)
+        (~(Parser.test test.tail code.tail) P done fail)
+      let false = λcode.head λcode.tail
+        // Otherwise, returns false and reconstructs the original code.
+        (Parser.Result.done Bool (String.cons code.head code.tail) Bool.false)
+      ((~(Char.equal test.head code.head) P true false) code.head code.tail)
+    let nil  = (Parser.Result.done Bool String.nil Bool.false) 
+    (~code P cons nil)
+  let nil  = λcode (Parser.Result.done Bool code Bool.true)
+  (~test P cons nil code)
+
+// Parses an exact text.
+// - If successful, consumes text.
+// - Otherwise, throws.
 Parser.text
 : ∀(text: String)
   (Parser Unit)
-= λtext λcode
-  let P    = λx ∀(code: String) (Parser.Result Unit)
-  let cons = λtext.head λtext.tail λcode
-    let P    = λx (Parser.Result Unit)
-    let cons = λcode.head λcode.tail
-      let P     = λx(Parser.Result Unit)
-      let true  =
-        let tail = (Parser.text text.tail code.tail)
-        let P    = λx(Parser.Result Unit)
-        let done = λcode λvalue (Parser.Result.done Unit code value)
-        let fail = λcode λerror (Parser.Result.fail Unit (String.cons code.head code) error)
-        (~tail P done fail)
-      let false = (Parser.Result.fail Unit code "Parse error.")
-      (~(Char.equal text.head code.head) P true false)
-    let nil  = (Parser.Result.done Unit code Unit.one)
-    (~(String.skip code) P cons nil)
-  let nil  = λcode (Parser.Result.done Unit code Unit.one)
-  (~text P cons nil code)
+= λtext
+  (Parser.bind Bool Unit (Parser.test text) λsuccess
+  (Bool.if success (Parser Unit)
+    // then
+    (Parser.bind String Unit (Parser.take (String.length text)) λx
+    (Parser.pure Unit Unit.one))
+    // else
+    (Parser.fail Unit "error")))
 
-Parser.options
+// Repeats a parser N times. 
+Parser.repeat
+: ∀(n: Nat)
+  ∀(A: *)
+  ∀(p: (Parser A))
+  (Parser (List A))
+= λn λA λp
+  let P    = λx (Parser (List A))
+  let succ = λn.pred
+    (Parser.bind A (List A) p λhead
+    (Parser.bind (List A) (List A) (Parser.repeat n.pred A p) λtail
+    (Parser.pure (List A) (List.cons A head tail))))
+  let zero = (Parser.pure (List A) (List.nil A))
+  (~n P succ zero)
+
+// Picks a single character.
+Parser.pick
+: (Parser Char)
+= λcode
+  let P    = λx(Parser.Result Char)
+  let cons = λhead λtail (Parser.Result.done Char tail head)
+  let nil  = (Parser.Result.fail Char "empty")
+  (~code P cons nil)
+  
+// Takes a string.
+Parser.take
+: ∀(n: Nat)
+  (Parser String)
+= λn (Parser.repeat n Char Parser.pick)
+
+// Attempts to parse one of multiple variants.
+// - Each variant is guarded by a (Parser Bool).
+// - If the guard succeeds, we parse that variant.
+// - Otherwise, we try the next variant.
+Parser.variant
 : ∀(A: *)
-  ∀(options: (List (Parser A)))
+  ∀(variants: (List (Parser.Guard A)))
   (Parser A)
-= λA λoptions
+= λA λvariants
   let P    = λx(Parser A)
-  let cons = λhead λtail λcode
-    // 1. attempts to parse 'head'
-    // 2. if it fails, drops the error and attempts the next parser
-    let P    = λx(Parser.Result A)
-    let done = λcode λvalue (Parser.Result.done A code value)
-    let fail = λcode λerror ((Parser.options A tail) code)
-    (~(head code) P done fail)
-  let nil  = (Parser.fail A "Parse error.") // TODO: parametrize
-  (~options P cons nil)
+  let cons = λvariant λothers
+    (Pair.get (Parser Bool) (Parser A) variant (Parser A) λguard λparser
+    (Parser.bind Bool A guard λsuccess
+    (Bool.if success (Parser A) parser (Parser.variant A others))))
+  let nil = (Parser.fail A "error")
+  (~variants P cons nil)
 
-Kind.Term.parser.bind
+// Parses a single character, escape-sequence-aware.
+// TODO: parse \u{...} escape sequences
+Parser.char
+: (Parser Char)
+= let P    = (List (Parser.Guard Char))
+  let cons = λhead λtail
+    let escaped = (~head λx(Parser.Guard Char) λnorm λspec
+      let guard = (String.cons Char.slash (String.cons norm String.nil))
+      let value = (Parser.pure Char spec)
+      (Parser.Guard.text Char guard value))
+    (List.cons (Parser.Guard Char) escaped tail)
+  let nil  =
+    (List.cons (Parser.Guard Char) (Parser.Guard.pass Char Parser.pick)
+    (List.nil (Parser.Guard Char)))
+  (Parser.variant Char 
+  (List.fold (Pair Char Char) Char.escapes P cons nil))
+
+// Applies a function to a parsed value.
+Parser.map
 : ∀(A: *)
-  ∀(a: (Parser A))
-  ∀(b: ∀(x: A) (Parser Kind.Term.Pre))
-  (Parser Kind.Term.Pre)
-= λA (Parser.bind A Kind.Term.Pre)
+  ∀(B: *)
+  ∀(f: ∀(a: A) B)
+  ∀(p: (Parser A))
+  (Parser B)
+= λA λB λf λp λcode
+  let P    = λx(Parser.Result B)
+  let done = λcode λvalue (Parser.Result.done B code (f value))
+  let fail = λerror (Parser.Result.fail B error)
+  (~(p code) P done fail)
 
-Kind.Term.parser.pure
-: ∀(value: Kind.Term.Pre)
-  (Parser Kind.Term.Pre)
-= λA (Parser.pure Kind.Term.Pre)
+// Parses repeatedly until a terminator parser succeeds.
+Parser.until
+: ∀(A: *)
+  ∀(until: (Parser Unit))
+  ∀(parse: (Parser A))
+  (Parser (List A))
+= λA λuntil λparse
+  (Parser.map (List.Concatenator A) (List A) (List.Concatenator.build A)
+  (Parser.until.go A until parse λx(x)))
 
-Kind.Term.parser.all 
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "∀") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λinp
-  (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λbod
-  (Kind.Term.parser.pure λscp 
-  (Kind.all nam (inp scp) λx(bod (Kind.Scope.extend nam x scp))))))))))
-
-Kind.Term.parser.lam
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "λ") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λbod
-  (Kind.Term.parser.pure λscp 
-  (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp)))))))
-
-// NOTE: for the APP parser, parse only `(fun arg)` forms. do not use
-// loops/recursion. the extended syntax will be added later
-Kind.Term.parser.app
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "(") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λfun
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λarg
-  (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
-  (Kind.Term.parser.pure λscp 
-  (Kind.app (fun scp) (arg scp)))))))
-
-Kind.Term.parser.ann
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "{") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λval
-  (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λtyp
-  (Kind.Term.parser.bind Unit          (Parser.text "}") λ_
-  (Kind.Term.parser.pure λscp 
-  (Kind.ann (val scp) (typ scp))))))))
-
-// Kind.Term.parser.slf
-Kind.Term.parser.slf
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "$") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λbod
-  (Kind.Term.parser.pure λscp 
-  (Kind.slf nam λx(bod (Kind.Scope.extend nam x scp)))))))
-
-Kind.Term.parser.ins
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "~") λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser       λval
-  (Kind.Term.parser.pure λscp 
-  (Kind.ins (val scp)))))
-
-Kind.Term.parser.set
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "*") λ_
-  (Kind.Term.parser.pure λscp 
-  Kind.set))
-
-Kind.Term.parser.def
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "let ") λ_
-  (Kind.Term.parser.bind String        Parser.name          λnam
-  (Kind.Term.parser.bind Unit          (Parser.text "=")    λ_
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser          λval
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser          λbod
-  (Kind.Term.parser.pure λscp 
-  (Kind.def nam (val scp) λx(bod (Kind.Scope.extend nam x scp)))))))))
-
-Kind.Term.parser.u60
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "#U60") λ_
-  (Kind.Term.parser.pure λscp 
-  Kind.u60))
-
-Kind.Term.parser.op2
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "#(") λ_
-  (Kind.Term.parser.bind Kind.Oper     Parser.oper        λopr
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser        λfst
-  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser        λsnd
-  (Kind.Term.parser.bind Unit          (Parser.text ")")  λ_
-  (Kind.Term.parser.pure λscp 
-  (Kind.op2 opr (fst scp) (snd scp))))))))
-
-// TODO: the MAT constructor hasn't been added yet
-
-Kind.Term.parser.num
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit     (Parser.text "#")  λ_
-  (Kind.Term.parser.bind #U60     Parser.U60.decimal λnum
-  (Kind.Term.parser.pure λscp 
-  (Kind.num num))))
-
-Kind.Term.parser.chr
-: (Parser Kind.Term.Pre)
-= ?TODO
-
-Kind.Term.parser.str
-: (Parser Kind.Term.Pre)
-= ?TODO
-
-Kind.Term.parser.hol
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind Unit          (Parser.text "?") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.pure λscp 
-  (Kind.hol nam))))
-
-Kind.Term.parser.var
-: (Parser Kind.Term.Pre)
-= (Kind.Term.parser.bind String Parser.name λnam
-  (Kind.Term.parser.pure λscp 
-  (Kind.Scope.find nam scp)))
-
-Parser.U60.decimal
-: (Parser #U60)
-= ?TODO
-
-Parser.oper
-: (Parser Kind.Oper)
-= ?TODO
-
-Kind.Term.parser
-: (Parser Kind.Term.Pre)
-= let TRY = (List.cons (Parser Kind.Term.Pre))
-  let END = (List.nil (Parser Kind.Term.Pre))
-  (Parser.options Kind.Term.Pre
-  (TRY Kind.Term.parser.all
-  (TRY Kind.Term.parser.lam
-  (TRY Kind.Term.parser.app
-  (TRY Kind.Term.parser.ann
-  (TRY Kind.Term.parser.slf
-  (TRY Kind.Term.parser.ins
-  (TRY Kind.Term.parser.set
-  (TRY Kind.Term.parser.def
-  (TRY Kind.Term.parser.u60
-  (TRY Kind.Term.parser.op2
-  (TRY Kind.Term.parser.num
-  (TRY Kind.Term.parser.hol
-  (TRY Kind.Term.parser.var
-  END))))))))))))))
+Parser.until.go
+: ∀(A: *)
+  ∀(until: (Parser Unit))
+  ∀(parse: (Parser A))
+  ∀(terms: (List.Concatenator A))
+  (Parser (List.Concatenator A))
+= λA λuntil λparse λterms λcode
+  let P    = λx(Parser.Result (List.Concatenator A))
+  let fail = λcode
+    let P    = λx(Parser.Result (List.Concatenator A))
+    let done = λcode λvalue (Parser.until.go A until parse λx(terms (List.cons A value x)) code)
+    let fail = λcode (Parser.Result.fail (List.Concatenator A) code)
+    (~(parse code) P done fail)
+  let done = λcode λvalue
+    (Parser.Result.done (List.Concatenator A) code terms)
+  (~(until code) P done fail)
