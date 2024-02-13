@@ -769,11 +769,11 @@ Kind.Term.parser.pure
 Kind.Term.parser.all 
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "∀"
-  (Kind.Term.parser.bind Unit          (Parser.text "∀") λ_
-  (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "∀") λ_
+  (Kind.Term.parser.bind String       Parser.name       λnam
+  (Kind.Term.parser.bind Unit         (Parser.text ":") λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λinp
-  (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ")") λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λbod
   (Kind.Term.parser.pure λscp 
   (Kind.all nam (inp scp) λx(bod (Kind.Scope.extend nam x scp)))))))))))
@@ -792,10 +792,10 @@ Kind.Term.parser.lam
 Kind.Term.parser.app
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "("
-  (Kind.Term.parser.bind Unit          (Parser.text "(") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "(") λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λfun
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λarg
-  (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ")") λ_
   (Kind.Term.parser.pure λscp 
   (Kind.app (fun scp) (arg scp))))))))
 
@@ -803,11 +803,11 @@ Kind.Term.parser.app
 Kind.Term.parser.ann
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "{"
-  (Kind.Term.parser.bind Unit          (Parser.text "{") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "{") λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λval
-  (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":") λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λtyp
-  (Kind.Term.parser.bind Unit          (Parser.text "}") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "}") λ_
   (Kind.Term.parser.pure λscp 
   (Kind.ann (val scp) (typ scp)))))))))
 
@@ -817,7 +817,7 @@ Kind.Term.parser.slf
 = (Parser.Guard.text Kind.PreTerm "$"
   (Kind.Term.parser.bind Unit          (Parser.text "$") λ_
   (Kind.Term.parser.bind String        Parser.name       λnam
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λbod
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λbod
   (Kind.Term.parser.pure λscp 
   (Kind.slf nam λx(bod (Kind.Scope.extend nam x scp))))))))
 
@@ -826,7 +826,7 @@ Kind.Term.parser.ins
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "~"
   (Kind.Term.parser.bind Unit          (Parser.text "~") λ_
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λval
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λval
   (Kind.Term.parser.pure λscp 
   (Kind.ins (val scp))))))
 
@@ -845,8 +845,8 @@ Kind.Term.parser.def
   (Kind.Term.parser.bind Unit          (Parser.text "let ") λ_
   (Kind.Term.parser.bind String        Parser.name          λnam
   (Kind.Term.parser.bind Unit          (Parser.text "=")    λ_
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser     λval
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser     λbod
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser      λval
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser      λbod
   (Kind.Term.parser.pure λscp 
   (Kind.def nam (val scp) λx(bod (Kind.Scope.extend nam x scp))))))))))
 
@@ -864,8 +864,8 @@ Kind.Term.parser.op2
 = (Parser.Guard.text Kind.PreTerm "#("
   (Kind.Term.parser.bind Unit          (Parser.text "#(") λ_
   (Kind.Term.parser.bind Kind.Oper     Kind.Oper.parser   λopr
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λfst
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λsnd
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser    λfst
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser    λsnd
   (Kind.Term.parser.bind Unit          (Parser.text ")")  λ_
   (Kind.Term.parser.pure λscp 
   (Kind.op2 opr (fst scp) (snd scp)))))))))
