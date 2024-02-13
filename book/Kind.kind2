@@ -22,6 +22,35 @@ Kind.Term
   ∀(var: ∀(nam: String) ∀(idx: Nat) (P (Kind.var nam idx)))
   (P self)
 
+// Operator Type
+// -------------
+
+Kind.Oper
+: *
+= $self
+  ∀(P: ∀(x: Kind.Oper) *)
+  ∀(add: (P Kind.Oper.add))
+  ∀(mul: (P Kind.Oper.mul))
+  ∀(sub: (P Kind.Oper.sub))
+  ∀(div: (P Kind.Oper.div))
+  (P self)
+
+// Other Types
+// -----------
+
+Kind.Binder
+: *
+= (Pair String Kind.Term)
+
+Kind.Scope
+: *
+= (List Kind.Binder)
+
+Kind.Term.Pre
+: *
+= ∀(ctx: Kind.Scope)
+  Kind.Term
+
 // Term Constructors
 // -----------------
 
@@ -138,6 +167,72 @@ Kind.var
 = λnam λidx
   ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (var nam idx)
+
+
+// Operator Constructors
+// ---------------------
+
+Kind.Oper.add
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (add)
+
+Kind.Oper.mul
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (mul)
+
+Kind.Oper.sub
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (sub)
+
+Kind.Oper.div
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv
+  (div)
+
+// Other Constructors
+// ------------------
+
+Kind.Binder.new
+: ∀(nam: String) ∀(typ: Kind.Term)
+  Kind.Binder
+= λnam λtyp
+  (Pair.new String Kind.Term nam typ)
+
+Kind.Scope.nil
+: Kind.Scope
+= (List.nil Kind.Binder)
+
+Kind.Scope.cons
+: ∀(head: Kind.Binder)
+  ∀(tail: Kind.Scope)
+  Kind.Scope
+= (List.cons Kind.Binder)
+
+// Other Utils
+// -----------
+
+Kind.Scope.extend
+: ∀(nam: String)
+  ∀(typ: Kind.Term)
+  ∀(scp: Kind.Scope)
+  Kind.Scope
+= λnam λtyp λscp
+  (Kind.Scope.cons (Kind.Binder.new nam typ) scp)
+
+Kind.Scope.find
+: ∀(nam: String)
+  ∀(scp: Kind.Scope)
+  Kind.Term
+= λname λscope
+  let cond  = λbnd (~bnd λx(Bool) λnλt(String.equal name n))
+  let found = (List.find Kind.Binder cond scope)
+  let P     = λx(Kind.Term)
+  let some  = λbnd (~bnd λx(Kind.Term) λnλt(t))
+  let none  = Kind.set // FIXME: handle unbound reference
+  (~found P some none)
 
 // Term Selectors
 // --------------
@@ -517,41 +612,6 @@ Kind.if.var
   let var = λnam λidx      λY λN (Y nam idx)
   (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var Y N)
 
-// Operator Type
-// -------------
-
-Kind.Oper
-: *
-= $self
-  ∀(P: ∀(x: Kind.Oper) *)
-  ∀(add: (P Kind.Oper.add))
-  ∀(mul: (P Kind.Oper.mul))
-  ∀(sub: (P Kind.Oper.sub))
-  ∀(div: (P Kind.Oper.div))
-  (P self)
-
-// Operator Constructors
-// ---------------------
-
-Kind.Oper.add
-: Kind.Oper
-= ~λP λadd λmul λsub λdiv
-  (add)
-
-Kind.Oper.mul
-: Kind.Oper
-= ~λP λadd λmul λsub λdiv
-  (mul)
-
-Kind.Oper.sub
-: Kind.Oper
-= ~λP λadd λmul λsub λdiv
-  (sub)
-
-Kind.Oper.div
-: Kind.Oper
-= ~λP λadd λmul λsub λdiv
-  (div)
 
 // Primitives
 // ----------
@@ -568,8 +628,8 @@ Kind.Book.String.nil
 : Kind.Term
 = (Kind.hol "TODO" (List.nil Kind.Term))
 
-// Syntax
-// ------
+// Stringifier
+// -----------
 
 Kind.Text
 : *
@@ -689,6 +749,160 @@ Kind.Oper.show
 : ∀(oper: Kind.Oper)
   String
 = λoper (String.Concatenator.build (Kind.Oper.show.go oper))
+
+// Parser
+// ------
+
+Kind.Term.parser.bind
+: ∀(A: *)
+  ∀(a: (Parser A))
+  ∀(b: ∀(x: A) (Parser Kind.Term.Pre))
+  (Parser Kind.Term.Pre)
+= λA (Parser.bind A Kind.Term.Pre)
+
+Kind.Term.parser.pure
+: ∀(value: Kind.Term.Pre)
+  (Parser Kind.Term.Pre)
+= λA (Parser.pure Kind.Term.Pre)
+
+Kind.Term.parser.all 
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "∀") λ_
+  (Kind.Term.parser.bind String        Parser.name       λnam
+  (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λinp
+  (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λbod
+  (Kind.Term.parser.pure λscp 
+  (Kind.all nam (inp scp) λx(bod (Kind.Scope.extend nam x scp))))))))))
+
+Kind.Term.parser.lam
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "λ") λ_
+  (Kind.Term.parser.bind String        Parser.name       λnam
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λbod
+  (Kind.Term.parser.pure λscp 
+  (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp)))))))
+
+Kind.Term.parser.app
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "(") λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λfun
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λarg
+  (Kind.Term.parser.bind Unit          (Parser.text ")") λ_
+  (Kind.Term.parser.pure λscp 
+  (Kind.app (fun scp) (arg scp)))))))
+
+Kind.Term.parser.ann
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "{") λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λval
+  (Kind.Term.parser.bind Unit          (Parser.text ":") λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λtyp
+  (Kind.Term.parser.bind Unit          (Parser.text "}") λ_
+  (Kind.Term.parser.pure λscp 
+  (Kind.ann (val scp) (typ scp))))))))
+
+Kind.Term.parser.slf
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "$") λ_
+  (Kind.Term.parser.bind String        Parser.name       λnam
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λbod
+  (Kind.Term.parser.pure λscp 
+  (Kind.slf nam λx(bod (Kind.Scope.extend nam x scp)))))))
+
+Kind.Term.parser.ins
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "~") λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser  λval
+  (Kind.Term.parser.pure λscp 
+  (Kind.ins (val scp)))))
+
+Kind.Term.parser.set
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit (Parser.text "*") λ_
+  (Kind.Term.parser.pure λscp 
+  Kind.set))
+
+Kind.Term.parser.def
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "let ") λ_
+  (Kind.Term.parser.bind String        Parser.name          λnam
+  (Kind.Term.parser.bind Unit          (Parser.text "=")    λ_
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser     λval
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser     λbod
+  (Kind.Term.parser.pure λscp 
+  (Kind.def nam (val scp) λx(bod (Kind.Scope.extend nam x scp)))))))))
+
+Kind.Term.parser.u60
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit (Parser.text "#U60") λ_
+  (Kind.Term.parser.pure λscp 
+  Kind.u60))
+
+Kind.Term.parser.op2
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "#(") λ_
+  (Kind.Term.parser.bind Kind.Oper     Kind.Oper.parser   λopr
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser   λfst
+  (Kind.Term.parser.bind Kind.Term.Pre Kind.Term.parser   λsnd
+  (Kind.Term.parser.bind Unit          (Parser.text ")")  λ_
+  (Kind.Term.parser.pure λscp 
+  (Kind.op2 opr (fst scp) (snd scp))))))))
+
+// TODO: the MAT constructor hasn't been added yet
+
+Kind.Term.parser.num
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit (Parser.text "#")  λ_
+  (Kind.Term.parser.bind #U60 U60.parser.decimal λnum
+  (Kind.Term.parser.pure λscp 
+  (Kind.num num))))
+
+Kind.Term.parser.chr
+: (Parser Kind.Term.Pre)
+= ?TODO
+
+Kind.Term.parser.str
+: (Parser Kind.Term.Pre)
+= ?TODO
+
+Kind.Term.parser.hol
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind Unit          (Parser.text "?") λ_
+  (Kind.Term.parser.bind String        Parser.name       λnam
+  (Kind.Term.parser.pure λscp 
+  (Kind.hol nam))))
+
+Kind.Term.parser.var
+: (Parser Kind.Term.Pre)
+= (Kind.Term.parser.bind String Parser.name λnam
+  (Kind.Term.parser.pure λscp 
+  (Kind.Scope.find nam scp)))
+
+Kind.Oper.parser
+: (Parser Kind.Oper)
+= ?TODO
+
+Kind.Term.parser
+: (Parser Kind.Term.Pre)
+= let TRY = (List.cons (Parser Kind.Term.Pre))
+  let END = (List.nil (Parser Kind.Term.Pre))
+  (Parser.options Kind.Term.Pre
+  (TRY Kind.Term.parser.all
+  (TRY Kind.Term.parser.lam
+  (TRY Kind.Term.parser.app
+  (TRY Kind.Term.parser.ann
+  (TRY Kind.Term.parser.slf
+  (TRY Kind.Term.parser.ins
+  (TRY Kind.Term.parser.set
+  (TRY Kind.Term.parser.def
+  (TRY Kind.Term.parser.u60
+  (TRY Kind.Term.parser.op2
+  (TRY Kind.Term.parser.num
+  (TRY Kind.Term.parser.hol
+  (TRY Kind.Term.parser.var
+  END))))))))))))))
 
 // Evaluation
 // ----------

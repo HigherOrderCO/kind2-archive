@@ -1,6 +1,42 @@
-Main
-: Bool
-= (Char.is_name 'D')
+Main = Kind.Term.parser
+//Main = Kind.Scope.find
+
+//Main
+//: String
+//= let OPT  = (List.cons (Parser String))
+  //let END  = (List.nil (Parser String))
+  //let CON  = String.concat
+  //let NIL  = String.nil
+  //let P    = λx(String)
+  //let done = λcode λvalue (CON "done: " (CON value (CON " ## left: " code)))
+  //let fail = λcode λerror (CON "fail: " code)
+  //let opts =
+    //(OPT (Parser.bind Unit String (Parser.text "abathur") λx
+         //(Parser.pure String "parsed_0"))
+    //(OPT (Parser.bind Unit String (Parser.text "farinha") λx
+         //(Parser.pure String "parsed_1"))
+    //(OPT (Parser.bind Unit String (Parser.text "alpiste") λx
+         //(Parser.pure String "parsed_2"))
+    //END))) 
+  //let text = "alpiste medula oblongata"
+  //(~(Parser.options String opts text) P done fail)
+
+//Main
+//: String
+//= let P    = λx(String)
+  //let done = λcode λvalue (String.concat "done: ##" code)
+  //let fail = λcode λerror (String.concat "fail: ##" code)
+  //(~(Parser.text "foodtX" "foodtruck") P done fail)
+
+//Main
+//: String
+//= let P   = λx(String)
+  //let new = λcode λword word
+  //(~(Parser.word Char.is_name "foo bar tic tac") P new)
+
+//Main
+//: Bool
+//= (Char.is_name 'D')
 
 //Main
 //: String

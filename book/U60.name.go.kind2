@@ -1,0 +1,13 @@
+// FIXME: use proper char literals (when implemented)
+// TODO
+U60.name.go
+: ∀(n: #U60)
+  String.Concatenator
+= λn #match n = n {
+  #0: λnil
+    nil
+  #+: λnil
+    ((String.cons #(+ 'a' #(% n-1 #26)))
+    ((U60.name.go #(/ n-1 #26))
+    nil))
+}: String.Concatenator

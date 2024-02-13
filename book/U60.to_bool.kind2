@@ -1,0 +1,8 @@
+U60.to_bool
+: ∀(x: #U60)
+  Bool
+= λx
+  #match x = x {
+    #0: Bool.false
+    #+: Bool.true
+  }: Bool

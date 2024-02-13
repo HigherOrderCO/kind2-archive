@@ -1,0 +1,18 @@
+Char.is_oper
+: ∀(a: Char)
+  Bool
+= λa 
+  (Bool.or (Char.equal '+' a)
+  (Bool.or (Char.equal '-' a)
+  (Bool.or (Char.equal '*' a)
+  (Bool.or (Char.equal '/' a)
+  (Bool.or (Char.equal '%' a)
+  (Bool.or (Char.equal '<' a)
+  (Bool.or (Char.equal '>' a)
+  (Bool.or (Char.equal '=' a)
+  (Bool.or (Char.equal '&' a)
+  (Bool.or (Char.equal '|' a)
+  (Bool.or (Char.equal '^' a)
+  (Bool.or (Char.equal '!' a)
+  (Bool.or (Char.equal '~' a)
+  Bool.false)))))))))))))

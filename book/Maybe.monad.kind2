@@ -1,0 +1,4 @@
+// Maybe is a Monad
+Maybe.monad
+: (Monad Maybe)
+= (Monad.new Maybe Maybe.bind Maybe.pure)

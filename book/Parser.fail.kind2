@@ -1,0 +1,6 @@
+Parser.fail
+: ∀(A: *)
+  ∀(error: String)
+  (Parser A)
+= λT λerror λcode
+  (Parser.Result.fail T code error)

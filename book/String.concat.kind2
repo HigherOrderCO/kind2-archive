@@ -1,0 +1,6 @@
+String.concat
+: ∀(xs: String)
+  ∀(ys: String)
+  String
+= (List.concat Char)
+

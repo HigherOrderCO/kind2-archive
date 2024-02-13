@@ -215,7 +215,7 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
     var [code, nam] = parse_name(code.slice(2));
     var [code, _  ] = parse_text(code, ":");
     var [code, inp] = parse_term(code);
-    var [code, __ ] = parse_text(code, ")");
+    var [code, _  ] = parse_text(code, ")");
     var [code, bod] = parse_term(code);
     return [code, ctx => All(nam, inp(ctx), x => bod(Cons([nam, x], ctx)))];
   }

@@ -1,0 +1,9 @@
+Pair
+: ∀(A: *)
+  ∀(B: *)
+  *
+= λA λB
+  $self
+  ∀(P: ∀(pair: (Pair A B)) *)
+  ∀(new: ∀(fst: A) ∀(snd: B) (P (Pair.new A B fst snd)))
+  (P self)

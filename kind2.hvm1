@@ -395,8 +395,8 @@
 
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
-//(Normalizer val)           = (Read (Compile val))
-(Normalizer val)           = ((Compile val))
+(Normalizer val)           = (Read (Compile val))
+//(Normalizer val)           = ((Compile val))
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))

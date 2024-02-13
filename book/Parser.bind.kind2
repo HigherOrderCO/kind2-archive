@@ -1,0 +1,12 @@
+Parser.bind
+: ∀(A: *)
+  ∀(B: *)
+  ∀(a: (Parser A))
+  ∀(b: ∀(x: A) (Parser B))
+  (Parser B)
+= λA λB λa λb
+  λcode
+  let P    = λx ∀(b: ∀(x: A) (Parser B)) (Parser.Result B)
+  let done = λa.code λa.value λb (b a.value a.code)
+  let fail = λa.code λa.error λb (Parser.Result.fail B a.code a.error)
+  (~(a code) P done fail b)

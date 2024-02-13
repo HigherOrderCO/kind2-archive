@@ -1,0 +1,14 @@
+// TODO: implement comment skipper
+String.skip
+: ∀(str: String)
+  String
+= λstr
+  let P    = λx(String)
+  let cons = λhead λtail
+    let skip  = (Char.is_whitespace head)
+    let P     = λx ∀(head: Char) ∀(tail: String) (String)
+    let true  = λhead λtail (String.skip tail)
+    let false = λhead λtail (String.cons head tail)
+    (~skip P true false head tail)
+  let nil  = String.nil
+  (~str P cons nil)

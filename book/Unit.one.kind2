@@ -1,0 +1,3 @@
+Unit.one
+: Unit
+= ~λP λone one

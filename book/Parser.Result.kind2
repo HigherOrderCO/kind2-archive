@@ -1,0 +1,10 @@
+// TODO: abstract error type
+Parser.Result
+: ∀(T: *)
+  *
+= λT
+  $self
+  ∀(P: ∀(x: (Parser.Result T)) *)
+  ∀(done: ∀(code: String) ∀(value: T) (P (Parser.Result.done T code value)))
+  ∀(fail: ∀(code: String) ∀(error: String) (P (Parser.Result.fail T code error)))
+  (P self)

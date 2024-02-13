@@ -1,0 +1,9 @@
+Parser.Result.done
+: ∀(T: *)
+  ∀(code: String)
+  ∀(value: T)
+  (Parser.Result T)
+= λT λcode λvalue
+  ~λP λdone λfail
+  (done code value)
+

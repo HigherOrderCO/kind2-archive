@@ -1,0 +1,7 @@
+// FIXME: use proper char literals (when implemented)
+// FIXME: abstract repeated code (vs U60.shower)
+// TODO
+U60.name
+: ∀(n: #U60)
+  String
+= λn (String.Concatenator.build (U60.name.go #(+ n #1)))
