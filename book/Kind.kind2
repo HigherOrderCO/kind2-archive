@@ -937,6 +937,15 @@ Kind.Term.parser
   (TRY Kind.Term.parser.var
   END))))))))))))))
 
+Kind.Term.parser.run
+: ∀(code: String)
+  Kind.Term
+= λcode
+  let P    = λx(Kind.Term)
+  let done = λcode λterm (term (List.nil Kind.Binder))
+  let fail = λerror (Kind.hol "error" (List.nil Kind.Term))
+  (~(Kind.Term.parser code) P done fail)
+
 // Evaluation
 // ----------
 

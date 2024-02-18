@@ -95,11 +95,29 @@ Parser.fail
 = λT λerror λcode
   (Parser.Result.fail T error)
 
+//Parser.run
+//: ∀(A: *)
+  //∀(parser: (Parser A))
+  //∀(code: String)
+  //∀(default: A)
+  //A
+//= λA λparser λcode λfail
+  //let P    = λx(A)
+  //let done = λcode λvalue value
+  //let fail = default
+  //(~(parser code) P done fail)
+
+Parser.skip
+: ∀(A: *)
+  ∀(parser: (Parser A))
+  (Parser A)
+= λA λparser λcode (parser (String.skip code))
+
 // Takes characters while a condition is true.
 Parser.pick_while
 : ∀(cond: ∀(chr: Char) Bool)
   (Parser String)
-= λcond λcode (Parser.pick_while.go cond (String.skip code))
+= λcond λcode (Parser.pick_while.go cond code)
 
 Parser.pick_while.go
 : ∀(cond: ∀(chr: Char) Bool)
@@ -114,7 +132,7 @@ Parser.pick_while.go
       let fail = λerror (Parser.Result.fail String error)
       (~(Parser.pick_while.go cond tail) P done fail) 
     let false = λhead λtail
-      (Parser.Result.done String tail String.nil)
+      (Parser.Result.done String (String.cons head tail) String.nil)
     (~(cond head) P true false head tail)
   let nil =
     (Parser.Result.done String String.nil String.nil)
@@ -156,7 +174,7 @@ Parser.test
     let nil  = (Parser.Result.done Bool String.nil Bool.false) 
     (~code P cons nil)
   let nil  = λcode (Parser.Result.done Bool code Bool.true)
-  (~test P cons nil code)
+  (~test P cons nil (String.skip code))
 
 // Parses an exact text.
 // - If successful, consumes text.
@@ -165,13 +183,14 @@ Parser.text
 : ∀(text: String)
   (Parser Unit)
 = λtext
+  (Parser.skip Unit
   (Parser.bind Bool Unit (Parser.test text) λsuccess
   (Bool.if success (Parser Unit)
     // then
     (Parser.bind String Unit (Parser.take (String.length text)) λx
     (Parser.pure Unit Unit.one))
     // else
-    (Parser.fail Unit "error")))
+    (Parser.fail Unit "error"))))
 
 // Repeats a parser N times. 
 Parser.repeat

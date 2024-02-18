@@ -27,7 +27,7 @@
   //| (Op2 opr fst snd)
   //| (Mat nam x z s p)
   //| (Txt txt)
-  //| (Hol nam ctx)
+  //| (Hol nam ctx val)
   //| (Var nam idx) 
 
 // Prelude
@@ -101,8 +101,9 @@
 (Reduce 1 (Txt txt))         = (Reduce.txt 1 txt)
 (Reduce r val)               = val
 
-(Reduce.app r (Lam nam bod) arg) = (Reduce r (bod (Reduce r arg)))
-(Reduce.app r fun           arg) = (App fun arg)
+(Reduce.app r (Lam nam bod)     arg) = (Reduce r (bod (Reduce r arg)))
+//(Reduce.app r (Hol nam ctx ars) arg) = (Hol nam ctx (List.cons arg ars))
+(Reduce.app r fun               arg) = (App fun arg)
 
 (Reduce.op2 r ADD (Num fst) (Num snd)) = (Num (+ fst snd))
 (Reduce.op2 r SUB (Num fst) (Num snd)) = (Num (- fst snd))
@@ -153,7 +154,18 @@
 // --------
 
 // Check if two terms are identical. If not...
-(Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
+(Equal a b dep) = (Equal.unify.a a λx(x) b dep)
+//(Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
+
+// ...
+(Equal.unify.a (App a.fun a.arg) as b dep) = (Equal.unify.a a.fun λk(as (App k a.arg)) b dep)
+(Equal.unify.a (Hol a.nam a.ctx) as b dep) = (Debug dep ["Found: ?" a.nam " = " (Show b dep)] 1)
+(Equal.unify.a a                 as b dep) = (Equal.unify.b (as a) b λx(x) dep)
+
+// ...
+(Equal.unify.b a (App b.fun b.arg) bs dep) = (Equal.unify.b a b.fun λk(bs (App k b.arg)) dep)
+(Equal.unify.b a (Hol b.nam b.ctx) bs dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
+(Equal.unify.b a b                 bs dep) = let b = (bs b); (Equal.minor (Identical a b dep) a b dep)
 
 // Check if they're identical after a minor weak reduction. If not...
 (Equal.minor 0 a b dep) = (Equal.major (Identical (Reduce 0 a) (Reduce 0 b) dep) a b dep)
@@ -184,8 +196,7 @@
 (Comparer rec (Var a.nam a.idx)           (Var b.nam b.idx)           dep) = (== a.idx b.idx)
 (Comparer rec (Ann a.val a.typ)           b                           dep) = (rec a.val b dep)
 (Comparer rec a                           (Ann b.val b.typ)           dep) = (rec a b.val dep)
-(Comparer rec (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show b dep)] 1)
-(Comparer rec a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show a dep)] 1)
+(Comparer rec (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
 (Comparer rec U60                         U60                         dep) = 1
 (Comparer rec (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
 (Comparer rec (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (rec a.fst a.snd dep) (rec b.fst b.snd dep))
@@ -327,6 +338,12 @@
 (Show (Var nam idx)     dep) = (Join [nam])
 //(Show (Var nam idx)     dep) = (Join [nam "'" (U60.show idx)])
 
+(Show.many List.nil         dep) = ""
+(Show.many (List.cons x xs) dep) = (Join [" " (Show x dep) (Show.many xs dep)])
+
+(Show.trim (String.cons ' ' xs)) = xs
+(Show.trim str)                  = str
+
 (Show.prune (String.cons '(' xs)) = (Show.begin xs)
 (Show.prune str)                  = str
 
@@ -400,7 +417,7 @@
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))
-(Checker val)           = (HVM.print "Untyped." OK)
+(Checker val)           = (Checker.report (Infer val 0))
 
 (Checker.report (Some x)) = (HVM.print "Check!" OK)
 (Checker.report None)     = (HVM.print "Error." ERR)

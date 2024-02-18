@@ -1,7 +1,11 @@
 //CON = String.concat
 
+//Main = Parser.skip
+
 //Main = Parser.text
-Main = Kind.Term.parser
+Main
+: String
+= (Kind.show (Kind.Term.parser.run "λx λy (y x)") Nat.zero)
 
 
 
