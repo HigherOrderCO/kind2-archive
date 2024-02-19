@@ -1,0 +1,6 @@
+Char.is_blank
+: ∀(a: Char)
+  Bool
+= λa (Bool.or
+  (Char.equal a #10) // newline
+  (Char.equal a #32)) // space

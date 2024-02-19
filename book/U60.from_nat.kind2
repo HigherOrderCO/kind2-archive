@@ -1,0 +1,8 @@
+U60.from_nat
+: ∀(n: Nat)
+  #U60
+= λn
+  let P    = λx(#U60)
+  let succ = λn.pred #(+ #1 (U60.from_nat n.pred))
+  let zero = #0
+  (~n P succ zero)

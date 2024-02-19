@@ -1,0 +1,42 @@
+List.Map
+: ∀(K: *)
+  ∀(V: *)
+  *
+= λK λV
+  (List (Pair K V))
+
+List.Map.get
+: ∀(K: *)
+  ∀(V: *)
+  ∀(eql: ∀(a: K) ∀(b: K) Bool)
+  ∀(key: K)
+  ∀(map: (List.Map K V))
+  (Maybe V)
+= λK λV λeql λkey λmap
+  let P    = λx(Maybe V)
+  let cons = λhead λtail
+    let P   = λx(Maybe V)
+    let new = λhead.fst λhead.snd
+      let P     = λx(Maybe V)
+      let true  = (Maybe.some V head.snd)
+      let false = (List.Map.get K V eql key tail)
+      (~(eql head.fst key) P true false)
+    (~head P new)
+  let nil  = (Maybe.none V)
+  (~map P cons nil)
+
+List.Map.set
+: ∀(K: *)
+  ∀(V: *)
+  ∀(key: K)
+  ∀(val: V)
+  ∀(map: (List.Map K V))
+  (List.Map K V)
+= λK λV λkey λval λmap
+  (List.cons (Pair K V) (Pair.new K V key val) map)
+
+List.Map.new
+: ∀(K: *)
+  ∀(V: *)
+  (List.Map K V)
+= λK λV (List.nil (Pair K V))

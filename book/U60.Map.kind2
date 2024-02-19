@@ -1,0 +1,27 @@
+// Temporarily just a list of key/val
+
+U60.Map
+: ∀(A: *) *
+= (List.Map #U60)
+
+U60.Map.get
+: ∀(A: *)
+  ∀(key: #U60)
+  ∀(map: (U60.Map A))
+  (Maybe A)
+= λA λkey λmap
+  (List.Map.get #U60 A U60.equal key map)
+
+U60.Map.set
+: ∀(A: *)
+  ∀(key: #U60)
+  ∀(val: A)
+  ∀(map: (U60.Map A))
+  (U60.Map A)
+= λA λkey λval λmap
+  (List.Map.set #U60 A key val map)
+
+U60.Map.new
+: ∀(V: *)
+  (String.Map V)
+= λV (String.Map.new String V)

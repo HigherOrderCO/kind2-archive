@@ -1629,6 +1629,18 @@ Kind.compile.hvm.term
 = λterm λdep
   (String.Concatenator.build (Kind.compile.hvm.term.go term dep))
 
+// TODO: implement Kind.compile.hvm.book
+
+```haskell
+Kind.compile.hvm.book
+: ∀(book: Kind.Book)
+  String
+= λbook
+  let P    = λx String
+  let fold = λkey λval λacc (String.concat acc (String.concat key (String.concat " = " (String.concat (Kind.compile.hvm.term val Nat.zero) "\n"))))
+  (String.Map.fold Kind.Term fold book "")
+```
+
 // Tests
 // -----
 
