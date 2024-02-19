@@ -2,10 +2,18 @@
 
 //Main = Parser.skip
 
+Main = (String.skip "//oimeugrandeamigo... tudo bem?
+eu to, e vc?
+foo
+")
+
 //Main = Parser.text
-Main
-: String
-= (Kind.show (Kind.Term.parser.run "λx λy (y x)") Nat.zero)
+//Main
+//: String
+//= let term = (Kind.Term.parser.run "
+    //λf λx (f (f x))
+  //")
+  //(Kind.compile.hvm term Nat.zero)
 
 
 

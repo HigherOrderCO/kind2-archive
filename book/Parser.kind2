@@ -111,7 +111,8 @@ Parser.skip
 : ∀(A: *)
   ∀(parser: (Parser A))
   (Parser A)
-= λA λparser λcode (parser (String.skip code))
+= λA λparser λcode
+  (parser (String.skip code))
 
 // Takes characters while a condition is true.
 Parser.pick_while

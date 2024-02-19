@@ -732,7 +732,8 @@ Kind.show
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
   String
-= λterm λdep (String.Concatenator.build (Kind.show.go term dep))
+= λterm λdep
+  (String.Concatenator.build (Kind.show.go term dep))
 
 Kind.Oper.show.go
 : ∀(oper: Kind.Oper)
@@ -1377,6 +1378,79 @@ Kind.report
   let true  = λinferred λexpected λvalue λdep (pure Kind.set)
   let false = λinferred λexpected λvalue λdep none // TODO: HVM.log error
   (~e P true false inferred expected value dep)
+
+// Compilers
+// ---------
+
+Kind.compile.hvm.go
+: ∀(term: Kind.Term)
+  ∀(dep: Nat)
+  String.Concatenator
+= λterm λdep
+  let P   = λx String.Concatenator
+  let all = λnam λinp λbod
+    (Kind.Text.show.go "0")
+  let lam = λnam λbod λnil
+    ((Kind.Text.show.go "λ")
+    ((Kind.Text.show.go (U60.name (U60.from_nat dep)))
+    ((Kind.Text.show.go " "
+    ((Kind.compile.hvm.go (bod (Kind.var nam dep)) (Nat.succ dep))
+    nil)))))
+  let app = λfun λarg λnil
+    ((Kind.Text.show.go "(")
+    ((Kind.compile.hvm.go fun dep)
+    ((Kind.Text.show.go " ")
+    ((Kind.compile.hvm.go arg dep)
+    ((Kind.Text.show.go ")")
+    nil)))))
+  let ann = λval λtyp
+    (Kind.compile.hvm.go val dep)
+  let slf = λnam λbod
+    (Kind.Text.show.go "0")
+  let ins = λval
+    (Kind.compile.hvm.go val dep)
+  let ref = λnam λval
+    (Kind.Text.show.go nam)
+  let def = λnam λval λbod λnil
+    ((Kind.Text.show.go "let ")
+    ((Kind.Text.show.go nam)
+    ((Kind.Text.show.go " = ")
+    ((Kind.compile.hvm.go val dep)
+    ((Kind.Text.show.go "; ")
+    ((Kind.compile.hvm.go (bod (Kind.var nam dep)) (Nat.succ dep))
+    nil))))))
+  let set =
+    (Kind.Text.show.go "*")
+  let u60 =
+    (Kind.Text.show.go "*")
+  let num = λval
+    (U60.show.go val)
+  let op2 = λopr λfst λsnd λnil
+    ((Kind.Text.show.go "(")
+    ((Kind.Oper.show.go opr)
+    ((Kind.Text.show.go " ")
+    ((Kind.compile.hvm.go fst dep)
+    ((Kind.Text.show.go " ")
+    ((Kind.compile.hvm.go snd dep)
+    ((Kind.Text.show.go ")")
+    nil)))))))
+  let txt = λtxt λnil
+    ((Kind.Text.show.go String.quote)
+    ((Kind.Text.show.go txt)
+    ((Kind.Text.show.go String.quote)
+    nil)))
+  let hol = λnam λctx
+    (Kind.Text.show.go "0")
+  let var = λnam λidx
+    (Kind.Text.show.go (U60.name (U60.from_nat idx)))
+  (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var)
+
+Kind.compile.hvm
+: ∀(term: Kind.Term)
+  ∀(dep: Nat)
+  String
+= λterm λdep
+  (String.Concatenator.build (Kind.compile.hvm.go term dep))
 
 // Tests
 // -----
