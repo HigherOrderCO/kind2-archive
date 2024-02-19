@@ -1629,17 +1629,23 @@ Kind.compile.hvm.term
 = λterm λdep
   (String.Concatenator.build (Kind.compile.hvm.term.go term dep))
 
-// TODO: implement Kind.compile.hvm.book
-
-```haskell
-Kind.compile.hvm.book
+Kind.compile.hvm.book.go
 : ∀(book: Kind.Book)
-  String
+  String.Concatenator
 = λbook
-  let P    = λx String
-  let fold = λkey λval λacc (String.concat acc (String.concat key (String.concat " = " (String.concat (Kind.compile.hvm.term val Nat.zero) "\n"))))
-  (String.Map.fold Kind.Term fold book "")
-```
+  let P    = λx String.Concatenator
+  let cons = λhead λtail
+    let P   = λx String.Concatenator
+    let new = λhead.fst λhead.snd λnil
+      ((Kind.Text.show.go head.fst)
+      ((Kind.Text.show.go " = "
+      ((Kind.compile.hvm.term.go head
+      ((Kind.Text.show.go String.newline
+      ((Kind.compile.hvm.book.go tail
+      nil)))))))))
+    (~book P new)
+  let nil  = λnil nil
+  (~book P cons nil)
 
 // Tests
 // -----

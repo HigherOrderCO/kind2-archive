@@ -2,7 +2,9 @@
 
 //Main = Parser.skip
 
-Main = Kind.Book.parser
+Main = Kind.compile.hvm.book.go
+
+//Main = Kind.Book.parser
 //Main = Parser.is_eof
 //Main = U60.Map.set
 
