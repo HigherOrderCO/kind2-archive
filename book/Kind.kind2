@@ -1,3 +1,161 @@
+
+// TYPESCRIPT PARSER
+
+//export function parse_term(code: string): [string, (ctx: Scope) => Term] {
+  //code = skip(code);
+  //// ALL: `∀(x: A) B[x]` -SUGAR
+  //if (code[0] === "∀") {
+    //var [code, nam] = parse_name(code.slice(2));
+    //var [code, _  ] = parse_text(code, ":");
+    //var [code, inp] = parse_term(code);
+    //var [code, _  ] = parse_text(code, ")");
+    //var [code, bod] = parse_term(code);
+    //return [code, ctx => All(nam, inp(ctx), x => bod(Cons([nam, x], ctx)))];
+  //}
+  //// LAM: `λx f`
+  //if (code[0] === "λ") {
+    //var [code, nam] = parse_name(code.slice(1));
+    //var [code, bod] = parse_term(code);
+    //return [code, ctx => Lam(nam, x => bod(Cons([nam, x], ctx)))];
+  //}
+  //// APP: `(f x y z ...)`
+  //if (code[0] === "(") {
+    //var [code, fun] = parse_term(code.slice(1));
+    //var args: ((ctx: Scope) => Term)[] = [];
+    //while (code[0] !== ")") {
+      //var [code, arg] = parse_term(code);
+      //args.push(arg);
+      //code = skip(code);
+    //}
+    //var [code, _] = parse_text(code, ")");
+    //return [code, ctx => args.reduce((f, x) => App(f, x(ctx)), fun(ctx))];
+  //}
+  //// ANN: `{x : T}`
+  //if (code[0] === "{") {
+    //var [code, val] = parse_term(code.slice(1));
+    //var [code, _  ] = parse_text(code, ":");
+    //var [code, typ] = parse_term(code);
+    //var [code, _  ] = parse_text(code, "}");
+    //return [code, ctx => Ann(val(ctx), typ(ctx))];
+  //}
+  //// SLF: `$x T`
+  //if (code[0] === "$") {
+    //var [code, nam] = parse_name(code.slice(1));
+    //var [code, bod] = parse_term(code);
+    //return [code, ctx => Slf(nam, x => bod(Cons([nam, x], ctx)))];
+  //}
+  //// INS: `~x`
+  //if (code[0] === "~") {
+    //var [code, val] = parse_term(code.slice(1));
+    //return [code, ctx => Ins(val(ctx))];
+  //}
+  //// SET: `*`
+  //if (code[0] === "*") {
+    //return [code.slice(1), ctx => Set()];
+  //}
+  //// LET: `let x = A in B`
+  //if (code.slice(0,4) === "let ") {
+    //var [code, nam] = parse_name(code.slice(4));
+    //var [code, _  ] = parse_text(code, "=");
+    //var [code, val] = parse_term(code);
+    //var [code, bod] = parse_term(code);
+    //return [code, ctx => Let(nam, val(ctx), x => bod(Cons([nam, x], ctx)))];
+  //}
+  //// U60: `#U60`
+  //if (code.slice(0,4) === "#U60") {
+    //return [code.slice(4), ctx => U60()];
+  //}
+  //// OP2: `#(<opr> fst snd)`
+  //if (code.slice(0,2) === "#(") {
+    //var [code, opr] = parse_oper(code.slice(2));
+    //var [code, fst] = parse_term(code);
+    //var [code, snd] = parse_term(code);
+    //var [code, _]   = parse_text(code, ")");
+    //return [code, ctx => Op2(opr, fst(ctx), snd(ctx))];
+  //}
+  //// MAT: `#match x = val { #0: z; #+: s }: p`
+  //if (code.slice(0,7) === "#match ") {
+    //var [code, nam] = parse_name(code.slice(7));
+    //var [code, _  ] = parse_text(code, "=");
+    //var [code, x]   = parse_term(code);
+    //var [code, _  ] = parse_text(code, "{");
+    //var [code, _  ] = parse_text(code, "#0:");
+    //var [code, z] = parse_term(code);
+    //var [code, _  ] = parse_text(code, "#+:");
+    //var [code, s] = parse_term(code);
+    //var [code, _  ] = parse_text(code, "}");
+    //var [code, _  ] = parse_text(code, ":");
+    //var [code, p]   = parse_term(code);
+    //return [code, ctx => Mat(nam, x(ctx), z(ctx), k => s(Cons([nam+"-1", k], ctx)), k => p(Cons([nam, k], ctx)))];
+  //}
+  //// NUM: `#num`
+  //if (code[0] === "#") {
+    //var [code, num] = parse_name(code.slice(1));
+    //return [code, ctx => Num(BigInt(num))];
+  //}
+  //// CHR: `'a'` -- char syntax sugar
+  //if (code[0] === "'") {
+    //var [code, chr] = [code.slice(2), code[1]];
+    //var [code, _]   = parse_text(code, "'");
+    //return [code, ctx => Num(BigInt(chr.charCodeAt(0)))];
+  //}
+  //// STR: `"text"` -- string syntax sugar
+  //if (code[0] === "\"") {
+    //var str = "";
+    //code = code.slice(1);
+    //while (code[0] !== "\"") {
+      //str += code[0];
+      //code = code.slice(1);
+    //}
+    //code = code.slice(1);
+    //return [code, ctx => Txt(str)];
+  //}
+  //// HOL: `?name`
+  //if (code[0] === "?") {
+    //var [code, nam] = parse_name(code.slice(1));
+    //return [code, ctx => Hol(nam)];
+  //}
+  //// VAR: `name`
+  //var [code, nam] = parse_name(code);
+  //if (nam.length > 0) {
+    //return [code, ctx => find(ctx, nam)];
+  //}
+  //throw "parse error";
+//}
+
+//export function do_parse_term(code: string): Term {
+  //return parse_term(code)[1](Nil());
+//}
+
+//export function parse_def(code: string): [string, {nam: string, val: Term}] {
+  //var [code, nam] = parse_name(skip(code));
+  //if (skip(code)[0] === ":") {
+    //var [code, _  ] = parse_text(code, ":");
+    //var [code, typ] = parse_term(code);
+    //var [code, _  ] = parse_text(code, "=");
+    //var [code, val] = parse_term(code);
+    //return [code, {nam: nam, val: Ann(val(Nil()), typ(Nil()))}];
+  //} else {
+    //var [code, _  ] = parse_text(code, "=");
+    //var [code, val] = parse_term(code);
+    //return [code, {nam: nam, val: val(Nil())}];
+  //}
+//}
+
+//export function parse_book(code: string): Book {
+  //var book : Book = {};
+  //while (code.length > 0) {
+    //var [code, def] = parse_def(code);
+    //book[def.nam] = def.val;
+    //code = skip(code);
+  //}
+  //return book;
+//}
+
+//export function do_parse_book(code: string): Book {
+  //return parse_book(code);
+//}
+
 // Term Type
 // ---------
 
@@ -50,6 +208,10 @@ Kind.PreTerm
 : *
 = ∀(ctx: Kind.Scope)
   Kind.Term
+
+Kind.Book
+: *
+= (String.Map Kind.Term)
 
 // Term Constructors
 // -----------------
@@ -167,7 +329,6 @@ Kind.var
 = λnam λidx
   ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λtxt λhol λvar
   (var nam idx)
-
 
 // Operator Constructors
 // ---------------------
@@ -947,6 +1108,22 @@ Kind.Term.parser.run
   let fail = λerror (Kind.hol "error" (List.nil Kind.Term))
   (~(Kind.Term.parser code) P done fail)
 
+// Kind2 Book Parser
+Kind.Book.parser
+: (Parser Kind.Book)
+= (Parser.bind Bool Kind.Book Parser.is_eof λis_eof
+  let P = λx(Parser Kind.Book)
+  // If EOF, return an empty book
+  let true  = (Parser.pure Kind.Book (String.Map.new Kind.Term))
+  // Otherwise, parse a definition
+  let false =
+    (Parser.bind String Kind.Book Parser.name λnam
+    (Parser.bind Unit Kind.Book (Parser.text "=") λ_
+    (Parser.bind Kind.PreTerm Kind.Book Kind.Term.parser λval
+    (Parser.bind Kind.Book Kind.Book Kind.Book.parser λbook
+    (Parser.pure Kind.Book (String.Map.set Kind.Term nam (val (List.nil Kind.Binder)) book))))))
+  (~is_eof P true false))
+  
 // Evaluation
 // ----------
 
@@ -1382,7 +1559,7 @@ Kind.report
 // Compilers
 // ---------
 
-Kind.compile.hvm.go
+Kind.compile.hvm.term.go
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
   String.Concatenator
@@ -1394,30 +1571,30 @@ Kind.compile.hvm.go
     ((Kind.Text.show.go "λ")
     ((Kind.Text.show.go (U60.name (U60.from_nat dep)))
     ((Kind.Text.show.go " "
-    ((Kind.compile.hvm.go (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.compile.hvm.term.go (bod (Kind.var nam dep)) (Nat.succ dep))
     nil)))))
   let app = λfun λarg λnil
     ((Kind.Text.show.go "(")
-    ((Kind.compile.hvm.go fun dep)
+    ((Kind.compile.hvm.term.go fun dep)
     ((Kind.Text.show.go " ")
-    ((Kind.compile.hvm.go arg dep)
+    ((Kind.compile.hvm.term.go arg dep)
     ((Kind.Text.show.go ")")
     nil)))))
   let ann = λval λtyp
-    (Kind.compile.hvm.go val dep)
+    (Kind.compile.hvm.term.go val dep)
   let slf = λnam λbod
     (Kind.Text.show.go "0")
   let ins = λval
-    (Kind.compile.hvm.go val dep)
+    (Kind.compile.hvm.term.go val dep)
   let ref = λnam λval
     (Kind.Text.show.go nam)
   let def = λnam λval λbod λnil
     ((Kind.Text.show.go "let ")
     ((Kind.Text.show.go nam)
     ((Kind.Text.show.go " = ")
-    ((Kind.compile.hvm.go val dep)
+    ((Kind.compile.hvm.term.go val dep)
     ((Kind.Text.show.go "; ")
-    ((Kind.compile.hvm.go (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.compile.hvm.term.go (bod (Kind.var nam dep)) (Nat.succ dep))
     nil))))))
   let set =
     (Kind.Text.show.go "*")
@@ -1429,9 +1606,9 @@ Kind.compile.hvm.go
     ((Kind.Text.show.go "(")
     ((Kind.Oper.show.go opr)
     ((Kind.Text.show.go " ")
-    ((Kind.compile.hvm.go fst dep)
+    ((Kind.compile.hvm.term.go fst dep)
     ((Kind.Text.show.go " ")
-    ((Kind.compile.hvm.go snd dep)
+    ((Kind.compile.hvm.term.go snd dep)
     ((Kind.Text.show.go ")")
     nil)))))))
   let txt = λtxt λnil
@@ -1445,12 +1622,12 @@ Kind.compile.hvm.go
     (Kind.Text.show.go (U60.name (U60.from_nat idx)))
   (~term P all lam app ann slf ins ref def set u60 num op2 txt hol var)
 
-Kind.compile.hvm
+Kind.compile.hvm.term
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
   String
 = λterm λdep
-  (String.Concatenator.build (Kind.compile.hvm.go term dep))
+  (String.Concatenator.build (Kind.compile.hvm.term.go term dep))
 
 // Tests
 // -----

@@ -412,8 +412,9 @@
 
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
-(Normalizer val)           = (Read (Compile val))
-//(Normalizer val)           = ((Compile val))
+//(Normalizer val)           = (Read (Compile val)) // compiles to native and reads as string
+(Normalizer val)           = ((Compile val)) // compiles to native and show it
+//(Normalizer val)           = (Normal 1 val  1) // uses the normalizer function
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))

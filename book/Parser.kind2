@@ -149,6 +149,15 @@ Parser.oper
 : (Parser String)
 = (Parser.pick_while Char.is_oper)
 
+// Checks if the next character is EOF.
+Parser.is_eof
+: (Parser Bool)
+= λcode
+  let P    = λx(Parser.Result Bool)
+  let cons = λcode.head λcode.tail (Parser.Result.done Bool (String.cons code.head code.tail) Bool.false)
+  let nil  = (Parser.Result.done Bool String.nil Bool.true)
+  (~code P cons nil)
+
 // Checks if the next characteres match given text.
 Parser.test
 : ∀(test: String)

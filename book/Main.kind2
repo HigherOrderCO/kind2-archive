@@ -2,10 +2,14 @@
 
 //Main = Parser.skip
 
-Main = (String.skip "//oimeugrandeamigo... tudo bem?
-eu to, e vc?
-foo
-")
+Main = Kind.Book.parser
+//Main = Parser.is_eof
+//Main = U60.Map.set
+
+//Main = (String.skip "//oimeugrandeamigo... tudo bem?
+//eu to, e vc?
+//fofo
+//")
 
 //Main = Parser.text
 //Main
