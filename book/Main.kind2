@@ -1,3 +1,5 @@
+//Main = Kind.reduce.mat
+
 BOOK
 : String
 = "id = λx x
@@ -12,12 +14,13 @@ Bool
 
 Bool.true  : Bool = ~λP λt λf t
 Bool.false : Bool = ~λP λt λf f
+
+Foo = #12345
 "
 
 Main
 : String
 = (Kind.Book.show (Kind.Book.parse BOOK))
-
 
 //Main
 //: String

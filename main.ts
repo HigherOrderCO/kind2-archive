@@ -428,21 +428,30 @@ export function main() {
   // Runs 'hvm1 kind2.hvm1 -s -L -1'
 
   //const output = execSync("hvm1 run .kind2.hvm1 -s -L -1").toString();
-  const output = execSync("hvm1 run -t 1 -c -f .kind2.hvm1 \"(Main)\"").toString();
-  try {
-    var check_text = output.slice(output.indexOf("[["), output.indexOf("RWTS")).trim();
-    var stats_text = output.slice(output.indexOf("RWTS"));
-    var [logs, check] = JSON.parse(check_text);
-    logs.reverse();
-    for (var log of logs) {
-      console.log(log);
+  
+
+
+  //for (let name in book) {
+    //console.log("Checking: " + name);
+
+    const output = execSync("hvm1 run -t 1 -c -f .kind2.hvm1 \"(Main)\"").toString();
+    //const output = execSync(`hvm1 run -t 1 -c -f .kind2.hvm1 "(Checker Book.${name})"`).toString();
+    try {
+      var check_text = output.slice(output.indexOf("[["), output.indexOf("RWTS")).trim();
+      var stats_text = output.slice(output.indexOf("RWTS"));
+      var [logs, check] = JSON.parse(check_text);
+      logs.reverse();
+      for (var log of logs) {
+        console.log(log);
+      }
+      console.log(check ? "Check!" : "Error.");
+      console.log("");
+      console.log(stats_text);
+    } catch (e) {
+      console.log(output);
     }
-    console.log(check ? "Check!" : "Error.");
-    console.log("");
-    console.log(stats_text);
-  } catch (e) {
-    console.log(output);
-  }
+
+  //}
 
 };
 

@@ -149,6 +149,11 @@ Parser.oper
 : (Parser String)
 = (Parser.pick_while Char.is_oper)
 
+// Parses a sequence of decimal characters.
+Parser.decimal
+: (Parser String)
+= (Parser.pick_while Char.is_decimal)
+
 // Checks if the next character is EOF.
 Parser.is_eof
 : (Parser Bool)
@@ -282,7 +287,7 @@ Parser.map
 // Parses repeatedly until a terminator parser succeeds.
 Parser.until
 : ∀(A: *)
-  ∀(until: (Parser Unit))
+  ∀(until: (Parser Bool))
   ∀(parse: (Parser A))
   (Parser (List A))
 = λA λuntil λparse
@@ -291,17 +296,21 @@ Parser.until
 
 Parser.until.go
 : ∀(A: *)
-  ∀(until: (Parser Unit))
+  ∀(until: (Parser Bool))
   ∀(parse: (Parser A))
   ∀(terms: (List.Concatenator A))
   (Parser (List.Concatenator A))
 = λA λuntil λparse λterms λcode
   let P    = λx(Parser.Result (List.Concatenator A))
-  let fail = λcode
-    let P    = λx(Parser.Result (List.Concatenator A))
-    let done = λcode λvalue (Parser.until.go A until parse λx(terms (List.cons A value x)) code)
-    let fail = λcode (Parser.Result.fail (List.Concatenator A) code)
-    (~(parse code) P done fail)
-  let done = λcode λvalue
-    (Parser.Result.done (List.Concatenator A) code terms)
+  let done = λcode λstop
+    let P     = λx ∀(code: String) (Parser.Result (List.Concatenator A))
+    let true  = λcode
+      (Parser.Result.done (List.Concatenator A) code terms)
+    let false = λcode
+      let P    = λx (Parser.Result (List.Concatenator A))
+      let done = λcode λvalue (Parser.until.go A until parse λx(terms (List.cons A value x)) code)
+      let fail = λerror (Parser.Result.fail (List.Concatenator A) error)
+      (~(parse code) P done fail)
+    ((~stop P true false) code)
+  let fail = λerror (Parser.Result.fail (List.Concatenator A) error)
   (~(until code) P done fail)
