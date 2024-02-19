@@ -2,7 +2,4 @@ String.length
 : ∀(a: String)
   Nat
 = λa
-  let P    = λx (Nat)
-  let cons = λa.head λa.tail (Nat.succ (String.length a.tail))
-  let nil  = Nat.zero
-  (~a P cons nil)
+  (List.length Char a)

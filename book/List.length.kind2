@@ -1,0 +1,9 @@
+List.length
+: ∀(A: *)
+  ∀(a: (List A))
+  Nat
+= λA λa
+  let P    = λx (Nat)
+  let cons = λa.head λa.tail (Nat.succ (List.length A a.tail))
+  let nil  = Nat.zero
+  (~a P cons nil)
