@@ -221,7 +221,7 @@ RunTests
   let solution = (Tests.run tests)
   solution
 
-testbbt
+testBBT
 // : (Maybe String)
 // : String
 // : (List.Map #U60 String)
