@@ -126,7 +126,7 @@ export const compile = (term: Term, used_refs: any, dep: number = 0): string => 
     case "Num": return `(Num ${term.val.toString()})`;
     case "Op2": return `(Op2 ${compile_oper(term.opr)} ${compile(term.fst, used_refs, dep)} ${compile(term.snd, used_refs, dep)})`;
     case "Mat": return `(Mat "${term.nam}" ${compile(term.x, used_refs, dep)} ${compile(term.z, used_refs, dep)} λ${name(dep)} ${compile(term.s(Var(term.nam,dep)), used_refs, dep + 1)} λ${name(dep)} ${compile(term.p(Var(term.nam,dep)), used_refs, dep + 1)})`;
-    case "Txt": return `(Txt "${term.txt}")`;
+    case "Txt": return `(Txt \`${term.txt}\`)`;
     case "Hol": return `(Hol "${term.nam}" ${context(dep)})`;
     case "Var": return name(term.idx);
     case "Ref": return (used_refs[term.nam] = 1), ("Book." + term.nam);
@@ -307,10 +307,11 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
     return [code, ctx => Num(BigInt(chr.charCodeAt(0)))];
   }
   // STR: `"text"` -- string syntax sugar
-  if (code[0] === "\"") {
+  if (code[0] === "\"" || code[0] === "`") {
     var str = "";
+    var end = code[0];
     code = code.slice(1);
-    while (code[0] !== "\"") {
+    while (code[0] !== end) {
       str += code[0];
       code = code.slice(1);
     }

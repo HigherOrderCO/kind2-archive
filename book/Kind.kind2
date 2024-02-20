@@ -1,6 +1,3 @@
-// Term Type
-// ---------
-
 Kind.Term
 : *
 = $self
@@ -23,9 +20,6 @@ Kind.Term
   ∀(var: ∀(nam: String) ∀(idx: Nat) (P (Kind.var nam idx)))
   (P self)
 
-// Operator Type
-// -------------
-
 Kind.Oper
 : *
 = $self
@@ -34,10 +28,19 @@ Kind.Oper
   ∀(mul: (P Kind.Oper.mul))
   ∀(sub: (P Kind.Oper.sub))
   ∀(div: (P Kind.Oper.div))
+  ∀(mod: (P Kind.Oper.mod))
+  ∀(eq:  (P Kind.Oper.eq))
+  ∀(ne:  (P Kind.Oper.ne))
+  ∀(lt:  (P Kind.Oper.lt))
+  ∀(gt:  (P Kind.Oper.gt))
+  ∀(lte: (P Kind.Oper.lte))
+  ∀(gte: (P Kind.Oper.gte))
+  ∀(and: (P Kind.Oper.and))
+  ∀(or:  (P Kind.Oper.or))
+  ∀(xor: (P Kind.Oper.xor))
+  ∀(lsh: (P Kind.Oper.lsh))
+  ∀(rsh: (P Kind.Oper.rsh))
   (P self)
-
-// Other Types
-// -----------
 
 Kind.Binder
 : *
@@ -55,9 +58,6 @@ Kind.PreTerm
 Kind.Book
 : *
 = (String.Map Kind.Term)
-
-// Term Constructors
-// -----------------
 
 Kind.all
 : ∀(nam: String)
@@ -184,31 +184,85 @@ Kind.var
   ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
   (var nam idx)
 
-// Operator Constructors
-// ---------------------
-
 Kind.Oper.add
 : Kind.Oper
-= ~λP λadd λmul λsub λdiv
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
   (add)
 
 Kind.Oper.mul
 : Kind.Oper
-= ~λP λadd λmul λsub λdiv
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
   (mul)
 
 Kind.Oper.sub
 : Kind.Oper
-= ~λP λadd λmul λsub λdiv
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
   (sub)
 
 Kind.Oper.div
 : Kind.Oper
-= ~λP λadd λmul λsub λdiv
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
   (div)
 
-// Other Constructors
-// ------------------
+Kind.Oper.mod
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (mod)
+
+Kind.Oper.eq
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (eq)
+
+Kind.Oper.ne
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (ne)
+
+Kind.Oper.lt
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (lt)
+
+Kind.Oper.gt
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (gt)
+
+Kind.Oper.lte
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (lte)
+
+Kind.Oper.gte
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (gte)
+
+Kind.Oper.and
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (and)
+
+Kind.Oper.or
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (or)
+
+Kind.Oper.xor
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (xor)
+
+Kind.Oper.lsh
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (lsh)
+
+Kind.Oper.rsh
+: Kind.Oper
+= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
+  (rsh)
 
 Kind.Binder.new
 : ∀(nam: String) ∀(typ: Kind.Term)
@@ -225,9 +279,6 @@ Kind.Scope.cons
   ∀(tail: Kind.Scope)
   Kind.Scope
 = (List.cons Kind.Binder)
-
-// Other Utils
-// -----------
 
 Kind.Scope.extend
 : ∀(nam: String)
@@ -248,9 +299,6 @@ Kind.Scope.find
   let some  = λbnd (~bnd λx(Kind.Term) λnλt(t))
   let none  = (Kind.ref name Kind.set) // FIXME: handle unbound reference
   (~found P some none)
-
-// Term Selectors
-// --------------
 
 Kind.if.all
 : ∀(term: Kind.Term)
@@ -668,9 +716,6 @@ Kind.if.var
   let var = λnam λidx        λY λN (Y nam idx)
   (~term P all lam app ann slf ins ref def set u60 num op2 mat txt hol var Y N)
 
-// Primitives
-// ----------
-
 Kind.Book.String
 : Kind.Term
 = (Kind.hol "TODO" (List.nil Kind.Term))
@@ -682,9 +727,6 @@ Kind.Book.String.cons
 Kind.Book.String.nil
 : Kind.Term
 = (Kind.hol "TODO" (List.nil Kind.Term))
-
-// Stringifier
-// -----------
 
 Kind.Text
 : *
@@ -725,7 +767,7 @@ Kind.Term.show.go
   let ann = λval λtyp λnil
     ((Kind.Text.show.go "{")
     ((Kind.Term.show.go val dep)
-    ((Kind.Text.show.go ": ")
+    ((Kind.Text.show.go " : ")
     ((Kind.Term.show.go typ dep)
     ((Kind.Text.show.go "}")
     nil)))))
@@ -811,7 +853,19 @@ Kind.Oper.show.go
   let mul = (Kind.Text.show.go "*")
   let sub = (Kind.Text.show.go "-")
   let div = (Kind.Text.show.go "/")
-  (~oper P add mul sub div)
+  let mod = (Kind.Text.show.go "%")
+  let eq  = (Kind.Text.show.go "==")
+  let ne  = (Kind.Text.show.go "!=")
+  let lt  = (Kind.Text.show.go "<")
+  let gt  = (Kind.Text.show.go ">")
+  let lte = (Kind.Text.show.go "<=")
+  let gte = (Kind.Text.show.go ">=")
+  let and = (Kind.Text.show.go "&")
+  let or  = (Kind.Text.show.go "|")
+  let xor = (Kind.Text.show.go "^")
+  let lsh = (Kind.Text.show.go "<<")
+  let rsh = (Kind.Text.show.go ">>")
+  (~oper P add mul sub div mod eq ne lt gt lte gte and or xor lsh rsh)
 
 Kind.Oper.show
 : ∀(oper: Kind.Oper)
@@ -842,9 +896,6 @@ Kind.Book.show
 = λbook
   (String.Concatenator.build (Kind.Book.show.go book))
 
-// Parser
-// ------
-
 Kind.Term.parser.bind
 : ∀(A: *)
   ∀(a: (Parser A))
@@ -857,7 +908,6 @@ Kind.Term.parser.pure
   (Parser Kind.PreTerm)
 = (Parser.pure Kind.PreTerm)
 
-// ∀(x: inp) bod
 Kind.Term.parser.all 
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "∀"
@@ -871,7 +921,6 @@ Kind.Term.parser.all
   (Kind.Term.parser.pure λscp 
   (Kind.all nam (inp scp) λx(bod (Kind.Scope.extend nam x scp))))))))))))
 
-// λx bod
 Kind.Term.parser.lam
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "λ"
@@ -881,7 +930,6 @@ Kind.Term.parser.lam
   (Kind.Term.parser.pure λscp 
   (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp))))))))
 
-// (f x y z ...)
 Kind.Term.parser.app
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "("
@@ -895,7 +943,6 @@ Kind.Term.parser.app
   λfun(fun))
   (fun scp))))))))
 
-// {x: T}
 Kind.Term.parser.ann
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "{"
@@ -907,7 +954,6 @@ Kind.Term.parser.ann
   (Kind.Term.parser.pure λscp 
   (Kind.ann (val scp) (typ scp)))))))))
 
-// $x bod
 Kind.Term.parser.slf
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "$"
@@ -917,7 +963,6 @@ Kind.Term.parser.slf
   (Kind.Term.parser.pure λscp 
   (Kind.slf nam λx(bod (Kind.Scope.extend nam x scp))))))))
 
-// ~val
 Kind.Term.parser.ins
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "~"
@@ -926,7 +971,6 @@ Kind.Term.parser.ins
   (Kind.Term.parser.pure λscp 
   (Kind.ins (val scp))))))
 
-// *
 Kind.Term.parser.set
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "*"
@@ -934,7 +978,6 @@ Kind.Term.parser.set
   (Kind.Term.parser.pure λscp 
   Kind.set)))
 
-// let x = val; bod
 Kind.Term.parser.def
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "let "
@@ -946,7 +989,6 @@ Kind.Term.parser.def
   (Kind.Term.parser.pure λscp 
   (Kind.def nam (val scp) λx(bod (Kind.Scope.extend nam x scp))))))))))
 
-// #U60
 Kind.Term.parser.u60
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "#U60"
@@ -954,36 +996,37 @@ Kind.Term.parser.u60
   (Kind.Term.parser.pure λscp 
   Kind.u60)))
 
-// #(OP fst snd)
 Kind.Term.parser.op2
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "#("
-  (Kind.Term.parser.bind Unit          (Parser.text "#(") λ_
-  (Kind.Term.parser.bind Kind.Oper     Kind.Oper.parser   λopr
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser    λfst
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser    λsnd
-  (Kind.Term.parser.bind Unit          (Parser.text ")")  λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "#(") λ_
+  (Kind.Term.parser.bind Kind.Oper    Kind.Oper.parser   λopr
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λfst
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λsnd
+  (Kind.Term.parser.bind Unit         (Parser.text ")")  λ_
   (Kind.Term.parser.pure λscp 
   (Kind.op2 opr (fst scp) (snd scp)))))))))
 
-// #match nam = x { #0: z; #+: s }: p
 Kind.Term.parser.mat
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "#match "
   (Kind.Term.parser.bind Unit         (Parser.text "#match ") λ_
   (Kind.Term.parser.bind String       Parser.name             λnam
-  (Kind.Term.parser.bind Unit         (Parser.text " = ")     λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "=")       λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λx
-  (Kind.Term.parser.bind Unit         (Parser.text " { #0: ") λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "{")       λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "#0")      λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λz
-  (Kind.Term.parser.bind Unit         (Parser.text "; #+: ")  λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "#+")      λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λs
-  (Kind.Term.parser.bind Unit         (Parser.text " }: ")    λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "}")       λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λp
   (Kind.Term.parser.pure λscp 
-  (Kind.mat nam (x scp) (z scp) λx(s (Kind.Scope.extend nam x scp)) λx(p (Kind.Scope.extend nam x scp)))))))))))))))
+  (Kind.mat nam (x scp) (z scp) λx(s (Kind.Scope.extend nam x scp)) λx(p (Kind.Scope.extend nam x scp)))))))))))))))))))
 
-// #num
 Kind.Term.parser.num
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "#"
@@ -992,7 +1035,6 @@ Kind.Term.parser.num
   (Kind.Term.parser.pure λscp 
   (Kind.num num)))))
 
-// 'c'
 Kind.Term.parser.chr
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "'"
@@ -1002,7 +1044,6 @@ Kind.Term.parser.chr
   (Kind.Term.parser.pure λscp 
   (Kind.num chr))))))
 
-// "text_here"
 Kind.Term.parser.str
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm String.quote
@@ -1012,7 +1053,6 @@ Kind.Term.parser.str
   (Kind.Term.parser.pure λscp
   (Kind.txt chars))))))
 
-// ?nam
 Kind.Term.parser.hol
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "?"
@@ -1021,7 +1061,6 @@ Kind.Term.parser.hol
   (Kind.Term.parser.pure λscp
   (Kind.hol nam (List.nil Kind.Term)))))) // TODO: build context
 
-// x
 Kind.Term.parser.var
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.pass Kind.PreTerm
@@ -1031,7 +1070,32 @@ Kind.Term.parser.var
 
 Kind.Oper.parser
 : (Parser Kind.Oper)
-= ?TODO
+= let TRY = (List.cons (Parser.Guard Kind.Oper))
+  let END = (List.nil (Parser.Guard Kind.Oper))
+  let OP2 =
+    { λsym λoper
+      (Parser.Guard.text Kind.Oper sym
+      (Parser.bind Unit Kind.Oper (Parser.text sym) λx
+      (Parser.pure Kind.Oper oper)))
+    : ∀(sym: String) ∀(oper: Kind.Oper) (Parser.Guard Kind.Oper)}
+  (Parser.variant Kind.Oper
+  (TRY (OP2 "+"  Kind.Oper.add)
+  (TRY (OP2 "*"  Kind.Oper.mul)
+  (TRY (OP2 "-"  Kind.Oper.sub)
+  (TRY (OP2 "/"  Kind.Oper.div)
+  (TRY (OP2 "%"  Kind.Oper.mod)
+  (TRY (OP2 "==" Kind.Oper.eq)
+  (TRY (OP2 "!=" Kind.Oper.ne)
+  (TRY (OP2 "<=" Kind.Oper.lte)
+  (TRY (OP2 ">=" Kind.Oper.gte)
+  (TRY (OP2 "<<" Kind.Oper.lsh)
+  (TRY (OP2 ">>" Kind.Oper.rsh)
+  (TRY (OP2 "<"  Kind.Oper.lt)
+  (TRY (OP2 ">"  Kind.Oper.gt)
+  (TRY (OP2 "&"  Kind.Oper.and)
+  (TRY (OP2 "|"  Kind.Oper.or)
+  (TRY (OP2 "^"  Kind.Oper.xor)
+  END)))))))))))))))))
 
 Kind.Term.parser
 : (Parser Kind.PreTerm)
@@ -1049,10 +1113,12 @@ Kind.Term.parser
   (TRY Kind.Term.parser.u60
   (TRY Kind.Term.parser.op2
   (TRY Kind.Term.parser.mat
+  (TRY Kind.Term.parser.chr
+  (TRY Kind.Term.parser.str
   (TRY Kind.Term.parser.num
   (TRY Kind.Term.parser.hol
   (TRY Kind.Term.parser.var
-  END)))))))))))))))
+  END)))))))))))))))))
 
 Kind.Term.parse
 : ∀(code: String)
@@ -1063,7 +1129,6 @@ Kind.Term.parse
   let fail = λerror (Kind.hol "error" (List.nil Kind.Term))
   (~(Kind.Term.parser code) P done fail)
 
-// Kind2 Book Parser
 Kind.Book.parser
 : (Parser Kind.Book)
 = (Parser.bind Bool Kind.Book Parser.is_eof λis_eof
@@ -1102,9 +1167,6 @@ Kind.Book.parse
   let fail = λerror (List.nil (Pair String Kind.Term))
   (~(Kind.Book.parser code) P done fail)
   
-// Evaluation
-// ----------
-
 Kind.reduce
 : ∀(maj: Bool)
   ∀(term: Kind.Term)
@@ -1166,7 +1228,18 @@ Kind.reduce.op2
       let mul = λfst_val λsnd_val (Kind.num #(* fst_val snd_val))
       let sub = λfst_val λsnd_val (Kind.num #(- fst_val snd_val))
       let div = λfst_val λsnd_val (Kind.num #(/ fst_val snd_val))
-      (~opr P add mul sub div fst_val snd_val)
+      let eq  = λfst_val λsnd_val (Kind.num #(== fst_val snd_val))
+      let ne  = λfst_val λsnd_val (Kind.num #(!= fst_val snd_val))
+      let lt  = λfst_val λsnd_val (Kind.num #(< fst_val snd_val))
+      let gt  = λfst_val λsnd_val (Kind.num #(> fst_val snd_val))
+      let lte = λfst_val λsnd_val (Kind.num #(<= fst_val snd_val))
+      let gte = λfst_val λsnd_val (Kind.num #(>= fst_val snd_val))
+      let and = λfst_val λsnd_val (Kind.num #(& fst_val snd_val))
+      let or  = λfst_val λsnd_val (Kind.num #(| fst_val snd_val))
+      let xor = λfst_val λsnd_val (Kind.num #(^ fst_val snd_val))
+      let lsh = λfst_val λsnd_val (Kind.num #(<< fst_val snd_val))
+      let rsh = λfst_val λsnd_val (Kind.num #(>> fst_val snd_val))
+      (~opr P add mul sub div eq ne lt gt lte gte and or xor lsh rsh fst_val snd_val)
     let N = λsnd λfst_val (Kind.op2 opr (Kind.num fst_val) snd)
     (Kind.if.num snd P Y N fst_val)
   let N = λfst λsnd (Kind.op2 opr fst snd)
@@ -1198,9 +1271,6 @@ Kind.reduce.txt
   let cons = λx λxs (Kind.reduce Bool.true (Kind.app (Kind.app Kind.Book.String.cons (Kind.num x)) (Kind.txt xs)))
   let nil  = (Kind.reduce Bool.true Kind.Book.String.nil)
   (~txt P cons nil)
-
-// Normalization
-// -------------
 
 Kind.normal
 : ∀(maj: Bool)
@@ -1234,9 +1304,6 @@ Kind.normal.go
   let hol = λnam λctx (Kind.hol nam ctx)
   let var = λnam λidx (Kind.var nam idx)
   (~term P all lam app ann slf ins ref def set u60 num op2 mat txt hol var)
-
-// Equality
-// --------
 
 Kind.equal
 : ∀(a: Kind.Term)
@@ -1390,10 +1457,6 @@ Kind.comparer
     (Kind.if.hol b R Y N dep a)
   (Kind.if.hol a R Y N b dep)
 
-// Type-Checking
-// -------------
-
-// Skips Ins, Ann and Let
 Kind.skip
 : ∀(x: Kind.Term)
   Kind.Term
@@ -1568,9 +1631,6 @@ Kind.report
   let false = λinferred λexpected λvalue λdep none // TODO: HVM.log error
   (~e P true false inferred expected value dep)
 
-// Compilers
-// ---------
-
 Kind.Term.to_hvm.go
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
@@ -1676,14 +1736,10 @@ Kind.Book.to_hvm
 = λbook
   (String.Concatenator.build (Kind.Book.to_hvm.go book))
 
-// Tests
-// -----
-
 Kind
 : String
 = let a = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))
   let b = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))
-
   let Test =
     (Kind.all "A" Kind.set λA
     (Kind.all "B" Kind.set λB
@@ -1696,7 +1752,6 @@ Kind
     (Kind.lam "a" λa
     (Kind.lam "b" λb
     b))))
-
   let P    = λx(String)
   let some = λvalue (Kind.Term.show value Nat.zero)
   let none = "error"

@@ -39,7 +39,7 @@ String.skip.comment
   let cons = λc0 λcs
     // If first char is not a newline, skip and recurse
     let P     = λx ∀(c0: Char) ∀(cs: String) (String)
-    let true  = λc0 λcs cs
+    let true  = λc0 λcs (String.skip cs)
     let false = λc0 λcs (String.skip.comment cs)
     (~(Char.is_newline c0) P true false c0 cs)
   let nil  = String.nil

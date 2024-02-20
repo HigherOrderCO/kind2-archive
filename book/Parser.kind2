@@ -254,22 +254,18 @@ Parser.variant
   let nil = (Parser.fail A "error")
   (~variants P cons nil)
 
-// Parses a single character, escape-sequence-aware.
-// TODO: parse \u{...} escape sequences
+// TODO: parse escape sequences.
 Parser.char
 : (Parser Char)
-= let P    = (List (Parser.Guard Char))
+= λcode
+  let P    = λx(Parser.Result Char)
   let cons = λhead λtail
-    let escaped = (~head λx(Parser.Guard Char) λnorm λspec
-      let guard = (String.cons Char.slash (String.cons norm String.nil))
-      let value = (Parser.pure Char spec)
-      (Parser.Guard.text Char guard value))
-    (List.cons (Parser.Guard Char) escaped tail)
-  let nil  =
-    (List.cons (Parser.Guard Char) (Parser.Guard.pass Char Parser.pick)
-    (List.nil (Parser.Guard Char)))
-  (Parser.variant Char 
-  (List.fold (Pair Char Char) Char.escapes P cons nil))
+    let P     = λx(Parser.Result Char)
+    let true  = (Parser.Result.done Char tail head) // TODO
+    let false = (Parser.Result.done Char tail head)
+    (~(Char.is_slash head) P true false)
+  let nil  = (Parser.Result.fail Char "eof")
+  (~code P cons nil)
 
 // Applies a function to a parsed value.
 Parser.map
