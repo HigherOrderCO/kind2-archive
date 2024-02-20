@@ -50,6 +50,14 @@ U60.get
 = λV λkey λmap
   (BBT.get #U60 V U60.cmp key map)
 
+U60.got
+: ∀(V: *)
+  ∀(key: #U60)
+  ∀(map: (BBT #U60 V))
+  (Pair (Maybe V) (BBT #U60 V))
+= λV λkey λmap
+  (BBT.got #U60 V U60.cmp key map)
+
 U60.set
 : ∀(V: *)
   ∀(key: #U60)
@@ -219,6 +227,7 @@ testbbt
 // : (List.Map #U60 String)
 // : (BBT #U60 String)
 : (#U60)
+// : (Maybe #U60)
 = 
   // let map = (BBT.tip #U60 String)
   // let map = ~λP λbin λtip (tip)
@@ -237,7 +246,6 @@ testbbt
   // val
   // map
   // let map = (U60.map_gen #1024)
-  // let ext  = λx (~x λx(#U60) λsome(#2) #0)
   // let val1 = (U60.get String #5 map)
   // let val2 = (U60.get String #10 map)
   // #(+ val1 val2)
@@ -273,8 +281,37 @@ testbbt
   let map = (U60.set #U60 #8 #8 map)   // 23469  +4320  5set 4bal 1rot_lft
   let map = (U60.set #U60 #9 #9 map)   // 27789  +4484  5set 4bal 1rot_lft
   let map = (U60.set #U60 #10 #10 map) // 32281  +4492  5set 4bal 1rot_lft
-  let sum = (U60.add_all map)
-  sum
+
+  let P   = λx(#U60)
+  let new = λval1 λmap
+    let val1 =
+      let P = λx(#U60)
+      let some = λval (val)
+      let none = #0
+      (~val1 P some none)
+    let P = λx(#U60)
+    let new = λval2 λmap
+      
+      let val2 = 
+        let P = λx(#U60)
+        let some = λval (val)
+        let none = #0
+        (~val2 P some none)
+
+      #(+ val1 val2)
+    (~(U60.got #U60 #3 map) P new)
+
+  (~(U60.got #U60 #3 map) P new)
+
+  // #(+ val1 val2)
+
+  // #3
+  // #(+ (ext val1) (ext val1))
+
+  // let mymap = λ_ λx0 λ_ (x0 #4 #3 #3 λ_ λx1 λ_ (x1 #2 #1 #1 λ_ λx2 λ_ (x2 #1 #0 #0 λ_ λ_ λx3 x3 λ_ λ_ λx4 x4) λ_ λx5 λ_ (x5 #1 #2 #2 λ_ λ_ λx6 x6 λ_ λ_ λx7 x7)) λ_ λx8 λ_ (x8 #3 #7 #7 λ_ λx9 λ_ (x9 #2 #5 #5 λ_ λx10 λ_ (x10 #1 #4 #4 λ_ λ_ λx11 x11 λ_ λ_ λx12 x12) λ_ λx13 λ_ (x13 #1 #6 #6 λ_ λ_ λx14 x14 λ_ λ_ λx15 x15)) λ_ λx16 λ_ (x16 #2 #9 #9 λ_ λx17 λ_ (x17 #1 #8 #8 λ_ λ_ λx18 x18 λ_ λ_ λx19 x19) λ_ λx20 λ_ (x20 #1 #10 #10 λ_ λ_ λx21 (x21 λ_ λ_ λx22 x22)))))
+  // mymap
+  // let sum = (U60.add_all map)
+  // sum
   // let map = (U60.map_gen_u60 #1023)
   // let map = (U60.set #U60 #3 #3 map)
   // let sum = (U60.add_all map)
