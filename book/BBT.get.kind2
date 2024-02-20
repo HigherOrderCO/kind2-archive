@@ -1,0 +1,17 @@
+BBT.get
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(key: K)
+  ∀(map: (BBT K V))
+  (Maybe V)
+= λK λV λcmp λkey λmap
+  let P = λx(Maybe V)
+  let bin = λ_size λnext.key λnext.val λnext.lft λnext.rgt
+    let P = λx(Maybe V)
+    let ltn = (BBT.get K V cmp key next.lft)
+    let eql = (Maybe.some V next.val)
+    let gtn = (BBT.get K V cmp key next.rgt)
+    (~(cmp key next.key) P ltn eql gtn)
+  let tip = (Maybe.none V)
+  (~map P bin tip)

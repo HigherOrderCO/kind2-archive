@@ -1,0 +1,9 @@
+Cmp.is_gtn
+: ∀(cmp: Cmp)
+  Bool
+= λcmp
+  let P = λx(Bool)
+  let ltn = Bool.false
+  let eql = Bool.false
+  let gtn = Bool.true
+  (~cmp P ltn eql gtn)

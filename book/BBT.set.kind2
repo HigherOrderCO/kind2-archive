@@ -1,0 +1,28 @@
+BBT.set
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(key: K)
+  ∀(val: V)
+  ∀(map: (BBT K V))
+  (BBT K V)
+= λK λV λcmp λkey λval λmap
+  let P = λx ∀(key: K) ∀(val: V) (BBT K V)
+  let bin = λsize λnext.key λnext.val λnext.lft λnext.rgt
+            λkey λval // Parent Lambdas      
+    let P = λx ∀(key: K) ∀(next.key: K) ∀(next.val: V) ∀(next.lft: (BBT K V)) ∀(next.rgt: (BBT K V)) (BBT K V)
+    let ltn = λkey λnext.key  λnext.val λnext.lft λnext.rgt
+      let new_lft = (BBT.set K V cmp key val next.lft)
+      (BBT.balance K V cmp key next.key next.val new_lft next.rgt)
+
+    let eql = λkey λnext.key λnext.val λnext.lft λnext.rgt
+      (BBT.bin K V size next.key val next.lft next.rgt)
+
+    let gtn = λkey λnext.key λnext.val λnext.lft λnext.rgt
+      let new_rgt = (BBT.set K V cmp key val next.rgt)
+      (BBT.balance K V cmp key next.key next.val next.lft new_rgt)
+    ((~(cmp key next.key) P ltn eql gtn) key next.key next.val next.lft next.rgt)
+  let tip = λkey λval // Parent Lambdas
+    (BBT.singleton K V key val)
+  ((~map P bin tip) key val)
+

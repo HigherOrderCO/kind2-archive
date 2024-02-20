@@ -1,5 +1,341 @@
+List.Map.gen
+: ∀(n: #U60)
+  (List.Map #U60 String)
+= λn
+  (List.Map.gen.go n (List.Map.new #U60 String))
+
+List.Map.gen.go
+: ∀(n: #U60)
+  ∀(map: (List.Map #U60 String))
+  (List.Map #U60 String)
+= λn λmap
+  let P     = λx ∀(map: (List.Map #U60 String)) (List.Map #U60 String)
+  let true   = λmap (List.Map.set #U60 String n (U60.show n) map)
+  let false  = λmap (List.Map.set #U60 String n (U60.show n) (List.Map.gen.go #(- n #1) map))
+  ((~(U60.to_bool #(== n #0)) P true false) map)
+
+List.Map.sum
+: ∀(map: (List.Map #U60 String))
+  (#U60)
+= λmap
+  let P = λx(#U60)
+  let cons = λhead λtail
+    let P = λx(#U60)
+    let new = λkey λval
+      #(+ key (List.Map.sum tail))
+    (~head P new)
+  let nil = #0
+  (~map P cons nil)
+
+Tests.run
+: ∀(tests: (List (Maybe String)))
+  String
+= λtests
+  let folder = (List.fold (Maybe String) tests)
+  (folder String (λhead λtail (~head λx(String) λsome(some) tail)) (String.cons #10 String.nil))
+
+
+U60.cmp
+: ∀(a: #U60)
+  ∀(b: #U60)
+  (Cmp)
+= λa λb
+  (U60.if #(== a b) Cmp (U60.if #(< a b) Cmp Cmp.gtn Cmp.ltn) Cmp.eql  )
+
+U60.get
+: ∀(V: *)
+  ∀(key: #U60)
+  ∀(map: (BBT #U60 V))
+  (Maybe V)
+= λV λkey λmap
+  (BBT.get #U60 V U60.cmp key map)
+
+U60.set
+: ∀(V: *)
+  ∀(key: #U60)
+  ∀(value: V)
+  ∀(map: (BBT #U60 V))
+  (BBT #U60 V)
+= λV λkey λvalue λmap
+  (BBT.set #U60 V U60.cmp key value map)
+
+U60.add_spaces
+: ∀(n: #U60)
+  (String)
+= λn
+  (U60.if #(== n #0) String (String.concat "  " (U60.add_spaces #(- n #1))) "")
+
+U60.map_show
+: ∀(map: (BBT #U60 String))
+  ∀(depth: #U60)
+  (String)
+= λmap λdepth
+  let P = λx(String)
+  let bin = λsize λkey λval λlft λrgt
+    let cct = λa λb (String.concat a b)
+    let spc = λx (cct (U60.add_spaces depth) x)
+    let nnl = λx (cct String.newline x)
+    let key  = (U60.show key)
+    let size = (U60.show size)
+    let a = (nnl (spc (cct "key: " key)))
+    let b = (cct ", size: " size)
+    let c = (cct ", value: " val)
+    let d = (nnl (spc (cct "left: " (U60.map_show lft #(+ #1 depth)))))
+    let e = (nnl (spc (cct "right: " (U60.map_show rgt #(+ #1 depth)))))
+    (cct a (cct b (cct c (cct d e ))))
+  let tip = ""
+  (~map P bin tip)
+
+U60.map_gen
+: ∀(n: #U60)
+  (BBT #U60 String)
+= λn
+  (U60.map_gen.go n (BBT.tip #U60 String))
+
+U60.map_gen.go
+: ∀(n: #U60)
+  ∀(map: (BBT #U60 String))
+  (BBT #U60 String)
+= λn λmap
+  let P     = λx ∀(map: (BBT #U60 String)) (BBT #U60 String)
+  let true  = λmap (U60.set String n (U60.show n) map)
+  let false = λmap (U60.map_gen.go #(- n #1) (U60.set String n (U60.show n) map))
+  ((~(U60.to_bool #(== n #0)) P true false) map)
+
+U60.map_gen_u60
+: ∀(n: #U60)
+  (BBT #U60 #U60)
+= λn
+  (U60.map_gen_u60.go n (BBT.tip #U60 #U60))
+
+U60.map_gen_u60.go
+: ∀(n: #U60)
+  ∀(map: (BBT #U60 #U60))
+  (BBT #U60 #U60)
+= λn λmap
+  let P     = λx ∀(map: (BBT #U60 #U60)) (BBT #U60 #U60)
+  let true  = λmap (U60.set #U60 n n map)
+  let false = λmap (U60.map_gen_u60.go #(- n #1) (U60.set #U60 n n map))
+  ((~(U60.to_bool #(== n #0)) P true false) map)
+
+Cmp.show
+: ∀(cmp: Cmp)
+  (String)
+= λcmp
+  let P = λx(String)
+  let ltn = "ltn"
+  let eql = "eql"
+  let gtn = "gtn"
+  (~cmp P ltn eql gtn)
+
+
+Test1
+: (Maybe String)
+= 
+  let emptyMap   = (BBT.tip #U60 String)
+  let updatedMap = (U60.set String #5 "value5" emptyMap)
+  let value      = (U60.get String #5 updatedMap)
+  let is_equal   = (String.equal (~value λx(String) λsome(some) "none") "value5")
+  (~is_equal λx(Maybe String) (Maybe.none String) (Maybe.some String "Test 1 Failed!"))
+
+// Update an existing key
+Test2
+: (Maybe String)
+= 
+  let initialMap = (U60.set String #10 "initialValue" (BBT.tip #U60 String))
+  let updatedMap = (U60.set String #10 "updatedValue" initialMap)
+  let value      = (U60.get String #10 updatedMap)
+  let is_equal   = (String.equal (~value λx(String) λsome(some) "none") "updatedValue")
+  (~is_equal λx(Maybe String) (Maybe.none String) (Maybe.some String "Test 2 Failed!"))
+
+// Getting on a full map
+Test3
+: (Maybe String)
+= 
+  let map = (U60.map_gen #24)
+  let value = (U60.get String #7 map)
+  let is_equal = (String.equal (~value λx(String) λsome(some) "none") "7")
+  (~is_equal λx(Maybe String) (Maybe.none String) (Maybe.some String "Test 3 Failed!"))
+
+
+U60.fold
+: ∀(A: *)
+  ∀(f: ∀(n: #U60) ∀(acc: A) A)
+  ∀(nil: A)
+  ∀(n: #U60)
+  A
+= λA λf λnil λn
+  (U60.fold.go A f nil n)
+
+U60.fold.go
+: ∀(A: *)
+  ∀(f: ∀(n: #U60) ∀(acc: A) A)
+  ∀(acc: A)
+  ∀(n: #U60)
+  A
+= λA λf λacc λn
+  (~(U60.to_bool n) λx(A) (U60.fold.go A f (f n acc) #(- n #1)) acc)
+
+
+AscendingMap
+: (BBT #U60 #U60)
+= 
+  let nil = (BBT.tip #U60 String)
+  let f = λn λacc (U60.set String #(- #10 n) #(- #10 n) acc)
+  (U60.fold (BBT #U60 String) f nil #10)
+
+DescendingMap
+: (BBT #U60 #U60)
+= 
+  let nil = (BBT.tip #U60 String)
+  let f = λn λacc (U60.set String #(+ n #0) n acc)
+  (U60.fold (BBT #U60 String) f nil #10)
+
+// Adds all the numbers in a map
+U60.add_all
+: ∀(map: (BBT #U60 #U60))
+  (#U60)
+= λmap
+  let P = λx(#U60)
+  let bin = λsize λkey λval λlft λrgt
+    let sum = #(+ #(+ key (U60.add_all lft)) (U60.add_all rgt))
+    sum
+  let tip = #0
+  (~map P bin tip)
+
+RunTests
+: (String)
+=
+  let tests = (List.nil (Maybe String))
+  let tests = (List.cons (Maybe String) Test1 tests)
+  let tests = (List.cons (Maybe String) Test2 tests)
+  let tests = (List.cons (Maybe String) Test3 tests)
+  let solution = (Tests.run tests)
+  solution
+
 test6
-: Nat
-= (Nat.succ (Nat.succ (Nat.succ Nat.zero)))
+// : (Maybe String)
+: String
+// : (List.Map #U60 String)
+// : (#U60)
+= 
+  // RunTests
+  // (Maybe.none String)
+  // let map = (List.Map.gen #1024)
+  // map
+  // let sum = (List.Map.sum map)
+  // sum
+  // let val = (List.Map.get #U60 String U60.equal #0 map)
+  // val
+  // map
+  // let map = (U60.map_gen #1024)
+  // let ext  = λx (~x λx(#U60) λsome(#2) #0)
+  // let val1 = (U60.get String #5 map)
+  // let val2 = (U60.get String #10 map)
+  // #(+ val1 val2)
+  // val1
+  // 75225975
+  // 35973695 - Removed 1 duplicate map on set
+  // 35973695 - Removed 2 duplicate values
+  // 35894135 - Removed 2 duplicate keys
+  //  9827059
+  // let map = (U60.map_gen_u60 #2)
+  // let map = (BBT.tip #U60 #U60)
+  // let map = (U60.set #U60 #0 #0 map)   // 299    +299   1set
+  // let map = (U60.set #U60 #1 #1 map)   // 1293   +994   2set 1bal
+  // let map = (U60.set #U60 #2 #2 map)   // 3958   +2665  3set 2bal 1rot_lft
+  // let map = (U60.set #U60 #3 #3 map)   // 5811   +1853  3set 2bal
+  // let map = (U60.set #U60 #4 #4 map)   // 9342   +3431  4set 3bal 1rot_lft
+  // let map = (U60.set #U60 #5 #5 map)   // 12952  +3610  4set 3bal 1rot_lft
+  // let map = (U60.set #U60 #6 #6 map)   // 16553  +3601  4set 3bal 1rot_lft
+  // let map = (U60.set #U60 #7 #7 map)   // 19141  +2588  4set 3bal
+  // let map = (U60.set #U60 #8 #8 map)   // 23469  +4320  5set 4bal 1rot_lft
+  // let map = (U60.set #U60 #9 #9 map)   // 27789  +4484  5set 4bal 1rot_lft
+  // let map = (U60.set #U60 #10 #10 map) // 32281  +4492  5set 4bal 1rot_lft
+
+  let map = (BBT.tip #U60 #U60)
+  let map = (U60.set #U60 #0 #0 map)   // 299    +299   1set
+  let map = (U60.set #U60 #1 #1 map)   // 1293   +994   2set 1bal
+  let map = (U60.set #U60 #2 #2 map)   // 3958   +2665  3set 2bal 1rot_lft
+  let map = (U60.set #U60 #3 #3 map)   // 5811   +1853  3set 2bal
+  let map = (U60.set #U60 #4 #4 map)   // 9342   +3431  4set 3bal 1rot_lft
+  let map = (U60.set #U60 #5 #5 map)   // 12952  +3610  4set 3bal 1rot_lft
+  let map = (U60.set #U60 #6 #6 map)   // 16553  +3601  4set 3bal 1rot_lft
+  let map = (U60.set #U60 #7 #7 map)   // 19141  +2588  4set 3bal
+  let map = (U60.set #U60 #8 #8 map)   // 23469  +4320  5set 4bal 1rot_lft
+  let map = (U60.set #U60 #9 #9 map)   // 27789  +4484  5set 4bal 1rot_lft
+  let map = (U60.set #U60 #10 #10 map) // 32281  +4492  5set 4bal 1rot_lft
+  let sum = (U60.add_all map)
+  sum
+  // let map = (U60.map_gen_u60 #1023)
+  // let map = (U60.set #U60 #3 #3 map)
+  // let sum = (U60.add_all map)
+  // sum
+
+  // let map = (BBT.bin #U60 #U60 #1 #0 #0 (BBT.tip #U60 #U60) (BBT.tip #U60 #U60))
+  // let map = (BBT.singleton #U60 #U60 #0 #0)
+  // let sum = (U60.add_all map)
+  // let val = (BBT.get #U60 #U60 U60.cmp #0 map)
+  // let val = (U60.get #U60 #0 map)
+  // map
+  // val
+  // sum
+  // let map = (BBT.tip #U60 #U60)
+  // let map = (U60.set #U60 #0 #0 map)
+  // let map = (U60.set #U60 #1 #1 map)
+  // let map = (U60.set #U60 #2 #2 map)
+  // let map = (U60.set #U60 #3 #3 map)
+  // let map = (U60.set #U60 #4 #4 map)
+  // let map = (AscendingMap) // 27990
+  // let map = (DescendingMap) // 26901
+  // let map = (U60.map_gen #1024)
+  // let map = (U60.set #U60 #0 #15 map)
+  // (U60.get String #10 map)
+  // let sum = (U60.add_all map)
+  // sum
+  // let map = (U60.set #U60 #2000 "test" map)
+
+  // // test u60 fold
+  // let u60test = (U60.fold String (λn λacc (String.concat (String.concat (U60.show n) String.newline) acc) ) "" #10)
+  // // u60test
+
+  // let ascMap = AscendingMap
+  // let descMap = DescendingMap
+  // // [0, 3, 7]
+  // let asc0 = (U60.get String #0 ascMap)
+  // let asc1 = (U60.get String #3 ascMap)
+  // let asc2 = (U60.get String #7 ascMap)
+  // let desc0 = (U60.get String #0 descMap)
+  // let desc1 = (U60.get String #3 descMap)
+  // let desc2 = (U60.get String #7 descMap)
+  // (U60.map_show map #0)
+
+
+  // (~asc1 λx(String) λsome(some) "VAZIOO")
+
+  // let map = (BBT.tip #U60 String)
+  // let map = (U60.set String #0 "hello" map)
+  // // let map = (U60.set String #1 "world" map)
+  // let map = (U60.set String #2 "!" map)
+  // // (U60.get String #0 map) 
+  // (U60.map_show map #0)
+  // let cct = λa λb (String.concat a b)
+  // let map = (U60.map_gen #24)
+  // let func = λx (~x λx(String) λsome(some) "none")
+  // let a = (func (U60.get String #0 map))
+  // let b = (func (U60.get String #1 map))
+  // let c = (func (U60.get String #2 map))
+  // let d = (func (U60.get String #4 map))
+  // let e = (func (U60.get String #8 map))
+  // let f = (func (U60.get String #16 map))
+  // let g = (func (U60.get String #32 map))
+  // let h = (func (U60.get String #64 map))
+  // (U60.map_show map #0)
+  // (cct a (cct b (cct c (cct d (cct e (cct f (cct g h)))))))
+  // a
+  
+
+  // (Cmp.show (U60.cmp #2 #0))
+  // (Tests.run (List.cons (Maybe String) (Maybe.none String) (List.cons (Maybe String) (Maybe.some String "error!") (List.nil (Maybe String)))))
 
 
