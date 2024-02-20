@@ -6,4 +6,3 @@ Bool.match
   (P b)
 = λb λP λt λf
   (~b P t f)
-

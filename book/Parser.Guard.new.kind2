@@ -1,0 +1,6 @@
+Parser.Guard.new
+: ∀(A: *)
+  ∀(guard: (Parser Bool))
+  ∀(value: (Parser A))
+  (Parser.Guard A)
+= λA (Pair.new (Parser Bool) (Parser A))

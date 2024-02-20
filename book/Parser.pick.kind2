@@ -1,0 +1,7 @@
+Parser.pick
+: (Parser Char)
+= λcode
+  let P    = λx(Parser.Result Char)
+  let cons = λhead λtail (Parser.Result.done Char tail head)
+  let nil  = (Parser.Result.fail Char "empty")
+  (~code P cons nil)

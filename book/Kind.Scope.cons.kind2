@@ -1,0 +1,5 @@
+Kind.Scope.cons
+: ∀(head: Kind.Binder)
+  ∀(tail: Kind.Scope)
+  Kind.Scope
+= (List.cons Kind.Binder)

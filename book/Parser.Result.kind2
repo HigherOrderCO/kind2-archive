@@ -1,0 +1,9 @@
+Parser.Result
+: ∀(T: *)
+  *
+= λT
+  $self
+  ∀(P: ∀(x: (Parser.Result T)) *)
+  ∀(done: ∀(code: String) ∀(value: T) (P (Parser.Result.done T code value)))
+  ∀(fail: ∀(error: String) (P (Parser.Result.fail T error)))
+  (P self)

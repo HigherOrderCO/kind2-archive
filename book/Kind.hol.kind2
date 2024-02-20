@@ -1,0 +1,7 @@
+Kind.hol
+: ∀(nam: String)
+  ∀(ctx: (List Kind.Term))
+  Kind.Term
+= λnam λctx
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
+  (hol nam ctx)

@@ -1,0 +1,7 @@
+test7.book
+: String
+= `Test : Kind.Term = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))`
+
+test7
+: String
+= (Kind.Book.to_hvm (Kind.Book.parse test7.book))

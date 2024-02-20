@@ -1,0 +1,12 @@
+Kind.Term.parser.app
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "("
+  (Kind.Term.parser.bind Unit (Parser.text "(") λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser λfun
+  (Kind.Term.parser.bind (List Kind.PreTerm) (Parser.until Kind.PreTerm (Parser.skip Bool (Parser.test ")")) Kind.Term.parser) λterms
+  (Kind.Term.parser.bind Unit (Parser.text ")") λ_
+  (Kind.Term.parser.pure λscp
+  (((List.fold Kind.PreTerm terms) ∀(fun:Kind.Term)Kind.Term
+  λargλrecλfun(rec (Kind.app fun (arg scp)))
+  λfun(fun))
+  (fun scp))))))))

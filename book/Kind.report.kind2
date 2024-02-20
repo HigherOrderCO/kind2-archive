@@ -1,0 +1,14 @@
+Kind.report
+: ∀(e: Bool)
+  ∀(inferred: Kind.Term)
+  ∀(expected: Kind.Term)
+  ∀(value: Kind.Term)
+  ∀(dep: Nat)
+  (Maybe Kind.Term)
+= λe λinferred λexpected λvalue λdep
+  let pure  = (Maybe.some Kind.Term) 
+  let none  = (Maybe.none Kind.Term)
+  let P     = λx ∀(inferred: Kind.Term) ∀(expected: Kind.Term) ∀(value: Kind.Term) ∀(dep: Nat) (Maybe Kind.Term)
+  let true  = λinferred λexpected λvalue λdep (pure Kind.set)
+  let false = λinferred λexpected λvalue λdep none // TODO: HVM.log error
+  (~e P true false inferred expected value dep)

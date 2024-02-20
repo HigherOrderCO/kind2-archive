@@ -145,9 +145,9 @@
 (Normal.term r Set               dep) = Set
 (Normal.term r U60               dep) = U60
 (Normal.term r (Num val)         dep) = (Num val)
-(Normal.term r (Txt val)         dep) = (Txt val)
 (Normal.term r (Op2 opr fst snd) dep) = (Op2 opr (Normal.term r fst dep) (Normal.term r snd dep))
 (Normal.term r (Mat nam x z s p) dep) = (Mat nam (Normal r x dep) (Normal r z dep) λk(Normal r (s (Var (Concat nam "-1") dep)) dep) λk(Normal r (p (Var nam dep)) dep))
+(Normal.term r (Txt val)         dep) = (Txt val)
 (Normal.term r (Var nam idx)     dep) = (Var nam idx)
 
 // Equality

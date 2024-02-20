@@ -24,4 +24,4 @@ String.Map.set
 String.Map.new
 : ∀(V: *)
   (String.Map V)
-= λV (String.Map.new String V)
+= λV (List.Map.new String V)

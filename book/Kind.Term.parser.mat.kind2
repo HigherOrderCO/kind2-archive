@@ -1,0 +1,19 @@
+Kind.Term.parser.mat
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "#match "
+  (Kind.Term.parser.bind Unit         (Parser.text "#match ") λ_
+  (Kind.Term.parser.bind String       Parser.name             λnam
+  (Kind.Term.parser.bind Unit         (Parser.text "=")       λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λx
+  (Kind.Term.parser.bind Unit         (Parser.text "{")       λ_
+  (Kind.Term.parser.bind Unit         (Parser.text "#0")      λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λz
+  (Kind.Term.parser.bind Unit         (Parser.text "#+")      λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λs
+  (Kind.Term.parser.bind Unit         (Parser.text "}")       λ_
+  (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λp
+  (Kind.Term.parser.pure λscp 
+  (Kind.mat nam (x scp) (z scp) λx(s (Kind.Scope.extend nam x scp)) λx(p (Kind.Scope.extend nam x scp)))))))))))))))))))

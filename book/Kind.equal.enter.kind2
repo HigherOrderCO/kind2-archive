@@ -1,0 +1,11 @@
+Kind.equal.enter
+: ∀(e: Bool)
+  ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
+  ∀(dep: Nat)
+  Bool
+= λe λa λb λdep
+  let P     = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  let true  = λa λb λdep Bool.true
+  let false = λa λb λdep (Kind.comparer Kind.equal a b dep)
+  (~e P true false a b dep)

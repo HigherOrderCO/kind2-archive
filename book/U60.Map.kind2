@@ -23,5 +23,5 @@ U60.Map.set
 
 U60.Map.new
 : ∀(V: *)
-  (String.Map V)
-= λV (String.Map.new String V)
+  (U60.Map V)
+= λV (List.Map.new #U60 V)

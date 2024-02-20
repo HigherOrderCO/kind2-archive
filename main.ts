@@ -126,7 +126,7 @@ export const compile = (term: Term, used_refs: any, dep: number = 0): string => 
     case "Num": return `(Num ${term.val.toString()})`;
     case "Op2": return `(Op2 ${compile_oper(term.opr)} ${compile(term.fst, used_refs, dep)} ${compile(term.snd, used_refs, dep)})`;
     case "Mat": return `(Mat "${term.nam}" ${compile(term.x, used_refs, dep)} ${compile(term.z, used_refs, dep)} λ${name(dep)} ${compile(term.s(Var(term.nam,dep)), used_refs, dep + 1)} λ${name(dep)} ${compile(term.p(Var(term.nam,dep)), used_refs, dep + 1)})`;
-    case "Txt": return `(Txt "${term.txt}")`;
+    case "Txt": return `(Txt \`${term.txt}\`)`;
     case "Hol": return `(Hol "${term.nam}" ${context(dep)})`;
     case "Var": return name(term.idx);
     case "Ref": return (used_refs[term.nam] = 1), ("Book." + term.nam);
@@ -307,10 +307,11 @@ export function parse_term(code: string): [string, (ctx: Scope) => Term] {
     return [code, ctx => Num(BigInt(chr.charCodeAt(0)))];
   }
   // STR: `"text"` -- string syntax sugar
-  if (code[0] === "\"") {
+  if (code[0] === "\"" || code[0] === "`") {
     var str = "";
+    var end = code[0];
     code = code.slice(1);
-    while (code[0] !== "\"") {
+    while (code[0] !== end) {
       str += code[0];
       code = code.slice(1);
     }
@@ -428,21 +429,30 @@ export function main() {
   // Runs 'hvm1 kind2.hvm1 -s -L -1'
 
   //const output = execSync("hvm1 run .kind2.hvm1 -s -L -1").toString();
-  const output = execSync("hvm1 run -t 1 -c -f .kind2.hvm1 \"(Main)\"").toString();
-  try {
-    var check_text = output.slice(output.indexOf("[["), output.indexOf("RWTS")).trim();
-    var stats_text = output.slice(output.indexOf("RWTS"));
-    var [logs, check] = JSON.parse(check_text);
-    logs.reverse();
-    for (var log of logs) {
-      console.log(log);
+  
+
+
+  //for (let name in book) {
+    //console.log("Checking: " + name);
+
+    const output = execSync("hvm1 run -t 1 -c -f .kind2.hvm1 \"(Main)\"").toString();
+    //const output = execSync(`hvm1 run -t 1 -c -f .kind2.hvm1 "(Checker Book.${name})"`).toString();
+    try {
+      var check_text = output.slice(output.indexOf("[["), output.indexOf("RWTS")).trim();
+      var stats_text = output.slice(output.indexOf("RWTS"));
+      var [logs, check] = JSON.parse(check_text);
+      logs.reverse();
+      for (var log of logs) {
+        console.log(log);
+      }
+      console.log(check ? "Check!" : "Error.");
+      console.log("");
+      console.log(stats_text);
+    } catch (e) {
+      console.log(output);
     }
-    console.log(check ? "Check!" : "Error.");
-    console.log("");
-    console.log(stats_text);
-  } catch (e) {
-    console.log(output);
-  }
+
+  //}
 
 };
 

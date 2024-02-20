@@ -1,0 +1,7 @@
+Parser.Guard.text
+: ∀(A: *)
+  ∀(text: String)
+  ∀(then: (Parser A))
+  (Parser.Guard A)
+= λA λtext λthen
+  (Parser.Guard.new A (Parser.skip Bool (Parser.test text)) then)

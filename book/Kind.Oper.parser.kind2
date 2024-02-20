@@ -1,0 +1,28 @@
+Kind.Oper.parser
+: (Parser Kind.Oper)
+= let TRY = (List.cons (Parser.Guard Kind.Oper))
+  let END = (List.nil (Parser.Guard Kind.Oper))
+  let OP2 =
+    { λsym λoper
+      (Parser.Guard.text Kind.Oper sym
+      (Parser.bind Unit Kind.Oper (Parser.text sym) λx
+      (Parser.pure Kind.Oper oper)))
+    : ∀(sym: String) ∀(oper: Kind.Oper) (Parser.Guard Kind.Oper)}
+  (Parser.variant Kind.Oper
+  (TRY (OP2 "+"  Kind.Oper.add)
+  (TRY (OP2 "*"  Kind.Oper.mul)
+  (TRY (OP2 "-"  Kind.Oper.sub)
+  (TRY (OP2 "/"  Kind.Oper.div)
+  (TRY (OP2 "%"  Kind.Oper.mod)
+  (TRY (OP2 "==" Kind.Oper.eq)
+  (TRY (OP2 "!=" Kind.Oper.ne)
+  (TRY (OP2 "<=" Kind.Oper.lte)
+  (TRY (OP2 ">=" Kind.Oper.gte)
+  (TRY (OP2 "<<" Kind.Oper.lsh)
+  (TRY (OP2 ">>" Kind.Oper.rsh)
+  (TRY (OP2 "<"  Kind.Oper.lt)
+  (TRY (OP2 ">"  Kind.Oper.gt)
+  (TRY (OP2 "&"  Kind.Oper.and)
+  (TRY (OP2 "|"  Kind.Oper.or)
+  (TRY (OP2 "^"  Kind.Oper.xor)
+  END)))))))))))))))))

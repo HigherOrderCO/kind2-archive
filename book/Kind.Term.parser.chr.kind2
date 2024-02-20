@@ -1,0 +1,8 @@
+Kind.Term.parser.chr
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "'"
+  (Kind.Term.parser.bind Unit (Parser.text "'") λ_
+  (Kind.Term.parser.bind #U60 Parser.char λchr
+  (Kind.Term.parser.bind Unit (Parser.text "'") λ_
+  (Kind.Term.parser.pure λscp 
+  (Kind.num chr))))))

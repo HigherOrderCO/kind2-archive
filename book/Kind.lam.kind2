@@ -1,0 +1,7 @@
+Kind.lam
+: ∀(nam: String)
+  ∀(bod: ∀(x: Kind.Term) Kind.Term)
+  Kind.Term
+= λnam λbod
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
+  (lam nam bod)

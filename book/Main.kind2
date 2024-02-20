@@ -1,27 +1,23 @@
-//CON = String.concat
+//BOOK
+//: String
+//= "id = λx x
+//Bool : * = $self ∀(P: ∀(x: Bool) *) ∀(t: (P Bool.true)) ∀(f: (P Bool.false)) (P self)
+//Bool.true  : Bool = ~λP λt λf t
+//Bool.false : Bool = ~λP λt λf f
+//"
 
-//Main = Parser.skip
-
-Main = Kind.compile.hvm.book.go
-
-//Main = Kind.Book.parser
-//Main = Parser.is_eof
-//Main = U60.Map.set
-
-//Main = (String.skip "//oimeugrandeamigo... tudo bem?
-//eu to, e vc?
-//fofo
-//")
-
-//Main = Parser.text
 //Main
 //: String
-//= let term = (Kind.Term.parser.run "
-    //λf λx (f (f x))
-  //")
-  //(Kind.compile.hvm term Nat.zero)
+//= (Kind.Book.show (Kind.Book.parse BOOK))
 
+//Main = Kind.Term.parser.app
 
+//Main
+//: String
+//= let P    = λx(String)
+  //let done = λcode λok (~ok λx(String) "A" "B")
+  //let fail = λerror "C"
+  //(~(Parser.is_eof "      k   skdafjkfd") P done fail)
 
 //Main
 //: String
