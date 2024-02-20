@@ -66,7 +66,7 @@ Parser.Guard.text
   ∀(then: (Parser A))
   (Parser.Guard A)
 = λA λtext λthen
-  (Parser.Guard.new A (Parser.test text) then)
+  (Parser.Guard.new A (Parser.skip Bool (Parser.test text)) then)
 
 Parser.pure
 : ∀(A: *)
@@ -189,7 +189,7 @@ Parser.test
     let nil  = (Parser.Result.done Bool String.nil Bool.false) 
     (~code P cons nil)
   let nil  = λcode (Parser.Result.done Bool code Bool.true)
-  (~test P cons nil (String.skip code))
+  (~test P cons nil code)
 
 // Parses an exact text.
 // - If successful, consumes text.

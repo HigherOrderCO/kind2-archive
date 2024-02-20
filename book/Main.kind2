@@ -1,26 +1,16 @@
-//Main = Kind.reduce.mat
+//BOOK
+//: String
+//= "id = λx x
+//Bool : * = $self ∀(P: ∀(x: Bool) *) ∀(t: (P Bool.true)) ∀(f: (P Bool.false)) (P self)
+//Bool.true  : Bool = ~λP λt λf t
+//Bool.false : Bool = ~λP λt λf f
+//"
 
-BOOK
-: String
-= "id = λx x
+//Main
+//: String
+//= (Kind.Book.show (Kind.Book.parse BOOK))
 
-Bool
-: *
-= $self
-  ∀(P: ∀(x: Bool) *)
-  ∀(t: (P Bool.true))
-  ∀(f: (P Bool.false))
-  (P self)
-
-Bool.true  : Bool = ~λP λt λf t
-Bool.false : Bool = ~λP λt λf f
-
-Foo = #12345
-"
-
-Main
-: String
-= (Kind.Book.show (Kind.Book.parse BOOK))
+//Main = Kind.Term.parser.app
 
 //Main
 //: String

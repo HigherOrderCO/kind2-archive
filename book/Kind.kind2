@@ -881,16 +881,19 @@ Kind.Term.parser.lam
   (Kind.Term.parser.pure λscp 
   (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp))))))))
 
-// (f x)
+// (f x y z ...)
 Kind.Term.parser.app
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text Kind.PreTerm "("
-  (Kind.Term.parser.bind Unit         (Parser.text "(") λ_
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λfun
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λarg
-  (Kind.Term.parser.bind Unit         (Parser.text ")") λ_
-  (Kind.Term.parser.pure λscp 
-  (Kind.app (fun scp) (arg scp))))))))
+  (Kind.Term.parser.bind Unit (Parser.text "(") λ_
+  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser λfun
+  (Kind.Term.parser.bind (List Kind.PreTerm) (Parser.until Kind.PreTerm (Parser.skip Bool (Parser.test ")")) Kind.Term.parser) λterms
+  (Kind.Term.parser.bind Unit (Parser.text ")") λ_
+  (Kind.Term.parser.pure λscp
+  (((List.fold Kind.PreTerm terms) ∀(fun:Kind.Term)Kind.Term
+  λargλrecλfun(rec (Kind.app fun (arg scp)))
+  λfun(fun))
+  (fun scp))))))))
 
 // {x: T}
 Kind.Term.parser.ann
@@ -1071,7 +1074,7 @@ Kind.Book.parser
   // Otherwise, parse a definition
   let false =
     (Parser.bind String Kind.Book Parser.name λnam
-    (Parser.bind Bool Kind.Book (Parser.test ":") λann
+    (Parser.bind Bool Kind.Book (Parser.skip Bool (Parser.test ":")) λann
     let P     = λx(Parser Kind.Book)
     // If annotated, parses the annotation
     let true  = 
