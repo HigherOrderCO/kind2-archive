@@ -1,0 +1,23 @@
+Kind.reduce
+: ∀(maj: Bool)
+  ∀(term: Kind.Term)
+  Kind.Term
+= λmaj λterm
+  let P   = λx(Kind.Term)
+  let all = Kind.all
+  let lam = Kind.lam
+  let app = λfun λarg (Kind.reduce.app maj (Kind.reduce maj fun) arg)
+  let slf = Kind.slf
+  let ann = λval λtyp (Kind.reduce maj val)
+  let ins = λval (Kind.reduce maj val)
+  let ref = λnam λval (Kind.reduce.ref maj nam val)
+  let def = λnam λval λbod (Kind.reduce maj (bod val))
+  let set = Kind.set
+  let u60 = Kind.u60
+  let num = Kind.num
+  let op2 = λopr λfst λsnd (Kind.reduce.op2 opr fst snd)
+  let mat = λnam λx λz λs λp (Kind.reduce.mat maj nam x z s p)
+  let txt = λtxt (Kind.reduce.txt txt)
+  let hol = Kind.hol
+  let var = Kind.var
+  (~term P all lam app ann slf ins ref def set u60 num op2 mat txt hol var)

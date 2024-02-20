@@ -1,0 +1,21 @@
+Kind.Oper
+: *
+= $self
+  ∀(P: ∀(x: Kind.Oper) *)
+  ∀(add: (P Kind.Oper.add))
+  ∀(mul: (P Kind.Oper.mul))
+  ∀(sub: (P Kind.Oper.sub))
+  ∀(div: (P Kind.Oper.div))
+  ∀(mod: (P Kind.Oper.mod))
+  ∀(eq:  (P Kind.Oper.eq))
+  ∀(ne:  (P Kind.Oper.ne))
+  ∀(lt:  (P Kind.Oper.lt))
+  ∀(gt:  (P Kind.Oper.gt))
+  ∀(lte: (P Kind.Oper.lte))
+  ∀(gte: (P Kind.Oper.gte))
+  ∀(and: (P Kind.Oper.and))
+  ∀(or:  (P Kind.Oper.or))
+  ∀(xor: (P Kind.Oper.xor))
+  ∀(lsh: (P Kind.Oper.lsh))
+  ∀(rsh: (P Kind.Oper.rsh))
+  (P self)

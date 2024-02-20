@@ -1,0 +1,7 @@
+Kind.ref
+: ∀(nam: String)
+  ∀(val: Kind.Term)
+  Kind.Term
+= λnam λval
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
+  (ref nam val)

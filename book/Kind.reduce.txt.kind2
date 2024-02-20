@@ -1,0 +1,8 @@
+Kind.reduce.txt
+: ∀(txt: Kind.Text)
+  Kind.Term
+= λtxt
+  let P    = λx Kind.Term
+  let cons = λx λxs (Kind.reduce Bool.true (Kind.app (Kind.app Kind.Book.String.cons (Kind.num x)) (Kind.txt xs)))
+  let nil  = (Kind.reduce Bool.true Kind.Book.String.nil)
+  (~txt P cons nil)

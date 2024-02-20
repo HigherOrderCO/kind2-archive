@@ -1,0 +1,22 @@
+Kind.skip
+: ∀(x: Kind.Term)
+  Kind.Term
+= λx
+  let P   = λx Kind.Term
+  let all = Kind.all
+  let lam = Kind.lam
+  let app = Kind.app
+  let ann = λval λtyp (Kind.skip val)
+  let slf = Kind.slf
+  let ins = λval (Kind.skip val)
+  let ref = Kind.ref
+  let def = λnam λval λbod (Kind.skip (bod val))
+  let set = Kind.set
+  let u60 = Kind.u60
+  let num = Kind.num
+  let op2 = Kind.op2
+  let mat = Kind.mat
+  let txt = Kind.txt
+  let hol = Kind.hol
+  let var = Kind.var
+  (~x P all lam app ann slf ins ref def set u60 num op2 mat txt hol var)

@@ -1,31 +1,7 @@
-BOOK
+test7.book
 : String
-= `
-Kind
-: String
-= let a = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))
-  let b = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))
-
-  let Test =
-    (Kind.all "A" Kind.set λA
-    (Kind.all "B" Kind.set λB
-    (Kind.all "a" A λa
-    (Kind.all "b" B λb
-    B))))
-  let test =
-    (Kind.lam "A" λA
-    (Kind.lam "B" λB
-    (Kind.lam "a" λa
-    (Kind.lam "b" λb
-    b))))
-
-  let P    = λx(String)
-  let some = λvalue (Kind.Term.show value Nat.zero)
-  let none = "error"
-  let chk  = (Kind.check test Test Nat.zero)
-  (~chk P some none)
-`
+= `Test : Kind.Term = (Kind.lam "f" λf(Kind.lam "x" λx(Kind.app f (Kind.app f x))))`
 
 test7
 : String
-= (Kind.Book.to_hvm (Kind.Book.parse BOOK))
+= (Kind.Book.to_hvm (Kind.Book.parse test7.book))

@@ -1,0 +1,12 @@
+Parser.variant
+: ∀(A: *)
+  ∀(variants: (List (Parser.Guard A)))
+  (Parser A)
+= λA λvariants
+  let P    = λx(Parser A)
+  let cons = λvariant λothers
+    (Pair.get (Parser Bool) (Parser A) variant (Parser A) λguard λparser
+    (Parser.bind Bool A guard λsuccess
+    (Bool.if success (Parser A) parser (Parser.variant A others))))
+  let nil = (Parser.fail A "error")
+  (~variants P cons nil)

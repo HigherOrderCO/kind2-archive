@@ -1,0 +1,6 @@
+Kind.Term.parser.set
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm "*"
+  (Kind.Term.parser.bind Unit (Parser.text "*") λ_
+  (Kind.Term.parser.pure λscp 
+  Kind.set)))

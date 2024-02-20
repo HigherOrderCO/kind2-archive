@@ -1,0 +1,3 @@
+Kind.Book.String.cons
+: Kind.Term
+= (Kind.hol "TODO" (List.nil Kind.Term))

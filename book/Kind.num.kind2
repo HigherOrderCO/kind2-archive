@@ -1,0 +1,6 @@
+Kind.num
+: ∀(val: #U60)
+  Kind.Term
+= λval
+  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
+  (num val)

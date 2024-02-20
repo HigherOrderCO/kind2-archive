@@ -1,0 +1,64 @@
+Kind.infer
+: ∀(term: Kind.Term)
+  ∀(dep: Nat)
+  (Maybe Kind.Term)
+= λterm λdep
+  let bind = (Maybe.bind Kind.Term Kind.Term)
+  let pure = (Maybe.some Kind.Term) 
+  let none = (Maybe.none Kind.Term)
+  let P = λx∀(dep:Nat)(Maybe Kind.Term)
+  let all = λnam λinp λbod λdep
+    (bind (Kind.check inp Kind.set dep) λ_
+    (bind (Kind.check (bod (Kind.ann (Kind.var nam dep) inp)) Kind.set (Nat.succ dep)) λ_
+    (pure Kind.set)))
+  let lam = λnam λbod λdep
+    none
+  let app = λfun λarg λdep
+    (bind (Kind.infer fun dep) λfun_typ
+    ((Kind.if.all (Kind.reduce Bool.true fun_typ)
+      ∀(fun: Kind.Term)∀(arg: Kind.Term)(Maybe Kind.Term)
+      λfun_typ.nam λfun_typ.inp λfun_typ.bod λfun λarg
+        (bind (Kind.check arg fun_typ.inp dep) λ_
+        (pure (fun_typ.bod arg)))
+      λfun_typ λfun λarg
+        none)
+      fun arg))
+  let ann = λval λtyp λdep
+    (pure typ)
+  let slf = λnam λbod λdep
+    (bind (Kind.check (bod (Kind.ann (Kind.var nam dep) (Kind.slf nam bod))) Kind.set (Nat.succ dep)) λ_
+    (pure Kind.set))
+  let ins = λval λdep
+    (bind (Kind.infer val dep) λval_typ
+    ((Kind.if.slf (Kind.reduce Bool.true val_typ)
+      ∀(val: Kind.Term)(Maybe Kind.Term)
+      λval_nam λval_typ.bod λval (pure (val_typ.bod (Kind.ins val)))
+      λval_typ λval none)
+      val))
+  let ref = λnam λval λdep
+    (Kind.infer val dep)
+  let def = λnam λval λbod λdep
+    none
+  let set = λdep
+    (pure Kind.set)
+  let u60 = λdep
+    (pure Kind.set)
+  let num = λnum λdep
+    (pure Kind.u60)
+  let txt = λtxt λdep
+    (pure Kind.Book.String)
+  let op2 = λopr λfst λsnd λdep
+    (bind (Kind.check fst Kind.u60 dep) λ_
+    (bind (Kind.check snd Kind.u60 dep) λ_
+    (pure Kind.u60)))
+  let mat = λnam λx λz λs λp λdep
+    (bind (Kind.check x Kind.u60 dep) λx_typ
+    (bind (Kind.check (p (Kind.ann (Kind.var nam dep) Kind.u60)) Kind.set dep) λp_typ
+    (bind (Kind.check z (p (Kind.num #0)) dep) λz_typ
+    (bind (Kind.check (s (Kind.ann (Kind.var (String.concat nam "-1") dep) Kind.u60)) (p (Kind.op2 Kind.Oper.add (Kind.num #1) (Kind.var (String.concat nam "-1") dep))) (Nat.succ dep)) λs_typ
+    (pure (p x))))))
+  let hol = λnam λctx λdep
+    none
+  let var = λnam λidx λdep
+    none
+  (~term P all lam app ann slf ins ref def set u60 num op2 mat txt hol var dep)

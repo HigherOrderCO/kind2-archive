@@ -1,0 +1,4 @@
+Kind.Text.show.go
+: ∀(text: Kind.Text)
+  String.Concatenator
+= String.Concatenator.from_string

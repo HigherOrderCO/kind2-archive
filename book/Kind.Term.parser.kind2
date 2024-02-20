@@ -1,0 +1,22 @@
+Kind.Term.parser
+: (Parser Kind.PreTerm)
+= let TRY = (List.cons (Parser.Guard Kind.PreTerm))
+  let END = (List.nil (Parser.Guard Kind.PreTerm))
+  (Parser.variant Kind.PreTerm
+  (TRY Kind.Term.parser.all
+  (TRY Kind.Term.parser.lam
+  (TRY Kind.Term.parser.app
+  (TRY Kind.Term.parser.ann
+  (TRY Kind.Term.parser.slf
+  (TRY Kind.Term.parser.ins
+  (TRY Kind.Term.parser.set
+  (TRY Kind.Term.parser.def
+  (TRY Kind.Term.parser.u60
+  (TRY Kind.Term.parser.op2
+  (TRY Kind.Term.parser.mat
+  (TRY Kind.Term.parser.chr
+  (TRY Kind.Term.parser.str
+  (TRY Kind.Term.parser.num
+  (TRY Kind.Term.parser.hol
+  (TRY Kind.Term.parser.var
+  END)))))))))))))))))

@@ -1,0 +1,8 @@
+Kind.Term.parser.str
+: (Parser.Guard Kind.PreTerm)
+= (Parser.Guard.text Kind.PreTerm String.quote
+  (Kind.Term.parser.bind Unit (Parser.text String.quote) λ_
+  (Kind.Term.parser.bind String (Parser.until Char (Parser.test String.quote) Parser.char) λchars
+  (Kind.Term.parser.bind Unit (Parser.text String.quote) λ_
+  (Kind.Term.parser.pure λscp
+  (Kind.txt chars))))))

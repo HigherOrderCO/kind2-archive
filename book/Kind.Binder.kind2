@@ -1,0 +1,3 @@
+Kind.Binder
+: *
+= (Pair String Kind.Term)

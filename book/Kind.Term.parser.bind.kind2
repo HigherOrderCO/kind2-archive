@@ -1,0 +1,6 @@
+Kind.Term.parser.bind
+: ∀(A: *)
+  ∀(a: (Parser A))
+  ∀(b: ∀(x: A) (Parser Kind.PreTerm))
+  (Parser Kind.PreTerm)
+= λA (Parser.bind A Kind.PreTerm)
