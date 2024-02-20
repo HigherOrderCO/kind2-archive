@@ -12,3 +12,17 @@ BBT.got_size
   let tip = (Pair.new #U60 (BBT K V) #0 (BBT.tip K V))
   (~map P bin tip)  
 
+// BBT.got_size
+// : ∀(K: *)
+//   ∀(V: *)
+//   ∀(map: (BBT K V))
+//   (Pair #U60 (BBT K V))
+// = λK λV λmap
+//   let P = λx(Pair #U60 (BBT K V))
+//   let bin = λsize λnext.key λnext.val λnext.lft λnext.rgt
+//     let map = ~λP λbin λtip (bin size next.key next.val next.lft next.rgt)
+//     ~λP λnew (new size map)
+//   let tip = ~λP λnew (new #0 ~λP λbin λtip tip)
+//   (~map P bin tip)  
+
+

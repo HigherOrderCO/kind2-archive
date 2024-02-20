@@ -1,4 +1,5 @@
-BBT.new_node
+// Creates a new node with size = 1 + (max lft.size rgt.size)
+ BBT.new_node
 : ∀(K: *)
   ∀(V: *)
   ∀(key: K)
@@ -7,32 +8,15 @@ BBT.new_node
   ∀(rgt: (BBT K V))
   (BBT K V)
 = λK λV λkey λval λlft λrgt
-  let P   = λx ∀(rgt: (BBT K V)) (BBT K V)
-  let bin = λlft.size λlft.key λlft.val λlft.lft λlft.rgt λrgt
-    let P   = λx ∀(lft.size: #U60) ∀(lft.key: K) ∀(lft.val: V) ∀(lft.lft: (BBT K V)) ∀(lft.rgt: (BBT K V)) (BBT K V)
-    let bin = λrgt.size λrgt.key λrgt.val λrgt.lft λrgt.rgt λlft.size λlft.key λlft.val λlft.lft λlft.rgt 
-      let new_size = #(+ #1 (U60.max rgt.size lft.size))
-      let lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
-      let rgt = (BBT.bin K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
-      (BBT.bin K V new_size key val lft rgt)
-    let tip = λlft.size λlft.key λlft.val λlft.lft λlft.rgt 
-      let new_size = #(+ #1 lft.size)
-      let lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
-      let rgt = (BBT.tip K V)
-      (BBT.bin K V new_size key val lft rgt)
-    ((~rgt P bin tip) lft.size lft.key lft.val lft.lft lft.rgt)
-  let tip = λrgt
+  let P   = λx(BBT K V)
+  let new = λlft.size λlft
     let P   = λx(BBT K V)
-    let bin = λrgt.size λrgt.key λrgt.val λrgt.lft λrgt.rgt
-      let new_size = #(+ #1 rgt.size)
-      let lft = (BBT.tip K V)
-      let rgt = (BBT.bin K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
+    let new = λrgt.size λrgt
+      let new_size = #(+ #1 (U60.max rgt.size lft.size))
       (BBT.bin K V new_size key val lft rgt)
-    let tip = (BBT.singleton K V key val)
-    (~rgt P bin tip)
-  ((~lft P bin tip) rgt)
+    (~(BBT.got_size K V rgt) P new)
+  (~(BBT.got_size K V lft) P new)
 
- 
 // BBT.new_node
 // : ∀(K: *)
 //   ∀(V: *)
@@ -42,11 +26,28 @@ BBT.new_node
 //   ∀(rgt: (BBT K V))
 //   (BBT K V)
 // = λK λV λkey λval λlft λrgt
-//   let P   = λx(BBT K V)
-//   let new = λlft.size λlft
-//     let P   = λx(BBT K V)
-//     let new = λrgt.size λrgt
+//   let P   = λx ∀(rgt: (BBT K V)) (BBT K V)
+//   let bin = λlft.size λlft.key λlft.val λlft.lft λlft.rgt λrgt
+//     let P   = λx ∀(lft.size: #U60) ∀(lft.key: K) ∀(lft.val: V) ∀(lft.lft: (BBT K V)) ∀(lft.rgt: (BBT K V)) (BBT K V)
+//     let bin = λrgt.size λrgt.key λrgt.val λrgt.lft λrgt.rgt λlft.size λlft.key λlft.val λlft.lft λlft.rgt 
 //       let new_size = #(+ #1 (U60.max rgt.size lft.size))
+//       let lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
+//       let rgt = (BBT.bin K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
 //       (BBT.bin K V new_size key val lft rgt)
-//     (~(BBT.got_size K V rgt) P new)
-//   (~(BBT.got_size K V lft) P new)
+//     let tip = λlft.size λlft.key λlft.val λlft.lft λlft.rgt 
+//       let new_size = #(+ #1 lft.size)
+//       let lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
+//       let rgt = (BBT.tip K V)
+//       (BBT.bin K V new_size key val lft rgt)
+//     ((~rgt P bin tip) lft.size lft.key lft.val lft.lft lft.rgt)
+//   let tip = λrgt
+//     let P   = λx(BBT K V)
+//     let bin = λrgt.size λrgt.key λrgt.val λrgt.lft λrgt.rgt
+//       let new_size = #(+ #1 rgt.size)
+//       let lft = (BBT.tip K V)
+//       let rgt = (BBT.bin K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
+//       (BBT.bin K V new_size key val lft rgt)
+//     let tip = (BBT.singleton K V key val)
+//     (~rgt P bin tip)
+//   ((~lft P bin tip) rgt)
+
