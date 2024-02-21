@@ -1,3 +1,4 @@
+
 // Temporarily just a list of key/val
 
 U60.Map
@@ -25,3 +26,41 @@ U60.Map.new
 : ∀(V: *)
   (U60.Map V)
 = λV (List.Map.new #U60 V)
+
+
+// BBT Version
+
+// U60.Map
+// : ∀(V: *)
+//   *
+// = λV (BBT #U60 V)
+
+// U60.Map.get
+// : ∀(V: *)
+//   ∀(key: #U60)
+//   ∀(map: (U60.Map V))
+//   (Maybe V)
+// = λV λkey λmap
+//   (BBT.get #U60 V U60.cmp key map)
+
+// U60.Map.got
+// : ∀(V: *)
+//   ∀(key: #U60)
+//   ∀(map: (U60.Map V))
+//   (Pair (Maybe V) (U60.Map V))
+// = λV λkey λmap
+//   (BBT.got #U60 V U60.cmp key map)
+
+// U60.Map.set
+// : ∀(V: *)
+//   ∀(key: #U60)
+//   ∀(val: V)
+//   ∀(map: (U60.Map V))
+//   (U60.Map V)
+// = λV λkey λval λmap
+//   (BBT.set #U60 V U60.cmp key val map)
+
+// U60.Map.new
+// : ∀(V: *)
+//   (U60.Map V)
+// = λV (BBT.tip #U60 V)
