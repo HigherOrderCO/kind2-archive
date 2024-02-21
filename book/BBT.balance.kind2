@@ -84,14 +84,11 @@ BBT.balance_rgt_heavier
     let P     = λx ∀(new_size: #U60) ∀(key: K) ∀(val: V) ∀(lft: (BBT K V)) ∀(rgt.key: K) ∀(rgt.val: V) ∀(rgt.lft: (BBT K V)) ∀(rgt.rgt: (BBT K V)) (BBT K V)
       
     // key > rgt.key
-    // rotating parent once to the left
     let true = λnew_size λkey λval λlft λrgt.key λrgt.val λrgt.lft λrgt.rgt  
       let rgt = (BBT.bin K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
       (BBT.lft_rotate K V new_size key val lft rgt)
 
     // key < rgt.key
-    // rotating parent once to the left
-    // rotating right child once to the right
     let false = λnew_size λkey λval λlft λrgt.key λrgt.val λrgt.lft λrgt.rgt  
       let rgt = (BBT.rgt_rotate K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
       (BBT.lft_rotate K V new_size key val lft rgt)

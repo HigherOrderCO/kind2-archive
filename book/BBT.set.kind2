@@ -17,6 +17,7 @@ BBT.set
       (BBT.balance K V cmp key next.key next.val new_lft next.rgt)
 
     // Same key, update value
+    // Should we update the value or return the same tree?
     let eql = λkey λnext.key λnext.val λnext.lft λnext.rgt
       (BBT.bin K V size next.key val next.lft next.rgt)
 

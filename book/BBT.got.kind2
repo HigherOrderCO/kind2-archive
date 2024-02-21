@@ -1,3 +1,4 @@
+// Returns a pair with the value and the new map
 BBT.got
 : ∀(K: *)
   ∀(V: *)
