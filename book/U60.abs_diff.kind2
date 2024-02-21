@@ -1,3 +1,4 @@
+// Returns the absolute difference between two U60s
 U60.abs_diff
 : ∀(a: #U60)
   ∀(b: #U60)
