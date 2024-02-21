@@ -169,5 +169,11 @@
 
 testBBT
 : String
-= "File commented for backward compatibility."
+= 
+"
+File commented for backward compatibility.
+To run the tests, uncomment the code on:
+  testBBT.kind2
+  U60.Map
+"
   // RunTests
