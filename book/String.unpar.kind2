@@ -1,0 +1,16 @@
+// If first char is '(', remove first and last
+// FIXME: check if last matches
+String.unpar
+: ∀(fst: Char)
+  ∀(lst: Char)
+  ∀(str: String)
+  String
+= λfst λlst λstr
+  let P    = λx(String)
+  let cons = λhead λtail
+    let P     = λx∀(head:Char)∀(tail:String)String
+    let true  = λheadλtail(String.begin tail)
+    let false = λheadλtail(String.cons head tail)
+    ((~(Char.equal head fst) P true false) head tail)
+  let nil  = String.nil
+  (~str P cons nil)

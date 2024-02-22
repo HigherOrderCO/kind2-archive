@@ -1,0 +1,9 @@
+Sigma
+: ∀(A: *)
+  ∀(B: ∀(x: A) *)
+  *
+= λA λB
+  $self
+  ∀(P: ∀(x: (Sigma A B)) *)
+  ∀(new: ∀(a: A) ∀(b: (B a)) (P (Sigma.new A B a b)))
+  (P self)

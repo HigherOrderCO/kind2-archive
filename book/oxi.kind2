@@ -1,5 +1,0 @@
-oxi
-: ∀(b: Bool)
-  (Equal Bool b (Bool.not (Bool.not b)))
-= λb
-  (~b ?P ?T ?F)

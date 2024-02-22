@@ -1,0 +1,71 @@
+//TRY-0
+//-----
+
+//A.one : A = ~λP λnew (new Nat.zero)
+//A.bad : A = ~λP λnew (new (Nat.succ Nat.zero) ?UE)
+
+//A : * =
+  //$self
+  //∀(P: ∀(x: A) *)
+  //∀(new: ∀(tag: Nat)
+    //let R    = λx(*)
+    //let zero = (P A.one)
+    //let succ = λp∀(x:Empty)*
+    //(~tag R succ zero))
+  //(P self)
+
+//A.elim : ∀(a: A) ∀(P: ∀(x: A) *) ∀(t: (P A.one)) (P a) =
+  //λa λP λt
+  //(~a P λtag(~tag λx(~x λx(*) λp(Empty) (P A.one)) λp(?B) t))
+
+// TRY-1
+// -----
+
+A.one : A = ~λP λnew (new #0)
+A.bad : A = ~λP λnew (new #1 ?UE)
+
+A.sel
+: ∀(P: ∀(x: A) *)
+  ∀(k: #U60)
+  *
+= λP λk #match tag = k {
+  #0: (P A.one)
+  #+: ∀(e: Empty) *
+}: *
+
+A : * =
+  $self
+  ∀(P: ∀(x: A) *)
+  ∀(new: ∀(tag: #U60) (A.sel P tag))
+  (P self)
+
+A.match : ∀(a: A) ∀(P: ∀(x: A) *) ∀(t: (P A.one)) (P a) =
+  λa λP λt
+  (~a P λtag #match tag = tag {
+    #0: t
+    #+: λx (~x λx(*))
+  }: (A.sel P tag))
+
+// TRY-2
+// -----
+
+//A.one
+//: A
+//= ~ λP λnew (new #0 Unit.one)
+
+//A : * = (Sigma #U60 λtag #match tag = tag {
+  //#0: Unit
+  //#+: Empty
+//}: *)
+
+//A.match : ∀(a: A) ∀(P: ∀(x: A) *) ∀(t: (P A.one)) (P a) =
+  //λa λP λt
+  //(~a P λx #match x = x {
+    //#0: λb ?A
+    //#+: λb ?B
+  //}: ∀(b: (#match x = x { #0: Unit #+: Empty }: *))
+     //(P (Sigma.new #U60 λtag(#match tag = tag { #0: Unit #+: Empty }: *) x b)))
+
+
+
+//(P (Sigma.new #U60 Unit b))

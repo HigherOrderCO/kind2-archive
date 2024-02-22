@@ -16,4 +16,4 @@ Kind.Term.parser.mat
   (Kind.Term.parser.bind Unit         (Parser.text ":")       λ_
   (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser        λp
   (Kind.Term.parser.pure λscp 
-  (Kind.mat nam (x scp) (z scp) λx(s (Kind.Scope.extend nam x scp)) λx(p (Kind.Scope.extend nam x scp)))))))))))))))))))
+  (Kind.mat nam (x scp) (z scp) λx(s (Kind.Scope.extend (String.concat nam "-1") x scp)) λx(p (Kind.Scope.extend nam x scp)))))))))))))))))))

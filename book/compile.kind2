@@ -1,0 +1,4 @@
+compile : String = (Kind.Book.to_hvm (Kind.Book.parse `test9
+: String
+= (String.unpar '(' ')' "((foo))")
+`))

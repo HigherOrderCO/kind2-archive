@@ -1,0 +1,11 @@
+U60.match
+: ∀(x: #U60)
+  ∀(P: ∀(x: #U60) *)
+  ∀(s: ∀(x: #U60) (P #(+ #1 x)))
+  ∀(z: (P #0))
+  (P x)
+= λx λP λs λz
+  #match self = x {
+    #0: z
+    #+: (s self-1)
+  }: (P self)

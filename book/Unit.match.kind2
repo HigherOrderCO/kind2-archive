@@ -1,0 +1,7 @@
+Unit.match
+: ∀(x: Unit)
+  ∀(P: ∀(x: Unit) *)
+  ∀(o: (P Unit.one))
+  (P x)
+= λx λP λo
+  (~x P o)

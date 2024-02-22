@@ -1,0 +1,8 @@
+String.indent
+: ∀(tab: Nat)
+  String
+= λtab
+  let P    = λx(String)
+  let succ = λtab.pred (String.cons ' ' (String.cons ' ' (String.indent tab.pred)))
+  let zero = String.nil
+  (~tab P succ zero)

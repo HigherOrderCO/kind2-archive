@@ -1,0 +1,5 @@
+String.begin
+: ∀(str: String)
+  String
+= λstr
+  (List.begin Char str)

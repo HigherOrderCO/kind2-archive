@@ -1,73 +1,113 @@
 Kind.Term.to_hvm.go
 : ∀(term: Kind.Term)
   ∀(dep: Nat)
+  ∀(inc: Bool)
+  ∀(tab: Nat)
   String.Concatenator
-= λterm λdep
+= λterm λdep λinc λtab
   let P   = λx String.Concatenator
-  let all = λnam λinp λbod
-    (Kind.Text.show.go "0")
+  let all = λnam λinp λbod λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "0")
+    nil))
   let lam = λnam λbod λnil
+    ((Kind.Term.to_hvm.nl inc tab)
     ((Kind.Text.show.go "λ")
-    ((Kind.Text.show.go (U60.name (U60.from_nat dep)))
+    //((Kind.Text.show.go (U60.name (U60.from_nat dep)))
+    ((Kind.Text.show.go (String.cons '_' nam))
     ((Kind.Text.show.go " "
-    ((Kind.Term.to_hvm.go (bod (Kind.var nam dep)) (Nat.succ dep))
-    nil)))))
-  let app = λfun λarg λnil
-    ((Kind.Text.show.go "(")
-    ((Kind.Term.to_hvm.go fun dep)
-    ((Kind.Text.show.go " ")
-    ((Kind.Term.to_hvm.go arg dep)
-    ((Kind.Text.show.go ")")
-    nil)))))
-  let ann = λval λtyp
-    (Kind.Term.to_hvm.go val dep)
-  let slf = λnam λbod
-    (Kind.Text.show.go "0")
-  let ins = λval
-    (Kind.Term.to_hvm.go val dep)
-  let ref = λnam λval
-    (Kind.Text.show.go nam)
-  let def = λnam λval λbod λnil
-    ((Kind.Text.show.go "let ")
-    ((Kind.Text.show.go nam)
-    ((Kind.Text.show.go " = ")
-    ((Kind.Term.to_hvm.go val dep)
-    ((Kind.Text.show.go "; ")
-    ((Kind.Term.to_hvm.go (bod (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Term.to_hvm.go (bod (Kind.var nam dep)) (Nat.succ dep) Bool.true tab)
     nil))))))
-  let set =
-    (Kind.Text.show.go "0")
-  let u60 =
-    (Kind.Text.show.go "0")
-  let num = λval
-    (U60.show.go val)
+  let app = λfun λarg λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "(")
+    ((Kind.Term.to_hvm.go fun dep Bool.true tab)
+    ((Kind.Text.show.go " ")
+    ((Kind.Term.to_hvm.go arg dep Bool.true tab)
+    ((Kind.Text.show.go ")")
+    nil))))))
+  let ann = λval λtyp λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Term.to_hvm.go val dep Bool.true tab)
+    nil))
+  let slf = λnam λbod λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "0")
+    nil))
+  let ins = λval λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Term.to_hvm.go val dep Bool.true tab)
+    nil))
+  let ref = λnam λval λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "(F.")
+    ((Kind.Text.show.go nam)
+    ((Kind.Text.show.go ")")
+    nil))))
+  let def = λnam λval λbod λnil
+    let tab = ((~inc λx∀(x:Nat)Nat Nat.succ λx(x)) tab)
+    ((Kind.Text.show.go String.newline)
+    ((Kind.Text.show.go (String.indent tab))
+    ((Kind.Text.show.go "let ")
+    //((Kind.Text.show.go (U60.name (U60.from_nat dep)))
+    ((Kind.Text.show.go (String.cons '_' nam))
+    ((Kind.Text.show.go " = ")
+    ((Kind.Term.to_hvm.go val dep Bool.true tab)
+    ((Kind.Text.show.go " ")
+    ((Kind.Term.to_hvm.go (bod (Kind.var nam dep)) (Nat.succ dep) Bool.false tab)
+    nil))))))))
+  let set = λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "0")
+    nil))
+  let u60 = λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "0")
+    nil))
+  let num = λval λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((U60.show.go val)
+    nil))
   let op2 = λopr λfst λsnd λnil
+    ((Kind.Term.to_hvm.nl inc tab)
     ((Kind.Text.show.go "(")
     ((Kind.Oper.show.go opr) // TODO: Kind.Oper.to_hvm
     ((Kind.Text.show.go " ")
-    ((Kind.Term.to_hvm.go fst dep)
+    ((Kind.Term.to_hvm.go fst dep Bool.true tab)
     ((Kind.Text.show.go " ")
-    ((Kind.Term.to_hvm.go snd dep)
+    ((Kind.Term.to_hvm.go snd dep Bool.true tab)
     ((Kind.Text.show.go ")")
-    nil)))))))
+    nil))))))))
   let mat = λnam λx λz λs λp λnil
+    ((Kind.Term.to_hvm.nl inc tab)
     ((Kind.Text.show.go "(U60.match ")
-    ((Kind.Term.to_hvm.go x dep)
+    ((Kind.Term.to_hvm.go x dep Bool.true tab)
     ((Kind.Text.show.go " ")
-    ((Kind.Term.to_hvm.go z dep)
+    ((Kind.Term.to_hvm.go z dep Bool.true tab)
     ((Kind.Text.show.go " ")
-    ((Kind.Term.to_hvm.go (s (Kind.var (String.concat nam "_1") dep)) (Nat.succ dep))
-    ((Kind.Text.show.go " ")
-    ((Kind.Term.to_hvm.go (p (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Text.show.go "λ")
+    ((Kind.Text.show.go (String.cons '_' (String.concat nam "_1")))
+    //((Kind.Text.show.go (U60.name (U60.from_nat dep)))
+    ((Kind.Text.show.go "(")
+    ((Kind.Term.to_hvm.go (s (Kind.var (String.concat nam "_1") dep)) (Nat.succ dep) Bool.true tab)
     ((Kind.Text.show.go ")")
-    nil)))))))))
+    ((Kind.Text.show.go ")")
+    nil))))))))))))
   let txt = λtxt λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "(Str ")
     ((Kind.Text.show.go String.quote)
     ((Kind.Text.show.go txt)
     ((Kind.Text.show.go String.quote)
-    nil)))
-  let hol = λnam λctx
-    (Kind.Text.show.go "0")
-  let var = λnam λidx
-    (Kind.Text.show.go (U60.name (U60.from_nat idx)))
+    ((Kind.Text.show.go ")")
+    nil))))))
+  let hol = λnam λctx λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    ((Kind.Text.show.go "0")
+    nil))
+  let var = λnam λidx λnil
+    ((Kind.Term.to_hvm.nl inc tab)
+    //((Kind.Text.show.go (U60.name (U60.from_nat idx)))
+    ((Kind.Text.show.go (String.cons '_' nam))
+    nil))
   (~term P all lam app ann slf ins ref def set u60 num op2 mat txt hol var)

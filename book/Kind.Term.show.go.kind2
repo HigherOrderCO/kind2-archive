@@ -80,7 +80,7 @@ Kind.Term.show.go
     ((Kind.Text.show.go " { #0: ")
     ((Kind.Term.show.go z dep)
     ((Kind.Text.show.go "; #+: ")
-    ((Kind.Term.show.go (s (Kind.var nam dep)) (Nat.succ dep))
+    ((Kind.Term.show.go (s (Kind.var (String.concat nam "-1") dep)) (Nat.succ dep))
     ((Kind.Text.show.go " }: ")
     ((Kind.Term.show.go (p (Kind.var nam dep)) (Nat.succ dep))
     nil))))))))))

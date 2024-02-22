@@ -6,12 +6,13 @@ Kind.Book.to_hvm.go
   let cons = λhead λtail
     let P   = λx String.Concatenator
     let new = λhead.fst λhead.snd λnil
+      ((Kind.Text.show.go "F."
       ((Kind.Text.show.go head.fst)
       ((Kind.Text.show.go " = "
-      ((Kind.Term.to_hvm.go head.snd Nat.zero
+      ((Kind.Term.to_hvm.go head.snd Nat.zero Bool.true Nat.zero
       ((Kind.Text.show.go String.newline
       ((Kind.Book.to_hvm.go tail
-      nil)))))))))
+      nil)))))))))))
     (~head P new)
   let nil  = λnil nil
   (~book P cons nil)
