@@ -1,0 +1,5 @@
+Kind.Book.get_refs
+: ∀(book: Kind.Book)
+  (List String)
+= λbook
+  (List.Concatenator.build String (Kind.Book.get_refs.go book))

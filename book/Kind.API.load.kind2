@@ -1,0 +1,6 @@
+// TODO
+Kind.API.load
+: ∀(name: String)
+  Kind.Book
+= λname
+  (Kind.API.load.one name)

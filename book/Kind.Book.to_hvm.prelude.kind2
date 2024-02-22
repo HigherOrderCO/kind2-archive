@@ -1,9 +1,11 @@
-Kind.Book.to_hvm.prelude
-: String
-= `
+Kind.Book.to_hvm.prelude : String = `
 (U60.match 0 z s) = z
 (U60.match n z s) = (s (- n 1))
 
 (Str String.nil)         = λP λcons λnil nil
 (Str (String.cons x xs)) = λP λcons λnil (cons x (Str xs))
+
+(Str.view str)        = (str 0 λhλt(String.cons h (Str.view t)) String.nil)
+(Strs.view strs)      = (List.view λx(Str.view x) strs)
+(List.view elem list) = (list 0 λhλt(List.cons (elem h) (List.view elem t)) List.nil)
 `

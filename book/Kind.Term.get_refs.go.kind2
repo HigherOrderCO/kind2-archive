@@ -1,0 +1,50 @@
+Kind.Term.get_refs.go
+: ∀(term: Kind.Term)
+  (List.Concatenator String)
+= λterm
+  let P   = λx(List.Concatenator String)
+  let all = λnam λinp λbod λnil
+    ((Kind.Term.get_refs.go inp)
+    ((Kind.Term.get_refs.go (bod Kind.set))
+    nil))
+  let lam = λnam λbod λnil
+    ((Kind.Term.get_refs.go (bod Kind.set))
+    nil)
+  let app = λfun λarg λnil
+    ((Kind.Term.get_refs.go fun)
+    ((Kind.Term.get_refs.go arg)
+    nil))
+  let ann = λval λtyp λnil
+    ((Kind.Term.get_refs.go val)
+    ((Kind.Term.get_refs.go typ)
+    nil))
+  let slf = λnam λbod λnil
+    ((Kind.Term.get_refs.go (bod Kind.set))
+    nil)
+  let ins = λval λnil
+    ((Kind.Term.get_refs.go val)
+    nil)
+  let ref = λnam λval λnil
+    ((List.cons String nam)
+    nil)
+  let def = λnam λval λbod λnil
+    ((Kind.Term.get_refs.go val)
+    ((Kind.Term.get_refs.go (bod Kind.set))
+    nil))
+  let set = λnil nil
+  let u60 = λnil nil
+  let num = λval λnil nil
+  let op2 = λopr λfst λsnd λnil
+    ((Kind.Term.get_refs.go fst)
+    ((Kind.Term.get_refs.go snd)
+    nil))
+  let mat = λnam λx λz λs λp λnil
+    ((Kind.Term.get_refs.go x)
+    ((Kind.Term.get_refs.go z)
+    ((Kind.Term.get_refs.go (s Kind.set))
+    ((Kind.Term.get_refs.go (p Kind.set))
+    nil))))
+  let txt = λtext λnil nil
+  let hol = λnam λctx λnil nil
+  let var = λnam λidx λnil nil
+  (~term P all lam app ann slf ins ref def set u60 num op2 mat txt hol var)

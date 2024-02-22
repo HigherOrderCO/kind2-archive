@@ -40,7 +40,7 @@ Kind.Term.to_hvm.go
     nil))
   let ref = λnam λval λnil
     ((Kind.Term.to_hvm.nl inc tab)
-    ((Kind.Text.show.go "(F.")
+    ((Kind.Text.show.go "(Book.")
     ((Kind.Text.show.go nam)
     ((Kind.Text.show.go ")")
     nil))))

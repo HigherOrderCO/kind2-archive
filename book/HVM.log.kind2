@@ -1,0 +1,8 @@
+HVM.log
+: ∀(A: *)
+  ∀(B: *)
+  ∀(msg: A)
+  ∀(ret: B)
+  B
+= λA λB λmsg λret
+  ret

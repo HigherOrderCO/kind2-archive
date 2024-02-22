@@ -1,3 +1,13 @@
+Main
+: Kind.Book
+=
+  let book = (Kind.API.load "Bool.and")
+  book
+  //let code = (Kind.Book.to_hvm book)
+  //let refs = (Kind.Book.get_refs book)
+  //(HVM.print Unit code
+  //Unit.one)
+
 //BOOK
 //: String
 //= "id = λx x

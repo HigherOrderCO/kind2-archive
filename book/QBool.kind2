@@ -1,4 +1,5 @@
 // Ideal:
+// 
 // QBool.true  : QBool = ~λP (#0, λx x)
 // QBool.false : QBool = ~λP (#1, λx x)
 // 
@@ -9,7 +10,7 @@
 //   ∀(x: match t {
 //     0: (P QBool.true)
 //     1: (P QBool.false)
-//     +: Empty
+//     +: ∀(x: Empty) *
 //   })
 //   (P self)
 // 
@@ -55,16 +56,16 @@ QBool.match
 = λa λP λt λf
   (~(~a P) λx(P a) λtag #match tag = tag {
     #0: λx (x t)
-    #+: λx ((#match tag-1 = tag-1 {
+    #+: λx ((#match tag_1 = tag-1 {
       #0: λx (x f)
       #+: λx (x λe (Empty.absurd e *))
-    }: ∀(x: ∀(x: #match tag-1 = tag-1 {
+    }: ∀(x: ∀(x: #match tag_1 = tag_1 {
       #0: (P QBool.false)
       #+: ∀(x: Empty) *
     }: *) (P a)) (P a)) x)
   }: ∀(x: (∀(x: #match tag = tag {
     #0: (P QBool.true)
-    #+: #match tag-1 = tag-1 {
+    #+: #match tag_1 = tag-1 {
       #0: (P QBool.false)
       #+: ∀(x: Empty) *
     }: *

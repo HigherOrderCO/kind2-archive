@@ -186,9 +186,9 @@
 (Comparer rec (Var a.nam a.idx)           (Var b.nam b.idx)           dep) = (== a.idx b.idx)
 (Comparer rec (Ann a.val a.typ)           b                           dep) = (rec a.val b dep)
 (Comparer rec a                           (Ann b.val b.typ)           dep) = (rec a b.val dep)
-(Comparer rec (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
 (Comparer rec (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
 (Comparer rec a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
+(Comparer rec (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
 (Comparer rec U60                         U60                         dep) = 1
 (Comparer rec (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
 (Comparer rec (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (rec a.fst b.fst dep) (rec a.snd b.snd dep))
@@ -358,25 +358,37 @@
 // Compilation
 // -----------
 
+(Str.view str) = (str 0 λheadλtail(String.cons head (Str.view tail)) String.nil)
+
+(Str.make (String.cons x xs)) = λP λcons λnil (cons x (Str.make xs))
+(Str.make String.nil)         = λP λcons λnil nil
+
+Compile.primitives = [
+  (Pair "HVM.log" λA λB λmsg λret (HVM.log msg ret))
+  (Pair "HVM.print" λA λmsg λret (HVM.print (Str.view msg) ret))
+  (Pair "HVM.save" λA λname λdata λret (HVM.save (Str.view name) (Str.view data) ret))
+  (Pair "HVM.load" λA λname λret (HVM.load (Str.view name) λdata (ret (Str.make data))))
+]
+
 (Compile (All nam inp bod)) = 0
 (Compile (Lam nam bod))     = λx(Compile (bod (Var "" x)))
 (Compile (App fun arg))     = ((Compile fun) (Compile arg))
 (Compile (Ann val typ))     = (Compile val)
 (Compile (Slf nam bod))     = 0
 (Compile (Ins val))         = (Compile val)
-(Compile (Ref nam val))     = (Compile val)
+(Compile (Ref nam val))     = (Compile.ref Compile.primitives nam val)
 (Compile (Let nam val bod)) = (Compile (bod val))
 (Compile Set)               = 0
 (Compile U60)               = 0
 (Compile (Num val))         = val
 (Compile (Op2 opr fst snd)) = (Compile.op2 opr (Compile fst) (Compile snd))
 (Compile (Mat nam x z s p)) = (Compile.mat (Compile x) (Compile z) λx(Compile (s (Var "" x))))
-(Compile (Txt txt))         = (Compile (Compile.txt txt))
+(Compile (Txt txt))         = (Str.make txt)
 (Compile (Hol nam ctx))     = 0
 (Compile (Var nam val))     = val
 
-(Compile.txt (String.cons x xs)) = (App (App Book.String.cons (Num x)) (Compile.txt xs))
-(Compile.txt String.nil)         = Book.String.nil
+//(Compile.txt (String.cons x xs)) = (App (App Book.String.cons (Num x)) (Compile.txt xs))
+//(Compile.txt String.nil)         = Book.String.nil
 
 (Compile.op2 ADD fst snd) = (+ fst snd)
 (Compile.op2 SUB fst snd) = (- fst snd)
@@ -398,16 +410,15 @@
 (Compile.mat 0 z s) = z
 (Compile.mat n z s) = (s (- n 1))
 
+(Compile.ref (List.cons (Pair prim_name prim_func) prims) nam val) = (If (Same prim_name nam) prim_func (Compile.ref prims nam val))
+(Compile.ref List.nil nam val) = (Compile val)
+
 // API
 // ---
 
-(Read str) = (str 0 λheadλtail(String.cons head (Read tail)) String.nil)
-
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
-(Normalizer val)           = (Read (Compile val)) // compiles to native and reads as string
-//(Normalizer val)           = ((Compile val)) // compiles to native and show it
-//(Normalizer val)           = (Normal 1 val  1) // uses the normalizer function
+(Normalizer val)           = (Compile val)
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))

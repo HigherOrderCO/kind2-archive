@@ -6,9 +6,8 @@ _exp = (Kind.lam "n" λn(Kind.lam "m" λm(Kind.lam "P" λP(Kind.app (Kind.app m 
 _C2 = _Nat
 _c2 = (Kind.lam "P" λP(Kind.lam "s" λs(Kind.lam "z" λz(Kind.app s (Kind.app s z)))))
 
-// Checks if `(work 2^4)` is propositionally equal to `true`
+// Checks if (work 2^4) is propositionally equal to true
 test10
 : String
 = let term = (Kind.app (Kind.app _exp _c2) _c2)
   (Kind.Term.show (Kind.normal Bool.true term Nat.zero) Nat.zero)
-

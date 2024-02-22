@@ -1,0 +1,8 @@
+HVM.save
+: ∀(A: *)
+  ∀(file: String)
+  ∀(data: String)
+  ∀(cont: A)
+  A
+= λA λfile λdata λcont
+  cont
