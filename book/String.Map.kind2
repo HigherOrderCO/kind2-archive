@@ -25,3 +25,41 @@ String.Map.new
 : ∀(V: *)
   (String.Map V)
 = λV (List.Map.new String V)
+
+// BBT Version
+
+// String.Map 
+// :  ∀(V: *) 
+//    *
+// = λV (BBT String V)
+
+// String.Map.get
+// : ∀(V: *)
+//   ∀(key: String)
+//   ∀(map: (String.Map V))
+//   (Maybe V)
+// = λV λkey λmap
+//   (BBT.get String V String.cmp key map)
+
+// String.Map.got 
+// : ∀(V: *)
+//   ∀(key: String)
+//   ∀(map: (String.Map V))
+//   (Pair (Maybe V) (String.Map V))
+// = λV λkey λmap
+//   (BBT.got String V String.cmp key map)
+
+// String.Map.set
+// : ∀(V: *)
+//   ∀(key: String)
+//   ∀(val: V)
+//   ∀(map: (String.Map V))
+//   (String.Map V)
+// = λV λkey λval λmap
+//   (BBT.set String V String.cmp key val map)
+
+// String.Map.new
+// :  ∀(V: *)
+//   (String.Map V)
+// = λV (BBT.tip String V)
+

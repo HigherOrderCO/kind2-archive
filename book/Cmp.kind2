@@ -1,0 +1,8 @@
+Cmp
+: *
+= $self
+  ∀(P: ∀(cmp: Cmp) *)
+  ∀(ltn: (P Cmp.ltn))
+  ∀(eql: (P Cmp.eql))
+  ∀(gtn: (P Cmp.gtn))
+  (P self)

@@ -1,0 +1,10 @@
+// Returns the absolute difference between two U60s
+U60.abs_diff
+: ∀(a: #U60)
+  ∀(b: #U60)
+  #U60
+= λa λb
+  let P = λx(#U60)
+  let true  = #(- b a)
+  let false = #(- a b)
+  (~(U60.to_bool #(< a b)) P true false)

@@ -1,0 +1,32 @@
+// Returns a pair with the value and the new map
+BBT.got
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(key: K)
+  ∀(map: (BBT K V))
+  (Pair (Maybe V) (BBT K V))
+= λK λV λcmp λkey λmap
+  let P = λx(Pair (Maybe V) (BBT K V))
+  let bin = λsize λnext.key λnext.val λnext.lft λnext.rgt
+    let P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) (Pair (Maybe V) (BBT K V))
+    let ltn = λcmp λkey 
+      let new_pair = (BBT.got K V cmp key next.lft)
+      let P   = λx(Pair (Maybe V) (BBT K V))
+      let new = λval λlft
+        let map = (BBT.bin K V size next.key next.val lft next.rgt)
+        (Pair.new (Maybe V) (BBT K V) val map)
+      (~new_pair P new)
+    let eql = λcmp λkey
+      let map = (BBT.bin K V size next.key next.val next.lft next.rgt)
+      (Pair.new (Maybe V) (BBT K V) (Maybe.some V next.val) map)
+    let gtn = λcmp λkey 
+      let new_pair = (BBT.got K V cmp key next.rgt)
+      let P   = λx(Pair (Maybe V) (BBT K V))
+      let new = λval λrgt
+        let map = (BBT.bin K V size next.key next.val next.lft rgt)
+        (Pair.new (Maybe V) (BBT K V) val map)
+      (~new_pair P new)
+    ((~(cmp key next.key) P ltn eql gtn) cmp key)
+  let tip = (Pair.new (Maybe V) (BBT K V) (Maybe.none V) (BBT.tip K V))
+  (~map P bin tip)

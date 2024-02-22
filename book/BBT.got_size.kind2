@@ -1,0 +1,13 @@
+// Returns a pair with the size of the map and the reconstructed map
+BBT.got_size
+: ∀(K: *)
+  ∀(V: *)
+  ∀(map: (BBT K V))
+  (Pair #U60 (BBT K V))
+= λK λV λmap
+  let P = λx(Pair #U60 (BBT K V))
+  let bin = λsize λnext.key λnext.val λnext.lft λnext.rgt
+    let map = (BBT.bin K V size next.key next.val next.lft next.rgt)
+    (Pair.new #U60 (BBT K V) size map)
+  let tip = (Pair.new #U60 (BBT K V) #0 (BBT.tip K V))
+  (~map P bin tip)  
