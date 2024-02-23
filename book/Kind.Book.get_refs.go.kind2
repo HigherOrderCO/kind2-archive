@@ -1,5 +1,5 @@
 Kind.Book.get_refs.go
-: ∀(book: Kind.Book)
+: ∀(book: (List (Pair String Kind.Term)))
   (List.Concatenator String)
 = λbook
   let P    = λx (List.Concatenator String)

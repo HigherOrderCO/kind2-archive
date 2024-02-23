@@ -1,3 +1,4 @@
+
 //// TODO
 //Kind.load
 //: ∀(name: String)
@@ -115,71 +116,3 @@
   //let defs = (String.Map.to_list Kind.Term book)
   //let defs = (List.app (Pair String Kind.Term) String (Pair.fst String Kind.Term) defs)
   //(String.join defs)
-
-
-
-import { execSync } from 'child_process';
-import * as fs from 'fs';
-
-export function run(expr: string): string {
-  var command = `hvm1 run -t 1 -c -f bootstrap.hvm1 '${expr}'`;
-  try {
-    const output = execSync(command).toString();
-    return output;
-  } catch (error) {
-    throw error;
-  }
-}
-
-export function str(result: string): string {
-  return result.slice(1,-1).trim();
-}
-
-export function get_refs(code: string): string {
-  return run(`(Strs.view ((Book.Kind.Book.get_refs) ((Book.Kind.Book.parse) (Str \`${code}\`))))`).trim();
-}
-
-export function to_hvm(code: string): string {
-  return str(run(`(Str.view ((Book.Kind.Book.to_hvm) ((Book.Kind.Book.parse) (Str \`${code}\`))))`).trim());
-}
-
-//// Loads a name into a book
-//Kind.load.name
-//: ∀(lims: #U60)
-  //∀(name: String)
-  //∀(book: Kind.Book)
-  //Kind.Book
-//= λlims
-  //(HVM.log #U60 ∀(name:String)∀(book:Kind.Book)Kind.Book lims
-  //#match lims = lims {
-    //#0: λname λbook book
-    //#+: λname λbook
-      //(HVM.print Kind.Book (String.concat "LOAD:" name)
-      //// Checks if name is already on book
-      //let P   = λx (Kind.Book)
-      //let new = λhas λbook
-        //// If it is, do nothing; otherwise, define it
-        //let P     = λx ∀(book: Kind.Book) (Kind.Book)
-        //let true  = λbook
-          //(HVM.print Kind.Book (String.concat (String.concat "OLD!:" name) (String.concat " -- " (Kind.keys book))) book)
-        //let false = λbook
-          //(HVM.print Kind.Book (String.concat (String.concat "NEW!:" name) (String.concat " -- " (Kind.keys book)))
-          //let file = (Kind.load.file (Kind.load.file_of name))
-          //let defs = (String.Map.to_list Kind.Term file)
-          //let bok1 = (Kind.load.define defs book)
-          //let file = (Kind.load.file (Kind.load.file_of name))
-          //let refs = (Kind.Book.get_refs file)
-          //let bok2 = (HVM.print ?a (String.concat "REC!:" (Kind.keys bok1)) (Kind.load.name.many lims-1 refs bok1))
-          //bok2)
-          ////(HVM.print.many Kind.Book refs book)
-        //((~has P true false) book)
-      //(~(String.Map.has.linear Kind.Term name book) P new))
-  //}: ∀(name: String) ∀(book: Kind.Book) Kind.Book)
-
-export function load_file(file: string): string {
-  return fs.readFileSync("./book/"+file, "utf8");
-}
-
-export function load_name(
-
-console.log(get_refs(load("Bool")));

@@ -101,7 +101,7 @@
 (Reduce 1 (Txt txt))         = (Reduce.txt 1 txt)
 (Reduce r val)               = val
 
-(Reduce.app r (Lam nam bod)     arg) = (Reduce r (bod (Reduce r arg)))
+(Reduce.app r (Lam nam bod)     arg) = (Reduce r (bod (Reduce 0 arg)))
 //(Reduce.app r (Hol nam ctx ars) arg) = (Hol nam ctx (List.cons arg ars))
 (Reduce.app r fun               arg) = (App fun arg)
 
@@ -155,6 +155,7 @@
 // --------
 
 // Check if two terms are identical. If not...
+(Equal a b 24)  = 0 // limits depth FIXME: won't be necessary with better ref-ids equality
 (Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
 
 // Check if they're identical after a minor weak reduction. If not...
@@ -418,7 +419,8 @@ Compile.primitives = [
 
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
-(Normalizer val)           = (Compile val)
+//(Normalizer val)           = (Compile val)
+(Normalizer val)           = (Str.view (Compile val))
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))
@@ -426,4 +428,3 @@ Compile.primitives = [
 
 (Checker.report (Some x)) = (HVM.print "Check!" OK)
 (Checker.report None)     = (HVM.print "Error." ERR)
-

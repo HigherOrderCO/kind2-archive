@@ -1,0 +1,15 @@
+BBT.to_list
+: ∀(K: *)
+  ∀(V: *)
+  ∀(map: (BBT K V))
+  (List (Pair K V))
+= λK λV λmap
+  let P = λx(List (Pair K V))
+  let bin = λsize λkey λval λlft λrgt
+    let lft = (BBT.to_list K V lft)
+    let rgt = (BBT.to_list K V rgt)
+    let pair = (Pair.new K V key val)
+    let list = (List.cons (Pair K V) pair (List.concat (Pair K V) lft rgt))
+    list
+  let tip = (List.nil (Pair K V))
+  (~map P bin tip)

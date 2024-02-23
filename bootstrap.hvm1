@@ -7,12 +7,203 @@
 (Str.view str)        = (str 0 λhλt(String.cons h (Str.view t)) String.nil)
 (Strs.view strs)      = (List.view λx(Str.view x) strs)
 (List.view elem list) = (list 0 λhλt(List.cons (elem h) (List.view elem t)) List.nil)
-
-Book.A.one = λ_P λ_new (_new 0)
+`
+Book.A.match = λ_a λ_P λ_t ((_a _P) λ_tag (U60.match _tag _t λ_tag_1(λ_x (_x λ_x 0))))
+Book.A = 0
 Book.A.bad = λ_P λ_new ((_new 1) 0)
 Book.A.sel = λ_P λ_k (U60.match _k (_P (Book.A.one)) λ_tag_1(0))
-Book.A = 0
-Book.A.match = λ_a λ_P λ_t ((_a _P) λ_tag (U60.match _tag _t λ_tag_1(λ_x (_x λ_x 0))))
+Book.A.one = λ_P λ_new (_new 0)
+
+Book.BBT.balance.lft_heavier = λ_K λ_V λ_cmp λ_new_size λ_node_key λ_set_key λ_val λ_lft λ_rgt 
+  let _P = λ_x (((Book.BBT) _K) _V) 
+  let _bin = λ_lft.size λ_lft.key λ_lft.val λ_lft.lft λ_lft.rgt 
+    let _P = λ_x 0 
+    let _true = λ_new_size λ_key λ_val λ_lft.key λ_lft.val λ_lft.lft λ_lft.rgt λ_rgt 
+      let _lft = ((((((((Book.BBT.lft_rotate) _K) _V) _lft.size) _lft.key) _lft.val) _lft.lft) _lft.rgt) 
+      ((((((((Book.BBT.rgt_rotate) _K) _V) _new_size) _key) _val) _lft) _rgt) 
+    let _false = λ_new_size λ_key λ_val λ_lft.key λ_lft.val λ_lft.lft λ_lft.rgt λ_rgt 
+      let _lft = ((((((((Book.BBT.bin) _K) _V) _lft.size) _lft.key) _lft.val) _lft.lft) _lft.rgt) 
+      ((((((((Book.BBT.rgt_rotate) _K) _V) _new_size) _key) _val) _lft) _rgt) 
+    (((((((((((((Book.Cmp.is_gtn) ((_cmp _set_key) _lft.key)) _P) _true) _false) _new_size) _node_key) _val) _lft.key) _lft.val) _lft.lft) _lft.rgt) _rgt) 
+  let _tip = (((Book.BBT.tip) _K) _V) 
+  (((_lft _P) _bin) _tip)
+Book.BBT.balance = λ_K λ_V λ_cmp λ_set_key λ_node_key λ_val λ_lft λ_rgt 
+  let _P = λ_x (((Book.BBT) _K) _V) 
+  let _new = λ_lft.size λ_lft 
+    let _P = λ_x (((Book.BBT) _K) _V) 
+    let _new = λ_rgt.size λ_rgt 
+      let _new_size = (+ 1 (((Book.U60.max) _lft.size) _rgt.size)) 
+      let _balance = (((Book.U60.abs_diff) _lft.size) _rgt.size) 
+      let _P = λ_x 0 
+      let _true = λ_new_size λ_node_key λ_val λ_lft λ_rgt 
+        let _P = λ_x 0 
+        let _true = (Book.BBT.balance.lft_heavier) 
+        let _false = (Book.BBT.balance_rgt_heavier) 
+        ((((((((((((((Book.U60.to_bool) (< _rgt.size _lft.size)) _P) _true) _false) _K) _V) _cmp) _new_size) _node_key) _set_key) _val) _lft) _rgt) 
+      let _false = λ_new_size λ_node_key λ_val λ_lft λ_rgt ((((((((Book.BBT.bin) _K) _V) _new_size) _node_key) _val) _lft) _rgt) 
+      ((((((((((Book.U60.to_bool) (> _balance 1)) _P) _true) _false) _new_size) _node_key) _val) _lft) _rgt) 
+    ((((((Book.BBT.got_size) _K) _V) _rgt) _P) _new) 
+  ((((((Book.BBT.got_size) _K) _V) _lft) _P) _new)
+Book.BBT.balance_rgt_heavier = λ_K λ_V λ_cmp λ_new_size λ_node_key λ_set_key λ_val λ_lft λ_rgt 
+  let _P = λ_x (((Book.BBT) _K) _V) 
+  let _bin = λ_rgt.size λ_rgt.key λ_rgt.val λ_rgt.lft λ_rgt.rgt 
+    let _P = λ_x 0 
+    let _true = λ_new_size λ_key λ_val λ_lft λ_rgt.key λ_rgt.val λ_rgt.lft λ_rgt.rgt 
+      let _rgt = ((((((((Book.BBT.bin) _K) _V) _rgt.size) _rgt.key) _rgt.val) _rgt.lft) _rgt.rgt) 
+      ((((((((Book.BBT.lft_rotate) _K) _V) _new_size) _key) _val) _lft) _rgt) 
+    let _false = λ_new_size λ_key λ_val λ_lft λ_rgt.key λ_rgt.val λ_rgt.lft λ_rgt.rgt 
+      let _rgt = ((((((((Book.BBT.rgt_rotate) _K) _V) _rgt.size) _rgt.key) _rgt.val) _rgt.lft) _rgt.rgt) 
+      ((((((((Book.BBT.lft_rotate) _K) _V) _new_size) _key) _val) _lft) _rgt) 
+    (((((((((((((Book.Cmp.is_gtn) ((_cmp _set_key) _rgt.key)) _P) _true) _false) _new_size) _node_key) _val) _lft) _rgt.key) _rgt.val) _rgt.lft) _rgt.rgt) 
+  let _tip = (((Book.BBT.tip) _K) _V) 
+  (((_rgt _P) _bin) _tip)
+
+Book.BBT.bin = λ_K λ_V λ_size λ_key λ_val λ_lft λ_rgt λ_P λ_bin λ_tip (((((_bin _size) _key) _val) _lft) _rgt)
+
+Book.BBT.from_list = λ_K λ_V λ_cmp λ_list 
+  let _P = λ_x (((Book.BBT) _K) _V) 
+  let _cons = λ_head λ_tail 
+    let _P = λ_x (((Book.BBT) _K) _V) 
+    let _new = λ_key λ_val (((((((Book.BBT.set) _K) _V) _cmp) _key) _val) (((((Book.BBT.from_list) _K) _V) _cmp) _tail)) 
+    ((_head _P) _new) 
+  let _nil = (((Book.BBT.tip) _K) _V) 
+  (((_list _P) _cons) _nil)
+
+Book.BBT.get = λ_K λ_V λ_cmp λ_key λ_map 
+  let _P = λ_x ((Book.Maybe) _V) 
+  let _bin = λ__size λ_next.key λ_next.val λ_next.lft λ_next.rgt 
+    let _P = λ_x 0 
+    let _ltn = λ_cmp λ_key ((((((Book.BBT.get) _K) _V) _cmp) _key) _next.lft) 
+    let _eql = λ_cmp λ_key (((Book.Maybe.some) _V) _next.val) 
+    let _gtn = λ_cmp λ_key ((((((Book.BBT.get) _K) _V) _cmp) _key) _next.rgt) 
+    ((((((((_cmp _key) _next.key) _P) _ltn) _eql) _gtn) _cmp) _key) 
+  let _tip = ((Book.Maybe.none) _V) 
+  (((_map _P) _bin) _tip)
+
+Book.BBT.got = λ_K λ_V λ_cmp λ_key λ_map 
+  let _P = λ_x (((Book.Pair) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) 
+  let _bin = λ_size λ_next.key λ_next.val λ_next.lft λ_next.rgt 
+    let _P = λ_x 0 
+    let _ltn = λ_cmp λ_key 
+      let _new_pair = ((((((Book.BBT.got) _K) _V) _cmp) _key) _next.lft) 
+      let _P = λ_x (((Book.Pair) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) 
+      let _new = λ_val λ_lft 
+        let _map = ((((((((Book.BBT.bin) _K) _V) _size) _next.key) _next.val) _lft) _next.rgt) 
+        (((((Book.Pair.new) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) _val) _map) 
+      ((_new_pair _P) _new) 
+    let _eql = λ_cmp λ_key 
+      let _map = ((((((((Book.BBT.bin) _K) _V) _size) _next.key) _next.val) _next.lft) _next.rgt) 
+      (((((Book.Pair.new) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) (((Book.Maybe.some) _V) _next.val)) _map) 
+    let _gtn = λ_cmp λ_key 
+      let _new_pair = ((((((Book.BBT.got) _K) _V) _cmp) _key) _next.rgt) 
+      let _P = λ_x (((Book.Pair) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) 
+      let _new = λ_val λ_rgt 
+        let _map = ((((((((Book.BBT.bin) _K) _V) _size) _next.key) _next.val) _next.lft) _rgt) 
+        (((((Book.Pair.new) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) _val) _map) 
+      ((_new_pair _P) _new) 
+    ((((((((_cmp _key) _next.key) _P) _ltn) _eql) _gtn) _cmp) _key) 
+  let _tip = (((((Book.Pair.new) ((Book.Maybe) _V)) (((Book.BBT) _K) _V)) ((Book.Maybe.none) _V)) (((Book.BBT.tip) _K) _V)) 
+  (((_map _P) _bin) _tip)
+
+Book.BBT.got_size = λ_K λ_V λ_map 
+  let _P = λ_x (((Book.Pair) 0) (((Book.BBT) _K) _V)) 
+  let _bin = λ_size λ_next.key λ_next.val λ_next.lft λ_next.rgt 
+    let _map = ((((((((Book.BBT.bin) _K) _V) _size) _next.key) _next.val) _next.lft) _next.rgt) 
+    (((((Book.Pair.new) 0) (((Book.BBT) _K) _V)) _size) _map) 
+  let _tip = (((((Book.Pair.new) 0) (((Book.BBT) _K) _V)) 0) (((Book.BBT.tip) _K) _V)) 
+  (((_map _P) _bin) _tip)
+
+Book.BBT.has = λ_K λ_V λ_cmp λ_key λ_map 
+  let _P = λ_x (Book.Bool) 
+  let _bin = λ_next.size λ_next.key λ_next.val λ_next.lft λ_next.rgt 
+    let _P = λ_x 0 
+    let _ltn = λ_cmp λ_key ((((((Book.BBT.has) _K) _V) _cmp) _key) _next.lft) 
+    let _eql = λ_cmp λ_key (Book.Bool.true) 
+    let _gtn = λ_cmp λ_key ((((((Book.BBT.has) _K) _V) _cmp) _key) _next.rgt) 
+    ((((((((_cmp _key) _next.key) _P) _ltn) _eql) _gtn) _cmp) _key) 
+  let _tip = (Book.Bool.false) 
+  (((_map _P) _bin) _tip)
+
+Book.BBT.has.linear = λ_K λ_V λ_cmp λ_key λ_map 
+  let _P = λ_x (((Book.Pair) (Book.Bool)) (((Book.BBT) _K) _V)) 
+  let _bin = λ_size λ_node_key λ_val λ_lft λ_rgt 
+    let _P = λ_x 0 
+    let _ltn = λ_cmp λ_size λ_has_key λ_val λ_lft λ_rgt λ_has_key 
+      let _P = λ_x (((Book.Pair) (Book.Bool)) (((Book.BBT) _K) _V)) 
+      let _new = λ_bool λ_lft 
+        let _map = ((((((((Book.BBT.bin) _K) _V) _size) _node_key) _val) _lft) _rgt) 
+        (((((Book.Pair.new) (Book.Bool)) (((Book.BBT) _K) _V)) _bool) _map) 
+      ((((((((Book.BBT.has.linear) _K) _V) _cmp) _has_key) _lft) _P) _new) 
+    let _eql = λ_cmp λ_size λ_key λ_val λ_lft λ_rgt λ_has_key (((((Book.Pair.new) (Book.Bool)) (((Book.BBT) _K) _V)) (Book.Bool.true)) ((((((((Book.BBT.bin) _K) _V) _size) _node_key) _val) _lft) _rgt)) 
+    let _gtn = λ_cmp λ_size λ_key λ_val λ_lft λ_rgt λ_has_key 
+      let _P = λ_x (((Book.Pair) (Book.Bool)) (((Book.BBT) _K) _V)) 
+      let _new = λ_bool λ_rgt 
+        let _map = ((((((((Book.BBT.bin) _K) _V) _size) _node_key) _val) _lft) _rgt) 
+        (((((Book.Pair.new) (Book.Bool)) (((Book.BBT) _K) _V)) _bool) _rgt) 
+      ((((((((Book.BBT.has.linear) _K) _V) _cmp) _has_key) _rgt) _P) _new) 
+    (((((((((((((_cmp _key) _node_key) _P) _ltn) _eql) _gtn) _cmp) _size) _node_key) _val) _lft) _rgt) _key) 
+  let _tip = (((((Book.Pair.new) (Book.Bool)) (((Book.BBT) _K) _V)) (Book.Bool.false)) (((Book.BBT.tip) _K) _V)) 
+  (((_map _P) _bin) _tip)
+
+Book.BBT = λ_K λ_V 0
+
+Book.BBT.lft_rotate = λ_K λ_V λ_size λ_key λ_val λ_lft λ_rgt 
+  let _P = λ_x 0 
+  let _bin = λ__size λ_rgt.key λ_rgt.val λ_rgt.lft λ_rgt.rgt λ_key λ_val λ_lft 
+    let _b = (((((((Book.BBT.new_node) _K) _V) _key) _val) _lft) _rgt.lft) 
+    let _a = (((((((Book.BBT.new_node) _K) _V) _rgt.key) _rgt.val) _b) _rgt.rgt) 
+    _a 
+  let _tip = λ_key λ_val λ_lft ((((((((Book.BBT.bin) _K) _V) _size) _key) _val) _lft) (((Book.BBT.tip) _K) _V)) 
+  ((((((_rgt _P) _bin) _tip) _key) _val) _lft)
+
+Book.BBT.new_node = λ_K λ_V λ_key λ_val λ_lft λ_rgt 
+  let _P = λ_x (((Book.BBT) _K) _V) 
+  let _new = λ_lft.size λ_lft 
+    let _P = λ_x (((Book.BBT) _K) _V) 
+    let _new = λ_rgt.size λ_rgt 
+      let _new_size = (+ 1 (((Book.U60.max) _rgt.size) _lft.size)) 
+      ((((((((Book.BBT.bin) _K) _V) _new_size) _key) _val) _lft) _rgt) 
+    ((((((Book.BBT.got_size) _K) _V) _rgt) _P) _new) 
+  ((((((Book.BBT.got_size) _K) _V) _lft) _P) _new)
+
+Book.BBT.rgt_rotate = λ_K λ_V λ_size λ_key λ_val λ_lft λ_rgt 
+  let _P = λ_x 0 
+  let _bin = λ__size λ_lft.key λ_lft.val λ_lft.lft λ_lft.rgt λ_key λ_val λ_rgt 
+    let _b = (((((((Book.BBT.new_node) _K) _V) _key) _val) _lft.rgt) _rgt) 
+    let _a = (((((((Book.BBT.new_node) _K) _V) _lft.key) _lft.val) _lft.lft) _b) 
+    _a 
+  let _tip = λ_key λ_val λ_rgt ((((((((Book.BBT.bin) _K) _V) _size) _key) _val) (((Book.BBT.tip) _K) _V)) _rgt) 
+  ((((((_lft _P) _bin) _tip) _key) _val) _rgt)
+
+Book.BBT.set = λ_K λ_V λ_cmp λ_key λ_val λ_map 
+  let _P = λ_x 0 
+  let _bin = λ_size λ_next.key λ_next.val λ_next.lft λ_next.rgt λ_key λ_val 
+    let _P = λ_x 0 
+    let _ltn = λ_key λ_next.key λ_next.val λ_next.lft λ_next.rgt 
+      let _new_lft = (((((((Book.BBT.set) _K) _V) _cmp) _key) _val) _next.lft) 
+      (((((((((Book.BBT.balance) _K) _V) _cmp) _key) _next.key) _next.val) _new_lft) _next.rgt) 
+    let _eql = λ_key λ_next.key λ_next.val λ_next.lft λ_next.rgt ((((((((Book.BBT.bin) _K) _V) _size) _next.key) _val) _next.lft) _next.rgt) 
+    let _gtn = λ_key λ_next.key λ_next.val λ_next.lft λ_next.rgt 
+      let _new_rgt = (((((((Book.BBT.set) _K) _V) _cmp) _key) _val) _next.rgt) 
+      (((((((((Book.BBT.balance) _K) _V) _cmp) _key) _next.key) _next.val) _next.lft) _new_rgt) 
+    (((((((((((_cmp _key) _next.key) _P) _ltn) _eql) _gtn) _key) _next.key) _next.val) _next.lft) _next.rgt) 
+  let _tip = λ_key λ_val (((((Book.BBT.singleton) _K) _V) _key) _val) 
+  (((((_map _P) _bin) _tip) _key) _val)
+
+Book.BBT.singleton = λ_K λ_V λ_key λ_val ((((((((Book.BBT.bin) _K) _V) 1) _key) _val) (((Book.BBT.tip) _K) _V)) (((Book.BBT.tip) _K) _V))
+
+Book.BBT.tip = λ_K λ_V λ_P λ_bin λ_tip _tip
+
+Book.BBT.to_list = λ_K λ_V λ_map 
+  let _P = λ_x ((Book.List) (((Book.Pair) _K) _V)) 
+  let _bin = λ_size λ_key λ_val λ_lft λ_rgt 
+    let _lft = ((((Book.BBT.to_list) _K) _V) _lft) 
+    let _rgt = ((((Book.BBT.to_list) _K) _V) _rgt) 
+    let _pair = (((((Book.Pair.new) _K) _V) _key) _val) 
+    let _list = ((((Book.List.cons) (((Book.Pair) _K) _V)) _pair) ((((Book.List.concat) (((Book.Pair) _K) _V)) _lft) _rgt)) 
+    _list 
+  let _tip = ((Book.List.nil) (((Book.Pair) _K) _V)) 
+  (((_map _P) _bin) _tip)
 
 Book.Bool.and = λ_a 
   let _P = λ_a 0 
@@ -42,6 +233,12 @@ Book.Bool.or = λ_a
   let _false = λ_b _b 
   (((_a _P) _true) _false)
 
+Book.Bool.show = λ_x 
+  let _P = λ_x (Book.String) 
+  let _true = (Str "true") 
+  let _false = (Str "false") 
+  (((_x _P) _true) _false)
+
 Book.Bool.true = λ_P λ_t λ_f _t
 
 Book.Char.equal = (Book.U60.equal)
@@ -66,6 +263,21 @@ Book.Char = 0
 
 Book.Char.slash = 92
 
+Book.Cmp.eql = λ_P λ_ltn λ_eql λ_gtn _eql
+
+Book.Cmp.gtn = λ_P λ_ltn λ_eql λ_gtn _gtn
+
+Book.Cmp.is_gtn = λ_cmp 
+  let _P = λ_x (Book.Bool) 
+  let _ltn = (Book.Bool.false) 
+  let _eql = (Book.Bool.false) 
+  let _gtn = (Book.Bool.true) 
+  ((((_cmp _P) _ltn) _eql) _gtn)
+
+Book.Cmp = 0
+
+Book.Cmp.ltn = λ_P λ_ltn λ_eql λ_gtn _ltn
+
 Book.Empty.absurd = λ_e λ_P (_e λ_x _P)
 
 Book.Empty = 0
@@ -75,6 +287,20 @@ Book.Equal.apply = λ_A λ_B λ_f λ_a λ_b λ_e ((_e λ_x ((((Book.Equal) _B) (
 Book.Equal = λ_A λ_a λ_b 0
 
 Book.Equal.refl = λ_A λ_a λ_P λ_p _p
+
+Book.HVM.load = λ_A λ_file λ_cont (_cont (Book.String.nil))
+
+Book.HVM.log = λ_A λ_B λ_msg λ_ret _ret
+
+Book.HVM.print = λ_A λ_msg λ_ret _ret
+
+Book.HVM.print.many = λ_A λ_msgs λ_ret 
+  let _P = λ_x _A 
+  let _cons = λ_msg λ_msgs ((((Book.HVM.print) _A) _msg) ((((Book.HVM.print.many) _A) _msgs) _ret)) 
+  let _nil = _ret 
+  (((_msgs _P) _cons) _nil)
+
+Book.HVM.save = λ_A λ_file λ_data λ_cont _cont
 
 Book.Kind.Binder = (((Book.Pair) (Book.String)) (Book.Kind.Term))
 
@@ -95,14 +321,14 @@ Book.Kind.Book.get_refs.go = λ_book
   let _nil = λ_nil _nil 
   (((_book _P) _cons) _nil)
 
-Book.Kind.Book.get_refs = λ_book (((Book.List.Concatenator.build) (Book.String)) ((Book.Kind.Book.get_refs.go) _book))
+Book.Kind.Book.get_refs = λ_book (((Book.List.Concatenator.build) (Book.String)) ((Book.Kind.Book.get_refs.go) (((Book.String.Map.to_list) (Book.Kind.Term)) _book)))
 
 Book.Kind.Book = ((Book.String.Map) (Book.Kind.Term))
 
 Book.Kind.Book.parse = λ_code 
   let _P = λ_x (Book.Kind.Book) 
   let _done = λ_code λ_book _book 
-  let _fail = λ_error ((Book.List.nil) (((Book.Pair) (Book.String)) (Book.Kind.Term))) 
+  let _fail = λ_error ((Book.String.Map.new) (Book.Kind.Term)) 
   (((((Book.Kind.Book.parser) _code) _P) _done) _fail)
 
 Book.Kind.Book.parser = (((((Book.Parser.bind) (Book.Bool)) (Book.Kind.Book)) (Book.Parser.is_eof)) λ_is_eof 
@@ -124,7 +350,7 @@ Book.Kind.Book.show.go = λ_book
   let _nil = λ_nil _nil 
   (((_book _P) _cons) _nil)
 
-Book.Kind.Book.show = λ_book ((Book.String.Concatenator.build) ((Book.Kind.Book.show.go) _book))
+Book.Kind.Book.show = λ_book ((Book.String.Concatenator.build) ((Book.Kind.Book.show.go) (((Book.String.Map.to_list) (Book.Kind.Term)) _book)))
 
 Book.Kind.Book.to_hvm.go = λ_book 
   let _P = λ_x (Book.String.Concatenator) 
@@ -135,7 +361,7 @@ Book.Kind.Book.to_hvm.go = λ_book
   let _nil = λ_nil _nil 
   (((_book _P) _cons) _nil)
 
-Book.Kind.Book.to_hvm = λ_book ((Book.String.Concatenator.build) ((Book.Kind.Book.to_hvm.go) _book))
+Book.Kind.Book.to_hvm = λ_book ((Book.String.Concatenator.build) ((Book.Kind.Book.to_hvm.go) (((Book.String.Map.to_list) (Book.Kind.Term)) _book)))
 
 Book.Kind.Oper.add = λ_P λ_add λ_mul λ_sub λ_div λ_mod λ_eq λ_ne λ_lt λ_gt λ_lte λ_gte λ_and λ_or λ_xor λ_lsh λ_rsh _add
 
@@ -484,6 +710,7 @@ Book.Kind.equal.minor = λ_e λ_a λ_b λ_dep
     let _b_wnf = (((Book.Kind.reduce) (Book.Bool.false)) _b) 
     (((((Book.Kind.equal.major) ((((Book.Kind.identical) _a_wnf) _b_wnf) _dep)) _a_wnf) _b_wnf) _dep) 
   ((((((_e _P) _true) _false) _a) _b) _dep)
+
 
 Book.Kind.hol = λ_nam λ_ctx λ_P λ_all λ_lam λ_app λ_ann λ_slf λ_ins λ_ref λ_def λ_set λ_u60 λ_num λ_op2 λ_mat λ_txt λ_hol λ_var ((_hol _nam) _ctx)
 
@@ -847,6 +1074,7 @@ Book.Kind =
 
 Book.Kind.lam = λ_nam λ_bod λ_P λ_all λ_lam λ_app λ_ann λ_slf λ_ins λ_ref λ_def λ_set λ_u60 λ_num λ_op2 λ_mat λ_txt λ_hol λ_var ((_lam _nam) _bod)
 
+
 Book.Kind.mat = λ_nam λ_x λ_z λ_s λ_p λ_P λ_all λ_lam λ_app λ_ann λ_slf λ_ins λ_ref λ_def λ_set λ_u60 λ_num λ_op2 λ_mat λ_txt λ_hol λ_var (((((_mat _nam) _x) _z) _s) _p)
 
 Book.Kind.normal.go = λ_maj λ_term λ_dep 
@@ -1018,21 +1246,11 @@ Book.List.Folder = λ_T 0
 
 Book.List.Folder.nil = λ_T λ_P λ_cons λ_nil _nil
 
-Book.List.Map = λ_K λ_V ((Book.List) (((Book.Pair) _K) _V))
-Book.List.Map.get = λ_K λ_V λ_eql λ_key λ_map 
-  let _P = λ_x ((Book.Maybe) _V) 
-  let _cons = λ_head λ_tail 
-    let _P = λ_x ((Book.Maybe) _V) 
-    let _new = λ_head.fst λ_head.snd 
-      let _P = λ_x ((Book.Maybe) _V) 
-      let _true = (((Book.Maybe.some) _V) _head.snd) 
-      let _false = ((((((Book.List.Map.get) _K) _V) _eql) _key) _tail) 
-      (((((_eql _head.fst) _key) _P) _true) _false) 
-    ((_head _P) _new) 
-  let _nil = ((Book.Maybe.none) _V) 
-  (((_map _P) _cons) _nil)
-Book.List.Map.set = λ_K λ_V λ_key λ_val λ_map ((((Book.List.cons) (((Book.Pair) _K) _V)) (((((Book.Pair.new) _K) _V) _key) _val)) _map)
-Book.List.Map.new = λ_K λ_V ((Book.List.nil) (((Book.Pair) _K) _V))
+Book.List.app = λ_A λ_B λ_f λ_x 
+  let _P = λ_x ((Book.List) _B) 
+  let _cons = λ_h λ_t ((((Book.List.cons) _B) (_f _h)) (((((Book.List.app) _A) _B) _f) _t)) 
+  let _nil = ((Book.List.nil) _B) 
+  (((_x _P) _cons) _nil)
 
 Book.List.begin = λ_A λ_list 
   let _P = λ_x ((Book.List) _A) 
@@ -1096,8 +1314,8 @@ Book.Maybe.pure = (Book.Maybe.some)
 
 Book.Maybe.some = λ_T λ_value λ_P λ_some λ_none (_some _value)
 
-Book.Monad = λ_M 0
 Book.Monad.new = λ_M λ_bind λ_pure λ_P λ_new ((_new _bind) _pure)
+Book.Monad = λ_M 0
 
 Book.Nat.double = λ_n (((_n λ_x (Book.Nat)) λ_pred ((Book.Nat.succ) ((Book.Nat.succ) ((Book.Nat.double) _pred)))) (Book.Nat.zero))
 
@@ -1125,11 +1343,21 @@ Book.Nat.succ = λ_n λ_P λ_succ λ_zero (_succ _n)
 
 Book.Nat.zero = λ_P λ_succ λ_zero _zero
 
+Book.Pair.fst = λ_A λ_B λ_p 
+  let _P = λ_x _A 
+  let _new = λ_a λ_b _a 
+  ((_p _P) _new)
+
 Book.Pair.get = λ_A λ_B λ_p λ_P λ_f ((_p λ_x _P) _f)
 
 Book.Pair = λ_A λ_B 0
 
 Book.Pair.new = λ_A λ_B λ_a λ_b λ_P λ_new ((_new _a) _b)
+
+Book.Pair.snd = λ_A λ_B λ_p 
+  let _P = λ_x _B 
+  let _new = λ_a λ_b _b 
+  ((_p _P) _new)
 
 Book.Parser.Guard.get = λ_A (((Book.Pair.get) ((Book.Parser) (Book.Bool))) ((Book.Parser) _A))
 
@@ -1261,19 +1489,19 @@ Book.Parser.variant = λ_A λ_variants
   let _nil = (((Book.Parser.fail) _A) (Str "error")) 
   (((_variants _P) _cons) _nil)
 
-Book.QBool.true = λ_P λ_S λ_p ((_p 0) λ_x _x)
 Book.QBool.false = λ_P λ_S λ_p ((_p 1) λ_x _x)
 Book.QBool = 0
 Book.QBool.match = λ_a λ_P λ_t λ_f (((_a _P) λ_x (_P _a)) λ_tag (U60.match _tag λ_x (_x _t) λ_tag_1(λ_x ((U60.match _tag_1 λ_x (_x _f) λ_tag_1_1(λ_x (_x λ_e (((Book.Empty.absurd) _e) 0)))) _x))))
+Book.QBool.true = λ_P λ_S λ_p ((_p 0) λ_x _x)
 
-Book.QBool2.true = λ_P λ_new (_new 0)
-Book.QBool2.false = λ_P λ_new (_new 1)
 Book.QBool2.bad = λ_P λ_new ((_new 2) 0)
 Book.QBool2 = 0
 Book.QBool2.match = λ_a λ_P λ_t λ_f ((_a _P) λ_tag (U60.match _tag _t λ_tag_1((U60.match _tag_1 _f λ_tag_1_1(λ_e (_e λ_x 0))))))
+Book.QBool2.false = λ_P λ_new (_new 1)
+Book.QBool2.true = λ_P λ_new (_new 0)
 
-Book.QUnit.one = λ_P λ_SP λ_new ((_new 0) λ_one _one)
 Book.QUnit = 0
+Book.QUnit.one = λ_P λ_SP λ_new ((_new 0) λ_one _one)
 
 Book.Sigma = λ_A λ_B 0
 
@@ -1289,12 +1517,40 @@ Book.String.Concatenator.join = ((Book.List.Concatenator.join) (Book.Char))
 
 Book.String.Concatenator = ((Book.List.Concatenator) (Book.Char))
 
-Book.String.Map = ((Book.List.Map) (Book.String))
-Book.String.Map.get = λ_A λ_key λ_map ((((((Book.List.Map.get) (Book.String)) _A) (Book.String.equal)) _key) _map)
-Book.String.Map.set = λ_A λ_key λ_val λ_map ((((((Book.List.Map.set) (Book.String)) _A) _key) _val) _map)
-Book.String.Map.new = λ_V (((Book.List.Map.new) (Book.String)) _V)
+Book.String.Map.from_list = λ_V λ_list (((((Book.BBT.from_list) (Book.String)) _V) (Book.String.cmp)) _list)
+
+Book.String.Map.has = λ_V λ_key λ_map ((((((Book.BBT.has) (Book.String)) _V) (Book.String.cmp)) _key) _map)
+
+Book.String.Map.has.linear = λ_V λ_key λ_map ((((((Book.BBT.has.linear) (Book.String)) _V) (Book.String.cmp)) _key) _map)
+
+Book.String.Map.new = λ_V (((Book.BBT.tip) (Book.String)) _V)
+Book.String.Map.get = λ_V λ_key λ_map ((((((Book.BBT.get) (Book.String)) _V) (Book.String.cmp)) _key) _map)
+Book.String.Map = λ_V (((Book.BBT) (Book.String)) _V)
+Book.String.Map.got = λ_V λ_key λ_map ((((((Book.BBT.got) (Book.String)) _V) (Book.String.cmp)) _key) _map)
+Book.String.Map.set = λ_V λ_key λ_val λ_map (((((((Book.BBT.set) (Book.String)) _V) (Book.String.cmp)) _key) _val) _map)
+
+Book.String.Map.to_list = λ_V λ_map ((((Book.BBT.to_list) (Book.String)) _V) _map)
 
 Book.String.begin = λ_str (((Book.List.begin) (Book.Char)) _str)
+
+Book.String.cmp = λ_a λ_b 
+  let _P = λ_x 0 
+  let _cons = λ_a.head λ_a.tail λ_b 
+    let _P = λ_x 0 
+    let _cons = λ_b.head λ_b.tail λ_a.head λ_a.tail 
+      let _P = λ_x (Book.Cmp) 
+      let _ltn = (Book.Cmp.ltn) 
+      let _eql = (((Book.String.cmp) _a.tail) _b.tail) 
+      let _gtn = (Book.Cmp.gtn) 
+      (((((((Book.U60.cmp) _a.head) _b.head) _P) _ltn) _eql) _gtn) 
+    let _nil = λ_a.head λ_a.tail (Book.Cmp.gtn) 
+    (((((_b _P) _cons) _nil) _a.head) _a.tail) 
+  let _nil = λ_b 
+    let _P = λ_x (Book.Cmp) 
+    let _cons = λ_b.head λ_b.tail (Book.Cmp.ltn) 
+    let _nil = (Book.Cmp.eql) 
+    (((_b _P) _cons) _nil) 
+  ((((_a _P) _cons) _nil) _b)
 
 Book.String.concat = ((Book.List.concat) (Book.Char))
 
@@ -1320,6 +1576,12 @@ Book.String.indent = λ_tab
   let _zero = (Book.String.nil) 
   (((_tab _P) _succ) _zero)
 
+Book.String.join = λ_strs 
+  let _P = λ_x (Book.String) 
+  let _cons = λ_h λ_t (((Book.String.concat) _h) ((Book.String.join) _t)) 
+  let _nil = (Book.String.nil) 
+  (((_strs _P) _cons) _nil)
+
 Book.String = ((Book.List) (Book.Char))
 
 Book.String.length = λ_a (((Book.List.length) (Book.Char)) _a)
@@ -1330,6 +1592,15 @@ Book.String.nil = λ_P λ_cons λ_nil _nil
 
 Book.String.quote = (((Book.String.cons) 34) (Book.String.nil))
 
+Book.String.skip.comment = λ_str 
+  let _P = λ_x (Book.String) 
+  let _cons = λ_c0 λ_cs 
+    let _P = λ_x 0 
+    let _true = λ_c0 λ_cs ((Book.String.skip) _cs) 
+    let _false = λ_c0 λ_cs ((Book.String.skip.comment) _cs) 
+    (((((((Book.Char.is_newline) _c0) _P) _true) _false) _c0) _cs) 
+  let _nil = (Book.String.nil) 
+  (((_str _P) _cons) _nil)
 Book.String.skip = λ_str 
   let _P = λ_x (Book.String) 
   let _cons = λ_c0 λ_cs 
@@ -1351,15 +1622,6 @@ Book.String.skip = λ_str
     (((((((Book.Char.is_blank) _c0) _P) _true) _false) _c0) _cs) 
   let _nil = (Book.String.nil) 
   (((_str _P) _cons) _nil)
-Book.String.skip.comment = λ_str 
-  let _P = λ_x (Book.String) 
-  let _cons = λ_c0 λ_cs 
-    let _P = λ_x 0 
-    let _true = λ_c0 λ_cs ((Book.String.skip) _cs) 
-    let _false = λ_c0 λ_cs ((Book.String.skip.comment) _cs) 
-    (((((((Book.Char.is_newline) _c0) _P) _true) _false) _c0) _cs) 
-  let _nil = (Book.String.nil) 
-  (((_str _P) _cons) _nil)
 
 Book.String.unpar = λ_fst λ_lst λ_str 
   let _P = λ_x (Book.String) 
@@ -1371,10 +1633,19 @@ Book.String.unpar = λ_fst λ_lst λ_str
   let _nil = (Book.String.nil) 
   (((_str _P) _cons) _nil)
 
-Book.U60.Map = ((Book.List.Map) 0)
-Book.U60.Map.get = λ_A λ_key λ_map ((((((Book.List.Map.get) 0) _A) (Book.U60.equal)) _key) _map)
-Book.U60.Map.set = λ_A λ_key λ_val λ_map ((((((Book.List.Map.set) 0) _A) _key) _val) _map)
-Book.U60.Map.new = λ_V (((Book.List.Map.new) 0) _V)
+Book.U60.Map.new = λ_V (((Book.BBT.tip) 0) _V)
+Book.U60.Map.get = λ_V λ_key λ_map ((((((Book.BBT.get) 0) _V) (Book.U60.cmp)) _key) _map)
+Book.U60.Map = λ_V (((Book.BBT) 0) _V)
+Book.U60.Map.got = λ_V λ_key λ_map ((((((Book.BBT.got) 0) _V) (Book.U60.cmp)) _key) _map)
+Book.U60.Map.set = λ_V λ_key λ_val λ_map (((((((Book.BBT.set) 0) _V) (Book.U60.cmp)) _key) _val) _map)
+
+Book.U60.abs_diff = λ_a λ_b 
+  let _P = λ_x 0 
+  let _true = (- _b _a) 
+  let _false = (- _a _b) 
+  (((((Book.U60.to_bool) (< _a _b)) _P) _true) _false)
+
+Book.U60.cmp = λ_a λ_b (((((Book.U60.if) (== _a _b)) (Book.Cmp)) (((((Book.U60.if) (< _a _b)) (Book.Cmp)) (Book.Cmp.gtn)) (Book.Cmp.ltn))) (Book.Cmp.eql))
 
 Book.U60.equal = λ_a λ_b (U60.match (== _a _b) (Book.Bool.false) λ_x_1((Book.Bool.true)))
 
@@ -1387,6 +1658,10 @@ Book.U60.from_nat = λ_n
 Book.U60.if = λ_x λ_P λ_t λ_f (U60.match _x _t λ_x_1(_f))
 
 Book.U60.match = λ_x λ_P λ_s λ_z (U60.match _x _z λ_self_1((_s _self_1)))
+
+Book.U60.max = λ_a λ_b (((((Book.U60.to_bool) (> _a _b)) λ_x 0) _a) _b)
+
+Book.U60.min = λ_a λ_b (((((Book.U60.to_bool) (< _a _b)) λ_x 0) _a) _b)
 
 Book.U60.name.go = λ_n (U60.match _n λ_nil _nil λ_n_1(λ_nil (((Book.String.cons) (+ 97 (% _n_1 26))) (((Book.U60.name.go) (/ _n_1 26)) _nil))))
 
@@ -1410,13 +1685,15 @@ Book.test0 = λ_A λ_B λ_aa λ_ab λ_ba λ_bb λ_a λ_b (_ba (_ab (_aa (_aa _a)
 
 Book.test1 = λ_x (+ 50 12)
 
-Book._EXP = ((((Book.Kind.all) (Str "n")) (Book._Nat)) λ_n ((((Book.Kind.all) (Str "m")) (Book._Nat)) λ_m (Book._Nat)))
-Book._exp = (((Book.Kind.lam) (Str "n")) λ_n (((Book.Kind.lam) (Str "m")) λ_m (((Book.Kind.lam) (Str "P")) λ_P (((Book.Kind.app) (((Book.Kind.app) _m) ((((Book.Kind.all) (Str "x")) _P) λ_x _P))) (((Book.Kind.app) _n) _P)))))
-Book._C2 = (Book._Nat)
 Book._c2 = (((Book.Kind.lam) (Str "P")) λ_P (((Book.Kind.lam) (Str "s")) λ_s (((Book.Kind.lam) (Str "z")) λ_z (((Book.Kind.app) _s) (((Book.Kind.app) _s) _z)))))
+Book._C2 = (Book._Nat)
+Book._EXP = ((((Book.Kind.all) (Str "n")) (Book._Nat)) λ_n ((((Book.Kind.all) (Str "m")) (Book._Nat)) λ_m (Book._Nat)))
 Book.test10 = 
   let _term = (((Book.Kind.app) (((Book.Kind.app) (Book._exp)) (Book._c2))) (Book._c2)) 
   (((Book.Kind.Term.show) ((((Book.Kind.normal) (Book.Bool.true)) _term) (Book.Nat.zero))) (Book.Nat.zero))
+Book._exp = (((Book.Kind.lam) (Str "n")) λ_n (((Book.Kind.lam) (Str "m")) λ_m (((Book.Kind.lam) (Str "P")) λ_P (((Book.Kind.app) (((Book.Kind.app) _m) ((((Book.Kind.all) (Str "x")) _P) λ_x _P))) (((Book.Kind.app) _n) _P)))))
+
+Book.test11 = 0
 
 Book.test2 = 
   let _xs = ((((Book.List.cons) 0) 0) ((((Book.List.cons) 0) 1) ((((Book.List.cons) 0) 2) ((Book.List.nil) 0)))) 
@@ -1437,12 +1714,9 @@ Book.test8 = λ_a ((((Book.U60.if) _a) 0) (Str "test"))
 
 Book.test9 = ((((Book.String.unpar) 40) 41) (Str "((foo))"))
 
-
-Main = (Str.view ((Book.Kind.Book.to_hvm) ((Book.Kind.Book.parse) (Str "F = λf λx (f (f x))"))))
-
-
-
-
-
-
-
+Book.testBBT = (Str "
+File commented for backward compatibility.
+To run the tests, uncomment the code on:
+  testBBT.kind2
+  U60.Map
+")

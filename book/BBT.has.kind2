@@ -1,0 +1,17 @@
+BBT.has
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(key: K)
+  ∀(map: (BBT K V))
+  Bool
+= λK λV λcmp λkey λmap
+  let P = λx Bool
+  let bin = λnext.size λnext.key λnext.val λnext.lft λnext.rgt
+    let P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) Bool
+    let ltn = λcmp λkey (BBT.has K V cmp key next.lft)
+    let eql = λcmp λkey Bool.true
+    let gtn = λcmp λkey (BBT.has K V cmp key next.rgt)
+    ((~(cmp key next.key) P ltn eql gtn) cmp key)
+  let tip = Bool.false
+  (~map P bin tip)

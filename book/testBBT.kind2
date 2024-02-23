@@ -1,4 +1,4 @@
-_compile : String = (Kind.Book.to_hvm (Kind.Book.parse `// Add_spaces
+// Add_spaces
 // : ∀(n: #U60)
 //   (String)
 // = λn
@@ -177,4 +177,3 @@ To run the tests, uncomment the code on:
   U60.Map
 "
   // RunTests
-`))

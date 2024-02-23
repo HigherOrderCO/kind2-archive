@@ -1,5 +1,5 @@
 Kind.Book.to_hvm.go
-: ∀(book: Kind.Book)
+: ∀(book: (List (Pair String Kind.Term)))
   String.Concatenator
 = λbook
   let P    = λx String.Concatenator

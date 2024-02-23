@@ -1,8 +1,45 @@
-Main
-: Kind.Book
-=
-  let book = (Kind.API.load "Bool.and")
-  book
+//Main
+//: Unit
+//= let map = (String.Map.new Unit)
+  //let map = (String.Map.set Unit "Bool" Unit.one map)
+  //let map = (String.Map.set Unit "Bool.true" Unit.one map)
+  //let has = (String.Map.has Unit "Bool.false" map)
+  //(HVM.print Unit (Bool.show has)
+  //Unit.one)
+
+//Main
+//: Unit
+//= let book = (Kind.load "Bool")
+  //(HVM.print Unit (Kind.Book.show book)
+  //Unit.one)
+
+//Main = Kind.load.name
+
+//Main = Kind.load.go.defs
+
+//Main
+//: Unit
+//=
+////= (HVM.print Unit (Kind.Book.to_hvm (Kind.API.load "Bool.and"))
+  //Unit.one
+  //)
+
+//Main
+//: (Maybe #U60)
+//= let map = (String.Map.new #U60)
+  //let map = (String.Map.set #U60 "foo" #1 map)
+  //let map = (String.Map.set #U60 "bar" #2 map)
+  //let map = (String.Map.set #U60 "tic" #3 map)
+  //let map = (String.Map.set #U60 "tac" #4 map)
+  //let val = (String.Map.get #U60 "bar" map)
+  //val
+
+//Main
+//: Kind.Book
+//=
+  //let book = (Kind.API.load "Bool.and")
+  //book
+
   //let code = (Kind.Book.to_hvm book)
   //let refs = (Kind.Book.get_refs book)
   //(HVM.print Unit code

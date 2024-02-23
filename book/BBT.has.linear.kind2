@@ -1,0 +1,32 @@
+// Returns a Pair with the boolean (indicating if the key is present) and the original map
+BBT.has.linear
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(key: K)
+  ∀(map: (BBT K V))
+  (Pair Bool (BBT K V))
+= λK λV λcmp λkey λmap
+  let P = λx(Pair Bool (BBT K V))
+  let bin = λsize λnode_key λval λlft λrgt
+    let P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) ∀(lft: (BBT K V)) ∀(rgt: (BBT K V)) (Pair Bool (BBT K V))
+    let ltn = λcmp λsize λhas_key λval λlft λrgt λhas_key
+      let P = λx (Pair Bool (BBT K V))
+      let new = λbool λlft 
+        let map = (BBT.bin K V size node_key val lft rgt)
+        (Pair.new Bool (BBT K V) bool map)
+      (~(BBT.has.linear K V cmp has_key lft) P new)
+    let eql = λcmp λsize λkey λval λlft λrgt λhas_key
+      (Pair.new Bool (BBT K V) Bool.true (BBT.bin K V size node_key val lft rgt))
+
+    let gtn = λcmp λsize λkey λval λlft λrgt λhas_key
+      let P = λx (Pair Bool (BBT K V))
+      let new = λbool λrgt 
+        let map = (BBT.bin K V size node_key val lft rgt)
+        (Pair.new Bool (BBT K V) bool rgt)
+      (~(BBT.has.linear K V cmp has_key rgt) P new)
+
+    ((~(cmp key node_key) P ltn eql gtn) cmp size node_key val lft rgt key)
+
+  let tip = (Pair.new Bool (BBT K V) Bool.false (BBT.tip K V))
+  (~map P bin tip)

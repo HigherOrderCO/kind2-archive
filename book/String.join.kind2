@@ -1,0 +1,8 @@
+String.join
+: ∀(strs: (List String))
+  String
+= λstrs
+  let P    = λx(String)
+  let cons = λhλt(String.concat h (String.join t))
+  let nil  = String.nil
+  (~strs P cons nil)

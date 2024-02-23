@@ -1,5 +1,0 @@
-Kind.API.file
-: ∀(name: String)
-  String
-= λname
-  (String.concat name ".kind2")

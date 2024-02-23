@@ -1,0 +1,6 @@
+String.Map.to_list
+: ∀(V: *)
+  ∀(map: (String.Map V))
+  (List (Pair String V))
+= λV λmap
+  (BBT.to_list String V map)

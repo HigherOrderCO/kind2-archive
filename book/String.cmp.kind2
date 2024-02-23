@@ -1,0 +1,22 @@
+String.cmp
+: ∀(a: String)
+  ∀(b: String)
+  Cmp
+= λa λb
+  let P    = λx ∀(b: String) (Cmp)
+  let cons = λa.head λa.tail λb
+    let P    = λx ∀(a.head: Char) ∀(a.tail: String) (Cmp)
+    let cons = λb.head λb.tail λa.head λa.tail
+      let P = λx Cmp
+      let ltn = Cmp.ltn
+      let eql = (String.cmp a.tail b.tail)
+      let gtn = Cmp.gtn
+      (~(U60.cmp a.head b.head) P ltn eql gtn)
+    let nil  = λa.head λa.tail Cmp.gtn
+    ((~b P cons nil) a.head a.tail)
+  let nil  = λb
+    let P    = λx Cmp
+    let cons = λb.head λb.tail Cmp.ltn
+    let nil  = Cmp.eql
+    (~b P cons nil)
+  (~a P cons nil b)

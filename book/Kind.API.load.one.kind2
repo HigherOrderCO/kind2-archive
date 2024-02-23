@@ -1,6 +1,0 @@
-Kind.API.load.one
-: ∀(name: String)
-  Kind.Book
-= λname
-  (HVM.load Kind.Book (Kind.API.file name) λdata
-  (Kind.Book.parse data))

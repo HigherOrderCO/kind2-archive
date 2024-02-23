@@ -1,0 +1,100 @@
+BBT.balance
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(set_key: K)
+  ∀(node_key: K)
+  ∀(val: V)
+  ∀(lft: (BBT K V))
+  ∀(rgt: (BBT K V))
+  (BBT K V)
+= λK λV λcmp λset_key λnode_key λval λlft λrgt
+  let P   = λx(BBT K V)
+  let new = λlft.size λlft
+    let P   = λx(BBT K V)
+    let new = λrgt.size λrgt
+      let new_size = #(+ #1 (U60.max lft.size rgt.size))
+      let balance  = (U60.abs_diff lft.size rgt.size)
+      let P     = λx ∀(new_size: #U60) ∀(node_key: K) ∀(val: V) ∀(lft: (BBT K V)) ∀(rgt: (BBT K V)) (BBT K V)
+
+      // Unbalanced Trees
+      let true  = λnew_size λnode_key λval λlft λrgt
+        let P = λx ∀(K: *) ∀(V: *) ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(new_size: #U60) ∀(node_key: K) ∀(set_key: K) ∀(val: V) ∀(lft: (BBT K V)) ∀(rgt: (BBT K V)) (BBT K V)
+        let true  = BBT.balance.lft_heavier
+        let false = BBT.balance_rgt_heavier
+        ((~(U60.to_bool #(< rgt.size lft.size)) P true false) K V cmp new_size node_key set_key val lft rgt)
+      
+      // Balanced Trees
+      let false = λnew_size λnode_key λval λlft λrgt
+        (BBT.bin K V new_size node_key val lft rgt)
+
+      ((~(U60.to_bool #(> balance #1)) P true false) new_size node_key val lft rgt)
+    (~(BBT.got_size K V rgt) P new)
+  (~(BBT.got_size K V lft) P new)
+
+
+
+BBT.balance.lft_heavier
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(new_size: #U60)
+  ∀(node_key: K)
+  ∀(set_key: K)
+  ∀(val: V)
+  ∀(lft: (BBT K V))
+  ∀(rgt: (BBT K V))
+  (BBT K V)
+= λK λV λcmp λnew_size λnode_key λset_key λval λlft λrgt
+  let P = λx(BBT K V)
+  let bin = λlft.size λlft.key λlft.val λlft.lft λlft.rgt
+    let P     = λx ∀(new_size: #U60) ∀(key: K) ∀(val: V) ∀(lft.key: K) ∀(lft.val: V) ∀(lft.lft: (BBT K V)) ∀(lft.rgt: (BBT K V)) ∀(rgt: (BBT K V)) (BBT K V)
+
+    // key > lft.key
+    let true  = λnew_size λkey λval λlft.key λlft.val λlft.lft λlft.rgt λrgt  
+      let lft = (BBT.lft_rotate K V lft.size lft.key lft.val lft.lft lft.rgt)
+      (BBT.rgt_rotate K V new_size key val lft rgt)
+
+    // key < lft.key
+    let false = λnew_size λkey λval λlft.key λlft.val λlft.lft λlft.rgt λrgt  
+      let lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
+      (BBT.rgt_rotate K V new_size key val lft rgt)
+      
+    ((~(Cmp.is_gtn (cmp set_key lft.key)) P true false) new_size node_key val lft.key lft.val lft.lft lft.rgt rgt)
+
+  // unreachable case 
+  // Left can't be a tip and greater than right at the same time
+  let tip = (BBT.tip K V)
+  (~lft P bin tip)
+
+BBT.balance_rgt_heavier
+: ∀(K: *)
+  ∀(V: *)
+  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  ∀(new_size: #U60)
+  ∀(node_key: K)
+  ∀(set_key: K)
+  ∀(val: V)
+  ∀(lft: (BBT K V))
+  ∀(rgt: (BBT K V))
+  (BBT K V)
+= λK λV λcmp λnew_size λnode_key λset_key λval λlft λrgt  
+  let P = λx(BBT K V)
+  let bin = λrgt.size λrgt.key λrgt.val λrgt.lft λrgt.rgt
+    let P     = λx ∀(new_size: #U60) ∀(key: K) ∀(val: V) ∀(lft: (BBT K V)) ∀(rgt.key: K) ∀(rgt.val: V) ∀(rgt.lft: (BBT K V)) ∀(rgt.rgt: (BBT K V)) (BBT K V)
+      
+    // key > rgt.key
+    let true = λnew_size λkey λval λlft λrgt.key λrgt.val λrgt.lft λrgt.rgt  
+      let rgt = (BBT.bin K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
+      (BBT.lft_rotate K V new_size key val lft rgt)
+
+    // key < rgt.key
+    let false = λnew_size λkey λval λlft λrgt.key λrgt.val λrgt.lft λrgt.rgt  
+      let rgt = (BBT.rgt_rotate K V rgt.size rgt.key rgt.val rgt.lft rgt.rgt)
+      (BBT.lft_rotate K V new_size key val lft rgt)
+    ((~(Cmp.is_gtn (cmp set_key rgt.key)) P true false) new_size node_key val lft rgt.key rgt.val rgt.lft rgt.rgt)
+  
+  // Unreachable case
+  // Right can't be a tip and greater than left at the same time
+  let tip = (BBT.tip K V)
+  (~rgt P bin tip)

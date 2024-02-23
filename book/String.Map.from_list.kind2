@@ -1,0 +1,6 @@
+String.Map.from_list
+: ∀(V: *)
+  ∀(list: (List (Pair String V)))
+  (String.Map V)
+= λV λlist
+  (BBT.from_list String V String.cmp list)
