@@ -7,7 +7,7 @@
 (Str.view str)        = (str 0 λhλt(String.cons h (Str.view t)) String.nil)
 (Strs.view strs)      = (List.view λx(Str.view x) strs)
 (List.view elem list) = (list 0 λhλt(List.cons (elem h) (List.view elem t)) List.nil)
-`
+
 Book.A.match = λ_a λ_P λ_t ((_a _P) λ_tag (U60.match _tag _t λ_tag_1(λ_x (_x λ_x 0))))
 Book.A = 0
 Book.A.bad = λ_P λ_new ((_new 1) 0)

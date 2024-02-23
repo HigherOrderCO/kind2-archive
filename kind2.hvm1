@@ -355,6 +355,7 @@
 
 (Context.show.ann (Ann val typ) dep) = (Join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
 (Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
+//(Context.show.ann val           dep) = (Join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 (Infer val dep) dep) dep) "}"])
 
 // Compilation
 // -----------
@@ -419,8 +420,8 @@ Compile.primitives = [
 
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
-//(Normalizer val)           = (Compile val)
-(Normalizer val)           = (Str.view (Compile val))
+(Normalizer val)           = (Compile val)
+//(Normalizer val)           = (Str.view (Compile val))
 
 (Checker (Ref nam val)) = (Checker val)
 (Checker (Ann val typ)) = (Checker.report (Check val typ 0))

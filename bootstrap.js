@@ -28,7 +28,7 @@ fs.readdirSync(bookDir).forEach(file => {
 });
 
 // Loads prelude
-var prelude = fs.readFileSync("./book/Kind.Book.to_hvm.prelude.kind2", "utf8");
+var prelude = fs.readFileSync("./book/Kind.Book.to_hvm.prelude.kind2", "utf8").trim();
 const lines = prelude.split("\n");
 lines.shift();
 lines.pop();

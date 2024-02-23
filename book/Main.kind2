@@ -1,3 +1,13 @@
+Main
+: (IO Unit)
+= (IO.run Unit
+  (IO.bind Unit Unit (IO.print.do "hello") λx
+  (IO.bind Kind.Book Unit (Kind.load "Bool") λbook
+  (IO.bind Unit Unit (IO.print.do (Kind.Book.show book)) λx
+  (IO.done Unit Unit.one)))))
+
+//Main = Kind.load.dependency
+
 //Main
 //: Unit
 //= let map = (String.Map.new Unit)
@@ -8,12 +18,45 @@
   //Unit.one)
 
 //Main
-//: Unit
+//: (IO Unit)
+//= (IO.run Unit
+  //(IO.load Unit "B.kind2" λfile
+  //(IO.print Unit file λx
+  //(IO.done Unit Unit.one))))
+
+//FOO
+//: Kind.Book
+//= (HVM.load Kind.Book "B.kind2" λdata (Kind.Book.parse data))
+
+//Main
+//: (String.Map Kind.Book)
+//=
+  ////(HVM.load ?k "B.kind2" λcode
+  ////let book = (Kind.Book.parse code)
+
+  
+  //let book = (HVM.load ?k "B.kind2" λdata (Kind.Book.parse data))
+
+  //let seen = (String.Map.new Kind.Book)
+  //let seen = (String.Map.set Kind.Book "Bool" book seen)
+  //seen
+  ////)
+
+//Main
+//: (String.Map Unit)
+//= let unit = Unit.one
+  //let seen = (String.Map.new Unit)
+  //let seen = (String.Map.set Unit "Bool" unit seen)
+  //seen
+
+//: (String.Map Kind.Book)
 //= let book = (Kind.load "Bool")
+  //book
+
   //(HVM.print Unit (Kind.Book.show book)
   //Unit.one)
 
-//Main = Kind.load.name
+//Main = Kind.load.code
 
 //Main = Kind.load.go.defs
 
