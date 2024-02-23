@@ -155,7 +155,7 @@
 // --------
 
 // Check if two terms are identical. If not...
-(Equal a b 24)  = 0 // limits depth FIXME: won't be necessary with better ref-ids equality
+//(Equal a b 8)  = 0 // limits depth FIXME: won't be necessary with better ref-ids equality
 (Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
 
 // Check if they're identical after a minor weak reduction. If not...

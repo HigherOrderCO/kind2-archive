@@ -1,13 +1,30 @@
 test7.book
 : String
 = `
-Kind.API.get_refs
-: ∀(code: String)
-  (List String)
-= λcode
-  (Kind.Term.get_refs (Kind.Term.parse code))
+Kind.Term
+: *
+= $self
+  ∀(P: ∀(x: Kind.Term) *)
+  ∀(all: ∀(nam: String) ∀(inp: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.all nam inp bod)))
+  ∀(lam: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.lam nam bod)))
+  ∀(app: ∀(fun: Kind.Term) ∀(arg: Kind.Term) (P (Kind.app fun arg)))
+  ∀(ann: ∀(val: Kind.Term) ∀(typ: Kind.Term) (P (Kind.ann val typ)))
+  ∀(slf: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.slf nam bod)))
+  ∀(ins: ∀(val: Kind.Term) (P (Kind.ins val)))
+  ∀(ref: ∀(nam: String) ∀(val: Kind.Term) (P (Kind.ref nam val)))
+  ∀(def: ∀(nam: String) ∀(val: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.def nam val bod)))
+  ∀(set: (P Kind.set))
+  ∀(u60: (P Kind.u60))
+  ∀(num: ∀(val: #U60) (P (Kind.num val)))
+  ∀(op2: ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term) (P (Kind.op2 opr fst snd)))
+  ∀(mat: ∀(nam: String) ∀(x: Kind.Term) ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term)Kind.Term) ∀(p: ∀(x: Kind.Term)Kind.Term) (P (Kind.mat nam x z s p)))
+  ∀(txt: ∀(lit: Kind.Text) (P (Kind.txt lit)))
+  ∀(hol: ∀(nam: String) ∀(ctx: (List Kind.Term)) (P (Kind.hol nam ctx)))
+  ∀(var: ∀(nam: String) ∀(idx: Nat) (P (Kind.var nam idx)))
+  (P self)
 `
 
 test7
-: String
-= (Kind.Book.to_hvm (Kind.Book.parse test7.book))
+: (IO Unit)
+= (IO.run Unit
+  (IO.print.do (Kind.Book.to_hvm (Kind.Book.parse test7.book))))

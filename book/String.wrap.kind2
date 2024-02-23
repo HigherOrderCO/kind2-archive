@@ -1,0 +1,17 @@
+String.wrap
+: ∀(ini: String)
+  ∀(str: String)
+  ∀(end: String)
+  String
+= λini λstr λend
+  (String.concat ini (String.wrap.go str end))
+
+String.wrap.go
+: ∀(str: String)
+  ∀(end: String)
+  String
+= λstr λend
+  let P    = λx ∀(end: String) (String)
+  let cons = λh λt λend (String.cons h (String.wrap.go t end))
+  let nil  = λend (String.concat end String.nil)
+  ((~str P cons nil) end)

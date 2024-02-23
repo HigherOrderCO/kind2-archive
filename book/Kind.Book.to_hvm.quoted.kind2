@@ -1,0 +1,7 @@
+Kind.Book.to_hvm.quoted
+: ∀(book: Kind.Book)
+  String
+= λbook
+  (String.Concatenator.build
+  (Kind.Book.to_hvm.quoted.go
+  (String.Map.to_list Kind.Term book)))

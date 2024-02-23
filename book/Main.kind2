@@ -1,10 +1,18 @@
 Main
-: (IO Unit)
-= (IO.run Unit
-  (IO.bind Unit Unit (IO.print.do "hello") λx
-  (IO.bind Kind.Book Unit (Kind.load "Bool") λbook
-  (IO.bind Unit Unit (IO.print.do (Kind.Book.show book)) λx
-  (IO.done Unit Unit.one)))))
+= (Kind.API.to_hvm "Bool")
+
+
+//Main
+//: (IO Unit)
+//= (IO.run Unit
+  //(IO.bind Unit Unit (IO.print.do "hello") λx
+  //(IO.bind Kind.Book Unit (Kind.load "Bool") λbook
+  //(IO.bind Unit Unit (IO.print.do (Kind.Book.to_hvm book)) λx
+  //(IO.done Unit Unit.one)))))
+
+//Main
+//= Kind.API.check
+
 
 //Main = Kind.load.dependency
 

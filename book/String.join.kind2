@@ -1,8 +1,19 @@
 String.join
-: ∀(strs: (List String))
+: ∀(sep: String)
+  ∀(strs: (List String))
   String
-= λstrs
+= λsep λstrs
   let P    = λx(String)
-  let cons = λhλt(String.concat h (String.join t))
+  let cons = λhλt(String.concat h (String.join.go sep t))
+  let nil  = String.nil
+  (~strs P cons nil)
+
+String.join.go
+: ∀(sep: String)
+  ∀(strs: (List String))
+  String
+= λsep λstrs
+  let P    = λx(String)
+  let cons = λhλt(String.concat sep (String.concat h (String.join.go sep t)))
   let nil  = String.nil
   (~strs P cons nil)

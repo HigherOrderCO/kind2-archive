@@ -2,9 +2,9 @@
   "name": "kind2",
   "version": "0.1.0",
   "description": "",
-  "main": "main.ts",
+  "main": "kind2.ts",
   "bin": {
-    "kind2": "./main.ts"
+    "kind2": "./kind2.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

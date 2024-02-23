@@ -1,4 +1,4 @@
-Kind.Book.to_hvm.go
+Kind.Book.to_hvm.quoted.go
 : ∀(book: (List (Pair String Kind.Term)))
   String.Concatenator
 = λbook
@@ -6,12 +6,12 @@ Kind.Book.to_hvm.go
   let cons = λhead λtail
     let P   = λx String.Concatenator
     let new = λhead.fst λhead.snd λnil
-      ((Kind.Text.show.go "F.")
+      ((Kind.Text.show.go "Book.")
       ((Kind.Text.show.go head.fst)
       ((Kind.Text.show.go " = ")
-      ((Kind.Term.to_hvm.go head.snd Nat.zero Bool.true Nat.zero)
+      ((Kind.Term.to_hvm.quoted.go head.snd Nat.zero)
       ((Kind.Text.show.go String.newline)
-      ((Kind.Book.to_hvm.go tail)
+      ((Kind.Book.to_hvm.quoted.go tail)
       nil))))))
     (~head P new)
   let nil  = λnil nil

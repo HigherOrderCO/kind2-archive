@@ -1,0 +1,6 @@
+Kind.Term.to_hvm.checker
+: ∀(term: Kind.Term)
+  ∀(dep: Nat)
+  String
+= λterm λdep
+  (String.Concatenator.build (Kind.Term.to_hvm.quoted.go term dep))
