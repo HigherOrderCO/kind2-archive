@@ -1,0 +1,7 @@
+IO.load.do
+: ∀(file: String)
+  (IO String)
+= λfile
+  (IO.load String file λx
+  (IO.done String x))
+

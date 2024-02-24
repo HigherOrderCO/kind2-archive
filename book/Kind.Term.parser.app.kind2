@@ -7,6 +7,6 @@ Kind.Term.parser.app
   (Kind.Term.parser.bind Unit (Parser.text ")") λ_
   (Kind.Term.parser.pure λscp
   (((List.fold Kind.PreTerm terms) ∀(fun:Kind.Term)Kind.Term
-  λargλrecλfun(rec (Kind.app fun (arg scp)))
+  λarg λrec λfun (rec (Kind.app fun (arg scp)))
   λfun(fun))
   (fun scp))))))))

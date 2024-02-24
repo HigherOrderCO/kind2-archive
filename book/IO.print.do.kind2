@@ -1,0 +1,7 @@
+IO.print.do
+: ∀(text: String)
+  (IO Unit)
+= λtext
+  (IO.print Unit text λx
+  (IO.done Unit x))
+

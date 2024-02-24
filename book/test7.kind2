@@ -1,6 +1,6 @@
 test7.book
 : String
-= `
+= "
 Kind.Term
 : *
 = $self
@@ -22,7 +22,7 @@ Kind.Term
   ∀(hol: ∀(nam: String) ∀(ctx: (List Kind.Term)) (P (Kind.hol nam ctx)))
   ∀(var: ∀(nam: String) ∀(idx: Nat) (P (Kind.var nam idx)))
   (P self)
-`
+"
 
 test7
 : (IO Unit)

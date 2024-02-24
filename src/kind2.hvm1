@@ -29,14 +29,15 @@
   //| (Txt txt)
   //| (Hol nam ctx val)
   //| (Var nam idx) 
+  //| (Src src val)
 
 // Prelude
 // -------
 
 (Debug dep []  value) = value
-(Debug dep msg value) = (HVM.print (Join msg) value)
+(Debug dep msg value) = (HVM.print (String.join msg) value)
 //(Debug dep []  value) = value
-//(Debug dep msg value) = (If (> dep 10) 1 (HVM.print (Join msg) value))
+//(Debug dep msg value) = (If (> dep 10) 1 (HVM.print (String.join msg) value))
 
 (NewLine) = (String.cons 10 String.nil)
 (Quote)   = (String.cons 34 String.nil)
@@ -70,23 +71,50 @@
 (Find name List.nil)                        = None
 (Find name (List.cons (Pair nam val) tail)) = (If (Same nam name) (Some val) (Find name tail))
 
-(Concat String.nil         ys) = ys
-(Concat (String.cons x xs) ys) = (String.cons x (Concat xs ys))
+(String.concat String.nil         ys) = ys
+(String.concat (String.cons x xs) ys) = (String.cons x (String.concat xs ys))
 
-(Join List.nil)         = ""
-(Join (List.cons x xs)) = (Concat x (Join xs))
+(String.join List.nil)         = ""
+(String.join (List.cons x xs)) = (String.concat x (String.join xs))
 
-(Fst (Pair fst snd)) = fst
-(Snd (Pair fst snd)) = snd
+(Pair.fst (Pair fst snd)) = fst
+(Pair.snd (Pair fst snd)) = snd
 
-(Get (Pair fst snd) fun) = (fun fst snd)
+(Pair.get (Pair fst snd) fun) = (fun fst snd)
 
-(Pure x) = (Some x)
+(Maybe.pure x) = (Some x)
 
-(Bind a b) = (Bind.match a b)
+(Maybe.bind a b) = (Maybe.bind.match a b)
 
-(Bind.match None     b) = None
-(Bind.match (Some a) b) = (b a)
+(Maybe.bind.match None     b) = None
+(Maybe.bind.match (Some a) b) = (b a)
+
+(String.color RESET)      = (String.cons 27 "[0m")
+(String.color BRIGHT)     = (String.cons 27 "[1m")
+(String.color DIM)        = (String.cons 27 "[2m")
+(String.color UNDERSCORE) = (String.cons 27 "[4m")
+(String.color BLINK)      = (String.cons 27 "[5m")
+(String.color REVERSE)    = (String.cons 27 "[7m")
+(String.color HIDDEN)     = (String.cons 27 "[8m")
+(String.color BLACK)      = (String.cons 27 "[30m")
+(String.color RED)        = (String.cons 27 "[31m")
+(String.color GREEN)      = (String.cons 27 "[32m")
+(String.color YELLOW)     = (String.cons 27 "[33m")
+(String.color BLUE)       = (String.cons 27 "[34m")
+(String.color MAGENTA)    = (String.cons 27 "[35m")
+(String.color CYAN)       = (String.cons 27 "[36m")
+(String.color WHITE)      = (String.cons 27 "[37m")
+(String.color GRAY)       = (String.cons 27 "[90m")
+(String.color BG_BLACK)   = (String.cons 27 "[40m")
+(String.color BG_RED)     = (String.cons 27 "[41m")
+(String.color BG_GREEN)   = (String.cons 27 "[42m")
+(String.color BG_YELLOW)  = (String.cons 27 "[43m")
+(String.color BG_BLUE)    = (String.cons 27 "[44m")
+(String.color BG_MAGENTA) = (String.cons 27 "[45m")
+(String.color BG_CYAN)    = (String.cons 27 "[46m")
+(String.color BG_WHITE)   = (String.cons 27 "[47m")
+(String.color BG_GRAY)    = (String.cons 27 "[100m")
+(String.color x)          = "?"
 
 // Evaluation
 // ----------
@@ -99,6 +127,7 @@
 (Reduce r (Op2 opr fst snd)) = (Reduce.op2 r opr fst snd)
 (Reduce r (Mat nam x z s p)) = (Reduce.mat r nam x z s p)
 (Reduce 1 (Txt txt))         = (Reduce.txt 1 txt)
+(Reduce r (Src src val))     = (Reduce r val)
 (Reduce r val)               = val
 
 (Reduce.app r (Lam nam bod)     arg) = (Reduce r (bod (Reduce 0 arg)))
@@ -147,27 +176,27 @@
 (Normal.term r U60               dep) = U60
 (Normal.term r (Num val)         dep) = (Num val)
 (Normal.term r (Op2 opr fst snd) dep) = (Op2 opr (Normal.term r fst dep) (Normal.term r snd dep))
-(Normal.term r (Mat nam x z s p) dep) = (Mat nam (Normal r x dep) (Normal r z dep) λk(Normal r (s (Var (Concat nam "-1") dep)) dep) λk(Normal r (p (Var nam dep)) dep))
+(Normal.term r (Mat nam x z s p) dep) = (Mat nam (Normal r x dep) (Normal r z dep) λk(Normal r (s (Var (String.concat nam "-1") dep)) dep) λk(Normal r (p (Var nam dep)) dep))
 (Normal.term r (Txt val)         dep) = (Txt val)
 (Normal.term r (Var nam idx)     dep) = (Var nam idx)
+(Normal.term r (Src src val)     dep) = (Src src (Normal r val dep))
 
 // Equality
 // --------
 
 // Check if two terms are identical. If not...
-//(Equal a b 8)  = 0 // limits depth FIXME: won't be necessary with better ref-ids equality
 (Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
 
 // Check if they're identical after a minor weak reduction. If not...
-(Equal.minor 0 a b dep) = let a = (Reduce 0 a); let b = (Reduce 0 b); (Equal.major (Identical a b dep) a b dep)
+(Equal.minor 0 a b dep) = (Equal.major (Identical (Reduce 0 a) (Reduce 0 b) dep) a b dep)
 (Equal.minor 1 a b dep) = 1
 
 // Check if they're identical after a major weak reduction. If not...
-(Equal.major 0 a b dep) = let a = (Reduce 1 a); let b = (Reduce 1 b); (Equal.enter (Identical a b dep) a b dep)
+(Equal.major 0 a b dep) = (Equal.enter (Identical (Reduce 1 a) (Reduce 1 b) dep) a b dep)
 (Equal.major 1 a b dep) = 1
 
 // Check if they become identical after reducing fields.
-(Equal.enter 0 a b dep) = (Comparer λaλbλdep(Equal a b dep) a b dep)
+(Equal.enter 0 a b dep) = (Comparer λaλbλdep(Equal a b dep) (Reduce 0 a) (Reduce 0 b) dep)
 (Equal.enter 1 a b dep) = 1
 
 // Checks if two terms are identical, without reductions.
@@ -193,8 +222,10 @@
 (Comparer rec U60                         U60                         dep) = 1
 (Comparer rec (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
 (Comparer rec (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (rec a.fst b.fst dep) (rec a.snd b.snd dep))
-(Comparer rec (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (rec a.x b.x dep) (& (rec a.z b.z dep) (& (rec (a.s (Var (Concat a.nam "-1") dep)) (b.s (Var (Concat b.nam "-1") dep)) dep) (rec (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
+(Comparer rec (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (rec a.x b.x dep) (& (rec a.z b.z dep) (& (rec (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (rec (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
 (Comparer rec (Txt a.txt)                 (Txt b.txt)                 dep) = (Same a.txt b.txt)
+(Comparer rec (Src a.src a.val)           b                           dep) = (Comparer rec a.val b dep)
+(Comparer rec a                           (Src b.src b.val)           dep) = (Comparer rec a b.val dep)
 (Comparer rec a                           b                           dep) = 0
 //(Comparer rec a                           b                           dep) = (HVM.log (NOP (Show a dep) (Show b dep)) 0)
 
@@ -211,29 +242,29 @@
 (Infer term dep) = (Infer.match term dep)
 
 (Infer.match (All nam inp bod) dep) =
-  (Bind (Check inp Set dep) λinp_typ
-  (Bind (Check (bod (Ann (Var nam dep) inp)) Set (+ 1 dep)) λbod_typ
-  (Pure Set)))
+  (Maybe.bind (Check 0 inp Set dep) λinp_typ
+  (Maybe.bind (Check 0 (bod (Ann (Var nam dep) inp)) Set (+ 1 dep)) λbod_typ
+  (Maybe.pure Set)))
 (Infer.match (Lam nam bod) dep) =
   (Debug dep ["Error: NonFunLam " (Show (Lam nam bod) dep)] (None))
 (Infer.match (App fun arg) dep) =
-  (Bind (Infer fun dep) λfun_typ
+  (Maybe.bind (Infer fun dep) λfun_typ
   ((IfAll (Reduce 1 fun_typ)
     λfun_nam λfun_typ.inp λfun_typ.bod λfun λarg
-      (Bind (Check arg fun_typ.inp dep) λval_typ
-      (Pure (fun_typ.bod arg)))
+      (Maybe.bind (Check 0 arg fun_typ.inp dep) λval_typ
+      (Maybe.pure (fun_typ.bod arg)))
     λfun λarg
       (Debug dep ["Error: NonFunApp " (Show (App fun arg) dep)] None))
     fun arg))
 (Infer.match (Ann val typ) dep) =
-  (Pure typ)
+  (Maybe.pure typ)
 (Infer.match (Slf nam bod) dep) =
-  (Bind (Check (bod (Ann (Var nam dep) (Slf nam bod))) Set (+ dep 1)) λslf
-  (Pure Set))
+  (Maybe.bind (Check 0 (bod (Ann (Var nam dep) (Slf nam bod))) Set (+ dep 1)) λslf
+  (Maybe.pure Set))
 (Infer.match (Ins val) dep) =
-  (Bind (Infer val dep) λval_typ
+  (Maybe.bind (Infer val dep) λval_typ
   ((IfSlf (Reduce 1 val_typ)
-    λval_nam λval_typ.bod λval (Pure (val_typ.bod (Ins val)))
+    λval_nam λval_typ.bod λval (Maybe.pure (val_typ.bod (Ins val)))
     λval (Debug dep ["Error: NonSlfIns " (Show (Ins val) dep)] None))
     val))
 (Infer.match (Ref nam val) dep) = 
@@ -241,99 +272,103 @@
 (Infer.match (Let nam val bod) dep) =
   (Debug dep ["Error: NonAnnLet " (Show (Let nam val bod) dep)] (None))
 (Infer.match Set dep) =
-  (Pure Set)
+  (Maybe.pure Set)
 (Infer.match U60 dep) =
-  (Pure Set)
+  (Maybe.pure Set)
 (Infer.match (Num num) dep) =
-  (Pure U60)
+  (Maybe.pure U60)
 (Infer.match (Txt txt) dep) =
-  (Pure Book.String)
+  (Maybe.pure Book.String)
 (Infer.match (Op2 opr fst snd) dep) =
-  (Bind (Check fst U60 dep) λfst
-  (Bind (Check snd U60 dep) λsnd
-  (Pure U60)))
-// x : U60
-// p : ∀(x: U60) *
-// z : (p 0)
-// s : ∀(x-1 : U60) (p (+ 1 x-1))
-// ------------------------------
-// (Mat nam x z s p) : (p x)
+  (Maybe.bind (Check 0 fst U60 dep) λfst
+  (Maybe.bind (Check 0 snd U60 dep) λsnd
+  (Maybe.pure U60)))
 (Infer.match (Mat nam x z s p) dep) =
-  (Bind (Check x U60 dep) λx_typ
-  (Bind (Check (p (Ann (Var nam dep) U60)) Set dep) λp_typ
-  (Bind (Check z (p (Num 0)) dep) λz_typ
-  (Bind (Check (s (Ann (Var (Concat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (Concat nam "-1") dep))) (+ dep 1)) λs_typ
-  (Pure (p x))))))
+  (Maybe.bind (Check 0 x U60 dep) λx_typ
+  (Maybe.bind (Check 0 (p (Ann (Var nam dep) U60)) Set dep) λp_typ
+  (Maybe.bind (Check 0 z (p (Num 0)) dep) λz_typ
+  (Maybe.bind (Check 0 (s (Ann (Var (String.concat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (String.concat nam "-1") dep))) (+ dep 1)) λs_typ
+  (Maybe.pure (p x))))))
 (Infer.match (Hol nam ctx) dep) =
   (Debug dep ["Error: NonAnnHol " (Show (Hol nam ctx) dep)] None)
 (Infer.match (Var nam idx) dep) =
   (Debug dep ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
+(Infer.match (Src src val) dep) =
+  (Infer.match val dep)
 
-//(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep)] (Check.match term type dep))
-(Check term type dep) = (Check.match term type dep)
+//(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep)] (Check.match 0 term type dep))
+(Check src term type dep) = (Check.match src term type dep)
 
-(Check.match (Lam term.nam term.bod) type dep) =
+(Check.match src (Lam term.nam term.bod) type dep) =
   ((IfAll (Reduce 1 type)
     λtype.nam λtype.inp λtype.bod λterm.bod
       let ann  = (Ann (Var term.nam dep) type.inp)
       let term = (term.bod ann)
       let type = (type.bod ann)
-      (Check term type (+ dep 1))
+      (Check 0 term type (+ dep 1))
     λterm.bod
       (Infer (Lam term.nam term.bod) dep))
     term.bod)
-(Check.match (Ins term.val) type dep) =
+(Check.match src (Ins term.val) type dep) =
   ((IfSlf (Reduce 1 type)
-    λtype.nam λtype.bod λterm.val (Check term.val (type.bod (Ins term.val)) dep)
+    λtype.nam λtype.bod λterm.val (Check 0 term.val (type.bod (Ins term.val)) dep)
     λterm.val (Infer (Ins term.val) dep))
     term.val)
-(Check.match (Let term.nam term.val term.bod) type dep) =
-  (Check (term.bod term.val) type (+ 1 dep))
-(Check.match (Hol term.nam term.ctx) type dep) =
-  (Debug dep ["HOLE!: ?" term.nam " :: " (Show (Normal 0 type dep) dep) (Context.show term.ctx dep)]
-  (Pure 0))
-(Check.match (Ref term.nam (Ann term.val term.typ)) type dep) = // better printing
-  (Check.report (Equal type term.typ dep) term.typ type (Ref term.nam term.val) dep)
-//(Check.match (Ref term.nam term.val) type dep) =
+(Check.match src (Let term.nam term.val term.bod) type dep) =
+  (Check 0 (term.bod term.val) type (+ 1 dep))
+(Check.match src (Hol term.nam term.ctx) type dep) =
+  (Debug dep [(String.color BRIGHT) "HOLE: ?" term.nam " :: " (Show (Normal 0 type dep) dep) (String.color RESET) (Context.show term.ctx dep)]
+  (Maybe.pure 0))
+(Check.match src (Ref term.nam (Ann term.val term.typ)) type dep) = // better printing
+  (Check.report src (Equal type term.typ dep) term.typ type (Ref term.nam term.val) dep)
+(Check.match src (Src term.src term.val) type dep) =
+  (Check term.src term.val type dep)
+//(Check.match src (Ref term.nam term.val) type dep) =
   //(Check term.val type dep)
-(Check.match term type dep) =
-  (Check.verify term type dep)
+(Check.match src term type dep) =
+  (Check.verify src term type dep)
 
-(Check.verify term type dep) =
-  (Bind (Infer term dep) λinfer
-  (Check.report (Equal type infer dep) infer type term dep))
+(Check.verify src term type dep) =
+  (Maybe.bind (Infer term dep) λinfer
+  (Check.report src (Equal type infer dep) infer type term dep))
 
-(Check.report 0 inferred expected value dep) =
-  let inf = (Show (Normal 0 inferred dep) dep)
+(Check.report src 0 detected expected value dep) =
+  let det = (Show (Normal 0 detected dep) dep)
   let exp = (Show (Normal 0 expected dep) dep)
   let val = (Show (Normal 0 value dep) dep)
-  (Debug dep ["Error: " inf NewLine "    != " exp NewLine "    in " val] None)
-(Check.report n inferred expected value dep) =
-  (Pure 0)
+  (Debug dep [(String.color BRIGHT) "TYPE_MISMATCH" NewLine
+    "- expected: " (String.color RESET) (String.color GREEN) exp NewLine (String.color RESET) (String.color BRIGHT)
+    "- detected: " (String.color RESET) (String.color RED)   det NewLine (String.color RESET) (String.color BRIGHT)
+    "- bad_term: " (String.color RESET) (String.color DIM)   val NewLine (String.color RESET)
+    "##LOC{" (U60.show src) "}LOC##" NewLine
+  ] None)
+(Check.report src n inferred expected value dep) =
+  (Maybe.pure 0)
 
 // Syntax
 // ------
 
-(Show (All nam inp bod) dep) = (Join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show (Lam nam bod)     dep) = (Join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show (App fun arg)     dep) = (Join ["(" (Show.unwrap (Show fun dep)) " " (Show arg dep) ")"])
-(Show (Ann val typ)     dep) = (Join ["{" (Show val dep) ": " (Show typ dep) "}"])
-(Show (Slf nam bod)     dep) = (Join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show (Ins val)         dep) = (Join ["~" (Show val dep)])
+(Show (All nam inp bod) dep) = (String.join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show (Lam nam bod)     dep) = (String.join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show (App fun arg)     dep) = (String.join ["(" (Show.unwrap (Show fun dep)) " " (Show arg dep) ")"])
+(Show (Ann val typ)     dep) = (String.join ["{" (Show val dep) ": " (Show typ dep) "}"])
+(Show (Slf nam bod)     dep) = (String.join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show (Ins val)         dep) = (String.join ["~" (Show val dep)])
 (Show (Ref nam val)     dep) = nam
-(Show (Let nam val bod) dep) = (Join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show Set               dep) = (Join ["*"])
+(Show (Let nam val bod) dep) = (String.join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show Set               dep) = (String.join ["*"])
 (Show U60               dep) = "#U60"
-(Show (Num val)         dep) = (Join ["#" (U60.show val)])
-(Show (Op2 opr fst snd) dep) = (Join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
-(Show (Mat nam x z s p) dep) = (Join ["#match " nam " = " (Show x dep) " { #0: " (Show z dep) " #+: " (Show (s (Var (Concat nam "-1") dep)) (+ dep 1)) " }: " (Show (p (Var nam dep)) dep)])
-(Show (Txt txt)         dep) = (Join [Quote txt Quote])
-(Show (Hol nam ctx)     dep) = (Join ["?" nam])
-(Show (Var nam idx)     dep) = (Join [nam])
-//(Show (Var nam idx)     dep) = (Join [nam "'" (U60.show idx)])
+(Show (Num val)         dep) = (String.join ["#" (U60.show val)])
+(Show (Op2 opr fst snd) dep) = (String.join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
+(Show (Mat nam x z s p) dep) = (String.join ["#match " nam " = " (Show x dep) " { #0: " (Show z dep) " #+: " (Show (s (Var (String.concat nam "-1") dep)) (+ dep 1)) " }: " (Show (p (Var nam dep)) dep)])
+(Show (Txt txt)         dep) = (String.join [Quote txt Quote])
+(Show (Hol nam ctx)     dep) = (String.join ["?" nam])
+(Show (Var nam idx)     dep) = (String.join [nam])
+(Show (Src src val)     dep) = (Show val dep)
+//(Show (Var nam idx)     dep) = (String.join [nam "'" (U60.show idx)])
 
 (Show.many List.nil         dep) = ""
-(Show.many (List.cons x xs) dep) = (Join [" " (Show x dep) (Show.many xs dep)])
+(Show.many (List.cons x xs) dep) = (String.join [" " (Show x dep) (Show.many xs dep)])
 
 (Show.trim (String.cons ' ' xs)) = xs
 (Show.trim str)                  = str
@@ -351,11 +386,11 @@
 (Op2.show DIV) = "/"
 
 (Context.show List.nil         dep) = ""
-(Context.show (List.cons x xs) dep) = (Join [NewLine "- " (Context.show.ann x dep) (Context.show xs dep)])
+(Context.show (List.cons x xs) dep) = (String.join [NewLine "- " (Context.show.ann x dep) (Context.show xs dep)])
 
-(Context.show.ann (Ann val typ) dep) = (Join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
+(Context.show.ann (Ann val typ) dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
 (Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
-//(Context.show.ann val           dep) = (Join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 (Infer val dep) dep) dep) "}"])
+//(Context.show.ann val           dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 (Infer val dep) dep) dep) "}"])
 
 // Compilation
 // -----------
@@ -388,6 +423,7 @@ Compile.primitives = [
 (Compile (Txt txt))         = (Str.make txt)
 (Compile (Hol nam ctx))     = 0
 (Compile (Var nam val))     = val
+(Compile (Src src val))     = (Compile val)
 
 //(Compile.txt (String.cons x xs)) = (App (App Book.String.cons (Num x)) (Compile.txt xs))
 //(Compile.txt String.nil)         = Book.String.nil
@@ -420,12 +456,22 @@ Compile.primitives = [
 
 (Normalizer (Ref nam val)) = (Normalizer val)
 (Normalizer (Ann val typ)) = (Normalizer val)
+(Normalizer (Src src val)) = (Normalizer val)
 (Normalizer val)           = (Compile val)
 //(Normalizer val)           = (Str.view (Compile val))
 
-(Checker (Ref nam val)) = (Checker val)
-(Checker (Ann val typ)) = (Checker.report (Check val typ 0))
-(Checker val)           = (Checker.report (Infer val 0))
+(Checker name (Ref nam val))           = (Checker name val)
+(Checker name (Src src (Ann val typ))) = (Checker.report name (Check src val typ 0))
+(Checker name (Src src val))           = (Checker name val)
+(Checker name (Ann val typ))           = (Checker.report name (Check 0 val typ 0))
+(Checker name val)                     = (Checker.report name (Infer val 0))
 
-(Checker.report (Some x)) = (HVM.print "Check!" OK)
-(Checker.report None)     = (HVM.print "Error." ERR)
+(Checker.report name (Some x)) = 1
+(Checker.report name None)     = 0
+//(Checker.report name (Some x)) = (HVM.print (String.join [(String.color GREEN) "- " name ": ✔" (String.color RESET)]) 1)
+//(Checker.report name None)     = (HVM.print (String.join [(String.color RED) "- " name ": ✘" (String.color RESET)]) 0)
+
+(Checker.many.go (List.cons (Pair name def) defs)) = (& (Checker name def) (Checker.many.go defs))
+(Checker.many.go List.nil)                         = 1
+
+(Checker.many list) = (If (Checker.many.go list) ALL_TERMS_CHECK ERRORS_FOUND)

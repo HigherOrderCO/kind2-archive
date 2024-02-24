@@ -1,0 +1,8 @@
+IO.done
+: ∀(A: *)
+  ∀(term: A)
+  (IO A)
+= λA λterm
+  ~λP λprint λload λsave λdone
+  (done term)
+

@@ -1,0 +1,13 @@
+// Loads a list of dependencies
+Kind.load.dependencies
+: ∀(deps: (List String))
+  ∀(book: Kind.Book)
+  (IO Kind.Book)
+= λdeps λbook
+  let P    = λx ∀(book: Kind.Book) (IO Kind.Book)
+  let cons = λdeps.head λdeps.tail λbook
+    (IO.bind Kind.Book Kind.Book (Kind.load.dependency deps.head book) λbook 
+    (Kind.load.dependencies deps.tail book))
+  let nil = λbook (IO.done Kind.Book book)
+  ((~deps P cons nil) book)
+

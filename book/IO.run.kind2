@@ -1,0 +1,12 @@
+IO.run
+: ∀(A: *)
+  ∀(x: (IO A))
+  (IO A)
+= λA λx
+  let P     = λx(IO A)
+  let print = λtext λthen (HVM.print (IO A) text (IO.run A (then Unit.one)))
+  let load  = λfile λthen (HVM.load (IO A) file λs(IO.run A (then s)))
+  let save  = λfile λdata λthen (HVM.save (IO A) file data (IO.run A (then Unit.one)))
+  let done  = λterm (IO.done A term)
+  (~x P print load save done)
+

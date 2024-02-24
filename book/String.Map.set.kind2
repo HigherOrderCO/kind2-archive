@@ -1,0 +1,9 @@
+String.Map.set
+: ∀(V: *)
+  ∀(key: String)
+  ∀(val: V)
+  ∀(map: (String.Map V))
+  (String.Map V)
+= λV λkey λval λmap
+  (BBT.set String V String.cmp key val map)
+

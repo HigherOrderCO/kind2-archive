@@ -1,0 +1,13 @@
+// Loads a single dependency, if not present
+// FIXME: String.map.has.linear is removing the entry
+Kind.load.dependency
+: ∀(name: String)
+  ∀(book: Kind.Book)
+  (IO Kind.Book)
+= λname λbook
+  let has   = (String.Map.has Kind.Term name book)
+  let P     = λx ∀(book: Kind.Book) (IO Kind.Book)
+  let true  = λbook (IO.done Kind.Book book)
+  let false = λbook (Kind.load.name name book)
+  ((~has P true false) book)
+

@@ -1,0 +1,10 @@
+IO.save
+: ∀(A: *)
+  ∀(file: String)
+  ∀(data: String)
+  ∀(then: ∀(x: Unit) (IO A))
+  (IO A)
+= λA λfile λdata λthen
+  ~λP λprint λload λsave λdone
+  (save file data then)
+

@@ -408,8 +408,6 @@ export function main() {
   // Runs 'hvm1 kind2.hvm1 -s -L -1'
 
   //const output = execSync("hvm1 run .kind2.hvm1 -s -L -1").toString();
-  
-
 
   //for (let name in book) {
     //console.log("Checking: " + name);

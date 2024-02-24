@@ -1,0 +1,8 @@
+String.Map.get
+: ∀(V: *)
+  ∀(key: String)
+  ∀(map: (String.Map V))
+  (Maybe V)
+= λV λkey λmap
+  (BBT.get String V String.cmp key map)
+

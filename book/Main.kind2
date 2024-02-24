@@ -1,5 +1,16 @@
 Main
-= (Kind.API.to_hvm "Bool")
+: #U60
+= #(+ #12 #30)
+
+//TYPE_MISMATCH
+//- expected: (Pair (Maybe V) (String.Map V))
+//- detected: (Pair (Maybe V) (BBT String V))
+//- bad_term: (BBT.got String V String.cmp key map)
+//./String.Map.kind2
+  //20 |   (BBT.got String V String.cmp key map)
+
+//(List.cons (Pair Char Char) (Pair.new Char Char Char  #8)  // '\b'
+  //(List.nil (Pair Char Char)))
 
 
 //Main

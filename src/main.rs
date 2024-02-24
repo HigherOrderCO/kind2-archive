@@ -3,6 +3,11 @@
 use TSPL::Parser;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::env;
+use std::fs::File;
+use std::io::Write;
+use std::process::Command;
+use highlight_error::highlight_error;
 //use std::fmt;
 
 #[derive(Clone, Copy)]
@@ -31,10 +36,12 @@ enum Term {
   Let { nam: String, val: Box<Term>, bod: Box<Term> },
   Hol { nam: String },
   Var { nam: String },
+  Src { src: u64, val: Box<Term> },
 }
 
 struct Book {
   defs: HashMap<String, Term>,
+  fids: HashMap<String, u64>,
 }
 
 // NOT USED ANYMORE
@@ -48,6 +55,22 @@ struct Book {
   //}
   //name
 //}
+
+pub fn new_src(fid: u64, ini: u64, end: u64) -> u64 {
+  (fid << 40) | (ini << 20) | end
+}
+
+pub fn src_fid(src: u64) -> u64 {
+  src >> 40
+}
+
+pub fn src_ini(src: u64) -> u64 {
+  (src >> 20) & 0xFFFFF
+}
+
+pub fn src_end(src: u64) -> u64 {
+  src & 0xFFFFF
+}
 
 pub fn cons<A>(vector: &im::Vector<A>, value: A) -> im::Vector<A> where A: Clone {
   let mut new_vector = vector.clone();
@@ -117,26 +140,31 @@ impl Term {
       Term::Let { nam, val, bod } => format!("let {} = {} in {}", nam, val.show(), bod.show()),
       Term::Hol { nam } => format!("?{}", nam),
       Term::Var { nam } => nam.clone(),
+      Term::Src { src: _, val } => val.show(),
     }
   }
 
   fn to_hvm1(&self, env: im::Vector<String>) -> String {
+    fn binder(name: &str) -> String {
+      format!("_{}", name.replace("-", "._."))
+    }
     match self {
-      Term::All { nam, inp, bod } => format!("(All \"{}\" {} λ{} {})", nam, inp.to_hvm1(env.clone()), nam, bod.to_hvm1(cons(&env, nam.clone()))),
-      Term::Lam { nam, bod } => format!("(Lam \"{}\" λ{} {})", nam, nam, bod.to_hvm1(cons(&env, nam.clone()))),
+      Term::All { nam, inp, bod } => format!("(All \"{}\" {} λ{} {})", nam, inp.to_hvm1(env.clone()), binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
+      Term::Lam { nam, bod } => format!("(Lam \"{}\" λ{} {})", nam, binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
       Term::App { fun, arg } => format!("(App {} {})", fun.to_hvm1(env.clone()), arg.to_hvm1(env.clone())),
       Term::Ann { val, typ } => format!("(Ann {} {})", val.to_hvm1(env.clone()), typ.to_hvm1(env.clone())),
-      Term::Slf { nam, bod } => format!("(Slf \"{}\" λ{} {})", nam, nam, bod.to_hvm1(cons(&env, nam.clone()))),
+      Term::Slf { nam, bod } => format!("(Slf \"{}\" λ{} {})", nam, binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
       Term::Ins { val } => format!("(Ins {})", val.to_hvm1(env.clone())),
       Term::Set => "(Set)".to_string(),
       Term::U60 => "(U60)".to_string(),
       Term::Num { val } => format!("(Num {})", val),
       Term::Op2 { opr, fst, snd } => format!("(Op2 {} {} {})", opr.to_hvm1(), fst.to_hvm1(env.clone()), snd.to_hvm1(env.clone())),
-      Term::Mat { nam, x, z, s, p } => format!("(Mat \"{}\" {} {} λ{} {} λ{} {})", nam, x.to_hvm1(env.clone()), z.to_hvm1(env.clone()), nam, s.to_hvm1(cons(&env, nam.clone())), nam, p.to_hvm1(cons(&env, nam.clone()))),
+      Term::Mat { nam, x, z, s, p } => format!("(Mat \"{}\" {} {} λ{} {} λ{} {})", nam, x.to_hvm1(env.clone()), z.to_hvm1(env.clone()), binder(&format!("{}-1",nam)), s.to_hvm1(cons(&env, format!("{}-1",nam))), binder(nam), p.to_hvm1(cons(&env, nam.clone()))),
       Term::Txt { txt } => format!("(Txt \"{}\")", txt),
-      Term::Let { nam, val, bod } => format!("(Let \"{}\" {} λ{} {})", nam, val.to_hvm1(env.clone()), nam, bod.to_hvm1(cons(&env, nam.clone()))),
-      Term::Hol { nam } => format!("(Hol \"{}\" [{}])", nam, env.iter().map(|n| format!("\"{}\"", n)).collect::<Vec<_>>().join(",")),
-      Term::Var { nam } => if env.contains(nam) { nam.clone() } else { format!("(Book.{})", nam) },
+      Term::Let { nam, val, bod } => format!("(Let \"{}\" {} λ{} {})", nam, val.to_hvm1(env.clone()), binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
+      Term::Hol { nam } => format!("(Hol \"{}\" [{}])", nam, env.iter().map(|n| binder(n)).collect::<Vec<_>>().join(",")),
+      Term::Var { nam } => if env.contains(nam) { format!("{}", binder(nam)) } else { format!("(Book.{})", nam) },
+      Term::Src { src, val } => format!("(Src {} {})", src, val.to_hvm1(env)),
     }
   }
 
@@ -173,7 +201,7 @@ impl Term {
       Term::Mat { nam, x, z, s, p } => {
         x.get_free_vars(env.clone(), free);
         z.get_free_vars(env.clone(), free);
-        s.get_free_vars(cons(&env, nam.clone()), free);
+        s.get_free_vars(cons(&env, format!("{}-1",nam)), free);
         p.get_free_vars(cons(&env, nam.clone()), free);
       },
       Term::Txt { txt: _ } => {},
@@ -182,6 +210,9 @@ impl Term {
         bod.get_free_vars(cons(&env, nam.clone()), free);
       },
       Term::Hol { nam: _ } => {},
+      Term::Src { src: _, val } => {
+        val.get_free_vars(env, free);
+      },
       Term::Var { nam } => {
         if !env.contains(nam) {
           free.insert(nam.clone());
@@ -202,120 +233,151 @@ impl<'i> KindParser<'i> {
       Some('*') => { self.advance_one(); Ok(Oper::Mul) }
       Some('/') => { self.advance_one(); Ok(Oper::Div) }
       Some('%') => { self.advance_one(); Ok(Oper::Mod) }
-      Some('=') => { self.consume("=")?; Ok(Oper::Eq) }
+      Some('=') => { self.consume("==")?; Ok(Oper::Eq) }
       Some('!') => { self.consume("!=")?; Ok(Oper::Ne) }
       Some('<') => {
         match self.peek_many(2) {
           Some("<=") => { self.advance_many(2); Ok(Oper::Lte) }
+          Some("<<") => { self.advance_many(2); Ok(Oper::Lsh) }
           _ => { self.advance_one(); Ok(Oper::Lt) }
         }
       }
       Some('>') => {
         match self.peek_many(2) {
           Some(">=") => { self.advance_many(2); Ok(Oper::Gte) }
+          Some(">>") => { self.advance_many(2); Ok(Oper::Rsh) }
           _ => { self.advance_one(); Ok(Oper::Gt) }
         }
       }
       Some('&') => { self.advance_one(); Ok(Oper::And) }
       Some('|') => { self.advance_one(); Ok(Oper::Or) }
       Some('^') => { self.advance_one(); Ok(Oper::Xor) }
-      Some('l') => { self.consume("<<")?; Ok(Oper::Lsh) }
-      Some('r') => { self.consume(">>")?; Ok(Oper::Rsh) }
       _ => self.expected("operator"),
     }
   }
-  
-  fn parse_term(&mut self) -> Result<Term, String> {
+
+  fn parse_term(&mut self, fid: u64) -> Result<Term, String> {
     self.skip_trivia();
     match self.peek_one() {
       Some('∀') => {
+        let ini = *self.index() as u64;
         self.consume("∀")?;
         self.consume("(")?;
         let nam = self.parse_name()?;
         self.consume(":")?;
-        let inp = Box::new(self.parse_term()?);
+        let inp = Box::new(self.parse_term(fid)?);
         self.consume(")")?;
-        let bod = Box::new(self.parse_term()?);
-        Ok(Term::All { nam, inp, bod })
+        let bod = Box::new(self.parse_term(fid)?);
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::All { nam, inp, bod }) })
       }
       Some('λ') => {
+        let ini = *self.index() as u64;
         self.consume("λ")?;
         let nam = self.parse_name()?;
-        let bod = Box::new(self.parse_term()?);
-        Ok(Term::Lam { nam, bod })
+        let bod = Box::new(self.parse_term(fid)?);
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Lam { nam, bod }) })
       }
       Some('(') => {
+        let ini = *self.index() as u64;
         self.consume("(")?;
-        let fun = Box::new(self.parse_term()?);
+        let fun = Box::new(self.parse_term(fid)?);
         let mut args = Vec::new();
         while self.peek_one() != Some(')') {
-          args.push(Box::new(self.parse_term()?));
+          args.push(Box::new(self.parse_term(fid)?));
+          self.skip_trivia();
         }
         self.consume(")")?;
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
         let mut app = fun;
         for arg in args {
           app = Box::new(Term::App { fun: app, arg });
         }
-        Ok(*app)
+        Ok(Term::Src { src, val: app })
       }
       Some('{') => {
+        let ini = *self.index() as u64;
         self.consume("{")?;
-        let val = Box::new(self.parse_term()?);
+        let val = Box::new(self.parse_term(fid)?);
         self.consume(":")?;
-        let typ = Box::new(self.parse_term()?);
+        let typ = Box::new(self.parse_term(fid)?);
         self.consume("}")?;
-        Ok(Term::Ann { val, typ })
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Ann { val, typ }) })
       }
       Some('$') => {
+        let ini = *self.index() as u64;
         self.consume("$")?;
         let nam = self.parse_name()?;
-        let bod = Box::new(self.parse_term()?);
-        Ok(Term::Slf { nam, bod })
+        let bod = Box::new(self.parse_term(fid)?);
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Slf { nam, bod }) })
       }
       Some('~') => {
+        let ini = *self.index() as u64;
         self.consume("~")?;
-        let val = Box::new(self.parse_term()?);
-        Ok(Term::Ins { val })
+        let val = Box::new(self.parse_term(fid)?);
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Ins { val }) })
       }
       Some('*') => {
+        let ini = *self.index() as u64;
         self.consume("*")?;
-        Ok(Term::Set)
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Set) })
       }
       Some('#') => {
+        let ini = *self.index() as u64;
         self.consume("#")?;
         match self.peek_one() {
           Some('U') => {
             self.consume("U60")?;
-            Ok(Term::U60)
+            let end = *self.index() as u64;
+            let src = new_src(fid, ini, end);
+            Ok(Term::Src { src, val: Box::new(Term::U60) })
           }
           Some('(') => {
             self.consume("(")?;
             let opr = self.parse_oper()?;
-            let fst = Box::new(self.parse_term()?);
-            let snd = Box::new(self.parse_term()?);
+            let fst = Box::new(self.parse_term(fid)?);
+            let snd = Box::new(self.parse_term(fid)?);
             self.consume(")")?;
-            Ok(Term::Op2 { opr, fst, snd })
+            let end = *self.index() as u64;
+            let src = new_src(fid, ini, end);
+            Ok(Term::Src { src, val: Box::new(Term::Op2 { opr, fst, snd }) })
           }
           Some('m') => {
             self.consume("match")?;
             let nam = self.parse_name()?;
             self.consume("=")?;
-            let x = Box::new(self.parse_term()?);
+            let x = Box::new(self.parse_term(fid)?);
             self.consume("{")?;
             self.consume("#0")?;
             self.consume(":")?;
-            let z = Box::new(self.parse_term()?);
+            let z = Box::new(self.parse_term(fid)?);
             self.consume("#+")?;
             self.consume(":")?;
-            let s = Box::new(self.parse_term()?);
+            let s = Box::new(self.parse_term(fid)?);
             self.consume("}")?;
             self.consume(":")?;
-            let p = Box::new(self.parse_term()?);
-            Ok(Term::Mat { nam, x, z, s, p })
+            let p = Box::new(self.parse_term(fid)?);
+            let end = *self.index() as u64;
+            let src = new_src(fid, ini, end);
+            Ok(Term::Src { src, val: Box::new(Term::Mat { nam, x, z, s, p }) })
           }
           Some(_) => {
             let val = self.parse_u64()?;
-            Ok(Term::Num { val })
+            let end = *self.index() as u64;
+            let src = new_src(fid, ini, end);
+            Ok(Term::Src { src, val: Box::new(Term::Num { val }) })
           }
           _ => {
             self.expected("numeric-expression")
@@ -323,54 +385,69 @@ impl<'i> KindParser<'i> {
         }
       }
       Some('?') => {
+        let ini = *self.index() as u64;
         self.consume("?")?;
         let nam = self.parse_name()?;
-        Ok(Term::Hol { nam })
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Hol { nam }) })
       }
       Some('\'') => {
+        let ini = *self.index() as u64;
         let chr = self.parse_quoted_char()?;
-        Ok(Term::Num { val: chr as u64 })
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Num { val: chr as u64 }) })
       }
       Some('"') => {
+        let ini = *self.index() as u64;
         let txt = self.parse_quoted_string()?;
-        Ok(Term::Txt { txt })
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Txt { txt }) })
       }
       _ => {
         if self.peek_many(4) == Some("let ") {
+          let ini = *self.index() as u64;
           self.advance_many(4);
           let nam = self.parse_name()?;
           self.consume("=")?;
-          let val = Box::new(self.parse_term()?);
-          let bod = Box::new(self.parse_term()?);
-          Ok(Term::Let { nam, val, bod })
+          let val = Box::new(self.parse_term(fid)?);
+          let bod = Box::new(self.parse_term(fid)?);
+          let end = *self.index() as u64;
+          let src = new_src(fid, ini, end);
+          Ok(Term::Src { src, val: Box::new(Term::Let { nam, val, bod }) })
         } else {
+          let ini = *self.index() as u64;
           let nam = self.parse_name()?;
-          Ok(Term::Var { nam })
+          let end = *self.index() as u64;
+          let src = new_src(fid, ini, end);
+          Ok(Term::Src { src, val: Box::new(Term::Var { nam }) })
         }
       }
     }
   }
-
-  fn parse_def(&mut self) -> Result<(String, Term), String> {
+  
+  fn parse_def(&mut self, fid: u64) -> Result<(String, Term), String> {
     let nam = self.parse_name()?;
     self.skip_trivia();
     if self.peek_one() == Some(':') {
       self.consume(":")?;
-      let typ = self.parse_term()?;
+      let typ = self.parse_term(fid)?;
       self.consume("=")?;
-      let val = self.parse_term()?;
+      let val = self.parse_term(fid)?;
       Ok((nam, Term::Ann { val: Box::new(val), typ: Box::new(typ) }))
     } else {
       self.consume("=")?;
-      let val = self.parse_term()?;
+      let val = self.parse_term(fid)?;
       Ok((nam, val))
     }
   }
 
-  fn parse_book(&mut self) -> Result<Book, String> {
+  fn parse_book(&mut self, fid: u64) -> Result<Book, String> {
     let mut book = Book::new();
     while *self.index() < self.input().len() {
-      let (name, term) = self.parse_def()?;
+      let (name, term) = self.parse_def(fid)?;
       book.defs.insert(name, term);
       self.skip_trivia();
     }
@@ -383,6 +460,7 @@ impl Book {
   fn new() -> Self {
     Book {
       defs: HashMap::new(),
+      fids: HashMap::new(),
     }
   }
   
@@ -404,48 +482,165 @@ impl Book {
     book_str
   }
 
-  fn load_file(filename: &str) -> Result<Self, String> {
-    std::fs::read_to_string(filename)
-      .map_err(|_| format!("Could not read file: {}", filename))
-      .and_then(|contents| KindParser::new(&contents).parse_book())
-  }
-
   fn load(name: &str) -> Result<Self, String> {
-    fn load_term(name: &str, book: &mut Book) -> Result<(), String> {
+    fn load_go(name: &str, book: &mut Book) -> Result<(), String> {
+      //println!("... {}", name);
       if !book.defs.contains_key(name) {
-        let file = format!("./book/{}.kind2", name);
+        let file = format!("./{}.kind2", name);
         let text = std::fs::read_to_string(&file).map_err(|_| format!("Could not read file: {}", file))?;
-        let defs = KindParser::new(&text).parse_book()?;
+        let fid  = book.get_file_id(&file);
+        //println!("... parsing: {}", name);
+        let defs = KindParser::new(&text).parse_book(fid)?;
+        //println!("... parsed: {}", name);
         for (def_name, def_term) in &defs.defs {
           book.defs.insert(def_name.clone(), def_term.clone());
         }
+        //println!("laoding deps for: {}", name);
         for (_, def_term) in defs.defs.into_iter() {
           let mut dependencies = HashSet::new();
           def_term.get_free_vars(im::Vector::new(), &mut dependencies);
+          //println!("{} deps: {:?}", name, dependencies);
           for ref_name in dependencies {
-            load_term(&ref_name, book)?;
+            load_go(&ref_name, book)?;
           }
         }
       }
       return Ok(());
     }
     let mut book = Book::new();
-    load_term(name, &mut book)?;
+    load_go(name, &mut book)?;
+    load_go("String", &mut book)?;
+    //println!("DONE!");
     Ok(book)
   }
 
+  fn get_file_id(&mut self, name: &str) -> u64 {
+    if let Some(id) = self.fids.get(name) {
+      *id
+    } else {
+      let id = self.fids.len() as u64 + 1;
+      self.fids.insert(name.to_string(), id);
+      id
+    }
+  }
+
+  // FIXME: asymptotics
+  fn get_file_name(&self, id: u64) -> Option<String> {
+    for (name, &fid) in &self.fids {
+      if fid == id {
+        return Some(name.clone());
+      }
+    }
+    None
+  }
+
+  fn inject_sources(&self, input: &str) -> Result<String, String> {
+    let mut result = input.to_string();
+    let ini_sym = "##LOC{";
+    let end_sym = "}LOC##";
+    while let (Some(ini), Some(end)) = (result.find(ini_sym), result.find(end_sym)) {
+      let got = &result[ini + ini_sym.len()..end];
+      let loc = got.parse::<u64>().map_err(|_| "Failed to parse location")?;
+      let fid = src_fid(loc);
+      let ini = src_ini(loc) as usize;
+      let end = src_end(loc) as usize;
+      if loc == 0 {
+        result = result.replace(&format!("{}{}{}", ini_sym, got, end_sym), "");
+      } else if let Some(file_name) = self.get_file_name(fid) {
+        let source_file = std::fs::read_to_string(&file_name).map_err(|_| "Failed to read source file")?;
+        let context_str = highlight_error(ini, end, &source_file);
+        let context_str = format!("\x1b[4m{}\x1b[0m\n{}", file_name, context_str);
+        result = result.replace(&format!("{}{}{}", ini_sym, got, end_sym), &context_str);
+      } else {
+        return Err("File ID not found".to_string());
+      }
+    }
+    Ok(result)
+  }
+
 }
 
-fn run() -> Result<(), String> {
-  let book = Book::load("Bool")?;
-  //let book = KindParser::new("f : * = ∀(a: *) λf λx (ID (f (f a b c)))").parse_book()?;
-  println!("{}", book.show());
-  println!("{}", book.to_hvm1());
-  return Ok(());
+//fn run() -> Result<(), String> {
+  //let book = Book::load("Nat")?;
+  //println!("{}", book.show());
+  //println!("{}", book.to_hvm1());
+  //return Ok(());
+//}
+
+//fn main() {
+  //if let Err(e) = run() {
+    //eprintln!("{}", e);
+  //}
+//}
+
+
+fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
+  // Gets used def names, sorted alphabetically.
+  let mut used_defs: Vec<_> = book.defs.keys().collect();
+  used_defs.sort();
+  let used_defs = used_defs.iter().map(|name| format!("(Pair \"{}\" Book.{})", name, name)).collect::<Vec<_>>().join(" ");
+  // Generates '.check.hvm1' contents.
+  let kind2_hvm1 = include_str!("./kind2.hvm1");
+  let book_hvm1 = book.to_hvm1();
+  let main_hvm1 = match command {
+    "check" => format!("Main = (Checker.many [{}])\n", used_defs),
+    "run"   => format!("Main = (Normalizer Book.{})\n", arg),
+    _       => panic!("invalid command"),
+  };
+  let hvm1_code = format!("{}\n{}\n{}", kind2_hvm1, book_hvm1, main_hvm1);
+  return hvm1_code;
 }
 
 fn main() {
-  if let Err(e) = run() {
-    eprintln!("{}", e);
+  let args: Vec<String> = env::args().collect();
+
+  if args.len() < 3 {
+    show_help();
   }
+
+  let cmd = &args[1];
+  let arg = &args[2];
+
+  //println!("loading");
+  match cmd.as_str() {
+    "check" | "run" => {
+      match Book::load(arg) {
+        Ok(book) => {
+          //println!("loaded!");
+          let check_hvm1 = generate_check_hvm1(&book, cmd, arg);
+
+          // Saves it to a file.
+          let mut file = File::create(".check.hvm1").expect("Failed to create '.check.hvm1'.");
+          file.write_all(check_hvm1.as_bytes()).expect("Failed to write '.check.hvm1'.");
+
+          let output = Command::new("hvm1").arg("run").arg("-t").arg("1").arg("-c").arg("-f").arg(".check.hvm1").arg("(Main)").output().expect("Failed to execute command");
+          //let stdout : Result<String,String> = Ok(format!("{}", String::from_utf8_lossy(&output.stdout)));
+          let stdout = book.inject_sources(&format!("{}", String::from_utf8_lossy(&output.stdout)));
+          let stderr = String::from_utf8_lossy(&output.stderr);
+
+          match stdout {
+            //Ok(output) => println!("{}", output.replace("(ERRORS_FOUND)","")),
+            Ok(output) => println!("{}", output),
+            Err(error) => eprintln!("{}", error),
+          }
+
+          if !output.stderr.is_empty() {
+            eprintln!("{}", stderr);
+          }
+        },
+        Err(e) => {
+          eprintln!("{}", e);
+          std::process::exit(1);
+        },
+      }
+    },
+    _ => {
+      show_help();
+    },
+  }
+}
+
+fn show_help() {
+  eprintln!("Usage: kind2 [check|run] <name>");
+  std::process::exit(1);
 }

@@ -1,0 +1,15 @@
+// Loads a name into a book; then, load its dependencies
+Kind.load.name
+: ∀(name: String)
+  ∀(book: Kind.Book)
+  (IO Kind.Book)
+= λname λbook
+  (IO.bind Kind.Book Kind.Book (Kind.load.code name) λfile
+  let defs = (String.Map.to_list Kind.Term file)
+  let fold = (List.fold (Pair String Kind.Term) defs)
+  let set2 = λnam λval (String.Map.set Kind.Term nam val book)
+  let setP = λdef λbook (~def λx(Kind.Book) set2)
+  let book = (fold Kind.Book setP book)
+  let deps = (Kind.Book.get_refs file)
+  (Kind.load.dependencies deps book))
+  

@@ -1,0 +1,9 @@
+IO.print
+: ∀(A: *)
+  ∀(text: String)
+  ∀(then: ∀(x: Unit) (IO A))
+  (IO A)
+= λA λtext λthen
+  ~λP λprint λload λsave λdone
+  (print text then)
+
