@@ -150,7 +150,7 @@ algorithm to do exactly that: "undo" the reduction on the `self` case. That is,
 instead of:
 
 ```
-($x A) ~~ ($y B) ::= (B (x:A)) == (D (y:C))
+($x A) ~~ ($y B) ::= (A x) == (B y)
 ```
 
 We have:
