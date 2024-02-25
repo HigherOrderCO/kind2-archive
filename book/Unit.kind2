@@ -1,6 +1,6 @@
 Unit
 : *
-= $self
+= $(self: Unit)
   ∀(P: ∀(x: Unit) *)
   ∀(one: (P Unit.one))
   (P self)

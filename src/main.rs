@@ -25,7 +25,7 @@ enum Term {
   Lam { nam: String, bod: Box<Term> },
   App { fun: Box<Term>, arg: Box<Term> },
   Ann { val: Box<Term>, typ: Box<Term> },
-  Slf { nam: String, bod: Box<Term> },
+  Slf { nam: String, typ: Box<Term>, bod: Box<Term> },
   Ins { val: Box<Term> },
   Set,
   U60,
@@ -129,7 +129,7 @@ impl Term {
       Term::Lam { nam, bod } => format!("λ{} {}", nam, bod.show()),
       Term::App { fun, arg } => format!("({} {})", fun.show(), arg.show()),
       Term::Ann { val, typ } => format!("{{{}: {}}}", val.show(), typ.show()),
-      Term::Slf { nam, bod } => format!("${} {}", nam, bod.show()),
+      Term::Slf { nam, typ, bod } => format!("$({}: {}) {}", nam, typ.show(), bod.show()),
       Term::Ins { val } => format!("~{}", val.show()),
       Term::Set => "*".to_string(),
       Term::U60 => "#U60".to_string(),
@@ -153,7 +153,7 @@ impl Term {
       Term::Lam { nam, bod } => format!("(Lam \"{}\" λ{} {})", nam, binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
       Term::App { fun, arg } => format!("(App {} {})", fun.to_hvm1(env.clone()), arg.to_hvm1(env.clone())),
       Term::Ann { val, typ } => format!("(Ann {} {})", val.to_hvm1(env.clone()), typ.to_hvm1(env.clone())),
-      Term::Slf { nam, bod } => format!("(Slf \"{}\" λ{} {})", nam, binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
+      Term::Slf { nam, typ, bod } => format!("(Slf \"{}\" {} λ{} {})", nam, typ.to_hvm1(env.clone()), binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
       Term::Ins { val } => format!("(Ins {})", val.to_hvm1(env.clone())),
       Term::Set => "(Set)".to_string(),
       Term::U60 => "(U60)".to_string(),
@@ -185,7 +185,8 @@ impl Term {
         val.get_free_vars(env.clone(), free);
         typ.get_free_vars(env.clone(), free);
       },
-      Term::Slf { nam, bod } => {
+      Term::Slf { nam, typ, bod } => {
+        typ.get_free_vars(env.clone(), free);
         bod.get_free_vars(cons(&env, nam.clone()), free);
       },
       Term::Ins { val } => {
@@ -313,11 +314,15 @@ impl<'i> KindParser<'i> {
       Some('$') => {
         let ini = *self.index() as u64;
         self.consume("$")?;
+        self.consume("(")?;
         let nam = self.parse_name()?;
+        self.consume(":")?;
+        let typ = Box::new(self.parse_term(fid)?);
+        self.consume(")")?;
         let bod = Box::new(self.parse_term(fid)?);
         let end = *self.index() as u64;
         let src = new_src(fid, ini, end);
-        Ok(Term::Src { src, val: Box::new(Term::Slf { nam, bod }) })
+        Ok(Term::Src { src, val: Box::new(Term::Slf { nam, typ, bod }) })
       }
       Some('~') => {
         let ini = *self.index() as u64;
@@ -429,6 +434,7 @@ impl<'i> KindParser<'i> {
   }
   
   fn parse_def(&mut self, fid: u64) -> Result<(String, Term), String> {
+    self.skip_trivia();
     let nam = self.parse_name()?;
     self.skip_trivia();
     if self.peek_one() == Some(':') {
@@ -492,8 +498,8 @@ impl Book {
         //println!("... parsing: {}", name);
         let defs = KindParser::new(&text).parse_book(fid)?;
         //println!("... parsed: {}", name);
-        for (def_name, def_term) in &defs.defs {
-          book.defs.insert(def_name.clone(), def_term.clone());
+        for (def_name, def_value) in &defs.defs {
+          book.defs.insert(def_name.clone(), def_value.clone());
         }
         //println!("laoding deps for: {}", name);
         for (_, def_term) in defs.defs.into_iter() {
@@ -509,7 +515,7 @@ impl Book {
     }
     let mut book = Book::new();
     load_go(name, &mut book)?;
-    load_go("String", &mut book)?;
+    //load_go("String", &mut book)?;
     //println!("DONE!");
     Ok(book)
   }

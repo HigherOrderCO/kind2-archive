@@ -1,6 +1,6 @@
 Kind.Oper
 : *
-= $self
+= $(self: Kind.Oper)
   ∀(P: ∀(x: Kind.Oper) *)
   ∀(add: (P Kind.Oper.add))
   ∀(mul: (P Kind.Oper.mul))

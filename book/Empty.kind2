@@ -1,5 +1,5 @@
 Empty
 : *
-= $self
+= $(self: Empty)
   ∀(P: ∀(x: Empty) *)
   (P self)

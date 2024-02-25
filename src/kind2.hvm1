@@ -17,7 +17,7 @@
   //| (Lam nam bod)
   //| (App fun arg)
   //| (Ann val typ)
-  //| (Slf nam bod)
+  //| (Slf nam typ bod)
   //| (Ins val)
   //| (Ref nam val)
   //| (Let nam val bod)
@@ -119,115 +119,123 @@
 // Evaluation
 // ----------
 
-(Reduce r (App fun arg))     = (Reduce.app r (Reduce r fun) arg)
-(Reduce r (Ann val typ))     = (Reduce r val)
-(Reduce r (Ins val))         = (Reduce r val)
-(Reduce 1 (Ref nam val))     = (Reduce 1 val)
-(Reduce r (Let nam val bod)) = (Reduce r (bod val))
-(Reduce r (Op2 opr fst snd)) = (Reduce.op2 r opr fst snd)
-(Reduce r (Mat nam x z s p)) = (Reduce.mat r nam x z s p)
-(Reduce 1 (Txt txt))         = (Reduce.txt 1 txt)
-(Reduce r (Src src val))     = (Reduce r val)
-(Reduce r val)               = val
+(Reduce lv (App fun arg))     = (Reduce.app lv (Reduce lv fun) arg)
+(Reduce lv (Ann val typ))     = (Reduce lv val)
+(Reduce lv (Ins val))         = (Reduce lv val)
+(Reduce lv (Ref nam val))     = (Reduce.ref lv nam (Reduce lv val))
+(Reduce lv (Let nam val bod)) = (Reduce lv (bod val))
+(Reduce lv (Op2 opr fst snd)) = (Reduce.op2 lv opr (Reduce lv fst) (Reduce lv snd))
+(Reduce lv (Mat nam x z s p)) = (Reduce.mat lv nam (Reduce lv x) z s p)
+(Reduce lv (Txt txt))         = (Reduce.txt lv txt)
+(Reduce lv (Src src val))     = (Reduce lv val)
+(Reduce lv val)               = val
 
-(Reduce.app r (Lam nam bod)     arg) = (Reduce r (bod (Reduce 0 arg)))
-//(Reduce.app r (Hol nam ctx ars) arg) = (Hol nam ctx (List.cons arg ars))
-(Reduce.app r fun               arg) = (App fun arg)
+(Reduce.app lv (Lam nam bod) arg) = (Reduce lv (bod (Reduce 0 arg)))
+(Reduce.app lv fun           arg) = (App fun arg)
 
-(Reduce.op2 r ADD (Num fst) (Num snd)) = (Num (+ fst snd))
-(Reduce.op2 r SUB (Num fst) (Num snd)) = (Num (- fst snd))
-(Reduce.op2 r MUL (Num fst) (Num snd)) = (Num (* fst snd))
-(Reduce.op2 r DIV (Num fst) (Num snd)) = (Num (/ fst snd))
-(Reduce.op2 r MOD (Num fst) (Num snd)) = (Num (% fst snd))
-(Reduce.op2 r EQ  (Num fst) (Num snd)) = (Num (== fst snd))
-(Reduce.op2 r NE  (Num fst) (Num snd)) = (Num (!= fst snd))
-(Reduce.op2 r LT  (Num fst) (Num snd)) = (Num (< fst snd))
-(Reduce.op2 r GT  (Num fst) (Num snd)) = (Num (> fst snd))
-(Reduce.op2 r LTE (Num fst) (Num snd)) = (Num (<= fst snd))
-(Reduce.op2 r GTE (Num fst) (Num snd)) = (Num (>= fst snd))
-(Reduce.op2 r AND (Num fst) (Num snd)) = (Num (& fst snd))
-(Reduce.op2 r OR  (Num fst) (Num snd)) = (Num (| fst snd))
-(Reduce.op2 r XOR (Num fst) (Num snd)) = (Num (^ fst snd))
-(Reduce.op2 r LSH (Num fst) (Num snd)) = (Num (<< fst snd))
-(Reduce.op2 r RSH (Num fst) (Num snd)) = (Num (>> fst snd))
-(Reduce.op2 r opr fst snd)             = (Op2 opr fst snd)
+(Reduce.op2 lv ADD (Num fst) (Num snd)) = (Num (+ fst snd))
+(Reduce.op2 lv SUB (Num fst) (Num snd)) = (Num (- fst snd))
+(Reduce.op2 lv MUL (Num fst) (Num snd)) = (Num (* fst snd))
+(Reduce.op2 lv DIV (Num fst) (Num snd)) = (Num (/ fst snd))
+(Reduce.op2 lv MOD (Num fst) (Num snd)) = (Num (% fst snd))
+(Reduce.op2 lv EQ  (Num fst) (Num snd)) = (Num (== fst snd))
+(Reduce.op2 lv NE  (Num fst) (Num snd)) = (Num (!= fst snd))
+(Reduce.op2 lv LT  (Num fst) (Num snd)) = (Num (< fst snd))
+(Reduce.op2 lv GT  (Num fst) (Num snd)) = (Num (> fst snd))
+(Reduce.op2 lv LTE (Num fst) (Num snd)) = (Num (<= fst snd))
+(Reduce.op2 lv GTE (Num fst) (Num snd)) = (Num (>= fst snd))
+(Reduce.op2 lv AND (Num fst) (Num snd)) = (Num (& fst snd))
+(Reduce.op2 lv OR  (Num fst) (Num snd)) = (Num (| fst snd))
+(Reduce.op2 lv XOR (Num fst) (Num snd)) = (Num (^ fst snd))
+(Reduce.op2 lv LSH (Num fst) (Num snd)) = (Num (<< fst snd))
+(Reduce.op2 lv RSH (Num fst) (Num snd)) = (Num (>> fst snd))
+(Reduce.op2 lv opr fst snd)             = (Op2 opr fst snd)
 
-(Reduce.mat r nam (Num 0)             z s p) = (Reduce r z)
-(Reduce.mat r nam (Num n)             z s p) = (Reduce r (s (Num (- n 1))))
-(Reduce.mat r nam (Op2 ADD (Num 1) k) z s p) = (Reduce r (s k))
-(Reduce.mat r nam val                 z s p) = (Mat nam val z s p)
+(Reduce.mat lv nam (Num 0)             z s p) = (Reduce lv z)
+(Reduce.mat lv nam (Num n)             z s p) = (Reduce lv (s (Num (- n 1))))
+(Reduce.mat lv nam (Op2 ADD (Num 1) k) z s p) = (Reduce lv (s k))
+(Reduce.mat lv nam val                 z s p) = (Mat nam val z s p)
 
-(Reduce.txt r (String.cons x xs)) = (Reduce 1 (App (App Book.String.cons (Num x)) (Txt xs)))
-(Reduce.txt r String.nil)         = (Reduce 1 Book.String.nil)
-(Reduce.txt r val)                = val
+(Reduce.ref 1  nam val) = (Reduce 1 val)
+(Reduce.ref 2  nam val) = (Reduce 2 val)
+(Reduce.ref lv nam val) = (Ref nam val)
 
-(Normal r term dep) = (Normal.term r (Reduce r term) dep)
+(Reduce.txt 0  (Txt txt))          = (Txt txt)
+(Reduce.txt lv (String.cons x xs)) = (Reduce lv (App (App Book.String.cons (Num x)) (Txt xs)))
+(Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
+(Reduce.txt lv val)                = val
 
-(Normal.term r (All nam inp bod) dep) = (All nam (Normal r inp dep) λx(Normal r (bod (Var nam dep)) (+ dep 1)))
-(Normal.term r (Lam nam bod)     dep) = (Lam nam λx(Normal r (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term r (App fun arg)     dep) = (App (Normal r fun dep) (Normal r arg dep))
-(Normal.term r (Ann val typ)     dep) = (Ann (Normal r val dep) (Normal r typ dep))
-(Normal.term r (Slf nam bod)     dep) = (Slf nam λx(Normal r (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term r (Ins val)         dep) = (Ins (Normal r val dep))
-(Normal.term r (Ref nam val)     dep) = (Ref nam (Normal r val dep))
-(Normal.term r (Let nam val bod) dep) = (Let nam (Normal r val bod) λx(Normal r (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term r (Hol nam ctx)     dep) = (Hol nam ctx)
-(Normal.term r Set               dep) = Set
-(Normal.term r U60               dep) = U60
-(Normal.term r (Num val)         dep) = (Num val)
-(Normal.term r (Op2 opr fst snd) dep) = (Op2 opr (Normal.term r fst dep) (Normal.term r snd dep))
-(Normal.term r (Mat nam x z s p) dep) = (Mat nam (Normal r x dep) (Normal r z dep) λk(Normal r (s (Var (String.concat nam "-1") dep)) dep) λk(Normal r (p (Var nam dep)) dep))
-(Normal.term r (Txt val)         dep) = (Txt val)
-(Normal.term r (Var nam idx)     dep) = (Var nam idx)
-(Normal.term r (Src src val)     dep) = (Src src (Normal r val dep))
+(Normal lv term dep) = (Normal.term lv (Reduce lv term) dep)
+
+(Normal.term lv (All nam inp bod) dep) = (All nam (Normal lv inp dep) λx(Normal lv (bod (Var nam dep)) (+ dep 1)))
+(Normal.term lv (Lam nam bod)     dep) = (Lam nam λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term lv (App fun arg)     dep) = (App (Normal lv fun dep) (Normal lv arg dep))
+(Normal.term lv (Ann val typ)     dep) = (Ann (Normal lv val dep) (Normal lv typ dep))
+(Normal.term lv (Slf nam typ bod) dep) = (Slf nam typ λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term lv (Ins val)         dep) = (Ins (Normal lv val dep))
+(Normal.term lv (Ref nam val)     dep) = (Ref nam (Normal lv val dep))
+(Normal.term lv (Let nam val bod) dep) = (Let nam (Normal lv val bod) λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term lv (Hol nam ctx)     dep) = (Hol nam ctx)
+(Normal.term lv Set               dep) = Set
+(Normal.term lv U60               dep) = U60
+(Normal.term lv (Num val)         dep) = (Num val)
+(Normal.term lv (Op2 opr fst snd) dep) = (Op2 opr (Normal.term lv fst dep) (Normal.term lv snd dep))
+(Normal.term lv (Mat nam x z s p) dep) = (Mat nam (Normal lv x dep) (Normal lv z dep) λk(Normal lv (s (Var (String.concat nam "-1") dep)) dep) λk(Normal lv (p (Var nam dep)) dep))
+(Normal.term lv (Txt val)         dep) = (Txt val)
+(Normal.term lv (Var nam idx)     dep) = (Var nam idx)
+(Normal.term lv (Src src val)     dep) = (Src src (Normal lv val dep))
 
 // Equality
 // --------
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// WARNING: this is a very delicate algorithm!
+// Before changing it, READ `docs/equality.md`
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 // Check if two terms are identical. If not...
-(Equal a b dep) = (Equal.minor (Identical a b dep) a b dep)
+(Equal a b dep) = 
+  (If (Identical a b dep) 1
+    let a = (Reduce 2 a)
+    let b = (Reduce 2 b)
+    (If (Identical a b dep) 1
+      (Similar a b dep)))
 
-// Check if they're identical after a minor weak reduction. If not...
-(Equal.minor 0 a b dep) = (Equal.major (Identical (Reduce 0 a) (Reduce 0 b) dep) a b dep)
-(Equal.minor 1 a b dep) = 1
+(Similar (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+(Similar (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Similar (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
+(Similar (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (Similar (Reduce 0 a.typ) (Reduce 0 b.typ) dep) // <- must call Similar, NOT Equal
+(Similar (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
+(Similar a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
+(Similar (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
+(Similar (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (Equal a.fst b.fst dep) (Equal a.snd b.snd dep))
+(Similar (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (Equal a.x b.x dep) (& (Equal a.z b.z dep) (& (Equal (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (Equal (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
+(Similar a                           b                           dep) = 0
 
-// Check if they're identical after a major weak reduction. If not...
-(Equal.major 0 a b dep) = (Equal.enter (Identical (Reduce 1 a) (Reduce 1 b) dep) a b dep)
-(Equal.major 1 a b dep) = 1
-
-// Check if they become identical after reducing fields.
-(Equal.enter 0 a b dep) = (Comparer λaλbλdep(Equal a b dep) (Reduce 0 a) (Reduce 0 b) dep)
-(Equal.enter 1 a b dep) = 1
-
-// Checks if two terms are identical, without reductions.
-(Identical a b dep) = (Comparer λaλbλdep(Identical a b dep) a b dep)
-
-// Generic comparer.
-(Comparer rec (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (rec a.inp b.inp dep) (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
-(Comparer rec (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Comparer rec (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (rec a.fun b.fun dep) (rec a.arg b.arg dep))
-(Comparer rec (Slf a.nam a.bod)           (Slf b.nam b.bod)           dep) = (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Comparer rec (Ins a.val)                 b                           dep) = (rec a.val b dep)
-(Comparer rec a                           (Ins b.val)                 dep) = (rec a b.val dep)
-(Comparer rec (Ref a.nam a.val)           (Ref b.nam b.val)           dep) = (Same a.nam b.nam)
-(Comparer rec (Let a.nam a.val a.bod)     b                           dep) = (rec (a.bod a.val) b dep)
-(Comparer rec a                           (Let b.nam b.val b.bod)     dep) = (rec a (b.bod b.val) dep)
-(Comparer rec Set                         Set                         dep) = 1
-(Comparer rec (Var a.nam a.idx)           (Var b.nam b.idx)           dep) = (== a.idx b.idx)
-(Comparer rec (Ann a.val a.typ)           b                           dep) = (rec a.val b dep)
-(Comparer rec a                           (Ann b.val b.typ)           dep) = (rec a b.val dep)
-(Comparer rec (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
-(Comparer rec a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
-(Comparer rec (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
-(Comparer rec U60                         U60                         dep) = 1
-(Comparer rec (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
-(Comparer rec (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (rec a.fst b.fst dep) (rec a.snd b.snd dep))
-(Comparer rec (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (rec a.x b.x dep) (& (rec a.z b.z dep) (& (rec (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (rec (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
-(Comparer rec (Txt a.txt)                 (Txt b.txt)                 dep) = (Same a.txt b.txt)
-(Comparer rec (Src a.src a.val)           b                           dep) = (Comparer rec a.val b dep)
-(Comparer rec a                           (Src b.src b.val)           dep) = (Comparer rec a b.val dep)
-(Comparer rec a                           b                           dep) = 0
-//(Comparer rec a                           b                           dep) = (HVM.log (NOP (Show a dep) (Show b dep)) 0)
+(Identical (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (Identical a.inp b.inp dep) (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+(Identical (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Identical (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (Identical a.fun b.fun dep) (Identical a.arg b.arg dep))
+(Identical (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (Identical a.typ b.typ dep)
+(Identical (Ins a.val)                 b                           dep) = (Identical a.val b dep)
+(Identical a                           (Ins b.val)                 dep) = (Identical a b.val dep)
+(Identical (Ref a.nam a.val)           (Ref b.nam b.val)           dep) = (Same a.nam b.nam)
+(Identical (Let a.nam a.val a.bod)     b                           dep) = (Identical (a.bod a.val) b dep)
+(Identical a                           (Let b.nam b.val b.bod)     dep) = (Identical a (b.bod b.val) dep)
+(Identical Set                         Set                         dep) = 1
+(Identical (Var a.nam a.idx)           (Var b.nam b.idx)           dep) = (== a.idx b.idx)
+(Identical (Ann a.val a.typ)           b                           dep) = (Identical a.val b dep)
+(Identical a                           (Ann b.val b.typ)           dep) = (Identical a b.val dep)
+(Identical (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
+(Identical a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
+(Identical (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
+(Identical U60                         U60                         dep) = 1
+(Identical (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
+(Identical (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (Identical a.fst b.fst dep) (Identical a.snd b.snd dep))
+(Identical (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (Identical a.x b.x dep) (& (Identical a.z b.z dep) (& (Identical (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (Identical (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
+(Identical (Txt a.txt)                 (Txt b.txt)                 dep) = (Same a.txt b.txt)
+(Identical (Src a.src a.val)           b                           dep) = (Identical a.val b dep)
+(Identical a                           (Src b.src b.val)           dep) = (Identical a b.val dep)
+(Identical a                           b                           dep) = 0
 
 // Type-Checking
 // -------------
@@ -235,8 +243,8 @@
 (IfAll (All nam inp bod) yep nop) = (yep nam inp bod)
 (IfAll other             yep nop) = nop
 
-(IfSlf (Slf nam bod) yep nop) = (yep nam bod)
-(IfSlf other         yep nop) = nop
+(IfSlf (Slf nam typ bod) yep nop) = (yep nam typ bod)
+(IfSlf other             yep nop) = nop
 
 //(Infer term dep) = (Debug dep ["Infer: " (Show term dep)] (Infer.match term dep))
 (Infer term dep) = (Infer.match term dep)
@@ -246,10 +254,10 @@
   (Maybe.bind (Check 0 (bod (Ann (Var nam dep) inp)) Set (+ 1 dep)) λbod_typ
   (Maybe.pure Set)))
 (Infer.match (Lam nam bod) dep) =
-  (Debug dep ["Error: NonFunLam " (Show (Lam nam bod) dep)] (None))
+  (Debug dep ["NON_FUNCTION_LAMBDA" NewLine "- detected: " (Show (Lam nam bod) dep)] (None))
 (Infer.match (App fun arg) dep) =
   (Maybe.bind (Infer fun dep) λfun_typ
-  ((IfAll (Reduce 1 fun_typ)
+  ((IfAll (Reduce 2 fun_typ)
     λfun_nam λfun_typ.inp λfun_typ.bod λfun λarg
       (Maybe.bind (Check 0 arg fun_typ.inp dep) λval_typ
       (Maybe.pure (fun_typ.bod arg)))
@@ -258,13 +266,13 @@
     fun arg))
 (Infer.match (Ann val typ) dep) =
   (Maybe.pure typ)
-(Infer.match (Slf nam bod) dep) =
-  (Maybe.bind (Check 0 (bod (Ann (Var nam dep) (Slf nam bod))) Set (+ dep 1)) λslf
+(Infer.match (Slf nam typ bod) dep) =
+  (Maybe.bind (Check 0 (bod (Ann (Var nam dep) typ)) Set (+ dep 1)) λslf
   (Maybe.pure Set))
 (Infer.match (Ins val) dep) =
   (Maybe.bind (Infer val dep) λval_typ
-  ((IfSlf (Reduce 1 val_typ)
-    λval_nam λval_typ.bod λval (Maybe.pure (val_typ.bod (Ins val)))
+  ((IfSlf (Reduce 2 val_typ)
+    λval_typ.nam λval_typ.typ λval_typ.bod λval (Maybe.pure (val_typ.bod (Ins val)))
     λval (Debug dep ["Error: NonSlfIns " (Show (Ins val) dep)] None))
     val))
 (Infer.match (Ref nam val) dep) = 
@@ -296,11 +304,11 @@
 (Infer.match (Src src val) dep) =
   (Infer.match val dep)
 
-//(Check term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep)] (Check.match 0 term type dep))
+//(Check src term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep) " ~> " (Show (Reduce 2 type) dep)] (Check.match src term type dep))
 (Check src term type dep) = (Check.match src term type dep)
 
 (Check.match src (Lam term.nam term.bod) type dep) =
-  ((IfAll (Reduce 1 type)
+  ((IfAll (Reduce 2 type)
     λtype.nam λtype.inp λtype.bod λterm.bod
       let ann  = (Ann (Var term.nam dep) type.inp)
       let term = (term.bod ann)
@@ -310,8 +318,8 @@
       (Infer (Lam term.nam term.bod) dep))
     term.bod)
 (Check.match src (Ins term.val) type dep) =
-  ((IfSlf (Reduce 1 type)
-    λtype.nam λtype.bod λterm.val (Check 0 term.val (type.bod (Ins term.val)) dep)
+  ((IfSlf (Reduce 2 type)
+    λtype.nam λtype.typ λtype.bod λterm.val (Check 0 term.val (type.bod (Ins term.val)) dep)
     λterm.val (Infer (Ins term.val) dep))
     term.val)
 (Check.match src (Let term.nam term.val term.bod) type dep) =
@@ -352,7 +360,7 @@
 (Show (Lam nam bod)     dep) = (String.join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
 (Show (App fun arg)     dep) = (String.join ["(" (Show.unwrap (Show fun dep)) " " (Show arg dep) ")"])
 (Show (Ann val typ)     dep) = (String.join ["{" (Show val dep) ": " (Show typ dep) "}"])
-(Show (Slf nam bod)     dep) = (String.join ["$" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
+(Show (Slf nam typ bod) dep) = (String.join ["$(" nam ": " (Show typ dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
 (Show (Ins val)         dep) = (String.join ["~" (Show val dep)])
 (Show (Ref nam val)     dep) = nam
 (Show (Let nam val bod) dep) = (String.join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
@@ -411,7 +419,7 @@ Compile.primitives = [
 (Compile (Lam nam bod))     = λx(Compile (bod (Var "" x)))
 (Compile (App fun arg))     = ((Compile fun) (Compile arg))
 (Compile (Ann val typ))     = (Compile val)
-(Compile (Slf nam bod))     = 0
+(Compile (Slf nam typ bod)) = 0
 (Compile (Ins val))         = (Compile val)
 (Compile (Ref nam val))     = (Compile.ref Compile.primitives nam val)
 (Compile (Let nam val bod)) = (Compile (bod val))

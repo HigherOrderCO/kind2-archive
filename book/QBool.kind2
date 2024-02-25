@@ -35,7 +35,7 @@ QBool.false : QBool =
   ~λP ~λS λp (p #1 λx x)
 
 QBool : * =
-  $self
+  $(self: QBool)
   ∀(P: ∀(x: QBool) *) 
   (Sigma #U60 λt
   ∀(x: #match t = t {

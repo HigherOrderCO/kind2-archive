@@ -1,6 +1,15 @@
 Main
-: #U60
-= #(+ #12 #30)
+: ∀(x: (Parser.Result (List Char)))
+  (Parser.Result String)
+= λx
+  x
+
+//Main
+//: ∀(P: ∀(x: Bool) *)
+  //∀(f: ∀(x: Bool) (P x))
+  //(P (Bool.not (Bool.not Bool.true)))
+//= λP λf
+  //?a
 
 //TYPE_MISMATCH
 //- expected: (Pair (Maybe V) (String.Map V))

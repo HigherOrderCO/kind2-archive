@@ -32,7 +32,7 @@ QBool2.false : QBool2 = ~λP λnew (new #1)
 QBool2.bad   : QBool2 = ~λP λnew (new #2 ?impossible)
 
 QBool2 : * =
-  $self
+  $(self: QBool2)
   ∀(P: ∀(x: QBool2) *)
   ∀(new: ∀(tag: #U60) #match tag = tag {
     #0: (P QBool2.true)

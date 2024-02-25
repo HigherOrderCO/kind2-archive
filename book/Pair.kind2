@@ -3,7 +3,7 @@ Pair
   ∀(B: *)
   *
 = λA λB
-  $self
+  $(self: (Pair A B))
   ∀(P: ∀(pair: (Pair A B)) *)
   ∀(new: ∀(fst: A) ∀(snd: B) (P (Pair.new A B fst snd)))
   (P self)

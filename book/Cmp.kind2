@@ -1,6 +1,6 @@
 Cmp
 : *
-= $self
+= $(self: Cmp)
   ∀(P: ∀(cmp: Cmp) *)
   ∀(ltn: (P Cmp.ltn))
   ∀(eql: (P Cmp.eql))

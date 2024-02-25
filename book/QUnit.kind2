@@ -2,7 +2,7 @@ QUnit.one : QUnit =
   ~λP ~λSP λnew (new #0 λone one)
 
 QUnit : * =
-  $self
+  $(self: QUnit)
   ∀(P: ∀(x: QUnit) *) 
   (Sigma #U60 λtag
   #match tag = tag {

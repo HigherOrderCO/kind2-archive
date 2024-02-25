@@ -1,7 +1,7 @@
 IO
 : ∀(A: *) *
 = λA
-  $self
+  $(self: (IO A))
   ∀(P: ∀(x: (IO A)) *)
   ∀(print: ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO.print A text then)))
   ∀(load: ∀(file: String) ∀(then: ∀(x: String) (IO A)) (P (IO.load A file then)))

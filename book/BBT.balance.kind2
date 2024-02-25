@@ -32,8 +32,6 @@ BBT.balance
     (~(BBT.got_size K V rgt) P new)
   (~(BBT.got_size K V lft) P new)
 
-
-
 BBT.balance.lft_heavier
 : ∀(K: *)
   ∀(V: *)

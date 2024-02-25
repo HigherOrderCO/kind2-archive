@@ -1,6 +1,6 @@
 Nat
 : *
-= $self
+= $(self: Nat)
   ∀(P: ∀(n: Nat) *)
   ∀(succ: ∀(n: Nat) (P (Nat.succ n)))
   ∀(zero: (P Nat.zero))

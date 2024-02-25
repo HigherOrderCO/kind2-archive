@@ -1,6 +1,6 @@
 Kind.Term
 : *
-= $self
+= $(self: Kind.Term)
   ∀(P: ∀(x: Kind.Term) *)
   ∀(all: ∀(nam: String) ∀(inp: Kind.Term) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.all nam inp bod)))
   ∀(lam: ∀(nam: String) ∀(bod: ∀(x: Kind.Term) Kind.Term) (P (Kind.lam nam bod)))

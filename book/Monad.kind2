@@ -1,7 +1,7 @@
 Monad
 : ∀(M: ∀(T: *) *) *
 = λM
-  $self
+  $(self: (Monad M))
   ∀(P: ∀(x: (Monad M)) *)
   ∀(new:
     ∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
