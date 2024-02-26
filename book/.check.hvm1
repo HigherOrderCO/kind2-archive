@@ -119,12 +119,6 @@
 // Evaluation
 // ----------
 
-// Reduction levels:
-// - 0: does not reduce references and constructors
-// - 1: does not reduce constructors
-// - 2: reduces everything
-// Constructors are Refs that return Slf or Ins
-
 (Reduce lv (App fun arg))     = (Reduce.app lv (Reduce lv fun) arg)
 (Reduce lv (Ann val typ))     = (Reduce lv val)
 (Reduce lv (Ins val))         = (Reduce lv val)
@@ -166,10 +160,9 @@
 (Reduce.ref 2  nam val) = (Reduce 2 val)
 (Reduce.ref lv nam val) = (Ref nam val)
 
-(Reduce.txt 0  (Txt txt))          = (Txt txt)
 (Reduce.txt lv (String.cons x xs)) = (Reduce lv (App (App Book.String.cons (Num x)) (Txt xs)))
 (Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
-(Reduce.txt lv val)                = val
+(Reduce.txt lv val)                = (Txt val)
 
 (Normal lv term dep) = (Normal.term lv (Reduce lv term) dep)
 
@@ -194,24 +187,23 @@
 // Equality
 // --------
 
-// NEW EQUALITY
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// WARNING: this is a very delicate algorithm!
+// Before changing it, READ `docs/equality.md`
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Check if two terms are identical. If not...
 (Equal a b dep) = 
-  //(Debug dep ["Equal: " (U60.show dep)
-    //NewLine "- " (Show a dep) " ~> " (Show (Reduce 2 a) dep)
-    //NewLine "- " (Show b dep) " ~> " (Show (Reduce 2 b) dep)]
   (If (Identical a b dep) 1
     let a = (Reduce 2 a)
     let b = (Reduce 2 b)
     (If (Identical a b dep) 1
       (Similar a b dep)))
-  //)
 
 (Similar (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
 (Similar (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
 (Similar (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
-(Similar (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (Similar (Reduce 0 a.typ) (Reduce 0 b.typ) dep)
+(Similar (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (Similar (Reduce 0 a.typ) (Reduce 0 b.typ) dep) // <- must call Similar, NOT Equal
 (Similar (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
 (Similar a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
 (Similar (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
@@ -243,61 +235,6 @@
 (Identical (Src a.src a.val)           b                           dep) = (Identical a.val b dep)
 (Identical a                           (Src b.src b.val)           dep) = (Identical a b.val dep)
 (Identical a                           b                           dep) = 0
-
-// OLD EQUALITY
-
-//// Check if two terms are identical. If not...
-//(Equal a b dep) =
-  //(Debug dep ["Equal:" NewLine "- " (Show a dep) NewLine "- " (Show b dep)]
-  //(If (Identical a b dep) 1 (Equal (Reduce 2 a) (Reduce 2 b) dep)))
-////(Equal a b dep) = (If (Identical a b dep) 1 (Equal (Reduce 2 a) (Reduce 2 b) dep))
-
-
-////// Check if they're identical after a minor weak reduction. If not...
-////(Equal.minor 0 a b dep) = (Equal.major (Identical (Reduce 0 a) (Reduce 0 b) dep) a b dep)
-////(Equal.minor 1 a b dep) = 1
-
-////// Check if they're identical after a major weak reduction. If not...
-////(Equal.major 0 a b dep) = (Equal.final (Identical (Reduce 1 a) (Reduce 1 b) dep) a b dep)
-////(Equal.major 1 a b dep) = 1
-
-////// Check if they're identical after a major weak reduction. If not...
-////(Equal.final 0 a b dep) = (Equal.enter (Identical (Reduce 2 a) (Reduce 2 b) dep) a b dep)
-////(Equal.final 1 a b dep) = 1
-
-////// Check if they become identical after reducing fields.
-////(Equal.enter 0 a b dep) = (Comparer λaλbλdep(Equal a b dep) (Reduce 1 a) (Reduce 1 b) dep)
-////(Equal.enter 1 a b dep) = 1
-
-//// Checks if two terms are identical, without reductions.
-//(Identical a b dep) = (Comparer λaλbλdep(Identical a b dep) a b dep)
-
-//// Generic comparer.
-//(Comparer rec (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (rec a.inp b.inp dep) (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
-//(Comparer rec (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (rec (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-//(Comparer rec (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (rec a.fun b.fun dep) (rec a.arg b.arg dep))
-//(Comparer rec (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (rec a.typ b.typ dep)
-//(Comparer rec (Ins a.val)                 b                           dep) = (rec a.val b dep)
-//(Comparer rec a                           (Ins b.val)                 dep) = (rec a b.val dep)
-//(Comparer rec (Ref a.nam a.val)           (Ref b.nam b.val)           dep) = (Same a.nam b.nam)
-//(Comparer rec (Let a.nam a.val a.bod)     b                           dep) = (rec (a.bod a.val) b dep)
-//(Comparer rec a                           (Let b.nam b.val b.bod)     dep) = (rec a (b.bod b.val) dep)
-//(Comparer rec Set                         Set                         dep) = 1
-//(Comparer rec (Var a.nam a.idx)           (Var b.nam b.idx)           dep) = (== a.idx b.idx)
-//(Comparer rec (Ann a.val a.typ)           b                           dep) = (rec a.val b dep)
-//(Comparer rec a                           (Ann b.val b.typ)           dep) = (rec a b.val dep)
-//(Comparer rec (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
-//(Comparer rec a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
-//(Comparer rec (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
-//(Comparer rec U60                         U60                         dep) = 1
-//(Comparer rec (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
-//(Comparer rec (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (rec a.fst b.fst dep) (rec a.snd b.snd dep))
-//(Comparer rec (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (rec a.x b.x dep) (& (rec a.z b.z dep) (& (rec (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (rec (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
-//(Comparer rec (Txt a.txt)                 (Txt b.txt)                 dep) = (Same a.txt b.txt)
-//(Comparer rec (Src a.src a.val)           b                           dep) = (Comparer rec a.val b dep)
-//(Comparer rec a                           (Src b.src b.val)           dep) = (Comparer rec a b.val dep)
-//(Comparer rec a                           b                           dep) = 0
-////(Comparer rec a                           b                           dep) = (HVM.log (NOP (Show a dep) (Show b dep)) 0)
 
 // Type-Checking
 // -------------
@@ -546,14 +483,13 @@ Compile.primitives = [
 
 (Checker.many list) = (If (Checker.many.go list) ALL_TERMS_CHECK ERRORS_FOUND)
 
+Book.Main = (Ref "Main" (Ann (Src 1099526307859 (Txt "foo")) (Src 1099518967819 (U60))))
+Book.List = (Ref "List" (Ann (Src 3298559000766 (Lam "T" λ_T (Src 3298565292222 (Slf "self" (Src 3298573680685 (App (Src 3298574729258 (Book.List)) (Src 3298579972140 _T))) λ_self (Src 3298586263742 (All "P" (Src 3298593603659 (All "xs" (Src 3298601992264 (App (Src 3298603040837 (Book.List)) (Src 3298608283719 _T))) λ_xs (Src 3298612478027 (Set)))) λ_P (Src 3298617721022 (All "cons" (Src 3298628206741 (All "head" (Src 3298638692452 _T) λ_head (Src 3298641838229 (All "tail" (Src 3298652323960 (App (Src 3298653372533 (Book.List)) (Src 3298658615415 _T))) λ_tail (Src 3298662809749 (App (Src 3298663858300 _P) (Src 3298665955476 (App (App (App (Src 3298667004039 (Book.List.cons)) (Src 3298677489801 _T)) (Src 3298679586958 _head)) (Src 3298684829843 _tail))))))))) λ_cons (Src 3298695315646 (All "nil" (Src 3298704752818 (App (Src 3298705801380 _P) (Src 3298707898545 (App (Src 3298708947118 (Book.List.nil)) (Src 3298718384304 _T))))) λ_nil (Src 3298725724350 (App (Src 3298726772920 _P) (Src 3298728870077 _self))))))))))))) (Src 3298542223380 (All "T" (Src 3298549563407 (Set)) λ_T (Src 3298554806292 (Set))))))
 Book.String = (Ref "String" (Ann (Src 2199036887064 (App (Src 2199037935634 (Book.List)) (Src 2199043178519 (Book.Char)))) (Src 2199032692746 (Set))))
-Book.Main = (Ref "Main" (Ann (Src 1099585028173 (Lam "x" λ_x (Src 1099591319629 _x))) (Src 1099518967875 (All "x" (Src 1099526307881 (App (Src 1099527356444 (Book.Parser.Result)) (Src 1099542036520 (App (Src 1099543085090 (Book.List)) (Src 1099548327975 (Book.Char)))))) λ_x (Src 1099558813763 (App (Src 1099559862331 (Book.Parser.Result)) (Src 1099574542402 (Book.String))))))))
-Book.Parser.Result.done = (Ref "Parser.Result.done" (Ann (Src 8796186345620 (Lam "T" λ_T (Src 8796190539924 (Lam "code" λ_code (Src 8796197879956 (Lam "value" λ_value (Src 8796208365716 (Ins (Src 8796209414292 (Lam "P" λ_P (Src 8796213608596 (Lam "done" λ_done (Src 8796220948628 (Lam "fail" λ_fail (Src 8796230385812 (App (App (Src 8796231434376 _done) (Src 8796236677261 _code)) (Src 8796241920147 _value))))))))))))))))) (Src 8796115042390 (All "T" (Src 8796122382365 (Set)) λ_T (Src 8796127625302 (All "code" (Src 8796138111025 (Book.String)) λ_code (Src 8796148596822 (All "value" (Src 8796160131137 _T) λ_value (Src 8796165374038 (App (Src 8796166422611 (Book.Parser.Result)) (Src 8796181102677 _T)))))))))))
-Book.Parser.Result.fail = (Ref "Parser.Result.fail" (Ann (Src 9895682244729 (Lam "T" λ_T (Src 9895686439033 (Lam "error" λ_error (Src 9895696924793 (Ins (Src 9895697973369 (Lam "P" λ_P (Src 9895702167673 (Lam "done" λ_done (Src 9895709507705 (Lam "fail" λ_fail (Src 9895718944889 (App (Src 9895719993458 _fail) (Src 9895725236344 _error))))))))))))))) (Src 9895626670151 (All "T" (Src 9895634010141 (Set)) λ_T (Src 9895639253063 (All "error" (Src 9895650787378 (Book.String)) λ_error (Src 9895661273159 (App (Src 9895662321732 (Book.Parser.Result)) (Src 9895677001798 _T)))))))))
-Book.Char = (Ref "Char" (Ann (Src 3298546417679 (U60)) (Src 3298542223368 (Set))))
-Book.Parser.Result = (Ref "Parser.Result" (Ann (Src 7696614949125 (Lam "T" λ_T (Src 7696621240581 (Slf "self" (Src 7696629628991 (App (Src 7696630677564 (Book.Parser.Result)) (Src 7696645357630 _T))) λ_self (Src 7696651649285 (All "P" (Src 7696658989157 (All "x" (Src 7696666329186 (App (Src 7696667377759 (Book.Parser.Result)) (Src 7696682057825 _T))) λ_x (Src 7696686252133 (Set)))) λ_P (Src 7696691495173 (All "done" (Src 7696701980856 (All "code" (Src 7696712466563 (Book.String)) λ_code (Src 7696720855224 (All "value" (Src 7696732389521 _T) λ_value (Src 7696735535288 (App (Src 7696736583829 _P) (Src 7696738681015 (App (App (App (Src 7696739729577 (Book.Parser.Result.done)) (Src 7696759652523 _T)) (Src 7696761749680 _code)) (Src 7696766992566 _value))))))))) λ_done (Src 7696778526981 (All "fail" (Src 7696789012729 (All "error" (Src 7696800547031 (Book.String)) λ_error (Src 7696808935673 (App (Src 7696809984219 _P) (Src 7696812081400 (App (App (Src 7696813129967 (Book.Parser.Result.fail)) (Src 7696833052913 _T)) (Src 7696835150071 _error))))))) λ_fail (Src 7696846684421 (App (Src 7696847732991 _P) (Src 7696849830148 _self))))))))))))) (Src 7696598171677 (All "T" (Src 7696605511704 (Set)) λ_T (Src 7696610754589 (Set))))))
-Book.List = (Ref "List" (Ann (Src 4398070628542 (Lam "T" λ_T (Src 4398076919998 (Slf "self" (Src 4398085308461 (App (Src 4398086357034 (Book.List)) (Src 4398091599916 _T))) λ_self (Src 4398097891518 (All "P" (Src 4398105231435 (All "xs" (Src 4398113620040 (App (Src 4398114668613 (Book.List)) (Src 4398119911495 _T))) λ_xs (Src 4398124105803 (Set)))) λ_P (Src 4398129348798 (All "cons" (Src 4398139834517 (All "head" (Src 4398150320228 _T) λ_head (Src 4398153466005 (All "tail" (Src 4398163951736 (App (Src 4398165000309 (Book.List)) (Src 4398170243191 _T))) λ_tail (Src 4398174437525 (App (Src 4398175486076 _P) (Src 4398177583252 (App (App (App (Src 4398178631815 (Book.List.cons)) (Src 4398189117577 _T)) (Src 4398191214734 _head)) (Src 4398196457619 _tail))))))))) λ_cons (Src 4398206943422 (All "nil" (Src 4398216380594 (App (Src 4398217429156 _P) (Src 4398219526321 (App (Src 4398220574894 (Book.List.nil)) (Src 4398230012080 _T))))) λ_nil (Src 4398237352126 (App (Src 4398238400696 _P) (Src 4398240497853 _self))))))))))))) (Src 4398053851156 (All "T" (Src 4398061191183 (Set)) λ_T (Src 4398066434068 (Set))))))
 Book.List.nil = (Ref "List.nil" (Ann (Src 5497593790527 (Lam "T" λ_T (Src 5497600081983 (Ins (Src 5497601130559 (Lam "P" λ_P (Src 5497605324863 (Lam "cons" λ_cons (Src 5497612664895 (Lam "nil" λ_nil (Src 5497621053503 _nil))))))))))) (Src 5497569673247 (All "T" (Src 5497577013267 (Set)) λ_T (Src 5497582256159 (App (Src 5497583304732 (Book.List)) (Src 5497588547614 _T)))))))
-Book.List.cons = (Ref "List.cons" (Ann (Src 6597145264256 (Lam "T" λ_T (Src 6597149458560 (Lam "head" λ_head (Src 6597156798592 (Lam "tail" λ_tail (Src 6597166235776 (Ins (Src 6597167284352 (Lam "P" λ_P (Src 6597171478656 (Lam "cons" λ_cons (Src 6597178818688 (Lam "nil" λ_nil (Src 6597187207296 (App (App (Src 6597188255861 _cons) (Src 6597193498746 _head)) (Src 6597198741631 _tail))))))))))))))))) (Src 6597082349637 (All "T" (Src 6597089689620 (Set)) λ_T (Src 6597094932549 (All "head" (Src 6597105418275 _T) λ_head (Src 6597110661189 (All "tail" (Src 6597121146937 (App (Src 6597122195510 (Book.List)) (Src 6597127438392 _T))) λ_tail (Src 6597133729861 (App (Src 6597134778434 (Book.List)) (Src 6597140021316 _T)))))))))))
+Book.Char = (Ref "Char" (Ann (Src 6597081301007 (U60)) (Src 6597077106696 (Set))))
+Book.String.cons = (Ref "String.cons" (Ann (Src 7696645357681 (Lam "head" λ_head (Src 7696652697713 (Lam "tail" λ_tail (Src 7696662134897 (Ins (Src 7696663183473 (Lam "P" λ_P (Src 7696667377777 (Lam "cons" λ_cons (Src 7696674717809 (Lam "nil" λ_nil (Src 7696683106417 (App (App (Src 7696684154982 _cons) (Src 7696689397867 _head)) (Src 7696694640752 _tail))))))))))))))) (Src 7696596074554 (All "head" (Src 7696606560284 (Book.Char)) λ_head (Src 7696614948922 (All "tail" (Src 7696625434672 (Book.String)) λ_tail (Src 7696635920442 (Book.String))))))))
+Book.List.cons = (Ref "List.cons" (Ann (Src 4398122008704 (Lam "T" λ_T (Src 4398126203008 (Lam "head" λ_head (Src 4398133543040 (Lam "tail" λ_tail (Src 4398142980224 (Ins (Src 4398144028800 (Lam "P" λ_P (Src 4398148223104 (Lam "cons" λ_cons (Src 4398155563136 (Lam "nil" λ_nil (Src 4398163951744 (App (App (Src 4398165000309 _cons) (Src 4398170243194 _head)) (Src 4398175486079 _tail))))))))))))))))) (Src 4398059094085 (All "T" (Src 4398066434068 (Set)) λ_T (Src 4398071676997 (All "head" (Src 4398082162723 _T) λ_head (Src 4398087405637 (All "tail" (Src 4398097891385 (App (Src 4398098939958 (Book.List)) (Src 4398104182840 _T))) λ_tail (Src 4398110474309 (App (Src 4398111522882 (Book.List)) (Src 4398116765764 _T)))))))))))
+Book.String.nil = (Ref "String.nil" (Ann (Src 8796116090925 (Ins (Src 8796117139501 (Lam "P" λ_P (Src 8796121333805 (Lam "cons" λ_cons (Src 8796128673837 (Lam "nil" λ_nil (Src 8796137062445 _nil))))))))) (Src 8796106653715 (Book.String))))
 
-Main = (Checker.many [(Pair "Char" Book.Char) (Pair "List" Book.List) (Pair "List.cons" Book.List.cons) (Pair "List.nil" Book.List.nil) (Pair "Main" Book.Main) (Pair "Parser.Result" Book.Parser.Result) (Pair "Parser.Result.done" Book.Parser.Result.done) (Pair "Parser.Result.fail" Book.Parser.Result.fail) (Pair "String" Book.String)])
+Main = (Checker.many [(Pair "Char" Book.Char) (Pair "List" Book.List) (Pair "List.cons" Book.List.cons) (Pair "List.nil" Book.List.nil) (Pair "Main" Book.Main) (Pair "String" Book.String) (Pair "String.cons" Book.String.cons) (Pair "String.nil" Book.String.nil)])

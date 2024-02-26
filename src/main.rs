@@ -515,7 +515,9 @@ impl Book {
     }
     let mut book = Book::new();
     load_go(name, &mut book)?;
-    //load_go("String", &mut book)?;
+    load_go("String", &mut book)?;
+    load_go("String.cons", &mut book)?;
+    load_go("String.nil", &mut book)?;
     //println!("DONE!");
     Ok(book)
   }

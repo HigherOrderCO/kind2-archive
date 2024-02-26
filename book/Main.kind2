@@ -1,8 +1,6 @@
 Main
-: ∀(x: (Parser.Result (List Char)))
-  (Parser.Result String)
-= λx
-  x
+: #U60
+= "foo"
 
 //Main
 //: ∀(P: ∀(x: Bool) *)

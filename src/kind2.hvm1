@@ -160,10 +160,9 @@
 (Reduce.ref 2  nam val) = (Reduce 2 val)
 (Reduce.ref lv nam val) = (Ref nam val)
 
-(Reduce.txt 0  (Txt txt))          = (Txt txt)
 (Reduce.txt lv (String.cons x xs)) = (Reduce lv (App (App Book.String.cons (Num x)) (Txt xs)))
 (Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
-(Reduce.txt lv val)                = val
+(Reduce.txt lv val)                = (Txt val)
 
 (Normal lv term dep) = (Normal.term lv (Reduce lv term) dep)
 
