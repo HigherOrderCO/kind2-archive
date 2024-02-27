@@ -1,12 +1,7 @@
 Main
-//: ∀(x: ?A) (List #U60)
-//= λx
-  //(List.cons ?B x
-  //(List.cons ?C #10
-  //(List.cons ?D #20
-  //(List.nil ?E))))
-: ∀(b: Bool) Bool
-= λb (~b (?A) ?B ?C)
+: ∀(b: Bool) (~b λx(*) Bool #U60)
+= λb
+  (~b ?A Bool.true ?C)
 
 
 

@@ -123,49 +123,19 @@
 // BitsMap
 // -------
 
-//// data BM A = BM.Nil | (BM.Node A BM BM)
-
-//// Returns true if value is present on BM
-//(BM.has E        (BM.node (Some val) lft rgt)) = 1
-//(BM.has (O bits) (BM.node val lft rgt))        = (BM.has bits lft)
-//(BM.has (I bits) (BM.node val lft rgt))        = (BM.has bits rgt)
-//(BM.has key      val)                          = 0
-
-//// Gets a value from a BM
-//(BM.get E        (BM.leaf))             = None
-//(BM.get E        (BM.node val lft rgt)) = val
-//(BM.get (O bits) (BM.leaf))             = None
-//(BM.get (O bits) (BM.node val lft rgt)) = (BM.get bits lft)
-//(BM.get (I bits) (BM.leaf))             = None
-//(BM.get (I bits) (BM.node val lft rgt)) = (BM.get bits rgt)
-
-//// Sets a value on a BM
-//(BM.set E        val (BM.leaf))           = (BM.node (Some val) BM.leaf BM.leaf)
-//(BM.set E        val (BM.node _ lft rgt)) = (BM.node (Some val) lft rgt)
-//(BM.set (O bits) val (BM.leaf))           = (BM.node None (BM.set bits val BM.leaf) BM.leaf)
-//(BM.set (O bits) val (BM.node v lft rgt)) = (BM.node v (BM.set bits val lft) rgt)
-//(BM.set (I bits) val (BM.leaf))           = (BM.node None BM.leaf (BM.set bits val BM.leaf))
-//(BM.set (I bits) val (BM.node v lft rgt)) = (BM.node v lft (BM.set bits val rgt))
-
-//// Map wrapper with String keys
-//(Map.new)             = BM.leaf
-//(Map.has key map)     = (BM.has (U60.to_bits key) map)
-//(Map.get key map)     = (BM.get (U60.to_bits key) map)
-//(Map.set key val map) = (BM.set (U60.to_bits key) val map)
-
 (Map.new) = List.nil
 
-(Map.has k (List.cons (Pair key val) map)) = (If (Same key k) 1 (Map.has k map))
-(Map.has k List.nil)                       = 0
+(Map.has eq k (List.cons (Pair key val) map)) = (If (eq key k) 1 (Map.has eq k map))
+(Map.has eq k List.nil)                       = 0
 
-(Map.put k v (List.cons (Pair key val) map)) = ((If (Same key k) λmap(None) λmap(Maybe.bind (Map.set k v map) λmap (List.cons (Pair key val) map))) map)
-(Map.put k v List.nil)                       = (Some (List.cons (Pair k v) List.nil))
+(Map.ins eq k v (List.cons (Pair key val) map)) = ((If (eq key k) λmap(None) λmap(Maybe.bind (Map.ins eq k v map) λmap(Some (List.cons (Pair key val) map)))) map)
+(Map.ins eq k v List.nil)                       = (Some (List.cons (Pair k v) List.nil))
 
-(Map.set k v (List.cons (Pair key val) map)) = ((If (Same key k) λmap(List.cons (Pair k v) map) λmap(List.cons (Pair key val) (Map.set k v map))) map)
-(Map.set k v List.nil)                       = (List.cons (Pair k v) List.nil)
+(Map.set eq k v (List.cons (Pair key val) map)) = ((If (eq key k) λmap(List.cons (Pair k v) map) λmap(List.cons (Pair key val) (Map.set eq k v map))) map)
+(Map.set eq k v List.nil)                       = (List.cons (Pair k v) List.nil)
 
-(Map.get k (List.cons (Pair key val) map)) = (If (Same key k) (Some val) (Map.get k map))
-(Map.get k List.nil)                       = None
+(Map.get eq k (List.cons (Pair key val) map)) = (If (eq key k) (Some val) (Map.get eq k map))
+(Map.get eq k List.nil)                       = None
 
 // Evaluation
 // ----------
@@ -216,7 +186,10 @@
 (Reduce.txt fill lv String.nil)         = (Reduce fill lv Book.String.nil)
 (Reduce.txt fill lv val)                = (Txt val)
 
-(Reduce.hol fill lv nam ctx) = (Maybe.match (Map.get nam fill) λval(Reduce fill lv val) (Hol nam ctx))
+(Reduce.hol fill lv nam ctx) =
+  (Maybe.match (Map.get λaλb(Same a b) nam fill)
+    λval(Reduce fill lv val)
+    (Hol nam ctx))
 
 (Normal fill lv term dep) = (Normal.term fill lv (Reduce fill lv term) dep)
 
@@ -255,21 +228,28 @@
 (Checker.fail e)       = λstate (Fail state e)
 (Checker.run chk)      = (chk State.new)
 (Checker.log msg)      = λstate (Done (State.get state λfill λlogs (State fill (List.cons msg logs))) 1)
-(Checker.fill key val) = λstate (Done (State.get state λfill λlogs (State (Map.set key val fill) logs)) 1)
-(Checker.get_fill)     = λstate (Done state (Pair.fst state))
+(Checker.fill key val) = λstate (Done (State.get state λfill λlogs (State (Map.set λaλb(Same a b) key val fill) logs)) 1)
+(Checker.get_fill)     = λstate (Done state (State.get state λfillλlogs(fill)))
 (Checker.save)         = λstate (Done state state)
 (Checker.load state)   = λerase (Done state 0)
 
 // Equality
 // --------
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// WARNING: this is a very delicate algorithm!
-// Before changing it, READ `docs/equality.md`
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The conversion checkers works as follows:
+//   1. If the two sides are structurally identical, they're equal.
+//   2. Otherwise, reduce both sides.
+//   3. If the two sides are structurally identical, they're equal.
+//   4. Otherwise, recurse on both sides and check if all fields are equal.
+// This algorithm will return true when both sides reduce to the same normal
+// form, but it will halt early if both sides become identical at any point
+// during the reduction, allowing checking recursive terms. This is enough to
+// cover any interesting term. Note we need to be careful with self-types, which
+// must be "un-unrolled" to avoid loops. Read `docs/equality.md` for more info.
 
 // Checks if two term are equal
 (Equal a b dep) = 
+  //(Debug dep ["Equal: " NewLine "- " (Show a dep) NewLine "- " (Show b dep)]
   (Checker.bind (Checker.save) λstate
   (Checker.bind (Identical a b dep) λequal
   (If equal
@@ -373,23 +353,45 @@
 (Identical.go a b dep) =
   (Checker.pure 0)
 
-// From smalltt:
-// 1. spine consists of distinct bound variables
-// 2. every free variable of rhs occurs in spine
-// 3. ?α does not occur in rhs
+// Unification
+// -----------
+
+// The unification algorithm is a simple pattern unifier, based on smalltt:
+// > https://github.com/AndrasKovacs/elaboration-zoo/blob/master/03-holes/Main.hs
+// The 'Unify.try' fn will attempt to match the following pattern:
+//   (?A x y z ...) = B
+// Where:
+//   1. The LHS spine, `x y z ...`, consists of distinct variables.
+//   2. Every free var of the RHS, `B`, occurs in the spine.
+//   3. The LHS hole, `?A`, doesn't occur in the RHS, `B`.
+// If it is successful, it outputs the following substitution:
+//   ?A = λx λy λz ... B
+// The `Unify.pat` fn will just recurse on the LHS apps, reaching the hole.
+// The `Unify.sub` fn will try to generate the subst, respecting the criteria.
+// The `Unify.rec` fn checks the 3rd condition, preventing recursive substs.
 
 // Unify.try : Term -> Term -> U60 -> (Checker U60) -> (Checker U60)
 (Unify.try a b dep else) =
   (Maybe.match (Unify.pat a b dep Map.new)
     λkv(Pair.get kv λkλv(Debug dep ["- unify: ?" k " = " (Show v dep)] (Checker.fill k v)))
-    (else))
+    (If (Unify.skp a)
+      (Debug dep ["- skips: " (Show a dep) " = " (Show b dep)] (Checker.pure 1))
+      (else)))
+
+// Unify.skp : Term -> Bool
+(Unify.skp (App fun arg)) = (Unify.skp fun)
+(Unify.skp (Ann val typ)) = (Unify.skp val)
+(Unify.skp (Ins val))     = (Unify.skp val)
+(Unify.skp (Src src val)) = (Unify.skp val)
+(Unify.skp (Hol nam ctx)) = 1
+(Unify.skp other)         = 0
 
 // Unify.pat : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
 (Unify.pat (App fun (Var nam idx)) b dep ctx) =
-  (Maybe.bind (Map.put idx $x ctx) λctx
+  (Maybe.bind (Map.ins λaλb(== a b) idx $x ctx) λctx
   (Maybe.bind (Unify.pat fun b dep ctx) λkv 
   (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.pat (Hol nam ctx)         b dep ctx) =
+(Unify.pat (Hol nam ctx) b dep ctx) =
   (Maybe.bind (Unify.sub b dep nam ctx) λneo
   (Maybe.pure (Pair nam neo)))
 (Unify.pat (App fun (Ann val _)) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
@@ -448,13 +450,33 @@
 (Unify.sub (Txt val) dep hol ctx) =
   (Maybe.pure (Txt val))
 (Unify.sub (Var nam idx) dep hol ctx) =
-  (Maybe.bind (Map.get idx ctx) λval
+  (Maybe.bind (Map.get λaλb(== a b) idx ctx) λval
   (Maybe.pure val))
 (Unify.sub (Src src val) dep hol ctx) =
   (Maybe.bind (Unify.sub val dep hol ctx) λval
   (Maybe.pure (Src src val)))
 (Unify.sub term dep hol ctx) =
   (HVM.log (UNEXPECTED (Show term dep)) None)
+
+// TODO: use this
+// Unify.rec : Fill -> Term -> String -> Bool
+(Unify.rec fill (All nam inp bod) hol) = (| (Unify.rec fill inp hol) (Unify.rec fill (bod Set) hol))
+(Unify.rec fill (Lam nam bod)     hol) = (Unify.rec fill (bod Set) hol)
+(Unify.rec fill (App fun arg)     hol) = (| (Unify.rec fill fun hol) (Unify.rec fill arg hol))
+(Unify.rec fill (Ann val typ)     hol) = (| (Unify.rec fill val hol) (Unify.rec fill typ hol))
+(Unify.rec fill (Slf nam typ bod) hol) = (Unify.rec fill typ hol)
+(Unify.rec fill (Ins val)         hol) = (Unify.rec fill val hol)
+(Unify.rec fill (Ref nam val)     hol) = 0
+(Unify.rec fill (Let nam val bod) hol) = (| (Unify.rec fill val hol) (Unify.rec fill (bod Set) hol))
+(Unify.rec fill Set               hol) = 0
+(Unify.rec fill U60               hol) = 0
+(Unify.rec fill (Num val)         hol) = 0
+(Unify.rec fill (Op2 opr fst snd) hol) = (| (Unify.rec fill fst hol) (Unify.rec fill snd hol))
+(Unify.rec fill (Mat nam x z s p) hol) = (| (Unify.rec fill x hol) (| (Unify.rec fill z hol) (| (Unify.rec fill (s Set) hol) (Unify.rec fill (p Set) hol))))
+(Unify.rec fill (Txt val)         hol) = 0
+(Unify.rec fill (Var nam idx)     hol) = 0
+(Unify.rec fill (Src src val)     hol) = (Unify.rec fill val hol)
+(Unify.rec fill (Hol nam ctx)     hol) = (If (Same nam hol) 1 (Maybe.match (Map.get λaλb(Same a b) nam fill) λgot(Unify.rec fill got hol) 0))
 
 // Type-Checking
 // -------------
@@ -527,7 +549,7 @@
 (Infer.match (Src src val) dep) =
   (Infer.match val dep)
 
-//(Check src term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep) " ~> " (Show (Reduce 2 type) dep)] (Check.match src term type dep))
+//(Check src term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep) " ~> " (Show (Reduce Map.new 2 type) dep)] (Check.match src term type dep))
 (Check src term type dep) = (Check.match src term type dep)
 
 (Check.match src (Lam term.nam term.bod) type dep) =
