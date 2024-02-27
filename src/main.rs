@@ -591,9 +591,8 @@ fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
   let kind2_hvm1 = include_str!("./kind2.hvm1");
   let book_hvm1 = book.to_hvm1();
   let main_hvm1 = match command {
-    "check" => format!("Main = (API.check \"{}\" Book.{})\n", arg, arg),
-    //"check" => format!("Main = (API.check.many [{}])\n", used_defs),
-    "run"   => format!("Main = (API.normal Book.{})\n", arg),
+    "check" => format!("Main = (Checker.many [{}])\n", used_defs),
+    "run"   => format!("Main = (Normalizer Book.{})\n", arg),
     _       => panic!("invalid command"),
   };
   let hvm1_code = format!("{}\n{}\n{}", kind2_hvm1, book_hvm1, main_hvm1);

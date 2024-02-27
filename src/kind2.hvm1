@@ -82,16 +82,12 @@
 
 (Pair.get (Pair fst snd) fun) = (fun fst snd)
 
-(Maybe.match (Some value) some none) = (some value)
-(Maybe.match None         some none) = none
-
 (Maybe.pure x) = (Some x)
-(Maybe.bind a b) = (Maybe.match a λvalue(b value) None)
 
-// Converts an U60 to a bitstring
-(U60.to_bits 0) = E
-(U60.to_bits 1) = (I E)
-(U60.to_bits n) = (If (== (% n 2) 0) (O (U60.to_bits (/ n 2))) (I (U60.to_bits (/ n 2))))
+(Maybe.bind a b) = (Maybe.bind.match a b)
+
+(Maybe.bind.match None     b) = None
+(Maybe.bind.match (Some a) b) = (b a)
 
 (String.color RESET)      = (String.cons 27 "[0m")
 (String.color BRIGHT)     = (String.cons 27 "[1m")
@@ -120,145 +116,73 @@
 (String.color BG_GRAY)    = (String.cons 27 "[100m")
 (String.color x)          = "?"
 
-// BitsMap
-// -------
-
-//// data BM A = BM.Nil | (BM.Node A BM BM)
-
-//// Returns true if value is present on BM
-//(BM.has E        (BM.node (Some val) lft rgt)) = 1
-//(BM.has (O bits) (BM.node val lft rgt))        = (BM.has bits lft)
-//(BM.has (I bits) (BM.node val lft rgt))        = (BM.has bits rgt)
-//(BM.has key      val)                          = 0
-
-//// Gets a value from a BM
-//(BM.get E        (BM.leaf))             = None
-//(BM.get E        (BM.node val lft rgt)) = val
-//(BM.get (O bits) (BM.leaf))             = None
-//(BM.get (O bits) (BM.node val lft rgt)) = (BM.get bits lft)
-//(BM.get (I bits) (BM.leaf))             = None
-//(BM.get (I bits) (BM.node val lft rgt)) = (BM.get bits rgt)
-
-//// Sets a value on a BM
-//(BM.set E        val (BM.leaf))           = (BM.node (Some val) BM.leaf BM.leaf)
-//(BM.set E        val (BM.node _ lft rgt)) = (BM.node (Some val) lft rgt)
-//(BM.set (O bits) val (BM.leaf))           = (BM.node None (BM.set bits val BM.leaf) BM.leaf)
-//(BM.set (O bits) val (BM.node v lft rgt)) = (BM.node v (BM.set bits val lft) rgt)
-//(BM.set (I bits) val (BM.leaf))           = (BM.node None BM.leaf (BM.set bits val BM.leaf))
-//(BM.set (I bits) val (BM.node v lft rgt)) = (BM.node v lft (BM.set bits val rgt))
-
-//// Map wrapper with String keys
-//(Map.new)             = BM.leaf
-//(Map.has key map)     = (BM.has (U60.to_bits key) map)
-//(Map.get key map)     = (BM.get (U60.to_bits key) map)
-//(Map.set key val map) = (BM.set (U60.to_bits key) val map)
-
-(Map.new) = List.nil
-
-(Map.has k (List.cons (Pair key val) map)) = (If (Same key k) 1 (Map.has k map))
-(Map.has k List.nil)                       = 0
-
-(Map.put k v (List.cons (Pair key val) map)) = ((If (Same key k) λmap(None) λmap(Maybe.bind (Map.set k v map) λmap (List.cons (Pair key val) map))) map)
-(Map.put k v List.nil)                       = (Some (List.cons (Pair k v) List.nil))
-
-(Map.set k v (List.cons (Pair key val) map)) = ((If (Same key k) λmap(List.cons (Pair k v) map) λmap(List.cons (Pair key val) (Map.set k v map))) map)
-(Map.set k v List.nil)                       = (List.cons (Pair k v) List.nil)
-
-(Map.get k (List.cons (Pair key val) map)) = (If (Same key k) (Some val) (Map.get k map))
-(Map.get k List.nil)                       = None
-
 // Evaluation
 // ----------
 
-(Reduce fill lv (App fun arg))     = (Reduce.app fill lv (Reduce fill lv fun) arg)
-(Reduce fill lv (Ann val typ))     = (Reduce fill lv val)
-(Reduce fill lv (Ins val))         = (Reduce fill lv val)
-(Reduce fill lv (Ref nam val))     = (Reduce.ref fill lv nam (Reduce fill lv val))
-(Reduce fill lv (Let nam val bod)) = (Reduce fill lv (bod val))
-(Reduce fill lv (Op2 opr fst snd)) = (Reduce.op2 fill lv opr (Reduce fill lv fst) (Reduce fill lv snd))
-(Reduce fill lv (Mat nam x z s p)) = (Reduce.mat fill lv nam (Reduce fill lv x) z s p)
-(Reduce fill lv (Txt txt))         = (Reduce.txt fill lv txt)
-(Reduce fill lv (Src src val))     = (Reduce fill lv val)
-(Reduce fill lv (Hol nam ctx))     = (Reduce.hol fill lv nam ctx)
-(Reduce fill lv val)               = val
+(Reduce lv (App fun arg))     = (Reduce.app lv (Reduce lv fun) arg)
+(Reduce lv (Ann val typ))     = (Reduce lv val)
+(Reduce lv (Ins val))         = (Reduce lv val)
+(Reduce lv (Ref nam val))     = (Reduce.ref lv nam (Reduce lv val))
+(Reduce lv (Let nam val bod)) = (Reduce lv (bod val))
+(Reduce lv (Op2 opr fst snd)) = (Reduce.op2 lv opr (Reduce lv fst) (Reduce lv snd))
+(Reduce lv (Mat nam x z s p)) = (Reduce.mat lv nam (Reduce lv x) z s p)
+(Reduce lv (Txt txt))         = (Reduce.txt lv txt)
+(Reduce lv (Src src val))     = (Reduce lv val)
+(Reduce lv val)               = val
 
-(Reduce.app fill lv (Lam nam bod) arg) = (Reduce fill lv (bod (Reduce fill 0 arg)))
-(Reduce.app fill lv fun           arg) = (App fun arg)
+(Reduce.app lv (Lam nam bod) arg) = (Reduce lv (bod (Reduce 0 arg)))
+(Reduce.app lv fun           arg) = (App fun arg)
 
-(Reduce.op2 fill lv ADD (Num fst) (Num snd)) = (Num (+ fst snd))
-(Reduce.op2 fill lv SUB (Num fst) (Num snd)) = (Num (- fst snd))
-(Reduce.op2 fill lv MUL (Num fst) (Num snd)) = (Num (* fst snd))
-(Reduce.op2 fill lv DIV (Num fst) (Num snd)) = (Num (/ fst snd))
-(Reduce.op2 fill lv MOD (Num fst) (Num snd)) = (Num (% fst snd))
-(Reduce.op2 fill lv EQ  (Num fst) (Num snd)) = (Num (== fst snd))
-(Reduce.op2 fill lv NE  (Num fst) (Num snd)) = (Num (!= fst snd))
-(Reduce.op2 fill lv LT  (Num fst) (Num snd)) = (Num (< fst snd))
-(Reduce.op2 fill lv GT  (Num fst) (Num snd)) = (Num (> fst snd))
-(Reduce.op2 fill lv LTE (Num fst) (Num snd)) = (Num (<= fst snd))
-(Reduce.op2 fill lv GTE (Num fst) (Num snd)) = (Num (>= fst snd))
-(Reduce.op2 fill lv AND (Num fst) (Num snd)) = (Num (& fst snd))
-(Reduce.op2 fill lv OR  (Num fst) (Num snd)) = (Num (| fst snd))
-(Reduce.op2 fill lv XOR (Num fst) (Num snd)) = (Num (^ fst snd))
-(Reduce.op2 fill lv LSH (Num fst) (Num snd)) = (Num (<< fst snd))
-(Reduce.op2 fill lv RSH (Num fst) (Num snd)) = (Num (>> fst snd))
-(Reduce.op2 fill lv opr fst snd)             = (Op2 opr fst snd)
+(Reduce.op2 lv ADD (Num fst) (Num snd)) = (Num (+ fst snd))
+(Reduce.op2 lv SUB (Num fst) (Num snd)) = (Num (- fst snd))
+(Reduce.op2 lv MUL (Num fst) (Num snd)) = (Num (* fst snd))
+(Reduce.op2 lv DIV (Num fst) (Num snd)) = (Num (/ fst snd))
+(Reduce.op2 lv MOD (Num fst) (Num snd)) = (Num (% fst snd))
+(Reduce.op2 lv EQ  (Num fst) (Num snd)) = (Num (== fst snd))
+(Reduce.op2 lv NE  (Num fst) (Num snd)) = (Num (!= fst snd))
+(Reduce.op2 lv LT  (Num fst) (Num snd)) = (Num (< fst snd))
+(Reduce.op2 lv GT  (Num fst) (Num snd)) = (Num (> fst snd))
+(Reduce.op2 lv LTE (Num fst) (Num snd)) = (Num (<= fst snd))
+(Reduce.op2 lv GTE (Num fst) (Num snd)) = (Num (>= fst snd))
+(Reduce.op2 lv AND (Num fst) (Num snd)) = (Num (& fst snd))
+(Reduce.op2 lv OR  (Num fst) (Num snd)) = (Num (| fst snd))
+(Reduce.op2 lv XOR (Num fst) (Num snd)) = (Num (^ fst snd))
+(Reduce.op2 lv LSH (Num fst) (Num snd)) = (Num (<< fst snd))
+(Reduce.op2 lv RSH (Num fst) (Num snd)) = (Num (>> fst snd))
+(Reduce.op2 lv opr fst snd)             = (Op2 opr fst snd)
 
-(Reduce.mat fill lv nam (Num 0)             z s p) = (Reduce fill lv z)
-(Reduce.mat fill lv nam (Num n)             z s p) = (Reduce fill lv (s (Num (- n 1))))
-(Reduce.mat fill lv nam (Op2 ADD (Num 1) k) z s p) = (Reduce fill lv (s k))
-(Reduce.mat fill lv nam val                 z s p) = (Mat nam val z s p)
+(Reduce.mat lv nam (Num 0)             z s p) = (Reduce lv z)
+(Reduce.mat lv nam (Num n)             z s p) = (Reduce lv (s (Num (- n 1))))
+(Reduce.mat lv nam (Op2 ADD (Num 1) k) z s p) = (Reduce lv (s k))
+(Reduce.mat lv nam val                 z s p) = (Mat nam val z s p)
 
-(Reduce.ref fill 1  nam val) = (Reduce fill 1 val)
-(Reduce.ref fill 2  nam val) = (Reduce fill 2 val)
-(Reduce.ref fill lv nam val) = (Ref nam val)
+(Reduce.ref 1  nam val) = (Reduce 1 val)
+(Reduce.ref 2  nam val) = (Reduce 2 val)
+(Reduce.ref lv nam val) = (Ref nam val)
 
-(Reduce.txt fill lv (String.cons x xs)) = (Reduce fill lv (App (App Book.String.cons (Num x)) (Txt xs)))
-(Reduce.txt fill lv String.nil)         = (Reduce fill lv Book.String.nil)
-(Reduce.txt fill lv val)                = (Txt val)
+(Reduce.txt lv (String.cons x xs)) = (Reduce lv (App (App Book.String.cons (Num x)) (Txt xs)))
+(Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
+(Reduce.txt lv val)                = (Txt val)
 
-(Reduce.hol fill lv nam ctx) = (Maybe.match (Map.get nam fill) λval(Reduce fill lv val) (Hol nam ctx))
+(Normal lv term dep) = (Normal.term lv (Reduce lv term) dep)
 
-(Normal fill lv term dep) = (Normal.term fill lv (Reduce fill lv term) dep)
-
-(Normal.term fill lv (All nam inp bod) dep) = (All nam (Normal fill lv inp dep) λx(Normal fill lv (bod (Var nam dep)) (+ dep 1)))
-(Normal.term fill lv (Lam nam bod)     dep) = (Lam nam λx(Normal fill lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term fill lv (App fun arg)     dep) = (App (Normal fill lv fun dep) (Normal fill lv arg dep))
-(Normal.term fill lv (Ann val typ)     dep) = (Ann (Normal fill lv val dep) (Normal fill lv typ dep))
-(Normal.term fill lv (Slf nam typ bod) dep) = (Slf nam typ λx(Normal fill lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term fill lv (Ins val)         dep) = (Ins (Normal fill lv val dep))
-(Normal.term fill lv (Ref nam val)     dep) = (Ref nam (Normal fill lv val dep))
-(Normal.term fill lv (Let nam val bod) dep) = (Let nam (Normal fill lv val bod) λx(Normal fill lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term fill lv (Hol nam ctx)     dep) = (Hol nam ctx)
-(Normal.term fill lv Set               dep) = Set
-(Normal.term fill lv U60               dep) = U60
-(Normal.term fill lv (Num val)         dep) = (Num val)
-(Normal.term fill lv (Op2 opr fst snd) dep) = (Op2 opr (Normal.term fill lv fst dep) (Normal.term fill lv snd dep))
-(Normal.term fill lv (Mat nam x z s p) dep) = (Mat nam (Normal fill lv x dep) (Normal fill lv z dep) λk(Normal fill lv (s (Var (String.concat nam "-1") dep)) dep) λk(Normal fill lv (p (Var nam dep)) dep))
-(Normal.term fill lv (Txt val)         dep) = (Txt val)
-(Normal.term fill lv (Var nam idx)     dep) = (Var nam idx)
-(Normal.term fill lv (Src src val)     dep) = (Src src (Normal fill lv val dep))
-
-// Checker
-// -------
-
-// type Result A = (Done State A) | (Fail State String)
-// type Checker A = State -> (Result A)
-
-(Result.match (Done state value) done fail) = (done state value)
-(Result.match (Fail state error) done fail) = (fail state error)     
-
-(State.get (State fill logs) got) = (got fill logs)
-(State.new)                       = (State Map.new [])
-
-(Checker.bind a b)     = λstate (Result.match (a state) λstateλvalue((b value) state) λstateλerror(Fail state error))
-(Checker.pure a)       = λstate (Done state a)
-(Checker.fail e)       = λstate (Fail state e)
-(Checker.run chk)      = (chk State.new)
-(Checker.log msg)      = λstate (Done (State.get state λfill λlogs (State fill (List.cons msg logs))) 1)
-(Checker.fill key val) = λstate (Done (State.get state λfill λlogs (State (Map.set key val fill) logs)) 1)
-(Checker.get_fill)     = λstate (Done state (Pair.fst state))
-(Checker.save)         = λstate (Done state state)
-(Checker.load state)   = λerase (Done state 0)
+(Normal.term lv (All nam inp bod) dep) = (All nam (Normal lv inp dep) λx(Normal lv (bod (Var nam dep)) (+ dep 1)))
+(Normal.term lv (Lam nam bod)     dep) = (Lam nam λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term lv (App fun arg)     dep) = (App (Normal lv fun dep) (Normal lv arg dep))
+(Normal.term lv (Ann val typ)     dep) = (Ann (Normal lv val dep) (Normal lv typ dep))
+(Normal.term lv (Slf nam typ bod) dep) = (Slf nam typ λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term lv (Ins val)         dep) = (Ins (Normal lv val dep))
+(Normal.term lv (Ref nam val)     dep) = (Ref nam (Normal lv val dep))
+(Normal.term lv (Let nam val bod) dep) = (Let nam (Normal lv val bod) λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.term lv (Hol nam ctx)     dep) = (Hol nam ctx)
+(Normal.term lv Set               dep) = Set
+(Normal.term lv U60               dep) = U60
+(Normal.term lv (Num val)         dep) = (Num val)
+(Normal.term lv (Op2 opr fst snd) dep) = (Op2 opr (Normal.term lv fst dep) (Normal.term lv snd dep))
+(Normal.term lv (Mat nam x z s p) dep) = (Mat nam (Normal lv x dep) (Normal lv z dep) λk(Normal lv (s (Var (String.concat nam "-1") dep)) dep) λk(Normal lv (p (Var nam dep)) dep))
+(Normal.term lv (Txt val)         dep) = (Txt val)
+(Normal.term lv (Var nam idx)     dep) = (Var nam idx)
+(Normal.term lv (Src src val)     dep) = (Src src (Normal lv val dep))
 
 // Equality
 // --------
@@ -268,193 +192,49 @@
 // Before changing it, READ `docs/equality.md`
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// Checks if two term are equal
+// Check if two terms are identical. If not...
 (Equal a b dep) = 
-  (Checker.bind (Checker.save) λstate
-  (Checker.bind (Identical a b dep) λequal
-  (If equal
-    (Checker.pure equal)
-    (Checker.bind (Checker.load state) λx
-    (Checker.bind (Checker.get_fill) λfill
-    let a = (Reduce fill 2 a)
-    let b = (Reduce fill 2 b)
-    (Checker.bind (Identical a b dep) λequal
-    (If equal
-      (Checker.pure equal)
-      (Similar a b dep))))))))
+  (If (Identical a b dep) 1
+    let a = (Reduce 2 a)
+    let b = (Reduce 2 b)
+    (If (Identical a b dep) 1
+      (Similar a b dep)))
 
-// Checks if all components of a term are equal
-(Similar (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) =
-  (Checker.bind (Equal a.inp b.inp dep) λe.inp
-  (Checker.bind (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)) λe.bod
-  (Checker.pure (& e.inp e.bod))))
-(Similar (Lam a.nam a.bod) (Lam b.nam b.bod) dep) =
-  (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Similar (App a.fun a.arg) (App b.fun b.arg) dep) =
-  (Checker.bind (Equal a.fun b.fun dep) λe.fun
-  (Checker.bind (Equal a.arg b.arg dep) λe.arg
-  (Checker.pure (& e.fun e.arg))))
-(Similar (Slf a.nam a.typ a.bod) (Slf b.nam b.typ b.bod) dep) =
-  (Similar (Reduce Map.new 0 a.typ) (Reduce Map.new 0 b.typ) dep) // <- must call Similar, NOT Equal
-(Similar (Hol a.nam a.ctx) (Hol b.nam b.ctx) dep) =
-  (Checker.pure (Same a.nam b.nam))
-(Similar (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) =
-  (Checker.bind (Equal a.fst b.fst dep) λe.fst
-  (Checker.bind (Equal a.snd b.snd dep) λe.snd
-  (Checker.pure (Same e.fst e.snd))))
-(Similar (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) =
-  (Checker.bind (Equal a.x b.x dep) λe.x
-  (Checker.bind (Equal a.z b.z dep) λe.z
-  (Checker.bind (Equal (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) λe.s
-  (Checker.bind (Equal (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep) λe.p
-  (& e.x (& e.z (& e.s e.p)))))))
-(Similar a b dep) =
-  (Checker.pure 0)
+(Similar (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (Equal a.inp b.inp dep) (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+(Similar (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (Equal (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Similar (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (Equal a.fun b.fun dep) (Equal a.arg b.arg dep))
+(Similar (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (Similar (Reduce 0 a.typ) (Reduce 0 b.typ) dep) // <- must call Similar, NOT Equal
+(Similar (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
+(Similar a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
+(Similar (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
+(Similar (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (Equal a.fst b.fst dep) (Equal a.snd b.snd dep))
+(Similar (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (Equal a.x b.x dep) (& (Equal a.z b.z dep) (& (Equal (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (Equal (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
+(Similar a                           b                           dep) = 0
 
-// Checks if two terms are structurally identical
-(Identical a b dep) =
-  //(Debug dep ["Identical?" NewLine "- " (Show a dep) NewLine "- " (Show b dep)]
-  (Unify.try b a dep
-  (Unify.try a b dep
-  (Identical.go a b dep)))
-
-(Identical.go (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) =
-  (Checker.bind (Identical a.inp b.inp dep) λi.inp
-  (Checker.bind (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)) λi.bod
-  (Checker.pure (& i.inp i.bod))))
-(Identical.go (Lam a.nam a.bod) (Lam b.nam b.bod) dep) =
-  (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
-(Identical.go (App a.fun a.arg) (App b.fun b.arg) dep) =
-  (Checker.bind (Identical a.fun b.fun dep) λi.fun
-  (Checker.bind (Identical a.arg b.arg dep) λi.arg
-  (Checker.pure (& i.fun i.arg))))
-(Identical.go (Slf a.nam a.typ a.bod) (Slf b.nam b.typ b.bod) dep) =
-  (Identical a.typ b.typ dep)
-(Identical.go (Ins a.val) b dep) =
-  (Identical a.val b dep)
-(Identical.go a (Ins b.val) dep) =
-  (Identical a b.val dep)
-(Identical.go (Let a.nam a.val a.bod) b dep) =
-  (Identical (a.bod a.val) b dep)
-(Identical.go a (Let b.nam b.val b.bod) dep) =
-  (Identical a (b.bod b.val) dep)
-(Identical.go Set Set dep) =
-  (Checker.pure 1)
-(Identical.go (Ann a.val a.typ) b dep) =
-  (Identical a.val b dep)
-(Identical.go a (Ann b.val b.typ) dep) =
-  (Identical a b.val dep)
-(Identical.go (Hol a.nam a.ctx) (Hol b.nam b.ctx) dep) =
-  (Checker.pure (Same a.nam b.nam))
-(Identical.go U60 U60 dep) =
-  (Checker.pure 1)
-(Identical.go (Num a.val) (Num b.val) dep) =
-  (Checker.pure (== a.val b.val))
-(Identical.go (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) =
-  (Checker.bind (Identical a.fst b.fst dep) λi.fst
-  (Checker.bind (Identical a.snd b.snd dep) λi.snd
-  (Checker.pure (& i.fst i.snd))))
-(Identical.go (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) =
-  (Checker.bind (Identical a.x b.x dep) λi.x
-  (Checker.bind (Identical a.z b.z dep) λi.z
-  (Checker.bind (Identical (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) λi.s
-  (Checker.bind (Identical (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep) λi.p
-  (& i.x (& i.z (& i.s i.p)))))))
-(Identical.go (Txt a.txt) (Txt b.txt) dep) =
-  (Checker.pure (Same a.txt b.txt))
-(Identical.go (Src a.src a.val) b dep) =
-  (Identical a.val b dep)
-(Identical.go a (Src b.src b.val) dep) =
-  (Identical a b.val dep)
-(Identical.go (Ref a.nam a.val) (Ref b.nam b.val) dep) =
-  (Checker.pure (Same a.nam b.nam))
-(Identical.go (Var a.nam a.idx) (Var b.nam b.idx) dep) =
-  (Checker.pure (== a.idx b.idx))
-(Identical.go a b dep) =
-  (Checker.pure 0)
-
-// From smalltt:
-// 1. spine consists of distinct bound variables
-// 2. every free variable of rhs occurs in spine
-// 3. ?α does not occur in rhs
-
-// Unify.try : Term -> Term -> U60 -> (Checker U60) -> (Checker U60)
-(Unify.try a b dep else) =
-  (Maybe.match (Unify.pat a b dep Map.new)
-    λkv(Pair.get kv λkλv(Debug dep ["- unify: ?" k " = " (Show v dep)] (Checker.fill k v)))
-    (else))
-
-// Unify.pat : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
-(Unify.pat (App fun (Var nam idx)) b dep ctx) =
-  (Maybe.bind (Map.put idx $x ctx) λctx
-  (Maybe.bind (Unify.pat fun b dep ctx) λkv 
-  (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.pat (Hol nam ctx)         b dep ctx) =
-  (Maybe.bind (Unify.sub b dep nam ctx) λneo
-  (Maybe.pure (Pair nam neo)))
-(Unify.pat (App fun (Ann val _)) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Ins val))   b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Src _ val)) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (Ann val typ)         b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Ins val)             b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Src src val)         b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat other                 b dep ctx) = None
-
-// Unify.sub : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
-(Unify.sub (All nam inp bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub inp dep hol ctx) λinp
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ dep 1) hol ctx) λbod
-  (Maybe.pure (All nam inp λ_(bod)))))
-(Unify.sub (Lam nam bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
-  (Maybe.pure (Lam nam λ_(bod))))
-(Unify.sub (App fun arg) dep hol ctx) =
-  (Maybe.bind (Unify.sub fun dep hol ctx) λfun
-  (Maybe.bind (Unify.sub arg dep hol ctx) λarg
-  (Maybe.pure (App fun arg))))
-(Unify.sub (Ann val typ) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.bind (Unify.sub typ dep hol ctx) λtyp
-  (Maybe.pure (Ann val typ))))
-(Unify.sub (Slf nam typ bod) dep hol ctx) =
-  (Unify.sub typ dep hol ctx)
-(Unify.sub (Ins val) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.pure (Ins val)))
-(Unify.sub (Ref nam val) dep hol ctx) =
-  (Maybe.pure (Ref nam val))
-(Unify.sub (Let nam val bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
-  (Maybe.pure (Let nam val λ_(bod)))))
-(Unify.sub (Hol nam ctx) dep hol ctx) =
-  (If (Same nam hol) None (Maybe.pure (Hol nam ctx)))
-(Unify.sub Set dep hol ctx) =
-  (Maybe.pure Set)
-(Unify.sub U60 dep hol ctx) =
-  (Maybe.pure U60)
-(Unify.sub (Num val) dep hol ctx) =
-  (Maybe.pure (Num val))
-(Unify.sub (Op2 opr fst snd) dep hol ctx) =
-  (Maybe.bind (Unify.sub fst dep hol ctx) λfst
-  (Maybe.bind (Unify.sub snd dep hol ctx) λsnd
-  (Maybe.pure (Op2 opr fst snd))))
-(Unify.sub (Mat nam x z s p) dep hol ctx) =
-  (Maybe.bind (Unify.sub x dep hol ctx) λx
-  (Maybe.bind (Unify.sub z dep hol ctx) λz
-  (Maybe.bind (Unify.sub (s (Var (String.concat nam "-1") dep)) dep hol ctx) λs
-  (Maybe.bind (Unify.sub (p (Var nam dep)) dep hol ctx) λp
-  (Maybe.pure (Mat nam x z λ_(s) λ_(p)))))))
-(Unify.sub (Txt val) dep hol ctx) =
-  (Maybe.pure (Txt val))
-(Unify.sub (Var nam idx) dep hol ctx) =
-  (Maybe.bind (Map.get idx ctx) λval
-  (Maybe.pure val))
-(Unify.sub (Src src val) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.pure (Src src val)))
-(Unify.sub term dep hol ctx) =
-  (HVM.log (UNEXPECTED (Show term dep)) None)
+(Identical (All a.nam a.inp a.bod)     (All b.nam b.inp b.bod)     dep) = (& (Identical a.inp b.inp dep) (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep)))
+(Identical (Lam a.nam a.bod)           (Lam b.nam b.bod)           dep) = (Identical (a.bod (Var a.nam dep)) (b.bod (Var b.nam dep)) (+ 1 dep))
+(Identical (App a.fun a.arg)           (App b.fun b.arg)           dep) = (& (Identical a.fun b.fun dep) (Identical a.arg b.arg dep))
+(Identical (Slf a.nam a.typ a.bod)     (Slf b.nam b.typ b.bod)     dep) = (Identical a.typ b.typ dep)
+(Identical (Ins a.val)                 b                           dep) = (Identical a.val b dep)
+(Identical a                           (Ins b.val)                 dep) = (Identical a b.val dep)
+(Identical (Ref a.nam a.val)           (Ref b.nam b.val)           dep) = (Same a.nam b.nam)
+(Identical (Let a.nam a.val a.bod)     b                           dep) = (Identical (a.bod a.val) b dep)
+(Identical a                           (Let b.nam b.val b.bod)     dep) = (Identical a (b.bod b.val) dep)
+(Identical Set                         Set                         dep) = 1
+(Identical (Var a.nam a.idx)           (Var b.nam b.idx)           dep) = (== a.idx b.idx)
+(Identical (Ann a.val a.typ)           b                           dep) = (Identical a.val b dep)
+(Identical a                           (Ann b.val b.typ)           dep) = (Identical a b.val dep)
+(Identical (Hol a.nam a.ctx)           b                           dep) = (Debug dep ["Found: ?" a.nam " = " (Show (Normal 0 b dep) dep)] 1)
+(Identical a                           (Hol b.nam b.ctx)           dep) = (Debug dep ["Found: ?" b.nam " = " (Show (Normal 0 a dep) dep)] 1)
+(Identical (Hol a.nam a.ctx)           (Hol b.nam b.ctx)           dep) = (Same a.nam b.nam)
+(Identical U60                         U60                         dep) = 1
+(Identical (Num a.val)                 (Num b.val)                 dep) = (== a.val b.val)
+(Identical (Op2 a.opr a.fst a.snd)     (Op2 b.opr b.fst b.snd)     dep) = (& (Identical a.fst b.fst dep) (Identical a.snd b.snd dep))
+(Identical (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) = (& (Identical a.x b.x dep) (& (Identical a.z b.z dep) (& (Identical (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) (Identical (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep))))
+(Identical (Txt a.txt)                 (Txt b.txt)                 dep) = (Same a.txt b.txt)
+(Identical (Src a.src a.val)           b                           dep) = (Identical a.val b dep)
+(Identical a                           (Src b.src b.val)           dep) = (Identical a b.val dep)
+(Identical a                           b                           dep) = 0
 
 // Type-Checking
 // -------------
@@ -469,61 +249,57 @@
 (Infer term dep) = (Infer.match term dep)
 
 (Infer.match (All nam inp bod) dep) =
-  (Checker.bind (Check 0 inp Set dep) λinp_typ
-  (Checker.bind (Check 0 (bod (Ann (Var nam dep) inp)) Set (+ 1 dep)) λbod_typ
-  (Checker.pure Set)))
+  (Maybe.bind (Check 0 inp Set dep) λinp_typ
+  (Maybe.bind (Check 0 (bod (Ann (Var nam dep) inp)) Set (+ 1 dep)) λbod_typ
+  (Maybe.pure Set)))
+(Infer.match (Lam nam bod) dep) =
+  (Debug dep ["NON_FUNCTION_LAMBDA" NewLine "- detected: " (Show (Lam nam bod) dep)] (None))
 (Infer.match (App fun arg) dep) =
-  (Checker.bind (Infer fun dep) λfun_typ
-  (Checker.bind (Checker.get_fill) λfill
-  ((IfAll (Reduce fill 2 fun_typ)
+  (Maybe.bind (Infer fun dep) λfun_typ
+  ((IfAll (Reduce 2 fun_typ)
     λfun_nam λfun_typ.inp λfun_typ.bod λfun λarg
-      (Checker.bind (Check 0 arg fun_typ.inp dep) λvty
-      (Checker.pure (fun_typ.bod arg)))
+      (Maybe.bind (Check 0 arg fun_typ.inp dep) λval_typ
+      (Maybe.pure (fun_typ.bod arg)))
     λfun λarg
-      (Checker.fail (NonFunApp (App fun arg) dep)))
-    fun arg)))
+      (Debug dep ["Error: NonFunApp " (Show (App fun arg) dep)] None))
+    fun arg))
 (Infer.match (Ann val typ) dep) =
-  (Checker.pure typ)
+  (Maybe.pure typ)
 (Infer.match (Slf nam typ bod) dep) =
-  (Checker.bind (Check 0 (bod (Ann (Var nam dep) typ)) Set (+ dep 1)) λslf
-  (Checker.pure Set))
+  (Maybe.bind (Check 0 (bod (Ann (Var nam dep) typ)) Set (+ dep 1)) λslf
+  (Maybe.pure Set))
 (Infer.match (Ins val) dep) =
-  (Checker.bind (Infer val dep) λvty
-  (Checker.bind (Checker.get_fill) λfill
-  ((IfSlf (Reduce fill 2 vty)
-    λvty.nam λvty.typ λvty.bod λval
-      (Checker.pure (vty.bod (Ins val)))
-    λval
-      (Checker.fail (NonSlfIns (Ins val))))
-    val)))
+  (Maybe.bind (Infer val dep) λval_typ
+  ((IfSlf (Reduce 2 val_typ)
+    λval_typ.nam λval_typ.typ λval_typ.bod λval (Maybe.pure (val_typ.bod (Ins val)))
+    λval (Debug dep ["Error: NonSlfIns " (Show (Ins val) dep)] None))
+    val))
 (Infer.match (Ref nam val) dep) = 
   (Infer val dep)
-(Infer.match Set dep) =
-  (Checker.pure Set)
-(Infer.match U60 dep) =
-  (Checker.pure Set)
-(Infer.match (Num num) dep) =
-  (Checker.pure U60)
-(Infer.match (Txt txt) dep) =
-  (Checker.pure Book.String)
-(Infer.match (Op2 opr fst snd) dep) =
-  (Checker.bind (Check 0 fst U60 dep) λfst
-  (Checker.bind (Check 0 snd U60 dep) λsnd
-  (Checker.pure U60)))
-(Infer.match (Mat nam x z s p) dep) =
-  (Checker.bind (Check 0 x U60 dep) λx_typ
-  (Checker.bind (Check 0 (p (Ann (Var nam dep) U60)) Set dep) λp_typ
-  (Checker.bind (Check 0 z (p (Num 0)) dep) λz_typ
-  (Checker.bind (Check 0 (s (Ann (Var (String.concat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (String.concat nam "-1") dep))) (+ dep 1)) λs_typ
-  (Checker.pure (p x))))))
-(Infer.match (Lam nam bod) dep) =
-  (Checker.fail (CantInfer (Lam nam bod) dep))
 (Infer.match (Let nam val bod) dep) =
-  (Checker.fail (CantInfer (Let nam val bod) dep))
+  (Debug dep ["Error: NonAnnLet " (Show (Let nam val bod) dep)] (None))
+(Infer.match Set dep) =
+  (Maybe.pure Set)
+(Infer.match U60 dep) =
+  (Maybe.pure Set)
+(Infer.match (Num num) dep) =
+  (Maybe.pure U60)
+(Infer.match (Txt txt) dep) =
+  (Maybe.pure Book.String)
+(Infer.match (Op2 opr fst snd) dep) =
+  (Maybe.bind (Check 0 fst U60 dep) λfst
+  (Maybe.bind (Check 0 snd U60 dep) λsnd
+  (Maybe.pure U60)))
+(Infer.match (Mat nam x z s p) dep) =
+  (Maybe.bind (Check 0 x U60 dep) λx_typ
+  (Maybe.bind (Check 0 (p (Ann (Var nam dep) U60)) Set dep) λp_typ
+  (Maybe.bind (Check 0 z (p (Num 0)) dep) λz_typ
+  (Maybe.bind (Check 0 (s (Ann (Var (String.concat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (String.concat nam "-1") dep))) (+ dep 1)) λs_typ
+  (Maybe.pure (p x))))))
 (Infer.match (Hol nam ctx) dep) =
-  (Checker.fail (CantInfer (Hol nam ctx) dep))
+  (Debug dep ["Error: NonAnnHol " (Show (Hol nam ctx) dep)] None)
 (Infer.match (Var nam idx) dep) =
-  (Checker.fail (CantInfer (Var nam idx) dep))
+  (Debug dep ["Error: NonAnnVar " (Show (Var nam idx) dep)] None)
 (Infer.match (Src src val) dep) =
   (Infer.match val dep)
 
@@ -531,8 +307,7 @@
 (Check src term type dep) = (Check.match src term type dep)
 
 (Check.match src (Lam term.nam term.bod) type dep) =
-  (Checker.bind (Checker.get_fill) λfill
-  ((IfAll (Reduce fill 2 type)
+  ((IfAll (Reduce 2 type)
     λtype.nam λtype.inp λtype.bod λterm.bod
       let ann  = (Ann (Var term.nam dep) type.inp)
       let term = (term.bod ann)
@@ -540,23 +315,19 @@
       (Check 0 term type (+ dep 1))
     λterm.bod
       (Infer (Lam term.nam term.bod) dep))
-    term.bod))
+    term.bod)
 (Check.match src (Ins term.val) type dep) =
-  (Checker.bind (Checker.get_fill) λfill
-  ((IfSlf (Reduce fill 2 type)
-    λtype.nam λtype.typ λtype.bod λterm.val
-      (Check 0 term.val (type.bod (Ins term.val)) dep)
-    λterm.val
-      (Infer (Ins term.val) dep))
-    term.val))
+  ((IfSlf (Reduce 2 type)
+    λtype.nam λtype.typ λtype.bod λterm.val (Check 0 term.val (type.bod (Ins term.val)) dep)
+    λterm.val (Infer (Ins term.val) dep))
+    term.val)
 (Check.match src (Let term.nam term.val term.bod) type dep) =
   (Check 0 (term.bod term.val) type (+ 1 dep))
 (Check.match src (Hol term.nam term.ctx) type dep) =
-  (Checker.bind (Checker.log (FoundHole term.nam type term.ctx dep)) λx
-  (Checker.pure 0))
+  (Debug dep [(String.color BRIGHT) "HOLE: ?" term.nam " :: " (Show (Normal 0 type dep) dep) (String.color RESET) (Context.show term.ctx dep)]
+  (Maybe.pure 0))
 (Check.match src (Ref term.nam (Ann term.val term.typ)) type dep) = // better printing
-  (Checker.bind (Equal type term.typ dep) λequal
-  (Check.report src equal term.typ type (Ref term.nam term.val) dep))
+  (Check.report src (Equal type term.typ dep) term.typ type (Ref term.nam term.val) dep)
 (Check.match src (Src term.src term.val) type dep) =
   (Check term.src term.val type dep)
 //(Check.match src (Ref term.nam term.val) type dep) =
@@ -565,14 +336,21 @@
   (Check.verify src term type dep)
 
 (Check.verify src term type dep) =
-  (Checker.bind (Infer term dep) λinfer
-  (Checker.bind (Equal type infer dep) λequal
-  (Check.report src equal infer type term dep)))
+  (Maybe.bind (Infer term dep) λinfer
+  (Check.report src (Equal type infer dep) infer type term dep))
 
 (Check.report src 0 detected expected value dep) =
-  (Checker.fail (TypeMismatch src detected expected value dep))
-(Check.report src n detected expected value dep) =
-  (Checker.pure 0)
+  let det = (Show (Normal 0 detected dep) dep)
+  let exp = (Show (Normal 0 expected dep) dep)
+  let val = (Show (Normal 0 value dep) dep)
+  (Debug dep [(String.color BRIGHT) "TYPE_MISMATCH" NewLine
+    "- expected: " (String.color RESET) (String.color GREEN) exp NewLine (String.color RESET) (String.color BRIGHT)
+    "- detected: " (String.color RESET) (String.color RED)   det NewLine (String.color RESET) (String.color BRIGHT)
+    "- bad_term: " (String.color RESET) (String.color DIM)   val NewLine (String.color RESET)
+    "##LOC{" (U60.show src) "}LOC##" NewLine
+  ] None)
+(Check.report src n inferred expected value dep) =
+  (Maybe.pure 0)
 
 // Syntax
 // ------
@@ -594,7 +372,6 @@
 (Show (Hol nam ctx)     dep) = (String.join ["?" nam])
 (Show (Var nam idx)     dep) = (String.join [nam])
 (Show (Src src val)     dep) = (Show val dep)
-//(Show (Src src val)     dep) = (String.join ["!" (Show val dep)])
 //(Show (Var nam idx)     dep) = (String.join [nam "'" (U60.show idx)])
 
 (Show.many List.nil         dep) = ""
@@ -615,35 +392,12 @@
 (Op2.show MUL) = "*"
 (Op2.show DIV) = "/"
 
-(Context.show fill List.nil         dep) = ""
-(Context.show fill (List.cons x xs) dep) = (String.join [NewLine "- " (Context.show.ann fill x dep) (Context.show fill xs dep)])
+(Context.show List.nil         dep) = ""
+(Context.show (List.cons x xs) dep) = (String.join [NewLine "- " (Context.show.ann x dep) (Context.show xs dep)])
 
-(Context.show.ann fill (Ann val typ) dep) = (String.join ["{" (Show (Normal fill 0 val dep) dep) ": " (Show (Normal fill 0 typ dep) dep) "}"])
-(Context.show.ann fill term          dep) = (Show (Normal fill 0 term dep) dep)
+(Context.show.ann (Ann val typ) dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
+(Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
 //(Context.show.ann val           dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 (Infer val dep) dep) dep) "}"])
-
-(Message.show fill (FoundHole name type ctx dep)) =
-  let bold  = (String.color BRIGHT)
-  let reset = (String.color RESET)
-  let type  = (Show (Normal fill 0 type dep) dep)
-  let ctx   = (Context.show fill ctx dep)
-  (String.join [bold "HOLE: ?" name " :: " type ctx reset])
-(Message.show fill (NonFunApp term dep)) =
-  let term = (Show term dep)
-  (String.join ["NON_FUNCTION_APPLICATION:" term])
-(Message.show fill (CantInfer term dep)) =
-  let term = (Show term dep)
-  (String.join ["CANT_INFER:" term])
-(Message.show fill (TypeMismatch src detected expected value dep)) =
-  let det = (Show (Normal fill 0 detected dep) dep)
-  let exp = (Show (Normal fill 0 expected dep) dep)
-  let val = (Show (Normal fill 0 value dep) dep)
-  (String.join [(String.color BRIGHT) "TYPE_MISMATCH" NewLine
-    "- expected: " (String.color RESET) (String.color GREEN) exp NewLine (String.color RESET) (String.color BRIGHT)
-    "- detected: " (String.color RESET) (String.color RED)   det NewLine (String.color RESET) (String.color BRIGHT)
-    "- bad_term: " (String.color RESET) (String.color DIM)   val NewLine (String.color RESET)
-    "##LOC{" (U60.show src) "}LOC##" NewLine
-  ])
 
 // Compilation
 // -----------
@@ -707,30 +461,24 @@ Compile.primitives = [
 // API
 // ---
 
-(API.normal (Ref nam val)) = (API.normal val)
-(API.normal (Ann val typ)) = (API.normal val)
-(API.normal (Src src val)) = (API.normal val)
-(API.normal val)           = (Compile val)
-//(API.normal val)           = (Str.view (Compile val))
+(Normalizer (Ref nam val)) = (Normalizer val)
+(Normalizer (Ann val typ)) = (Normalizer val)
+(Normalizer (Src src val)) = (Normalizer val)
+(Normalizer val)           = (Compile val)
+//(Normalizer val)           = (Str.view (Compile val))
 
-// Checker
+(Checker name (Ref nam val))           = (Checker name val)
+(Checker name (Src src (Ann val typ))) = (Checker.report name (Check src val typ 0))
+(Checker name (Src src val))           = (Checker name val)
+(Checker name (Ann val typ))           = (Checker.report name (Check 0 val typ 0))
+(Checker name val)                     = (Checker.report name (Infer val 0))
 
-(API.check name (Ref nam val))           = (API.check name val)
-(API.check name (Src src (Ann val typ))) = (API.check.report name (Checker.run (Check src val typ 0)))
-(API.check name (Src src val))           = (API.check name val)
-(API.check name (Ann val typ))           = (API.check.report name (Checker.run (Check 0 val typ 0)))
-(API.check name val)                     = (API.check.report name (Checker.run (Infer val 0)))
+(Checker.report name (Some x)) = 1
+(Checker.report name None)     = 0
+//(Checker.report name (Some x)) = (HVM.print (String.join [(String.color GREEN) "- " name ": ✔" (String.color RESET)]) 1)
+//(Checker.report name None)     = (HVM.print (String.join [(String.color RED) "- " name ": ✘" (String.color RESET)]) 0)
 
-(API.check.many list) = (If (API.check.many.go list) ALL_TERMS_CHECK ERRORS_FOUND)
+(Checker.many.go (List.cons (Pair name def) defs)) = (& (Checker name def) (Checker.many.go defs))
+(Checker.many.go List.nil)                         = 1
 
-(API.check.many.go (List.cons (Pair name def) defs)) = (& (API.check name def) (API.check.many.go defs))
-(API.check.many.go List.nil)                         = 1
-
-// Reporter
-
-(API.log fill (List.cons msg msgs)) = (HVM.print (Message.show fill msg) (API.log fill msgs))
-(API.log fill List.nil)             = λx x
-
-(API.check.report name (Done (State fill logs) val)) = ((API.log fill logs) 1)
-(API.check.report name (Fail (State fill logs) err)) = ((API.log fill logs) ((API.log fill [err]) 0))
-
+(Checker.many list) = (If (Checker.many.go list) ALL_TERMS_CHECK ERRORS_FOUND)
