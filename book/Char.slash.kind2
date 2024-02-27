@@ -1,3 +1,3 @@
 Char.slash 
 : Char
-= #47
+= "foo"

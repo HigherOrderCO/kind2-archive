@@ -123,19 +123,49 @@
 // BitsMap
 // -------
 
+//// data BM A = BM.Nil | (BM.Node A BM BM)
+
+//// Returns true if value is present on BM
+//(BM.has E        (BM.node (Some val) lft rgt)) = 1
+//(BM.has (O bits) (BM.node val lft rgt))        = (BM.has bits lft)
+//(BM.has (I bits) (BM.node val lft rgt))        = (BM.has bits rgt)
+//(BM.has key      val)                          = 0
+
+//// Gets a value from a BM
+//(BM.get E        (BM.leaf))             = None
+//(BM.get E        (BM.node val lft rgt)) = val
+//(BM.get (O bits) (BM.leaf))             = None
+//(BM.get (O bits) (BM.node val lft rgt)) = (BM.get bits lft)
+//(BM.get (I bits) (BM.leaf))             = None
+//(BM.get (I bits) (BM.node val lft rgt)) = (BM.get bits rgt)
+
+//// Sets a value on a BM
+//(BM.set E        val (BM.leaf))           = (BM.node (Some val) BM.leaf BM.leaf)
+//(BM.set E        val (BM.node _ lft rgt)) = (BM.node (Some val) lft rgt)
+//(BM.set (O bits) val (BM.leaf))           = (BM.node None (BM.set bits val BM.leaf) BM.leaf)
+//(BM.set (O bits) val (BM.node v lft rgt)) = (BM.node v (BM.set bits val lft) rgt)
+//(BM.set (I bits) val (BM.leaf))           = (BM.node None BM.leaf (BM.set bits val BM.leaf))
+//(BM.set (I bits) val (BM.node v lft rgt)) = (BM.node v lft (BM.set bits val rgt))
+
+//// Map wrapper with String keys
+//(Map.new)             = BM.leaf
+//(Map.has key map)     = (BM.has (U60.to_bits key) map)
+//(Map.get key map)     = (BM.get (U60.to_bits key) map)
+//(Map.set key val map) = (BM.set (U60.to_bits key) val map)
+
 (Map.new) = List.nil
 
-(Map.has eq k (List.cons (Pair key val) map)) = (If (eq key k) 1 (Map.has eq k map))
-(Map.has eq k List.nil)                       = 0
+(Map.has k (List.cons (Pair key val) map)) = (If (Same key k) 1 (Map.has k map))
+(Map.has k List.nil)                       = 0
 
-(Map.ins eq k v (List.cons (Pair key val) map)) = ((If (eq key k) λmap(None) λmap(Maybe.bind (Map.ins eq k v map) λmap(Some (List.cons (Pair key val) map)))) map)
-(Map.ins eq k v List.nil)                       = (Some (List.cons (Pair k v) List.nil))
+(Map.put k v (List.cons (Pair key val) map)) = ((If (Same key k) λmap(None) λmap(Maybe.bind (Map.set k v map) λmap (List.cons (Pair key val) map))) map)
+(Map.put k v List.nil)                       = (Some (List.cons (Pair k v) List.nil))
 
-(Map.set eq k v (List.cons (Pair key val) map)) = ((If (eq key k) λmap(List.cons (Pair k v) map) λmap(List.cons (Pair key val) (Map.set eq k v map))) map)
-(Map.set eq k v List.nil)                       = (List.cons (Pair k v) List.nil)
+(Map.set k v (List.cons (Pair key val) map)) = ((If (Same key k) λmap(List.cons (Pair k v) map) λmap(List.cons (Pair key val) (Map.set k v map))) map)
+(Map.set k v List.nil)                       = (List.cons (Pair k v) List.nil)
 
-(Map.get eq k (List.cons (Pair key val) map)) = (If (eq key k) (Some val) (Map.get eq k map))
-(Map.get eq k List.nil)                       = None
+(Map.get k (List.cons (Pair key val) map)) = (If (Same key k) (Some val) (Map.get k map))
+(Map.get k List.nil)                       = None
 
 // Evaluation
 // ----------
@@ -186,7 +216,7 @@
 (Reduce.txt fill lv String.nil)         = (Reduce fill lv Book.String.nil)
 (Reduce.txt fill lv val)                = (Txt val)
 
-(Reduce.hol fill lv nam ctx) = (Maybe.match (Map.get λaλb(Same a b) nam fill) λval(Reduce fill lv val) (Hol nam ctx))
+(Reduce.hol fill lv nam ctx) = (Maybe.match (Map.get nam fill) λval(Reduce fill lv val) (Hol nam ctx))
 
 (Normal fill lv term dep) = (Normal.term fill lv (Reduce fill lv term) dep)
 
@@ -225,28 +255,21 @@
 (Checker.fail e)       = λstate (Fail state e)
 (Checker.run chk)      = (chk State.new)
 (Checker.log msg)      = λstate (Done (State.get state λfill λlogs (State fill (List.cons msg logs))) 1)
-(Checker.fill key val) = λstate (Done (State.get state λfill λlogs (State (Map.set λaλb(Same a b) key val fill) logs)) 1)
-(Checker.get_fill)     = λstate (Done state (State.get state λfillλlogs(fill)))
+(Checker.fill key val) = λstate (Done (State.get state λfill λlogs (State (Map.set key val fill) logs)) 1)
+(Checker.get_fill)     = λstate (Done state (Pair.fst state))
 (Checker.save)         = λstate (Done state state)
 (Checker.load state)   = λerase (Done state 0)
 
 // Equality
 // --------
 
-// The conversion checkers works as follows:
-//   1. If the two sides are structurally identical, they're equal.
-//   2. Otherwise, reduce both sides.
-//   3. If the two sides are structurally identical, they're equal.
-//   4. Otherwise, recurse on both sides and check if all fields are equal.
-// This algorithm will return true when both sides reduce to the same normal
-// form, but it will halt early if both sides become identical at any point
-// during the reduction, allowing checking recursive terms. This is enough to
-// cover any interesting term. Note we need to be careful with self-types, which
-// must be "un-unrolled" to avoid loops. Read `docs/equality.md` for more info.
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// WARNING: this is a very delicate algorithm!
+// Before changing it, READ `docs/equality.md`
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Checks if two term are equal
 (Equal a b dep) = 
-  //(Debug dep ["Equal: " NewLine "- " (Show a dep) NewLine "- " (Show b dep)]
   (Checker.bind (Checker.save) λstate
   (Checker.bind (Identical a b dep) λequal
   (If equal
@@ -350,45 +373,23 @@
 (Identical.go a b dep) =
   (Checker.pure 0)
 
-// Unification
-// -----------
-
-// The unification algorithm is a simple pattern unifier, based on smalltt:
-// > https://github.com/AndrasKovacs/elaboration-zoo/blob/master/03-holes/Main.hs
-// The 'Unify.try' fn will attempt to match the following pattern:
-//   (?A x y z ...) = B
-// Where:
-//   1. The LHS spine, `x y z ...`, consists of distinct variables.
-//   2. Every free var of the RHS, `B`, occurs in the spine.
-//   3. The LHS hole, `?A`, doesn't occur in the RHS, `B`.
-// If it is successful, it outputs the following substitution:
-//   ?A = λx λy λz ... B
-// The `Unify.pat` fn will just recurse on the LHS apps, reaching the hole.
-// The `Unify.sub` fn will try to generate the subst, respecting the criteria.
-// The `Unify.rec` fn checks the 3rd condition, preventing recursive substs.
+// From smalltt:
+// 1. spine consists of distinct bound variables
+// 2. every free variable of rhs occurs in spine
+// 3. ?α does not occur in rhs
 
 // Unify.try : Term -> Term -> U60 -> (Checker U60) -> (Checker U60)
 (Unify.try a b dep else) =
   (Maybe.match (Unify.pat a b dep Map.new)
     λkv(Pair.get kv λkλv(Debug dep ["- unify: ?" k " = " (Show v dep)] (Checker.fill k v)))
-    (If (Unify.skp a)
-      (Debug dep ["- skips: " (Show a dep) " = " (Show b dep)] (Checker.pure 1))
-      (else)))
-
-// Unify.skp : Term -> Bool
-(Unify.skp (App fun arg)) = (Unify.skp fun)
-(Unify.skp (Ann val typ)) = (Unify.skp val)
-(Unify.skp (Ins val))     = (Unify.skp val)
-(Unify.skp (Src src val)) = (Unify.skp val)
-(Unify.skp (Hol nam ctx)) = 1
-(Unify.skp other)         = 0
+    (else))
 
 // Unify.pat : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
 (Unify.pat (App fun (Var nam idx)) b dep ctx) =
-  (Maybe.bind (Map.ins λaλb(== a b) idx $x ctx) λctx
+  (Maybe.bind (Map.put idx $x ctx) λctx
   (Maybe.bind (Unify.pat fun b dep ctx) λkv 
   (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.pat (Hol nam ctx) b dep ctx) =
+(Unify.pat (Hol nam ctx)         b dep ctx) =
   (Maybe.bind (Unify.sub b dep nam ctx) λneo
   (Maybe.pure (Pair nam neo)))
 (Unify.pat (App fun (Ann val _)) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
@@ -447,33 +448,13 @@
 (Unify.sub (Txt val) dep hol ctx) =
   (Maybe.pure (Txt val))
 (Unify.sub (Var nam idx) dep hol ctx) =
-  (Maybe.bind (Map.get λaλb(== a b) idx ctx) λval
+  (Maybe.bind (Map.get idx ctx) λval
   (Maybe.pure val))
 (Unify.sub (Src src val) dep hol ctx) =
   (Maybe.bind (Unify.sub val dep hol ctx) λval
   (Maybe.pure (Src src val)))
 (Unify.sub term dep hol ctx) =
   (HVM.log (UNEXPECTED (Show term dep)) None)
-
-// TODO: use this
-// Unify.rec : Fill -> Term -> String -> Bool
-(Unify.rec fill (All nam inp bod) hol) = (| (Unify.rec fill inp hol) (Unify.rec fill (bod Set) hol))
-(Unify.rec fill (Lam nam bod)     hol) = (Unify.rec fill (bod Set) hol)
-(Unify.rec fill (App fun arg)     hol) = (| (Unify.rec fill fun hol) (Unify.rec fill arg hol))
-(Unify.rec fill (Ann val typ)     hol) = (| (Unify.rec fill val hol) (Unify.rec fill typ hol))
-(Unify.rec fill (Slf nam typ bod) hol) = (Unify.rec fill typ hol)
-(Unify.rec fill (Ins val)         hol) = (Unify.rec fill val hol)
-(Unify.rec fill (Ref nam val)     hol) = 0
-(Unify.rec fill (Let nam val bod) hol) = (| (Unify.rec fill val hol) (Unify.rec fill (bod Set) hol))
-(Unify.rec fill Set               hol) = 0
-(Unify.rec fill U60               hol) = 0
-(Unify.rec fill (Num val)         hol) = 0
-(Unify.rec fill (Op2 opr fst snd) hol) = (| (Unify.rec fill fst hol) (Unify.rec fill snd hol))
-(Unify.rec fill (Mat nam x z s p) hol) = (| (Unify.rec fill x hol) (| (Unify.rec fill z hol) (| (Unify.rec fill (s Set) hol) (Unify.rec fill (p Set) hol))))
-(Unify.rec fill (Txt val)         hol) = 0
-(Unify.rec fill (Var nam idx)     hol) = 0
-(Unify.rec fill (Src src val)     hol) = (Unify.rec fill val hol)
-(Unify.rec fill (Hol nam ctx)     hol) = (If (Same nam hol) 1 (Maybe.match (Map.get λaλb(Same a b) nam fill) λgot(Unify.rec fill got hol) 0))
 
 // Type-Checking
 // -------------
@@ -546,7 +527,7 @@
 (Infer.match (Src src val) dep) =
   (Infer.match val dep)
 
-//(Check src term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep) " ~> " (Show (Reduce Map.new 2 type) dep)] (Check.match src term type dep))
+//(Check src term type dep) = (Debug dep ["Check: " (Show term dep) " :: " (Show type dep) " ~> " (Show (Reduce 2 type) dep)] (Check.match src term type dep))
 (Check src term type dep) = (Check.match src term type dep)
 
 (Check.match src (Lam term.nam term.bod) type dep) =
@@ -754,16 +735,16 @@ Compile.primitives = [
 (API.check.report name (Fail (State fill logs) err)) = ((API.log fill logs) ((API.log fill [err]) 0))
 
 
-Book.Main = (Ref "Main" (Ann (Src 1099557765190 (Lam "b" λ_b (Src 1099564056646 (App (App (App (Src 1099565105205 (Ins (Src 1099566153781 _b))) (Src 1099568250936 (Hol "A" [_b]))) (Src 1099571396674 (Book.Bool.true))) (Src 1099581882437 (Hol "C" [_b])))))) (Src 1099518967849 (All "b" (Src 1099526307858 (Book.Bool)) λ_b (Src 1099532599337 (App (App (App (Src 1099533647895 (Ins (Src 1099534696471 _b))) (Src 1099536793630 (Lam "x" λ_x (Src 1099539939358 (Src 1099540987933 (Set)))))) (Src 1099544133667 (Book.Bool))) (Src 1099549376552 (U60))))))))
-Book.List = (Ref "List" (Ann (Src 7696605511870 (Lam "T" λ_T (Src 7696611803326 (Slf "self" (Src 7696620191789 (App (Src 7696621240362 (Book.List)) (Src 7696626483244 _T))) λ_self (Src 7696632774846 (All "P" (Src 7696640114763 (All "xs" (Src 7696648503368 (App (Src 7696649551941 (Book.List)) (Src 7696654794823 _T))) λ_xs (Src 7696658989131 (Set)))) λ_P (Src 7696664232126 (All "cons" (Src 7696674717845 (All "head" (Src 7696685203556 _T) λ_head (Src 7696688349333 (All "tail" (Src 7696698835064 (App (Src 7696699883637 (Book.List)) (Src 7696705126519 _T))) λ_tail (Src 7696709320853 (App (Src 7696710369404 _P) (Src 7696712466580 (App (App (App (Src 7696713515143 (Book.List.cons)) (Src 7696724000905 _T)) (Src 7696726098062 _head)) (Src 7696731340947 _tail))))))))) λ_cons (Src 7696741826750 (All "nil" (Src 7696751263922 (App (Src 7696752312484 _P) (Src 7696754409649 (App (Src 7696755458222 (Book.List.nil)) (Src 7696764895408 _T))))) λ_nil (Src 7696772235454 (App (Src 7696773284024 _P) (Src 7696775381181 _self))))))))))))) (Src 7696588734484 (All "T" (Src 7696596074511 (Set)) λ_T (Src 7696601317396 (Set))))))
-Book.List.nil = (Ref "List.nil" (Ann (Src 9895640301631 (Lam "T" λ_T (Src 9895646593087 (Ins (Src 9895647641663 (Lam "P" λ_P (Src 9895651835967 (Lam "cons" λ_cons (Src 9895659175999 (Lam "nil" λ_nil (Src 9895667564607 _nil))))))))))) (Src 9895616184351 (All "T" (Src 9895623524371 (Set)) λ_T (Src 9895628767263 (App (Src 9895629815836 (Book.List)) (Src 9895635058718 _T)))))))
-Book.String.cons = (Ref "String.cons" (Ann (Src 10995180241009 (Lam "head" λ_head (Src 10995187581041 (Lam "tail" λ_tail (Src 10995197018225 (Ins (Src 10995198066801 (Lam "P" λ_P (Src 10995202261105 (Lam "cons" λ_cons (Src 10995209601137 (Lam "nil" λ_nil (Src 10995217989745 (App (App (Src 10995219038310 _cons) (Src 10995224281195 _head)) (Src 10995229524080 _tail))))))))))))))) (Src 10995130957882 (All "head" (Src 10995141443612 (Book.Char)) λ_head (Src 10995149832250 (All "tail" (Src 10995160318000 (Book.String)) λ_tail (Src 10995170803770 (Book.String))))))))
-Book.Char = (Ref "Char" (Ann (Src 6597081301007 (U60)) (Src 6597077106696 (Set))))
-Book.Bool.false = (Ref "Bool.false" (Ann (Src 4398067482658 (Ins (Src 4398068531234 (Lam "P" λ_P (Src 4398072725538 (Lam "t" λ_t (Src 4398076919842 (Lam "f" λ_f (Src 4398081114146 _f))))))))) (Src 4398060142609 (Book.Bool))))
-Book.String.nil = (Ref "String.nil" (Ann (Src 12094650974253 (Ins (Src 12094652022829 (Lam "P" λ_P (Src 12094656217133 (Lam "cons" λ_cons (Src 12094663557165 (Lam "nil" λ_nil (Src 12094671945773 _nil))))))))) (Src 12094641537043 (Book.String))))
-Book.List.cons = (Ref "List.cons" (Ann (Src 8796168519808 (Lam "T" λ_T (Src 8796172714112 (Lam "head" λ_head (Src 8796180054144 (Lam "tail" λ_tail (Src 8796189491328 (Ins (Src 8796190539904 (Lam "P" λ_P (Src 8796194734208 (Lam "cons" λ_cons (Src 8796202074240 (Lam "nil" λ_nil (Src 8796210462848 (App (App (Src 8796211511413 _cons) (Src 8796216754298 _head)) (Src 8796221997183 _tail))))))))))))))))) (Src 8796105605189 (All "T" (Src 8796112945172 (Set)) λ_T (Src 8796118188101 (All "head" (Src 8796128673827 _T) λ_head (Src 8796133916741 (All "tail" (Src 8796144402489 (App (Src 8796145451062 (Book.List)) (Src 8796150693944 _T))) λ_tail (Src 8796156985413 (App (Src 8796158033986 (Book.List)) (Src 8796163276868 _T)))))))))))
-Book.Bool = (Ref "Bool" (Ann (Src 3298546417773 (Slf "self" (Src 3298554806295 (Book.Bool)) λ_self (Src 3298563194989 (All "P" (Src 3298570534960 (All "x" (Src 3298577874989 (Book.Bool)) λ_x (Src 3298584166448 (Set)))) λ_P (Src 3298589409389 (All "t" (Src 3298596749384 (App (Src 3298597797949 _P) (Src 3298599895111 (Book.Bool.true)))) λ_t (Src 3298614575213 (All "f" (Src 3298621915233 (App (Src 3298622963797 _P) (Src 3298625060960 (Book.Bool.false)))) λ_f (Src 3298640789613 (App (Src 3298641838183 _P) (Src 3298643935340 _self))))))))))) (Src 3298542223368 (Set))))
-Book.Bool.true = (Ref "Bool.true" (Ann (Src 2199043178529 (Ins (Src 2199044227105 (Lam "P" λ_P (Src 2199048421409 (Lam "t" λ_t (Src 2199052615713 (Lam "f" λ_f (Src 2199056810017 _t))))))))) (Src 2199035838480 (Book.Bool))))
+Book.Main = (Ref "Main" (Ann (Src 1099665768614 (Lam "b" λ_b (Src 1099669962918 (App (App (App (Src 1099671011482 (Ins (Src 1099672060058 _b))) (Src 1099674157215 (Src 1099675205790 (Hol "A" [_b])))) (Src 1099679400098 (Hol "B" [_b]))) (Src 1099682545829 (Hol "C" [_b])))))) (Src 1099644797072 (All "b" (Src 1099652137098 (Book.Bool)) λ_b (Src 1099658428560 (Book.Bool))))))
 Book.String = (Ref "String" (Ann (Src 5497571770392 (App (Src 5497572818962 (Book.List)) (Src 5497578061847 (Book.Char)))) (Src 5497567576074 (Set))))
+Book.List.nil = (Ref "List.nil" (Ann (Src 8796128673855 (Lam "T" λ_T (Src 8796134965311 (Ins (Src 8796136013887 (Lam "P" λ_P (Src 8796140208191 (Lam "cons" λ_cons (Src 8796147548223 (Lam "nil" λ_nil (Src 8796155936831 _nil))))))))))) (Src 8796104556575 (All "T" (Src 8796111896595 (Set)) λ_T (Src 8796117139487 (App (Src 8796118188060 (Book.List)) (Src 8796123430942 _T)))))))
+Book.List = (Ref "List" (Ann (Src 6597093884094 (Lam "T" λ_T (Src 6597100175550 (Slf "self" (Src 6597108564013 (App (Src 6597109612586 (Book.List)) (Src 6597114855468 _T))) λ_self (Src 6597121147070 (All "P" (Src 6597128486987 (All "xs" (Src 6597136875592 (App (Src 6597137924165 (Book.List)) (Src 6597143167047 _T))) λ_xs (Src 6597147361355 (Set)))) λ_P (Src 6597152604350 (All "cons" (Src 6597163090069 (All "head" (Src 6597173575780 _T) λ_head (Src 6597176721557 (All "tail" (Src 6597187207288 (App (Src 6597188255861 (Book.List)) (Src 6597193498743 _T))) λ_tail (Src 6597197693077 (App (Src 6597198741628 _P) (Src 6597200838804 (App (App (App (Src 6597201887367 (Book.List.cons)) (Src 6597212373129 _T)) (Src 6597214470286 _head)) (Src 6597219713171 _tail))))))))) λ_cons (Src 6597230198974 (All "nil" (Src 6597239636146 (App (Src 6597240684708 _P) (Src 6597242781873 (App (Src 6597243830446 (Book.List.nil)) (Src 6597253267632 _T))))) λ_nil (Src 6597260607678 (App (Src 6597261656248 _P) (Src 6597263753405 _self))))))))))))) (Src 6597077106708 (All "T" (Src 6597084446735 (Set)) λ_T (Src 6597089689620 (Set))))))
+Book.Bool.false = (Ref "Bool.false" (Ann (Src 4398067482658 (Ins (Src 4398068531234 (Lam "P" λ_P (Src 4398072725538 (Lam "t" λ_t (Src 4398076919842 (Lam "f" λ_f (Src 4398081114146 _f))))))))) (Src 4398060142609 (Book.Bool))))
+Book.List.cons = (Ref "List.cons" (Ann (Src 7696656892032 (Lam "T" λ_T (Src 7696661086336 (Lam "head" λ_head (Src 7696668426368 (Lam "tail" λ_tail (Src 7696677863552 (Ins (Src 7696678912128 (Lam "P" λ_P (Src 7696683106432 (Lam "cons" λ_cons (Src 7696690446464 (Lam "nil" λ_nil (Src 7696698835072 (App (App (Src 7696699883637 _cons) (Src 7696705126522 _head)) (Src 7696710369407 _tail))))))))))))))))) (Src 7696593977413 (All "T" (Src 7696601317396 (Set)) λ_T (Src 7696606560325 (All "head" (Src 7696617046051 _T) λ_head (Src 7696622288965 (All "tail" (Src 7696632774713 (App (Src 7696633823286 (Book.List)) (Src 7696639066168 _T))) λ_tail (Src 7696645357637 (App (Src 7696646406210 (Book.List)) (Src 7696651649092 _T)))))))))))
+Book.Char = (Ref "Char" (Ann (Src 9895616184335 (U60)) (Src 9895611990024 (Set))))
+Book.String.cons = (Ref "String.cons" (Ann (Src 10995180241009 (Lam "head" λ_head (Src 10995187581041 (Lam "tail" λ_tail (Src 10995197018225 (Ins (Src 10995198066801 (Lam "P" λ_P (Src 10995202261105 (Lam "cons" λ_cons (Src 10995209601137 (Lam "nil" λ_nil (Src 10995217989745 (App (App (Src 10995219038310 _cons) (Src 10995224281195 _head)) (Src 10995229524080 _tail))))))))))))))) (Src 10995130957882 (All "head" (Src 10995141443612 (Book.Char)) λ_head (Src 10995149832250 (All "tail" (Src 10995160318000 (Book.String)) λ_tail (Src 10995170803770 (Book.String))))))))
+Book.String.nil = (Ref "String.nil" (Ann (Src 12094650974253 (Ins (Src 12094652022829 (Lam "P" λ_P (Src 12094656217133 (Lam "cons" λ_cons (Src 12094663557165 (Lam "nil" λ_nil (Src 12094671945773 _nil))))))))) (Src 12094641537043 (Book.String))))
+Book.Bool = (Ref "Bool" (Ann (Src 2199034789997 (Slf "self" (Src 2199043178519 (Book.Bool)) λ_self (Src 2199051567213 (All "P" (Src 2199058907184 (All "x" (Src 2199066247213 (Book.Bool)) λ_x (Src 2199072538672 (Set)))) λ_P (Src 2199077781613 (All "t" (Src 2199085121608 (App (Src 2199086170173 _P) (Src 2199088267335 (Book.Bool.true)))) λ_t (Src 2199102947437 (All "f" (Src 2199110287457 (App (Src 2199111336021 _P) (Src 2199113433184 (Book.Bool.false)))) λ_f (Src 2199129161837 (App (Src 2199130210407 _P) (Src 2199132307564 _self))))))))))) (Src 2199030595592 (Set))))
+Book.Bool.true = (Ref "Bool.true" (Ann (Src 3298554806305 (Ins (Src 3298555854881 (Lam "P" λ_P (Src 3298560049185 (Lam "t" λ_t (Src 3298564243489 (Lam "f" λ_f (Src 3298568437793 _t))))))))) (Src 3298547466256 (Book.Bool))))
 
 Main = (API.check "Main" Book.Main)
