@@ -790,17 +790,25 @@ Compile.primitives = [
 
 // Checks a definition.
 (API.check (Ref nam sub def)) =
-  //(HVM.print (String.join ["Running: " (Show (Subst sub def) 0)])
-  let done = λlogs λvalue
-    ((API.check.log logs)
-    (Pair.get (API.check.fill sub logs) λfilled λsub
-    let true  = (HVM.print "Solving..." (API.check (Ref nam sub def)))
-    let false = (HVM.print "Done!" 1)
-    (If filled true false)))
-  let fail = λlogs λerror
-    ((API.check.log logs)
-    ((API.check.log [error]) 0))
-  (Result.match (Checker.run (API.check.do (Subst sub def))) done fail)
+  //(HVM.print (String.join ["API.check: " (Show (Subst sub def) 0)])
+  (Result.match (Checker.run (API.check.do (Subst sub def)))
+    // case done:
+    λlogs λvalue
+      (API.check.log logs
+      (Pair.get (API.check.fill sub logs) λfilled λsub
+      (If filled
+        // case true:
+        (HVM.print "Solving..." (API.check (Ref nam sub def)))
+        // case false:
+        (HVM.print "Done!" 1))))
+    // case fail:
+    λlogs λerror
+      (API.check.log logs
+      (API.check.log [error] 0)))
+
+// Calls the type-checker *under* the metavar binders.
+//(API.check.fn (List.cons _ subs) val) = λx (API.check.fn subs (val x))
+//(API.check.fn List.nil           val) = (API.check.do val)
 
 // Calls check on typed defs and infer on untyped defs.
 (API.check.do (Ann val typ)) = (Check 0 val typ 0)
@@ -808,13 +816,12 @@ Compile.primitives = [
 
 // Moves solutions from the checker logs to a ref's subst list.
 (API.check.fill sub (List.cons (Fill k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (Map.set λxλy(Same x y) k (Some v) sub)))
-//(API.check.fill sub (List.cons (Fill k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (HVM.log (FILL k (Show v 0)) sub)))
 (API.check.fill sub (List.cons message xs))      = (API.check.fill sub xs)
 (API.check.fill sub List.nil)                    = (Pair 0 sub)
 
-
-(API.check.log (List.cons msg msgs)) = (HVM.print (Message.show msg) (API.check.log msgs))
-(API.check.log List.nil)             = λx x
+// Prints all messages returned by the checker.
+(API.check.log (List.cons msg msgs) then) = (HVM.print (Message.show msg) (API.check.log msgs then))
+(API.check.log List.nil             then) = then
 
 Book.Char = (Ref "Char" [] (Ann (Src 5497569673231 (U60)) (Src 5497565478920 (Set))))
 Book.List = (Ref "List" [] (Ann (Src 6597093884094 (Lam "T" λxT (Src 6597100175550 (Slf "self" (Src 6597108564013 (App (Src 6597109612586 (Book.List)) (Src 6597114855468 xT))) λxself (Src 6597121147070 (All "P" (Src 6597128486987 (All "xs" (Src 6597136875592 (App (Src 6597137924165 (Book.List)) (Src 6597143167047 xT))) λxxs (Src 6597147361355 (Set)))) λxP (Src 6597152604350 (All "cons" (Src 6597163090069 (All "head" (Src 6597173575780 xT) λxhead (Src 6597176721557 (All "tail" (Src 6597187207288 (App (Src 6597188255861 (Book.List)) (Src 6597193498743 xT))) λxtail (Src 6597197693077 (App (Src 6597198741628 xP) (Src 6597200838804 (App (App (App (Src 6597201887367 (Book.List.cons)) (Src 6597212373129 xT)) (Src 6597214470286 xhead)) (Src 6597219713171 xtail))))))))) λxcons (Src 6597230198974 (All "nil" (Src 6597239636146 (App (Src 6597240684708 xP) (Src 6597242781873 (App (Src 6597243830446 (Book.List.nil)) (Src 6597253267632 xT))))) λxnil (Src 6597260607678 (App (Src 6597261656248 xP) (Src 6597263753405 xself))))))))))))) (Src 6597077106708 (All "T" (Src 6597084446735 (Set)) λxT (Src 6597089689620 (Set))))))
@@ -825,7 +832,7 @@ Book.Pair.new = (Ref "Pair.new" [] (Ann (Src 3298610380910 (Lam "A" λxA (Src 32
 Book.String = (Ref "String" [] (Ann (Src 4398060142616 (App (Src 4398061191186 (Book.List)) (Src 4398066434071 (Book.Char)))) (Src 4398055948298 (Set))))
 Book.String.cons = (Ref "String.cons" [] (Ann (Src 9895668613233 (Lam "head" λxhead (Src 9895675953265 (Lam "tail" λxtail (Src 9895685390449 (Ins (Src 9895686439025 (Lam "P" λxP (Src 9895690633329 (Lam "cons" λxcons (Src 9895697973361 (Lam "nil" λxnil (Src 9895706361969 (App (App (Src 9895707410534 xcons) (Src 9895712653419 xhead)) (Src 9895717896304 xtail))))))))))))))) (Src 9895619330106 (All "head" (Src 9895629815836 (Book.Char)) λxhead (Src 9895638204474 (All "tail" (Src 9895648690224 (Book.String)) λxtail (Src 9895659175994 (Book.String))))))))
 Book.String.nil = (Ref "String.nil" [] (Ann (Src 10995139346477 (Ins (Src 10995140395053 (Lam "P" λxP (Src 10995144589357 (Lam "cons" λxcons (Src 10995151929389 (Lam "nil" λxnil (Src 10995160317997 xnil))))))))) (Src 10995129909267 (Book.String))))
-Book._main = (Ref "_main" [(Pair "A" None),(Pair "B" None)]  λ_A λ_B(Ann (Src 1099599708267 (Let "x" (Src 1099608096871 (App (App (Src 1099609145440 (Book.dup)) (Src 1099613339747 (Met "B" _B))) (Src 1099616485478 (Num 0)))) λxx (Src 1099622776939 xx))) (Src 1099594465361 (Met "A" _A))))
+Book._main = (Ref "_main" [(Pair "A" None),(Pair "B" None),(Pair "C" None),(Pair "D" None),(Pair "E" None),(Pair "F" None),(Pair "G" None),(Pair "H" None)]  λ_A λ_B λ_C λ_D λ_E λ_F λ_G λ_H(Ann (Src 1099599708393 (Let "x" (Src 1099608096871 (App (App (Src 1099609145440 (Book.dup)) (Src 1099613339747 (Met "B" _B))) (Src 1099616485478 (Num 0)))) λxx (Src 1099622777065 (Let "x" (Src 1099631165564 (App (App (Src 1099632214134 (Book.dup)) (Src 1099636408441 (Met "C" _C))) (Src 1099639554171 xx))) λxx (Src 1099644797161 (Let "x" (Src 1099653185681 (App (App (Src 1099654234251 (Book.dup)) (Src 1099658428558 (Met "D" _D))) (Src 1099661574288 xx))) λxx (Src 1099666817257 (Let "x" (Src 1099675205798 (App (App (Src 1099676254368 (Book.dup)) (Src 1099680448675 (Met "E" _E))) (Src 1099683594405 xx))) λxx (Src 1099688837353 (Let "x" (Src 1099697225915 (App (App (Src 1099698274485 (Book.dup)) (Src 1099702468792 (Met "F" _F))) (Src 1099705614522 xx))) λxx (Src 1099710857449 (Let "x" (Src 1099719246032 (App (App (Src 1099720294602 (Book.dup)) (Src 1099724488909 (Met "G" _G))) (Src 1099727634639 xx))) λxx (Src 1099732877545 (Let "x" (Src 1099741266149 (App (App (Src 1099742314719 (Book.dup)) (Src 1099746509026 (Met "H" _H))) (Src 1099749654756 xx))) λxx (Src 1099754897641 xx))))))))))))))) (Src 1099594465361 (Met "A" _A))))
 Book.dup = (Ref "dup" [] (Ann (Src 1099556716613 (Lam "A" λxA (Src 1099560910917 (Lam "x" λxx (Src 1099565105221 (App (App (App (App (Src 1099566153788 (Book.Pair.new)) (Src 1099575590974 xA)) (Src 1099577688128 xA)) (Src 1099579785282 xx)) (Src 1099581882436 xx))))))) (Src 1099517919272 (All "A" (Src 1099525259278 (Set)) λxA (Src 1099530502184 (All "x" (Src 1099537842202 xA) λxx (Src 1099543085096 (App (App (Src 1099544133667 (Book.Pair)) (Src 1099549376549 xA)) (Src 1099551473703 xA)))))))))
 
 Main = (API.check Book._main)

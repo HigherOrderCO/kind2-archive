@@ -790,17 +790,25 @@ Compile.primitives = [
 
 // Checks a definition.
 (API.check (Ref nam sub def)) =
-  //(HVM.print (String.join ["Running: " (Show (Subst sub def) 0)])
-  let done = λlogs λvalue
-    ((API.check.log logs)
-    (Pair.get (API.check.fill sub logs) λfilled λsub
-    let true  = (HVM.print "Solving..." (API.check (Ref nam sub def)))
-    let false = (HVM.print "Done!" 1)
-    (If filled true false)))
-  let fail = λlogs λerror
-    ((API.check.log logs)
-    ((API.check.log [error]) 0))
-  (Result.match (Checker.run (API.check.do (Subst sub def))) done fail)
+  //(HVM.print (String.join ["API.check: " (Show (Subst sub def) 0)])
+  (Result.match (Checker.run (API.check.do (Subst sub def)))
+    // case done:
+    λlogs λvalue
+      (API.check.log logs
+      (Pair.get (API.check.fill sub logs) λfilled λsub
+      (If filled
+        // case true:
+        (HVM.print "Solving..." (API.check (Ref nam sub def)))
+        // case false:
+        (HVM.print "Done!" 1))))
+    // case fail:
+    λlogs λerror
+      (API.check.log logs
+      (API.check.log [error] 0)))
+
+// Calls the type-checker *under* the metavar binders.
+//(API.check.fn (List.cons _ subs) val) = λx (API.check.fn subs (val x))
+//(API.check.fn List.nil           val) = (API.check.do val)
 
 // Calls check on typed defs and infer on untyped defs.
 (API.check.do (Ann val typ)) = (Check 0 val typ 0)
@@ -808,10 +816,9 @@ Compile.primitives = [
 
 // Moves solutions from the checker logs to a ref's subst list.
 (API.check.fill sub (List.cons (Fill k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (Map.set λxλy(Same x y) k (Some v) sub)))
-//(API.check.fill sub (List.cons (Fill k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (HVM.log (FILL k (Show v 0)) sub)))
 (API.check.fill sub (List.cons message xs))      = (API.check.fill sub xs)
 (API.check.fill sub List.nil)                    = (Pair 0 sub)
 
-
-(API.check.log (List.cons msg msgs)) = (HVM.print (Message.show msg) (API.check.log msgs))
-(API.check.log List.nil)             = λx x
+// Prints all messages returned by the checker.
+(API.check.log (List.cons msg msgs) then) = (HVM.print (Message.show msg) (API.check.log msgs then))
+(API.check.log List.nil             then) = then
