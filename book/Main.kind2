@@ -1,6 +1,23 @@
 Main
-: #U60
-= "foo"
+: ∀(b: Bool) (~b λx(*) Nat String)
+= λb (~b ?A Nat.zero "foo")
+
+//Main
+//: ∀(a: #U60)
+  //∀(b: #U60)
+  //#U60
+//= λa λb
+  //#(> a b)
+
+
+//(?A Bool.true) == (~b λx(*) Nat String)
+
+
+//Main = (List.cons ?A #1 (List.cons ?B #2 (List.nil ?C)))
+
+//Main
+//: #U60
+//= "foo"
 
 //Main
 //: ∀(P: ∀(x: Bool) *)
@@ -263,3 +280,4 @@ Main
     //#+: ">"
   //}: String
 //}: String
+

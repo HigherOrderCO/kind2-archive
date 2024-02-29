@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
 use TSPL::Parser;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -34,14 +34,14 @@ enum Term {
   Mat { nam: String, x: Box<Term>, z: Box<Term>, s: Box<Term>, p: Box<Term> },
   Txt { txt: String },
   Let { nam: String, val: Box<Term>, bod: Box<Term> },
-  Hol { nam: String },
   Var { nam: String },
+  Hol { nam: String },
   Src { src: u64, val: Box<Term> },
 }
 
 struct Book {
-  defs: HashMap<String, Term>,
-  fids: HashMap<String, u64>,
+  defs: BTreeMap<String, Term>,
+  fids: BTreeMap<String, u64>,
 }
 
 // NOT USED ANYMORE
@@ -162,61 +162,63 @@ impl Term {
       Term::Mat { nam, x, z, s, p } => format!("(Mat \"{}\" {} {} λ{} {} λ{} {})", nam, x.to_hvm1(env.clone()), z.to_hvm1(env.clone()), binder(&format!("{}-1",nam)), s.to_hvm1(cons(&env, format!("{}-1",nam))), binder(nam), p.to_hvm1(cons(&env, nam.clone()))),
       Term::Txt { txt } => format!("(Txt \"{}\")", txt),
       Term::Let { nam, val, bod } => format!("(Let \"{}\" {} λ{} {})", nam, val.to_hvm1(env.clone()), binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
-      Term::Hol { nam } => format!("(Hol \"{}\" [{}])", nam, env.iter().map(|n| binder(n)).collect::<Vec<_>>().join(",")),
+      Term::Hol { nam } => format!("(Hol \"{}\" [{}] {})", nam, env.iter().map(|n| binder(n)).collect::<Vec<_>>().join(","), format!("h_{}",nam)),
       Term::Var { nam } => if env.contains(nam) { format!("{}", binder(nam)) } else { format!("(Book.{})", nam) },
       Term::Src { src, val } => format!("(Src {} {})", src, val.to_hvm1(env)),
     }
   }
 
-  fn get_free_vars(&self, env: im::Vector<String>, free: &mut HashSet<String>) {
+  fn get_free_vars(&self, env: im::Vector<String>, free_vars: &mut BTreeSet<String>, holes: &mut BTreeSet<String>) {
     match self {
       Term::All { nam, inp, bod } => {
-        inp.get_free_vars(env.clone(), free);
-        bod.get_free_vars(cons(&env, nam.clone()), free);
+        inp.get_free_vars(env.clone(), free_vars, holes);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
       },
       Term::Lam { nam, bod } => {
-        bod.get_free_vars(cons(&env, nam.clone()), free);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
       },
       Term::App { fun, arg } => {
-        fun.get_free_vars(env.clone(), free);
-        arg.get_free_vars(env.clone(), free);
+        fun.get_free_vars(env.clone(), free_vars, holes);
+        arg.get_free_vars(env.clone(), free_vars, holes);
       },
       Term::Ann { val, typ } => {
-        val.get_free_vars(env.clone(), free);
-        typ.get_free_vars(env.clone(), free);
+        val.get_free_vars(env.clone(), free_vars, holes);
+        typ.get_free_vars(env.clone(), free_vars, holes);
       },
       Term::Slf { nam, typ, bod } => {
-        typ.get_free_vars(env.clone(), free);
-        bod.get_free_vars(cons(&env, nam.clone()), free);
+        typ.get_free_vars(env.clone(), free_vars, holes);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
       },
       Term::Ins { val } => {
-        val.get_free_vars(env.clone(), free);
+        val.get_free_vars(env.clone(), free_vars, holes);
       },
       Term::Set => {},
       Term::U60 => {},
       Term::Num { val: _ } => {},
       Term::Op2 { opr: _, fst, snd } => {
-        fst.get_free_vars(env.clone(), free);
-        snd.get_free_vars(env.clone(), free);
+        fst.get_free_vars(env.clone(), free_vars, holes);
+        snd.get_free_vars(env.clone(), free_vars, holes);
       },
       Term::Mat { nam, x, z, s, p } => {
-        x.get_free_vars(env.clone(), free);
-        z.get_free_vars(env.clone(), free);
-        s.get_free_vars(cons(&env, format!("{}-1",nam)), free);
-        p.get_free_vars(cons(&env, nam.clone()), free);
+        x.get_free_vars(env.clone(), free_vars, holes);
+        z.get_free_vars(env.clone(), free_vars, holes);
+        s.get_free_vars(cons(&env, format!("{}-1",nam)), free_vars, holes);
+        p.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
       },
       Term::Txt { txt: _ } => {},
       Term::Let { nam, val, bod } => {
-        val.get_free_vars(env.clone(), free);
-        bod.get_free_vars(cons(&env, nam.clone()), free);
+        val.get_free_vars(env.clone(), free_vars, holes);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
       },
-      Term::Hol { nam: _ } => {},
+      Term::Hol { nam } => {
+        holes.insert(nam.clone());
+      },
       Term::Src { src: _, val } => {
-        val.get_free_vars(env, free);
+        val.get_free_vars(env, free_vars, holes);
       },
       Term::Var { nam } => {
         if !env.contains(nam) {
-          free.insert(nam.clone());
+          free_vars.insert(nam.clone());
         }
       },
     }
@@ -465,16 +467,24 @@ impl<'i> KindParser<'i> {
 impl Book {
   fn new() -> Self {
     Book {
-      defs: HashMap::new(),
-      fids: HashMap::new(),
+      defs: BTreeMap::new(),
+      fids: BTreeMap::new(),
     }
   }
   
   fn to_hvm1(&self) -> String {
-    let mut used = HashSet::new();
+    let mut used = BTreeSet::new();
     let mut code = String::new();
     for (name, term) in &self.defs {
-      code.push_str(&format!("Book.{} = (Ref \"{}\" {})\n", name, name, term.to_hvm1(im::Vector::new())));
+      let mut vars = BTreeSet::new();
+      let mut hols = BTreeSet::new();
+      term.get_free_vars(im::Vector::new(), &mut vars, &mut hols);
+      let mut mets = String::new();
+      for hol in &hols {
+        mets = format!("{} λh_{}", mets, hol);
+      }
+      let subs = hols.iter().map(|h| format!("(Pair \"{}\" None)", h)).collect::<Vec<_>>().join(",");
+      code.push_str(&format!("Book.{} = (Ref \"{}\" [{}] {}{})\n", name, name, subs, mets, term.to_hvm1(im::Vector::new())));
       used.insert(name.clone());
     }
     code
@@ -503,8 +513,8 @@ impl Book {
         }
         //println!("laoding deps for: {}", name);
         for (_, def_term) in defs.defs.into_iter() {
-          let mut dependencies = HashSet::new();
-          def_term.get_free_vars(im::Vector::new(), &mut dependencies);
+          let mut dependencies = BTreeSet::new();
+          def_term.get_free_vars(im::Vector::new(), &mut dependencies, &mut BTreeSet::new());
           //println!("{} deps: {:?}", name, dependencies);
           for ref_name in dependencies {
             load_go(&ref_name, book)?;
@@ -583,19 +593,16 @@ impl Book {
 
 
 fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
-  // Gets used def names, sorted alphabetically.
-  let mut used_defs: Vec<_> = book.defs.keys().collect();
-  used_defs.sort();
-  let used_defs = used_defs.iter().map(|name| format!("(Pair \"{}\" Book.{})", name, name)).collect::<Vec<_>>().join(" ");
-  // Generates '.check.hvm1' contents.
-  let kind2_hvm1 = include_str!("./kind2.hvm1");
+  //let used_defs = book.defs.keys().collect::<Vec<_>>().iter().map(|name| format!("(Pair \"{}\" Book.{})", name, name)).collect::<Vec<_>>().join(" ");
+  let kind_hvm1 = include_str!("./kind2.hvm1");
   let book_hvm1 = book.to_hvm1();
   let main_hvm1 = match command {
-    "check" => format!("Main = (Checker.many [{}])\n", used_defs),
-    "run"   => format!("Main = (Normalizer Book.{})\n", arg),
+    "check" => format!("Main = (API.check Book.{})\n", arg),
+    //"check" => format!("Main = (API.check.many [{}])\n", used_defs),
+    "run"   => format!("Main = (API.normal Book.{})\n", arg),
     _       => panic!("invalid command"),
   };
-  let hvm1_code = format!("{}\n{}\n{}", kind2_hvm1, book_hvm1, main_hvm1);
+  let hvm1_code = format!("{}\n{}\n{}", kind_hvm1, book_hvm1, main_hvm1);
   return hvm1_code;
 }
 
