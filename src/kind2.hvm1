@@ -156,6 +156,11 @@
 // Evaluation
 // ----------
 
+// Evaluation levels:
+// - 0: reduces refs never
+// - 1: reduces refs on redexes
+// - 2: reduces refs always
+
 (Reduce lv (App fun arg))     = (Reduce.app lv (Reduce lv fun) arg)
 (Reduce lv (Ann val typ))     = (Reduce lv val)
 (Reduce lv (Ins val))         = (Reduce lv val)
@@ -168,34 +173,42 @@
 (Reduce lv (Src src val))     = (Reduce lv val)
 (Reduce lv val)               = val
 
-//(Reduce.app lv (Ref nam sub val) arg) = (Reduce.app lv val arg) // FIXME: should this be here? (no.)
-(Reduce.app lv (Lam nam bod)     arg) = (Reduce lv (bod (Reduce 0 arg)))
-(Reduce.app lv fun               arg) = (App fun arg)
+(Reduce.app 2  (Ref _ _ val) arg) = (Reduce.app 2 val arg) // FIXME: should this be here? (no.)
+(Reduce.app 1  (Ref _ _ val) arg) = (Reduce.app 1 val arg) // FIXME: should this be here? (no.)
+(Reduce.app lv (Lam nam bod) arg) = (Reduce lv (bod (Reduce 0 arg)))
+(Reduce.app lv fun           arg) = (App fun arg)
 
-(Reduce.op2 lv ADD (Num fst) (Num snd)) = (Num (+ fst snd))
-(Reduce.op2 lv SUB (Num fst) (Num snd)) = (Num (- fst snd))
-(Reduce.op2 lv MUL (Num fst) (Num snd)) = (Num (* fst snd))
-(Reduce.op2 lv DIV (Num fst) (Num snd)) = (Num (/ fst snd))
-(Reduce.op2 lv MOD (Num fst) (Num snd)) = (Num (% fst snd))
-(Reduce.op2 lv EQ  (Num fst) (Num snd)) = (Num (== fst snd))
-(Reduce.op2 lv NE  (Num fst) (Num snd)) = (Num (!= fst snd))
-(Reduce.op2 lv LT  (Num fst) (Num snd)) = (Num (< fst snd))
-(Reduce.op2 lv GT  (Num fst) (Num snd)) = (Num (> fst snd))
-(Reduce.op2 lv LTE (Num fst) (Num snd)) = (Num (<= fst snd))
-(Reduce.op2 lv GTE (Num fst) (Num snd)) = (Num (>= fst snd))
-(Reduce.op2 lv AND (Num fst) (Num snd)) = (Num (& fst snd))
-(Reduce.op2 lv OR  (Num fst) (Num snd)) = (Num (| fst snd))
-(Reduce.op2 lv XOR (Num fst) (Num snd)) = (Num (^ fst snd))
-(Reduce.op2 lv LSH (Num fst) (Num snd)) = (Num (<< fst snd))
-(Reduce.op2 lv RSH (Num fst) (Num snd)) = (Num (>> fst snd))
-(Reduce.op2 lv opr fst snd)             = (Op2 opr fst snd)
+(Reduce.op2 1  op  (Ref _ _ x) (Num snd))   = (Reduce.op2 1 op x snd)
+(Reduce.op2 2  op  (Ref _ _ x) (Num snd))   = (Reduce.op2 2 op x snd)
+(Reduce.op2 1  op  (Num fst)   (Ref _ _ x)) = (Reduce.op2 1 op fst x)
+(Reduce.op2 2  op  (Num fst)   (Ref _ _ x)) = (Reduce.op2 2 op fst x)
+(Reduce.op2 lv ADD (Num fst)   (Num snd))   = (Num (+ fst snd))
+(Reduce.op2 lv SUB (Num fst)   (Num snd))   = (Num (- fst snd))
+(Reduce.op2 lv MUL (Num fst)   (Num snd))   = (Num (* fst snd))
+(Reduce.op2 lv DIV (Num fst)   (Num snd))   = (Num (/ fst snd))
+(Reduce.op2 lv MOD (Num fst)   (Num snd))   = (Num (% fst snd))
+(Reduce.op2 lv EQ  (Num fst)   (Num snd))   = (Num (== fst snd))
+(Reduce.op2 lv NE  (Num fst)   (Num snd))   = (Num (!= fst snd))
+(Reduce.op2 lv LT  (Num fst)   (Num snd))   = (Num (< fst snd))
+(Reduce.op2 lv GT  (Num fst)   (Num snd))   = (Num (> fst snd))
+(Reduce.op2 lv LTE (Num fst)   (Num snd))   = (Num (<= fst snd))
+(Reduce.op2 lv GTE (Num fst)   (Num snd))   = (Num (>= fst snd))
+(Reduce.op2 lv AND (Num fst)   (Num snd))   = (Num (& fst snd))
+(Reduce.op2 lv OR  (Num fst)   (Num snd))   = (Num (| fst snd))
+(Reduce.op2 lv XOR (Num fst)   (Num snd))   = (Num (^ fst snd))
+(Reduce.op2 lv LSH (Num fst)   (Num snd))   = (Num (<< fst snd))
+(Reduce.op2 lv RSH (Num fst)   (Num snd))   = (Num (>> fst snd))
+(Reduce.op2 lv opr fst         snd)         = (Op2 opr fst snd)
 
+(Reduce.mat 2  nam (Ref _ _ x)         z s p) = (Reduce.mat 2 nam x z s p)
+(Reduce.mat 1  nam (Ref _ _ x)         z s p) = (Reduce.mat 1 nam x z s p)
 (Reduce.mat lv nam (Num 0)             z s p) = (Reduce lv z)
 (Reduce.mat lv nam (Num n)             z s p) = (Reduce lv (s (Num (- n 1))))
 (Reduce.mat lv nam (Op2 ADD (Num 1) k) z s p) = (Reduce lv (s k))
 (Reduce.mat lv nam val                 z s p) = (Mat nam val z s p)
 
-(Reduce.ref 1  nam sub val) = (Reduce 1 (Subst sub val))
+(Reduce.ref 2  nam sub val) = (Reduce 2 (Subst sub val))
+(Reduce.ref 1  nam sub val) = (Ref nam sub val)
 (Reduce.ref lv nam sub val) = (Ref nam sub val)
 
 (Reduce.met lv nam None)     = (Met nam None)
@@ -205,26 +218,31 @@
 (Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
 (Reduce.txt lv val)                = (Txt val)
 
-(Normal lv term dep) = (Normal.term lv (Reduce lv term) dep)
+(Normal lv term dep) = (Normal.go lv (Normal.prefer (Reduce 0 term) (Reduce lv term)) dep)
 
-(Normal.term lv (All nam inp bod) dep) = (All nam (Normal lv inp dep) λx(Normal lv (bod (Var nam dep)) (+ dep 1)))
-(Normal.term lv (Lam nam bod)     dep) = (Lam nam λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term lv (App fun arg)     dep) = (App (Normal lv fun dep) (Normal lv arg dep))
-(Normal.term lv (Ann val typ)     dep) = (Ann (Normal lv val dep) (Normal lv typ dep))
-(Normal.term lv (Slf nam typ bod) dep) = (Slf nam typ λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term lv (Ins val)         dep) = (Ins (Normal lv val dep))
-(Normal.term lv (Ref nam sub val) dep) = (Ref nam sub (Normal lv val dep))
-(Normal.term lv (Let nam val bod) dep) = (Let nam (Normal lv val dep) λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term lv (Hol nam ctx)     dep) = (Hol nam ctx)
-(Normal.term lv (Met nam val)     dep) = (Met nam (Maybe.match val λx(Some (Normal lv x dep)) None))
-(Normal.term lv Set               dep) = Set
-(Normal.term lv U60               dep) = U60
-(Normal.term lv (Num val)         dep) = (Num val)
-(Normal.term lv (Op2 opr fst snd) dep) = (Op2 opr (Normal.term lv fst dep) (Normal.term lv snd dep))
-(Normal.term lv (Mat nam x z s p) dep) = (Mat nam (Normal lv x dep) (Normal lv z dep) λk(Normal lv (s (Var (String.concat nam "-1") dep)) dep) λk(Normal lv (p (Var nam dep)) dep))
-(Normal.term lv (Txt val)         dep) = (Txt val)
-(Normal.term lv (Var nam idx)     dep) = (Var nam idx)
-(Normal.term lv (Src src val)     dep) = (Src src (Normal lv val dep))
+(Normal.prefer soft (Lam _ _))   = soft
+(Normal.prefer soft (Slf _ _ _)) = soft
+(Normal.prefer soft (All _ _ _)) = soft
+(Normal.prefer soft hard)        = hard
+
+(Normal.go lv (All nam inp bod) dep) = (All nam (Normal lv inp dep) λx(Normal lv (bod (Var nam dep)) (+ dep 1)))
+(Normal.go lv (Lam nam bod)     dep) = (Lam nam λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.go lv (App fun arg)     dep) = (App (Normal lv fun dep) (Normal lv arg dep))
+(Normal.go lv (Ann val typ)     dep) = (Ann (Normal lv val dep) (Normal lv typ dep))
+(Normal.go lv (Slf nam typ bod) dep) = (Slf nam typ λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.go lv (Ins val)         dep) = (Ins (Normal lv val dep))
+(Normal.go lv (Ref nam sub val) dep) = (Ref nam sub (Normal lv val dep))
+(Normal.go lv (Let nam val bod) dep) = (Let nam (Normal lv val dep) λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
+(Normal.go lv (Hol nam ctx)     dep) = (Hol nam ctx)
+(Normal.go lv (Met nam val)     dep) = (Met nam (Maybe.match val λx(Some (Normal lv x dep)) None))
+(Normal.go lv Set               dep) = Set
+(Normal.go lv U60               dep) = U60
+(Normal.go lv (Num val)         dep) = (Num val)
+(Normal.go lv (Op2 opr fst snd) dep) = (Op2 opr (Normal lv fst dep) (Normal lv snd dep))
+(Normal.go lv (Mat nam x z s p) dep) = (Mat nam (Normal lv x dep) (Normal lv z dep) λk(Normal lv (s (Var (String.concat nam "-1") dep)) dep) λk(Normal lv (p (Var nam dep)) dep))
+(Normal.go lv (Txt val)         dep) = (Txt val)
+(Normal.go lv (Var nam idx)     dep) = (Var nam idx)
+(Normal.go lv (Src src val)     dep) = (Src src (Normal lv val dep))
 
 // Checker
 // -------
@@ -264,8 +282,8 @@
 (Equal a b dep) = 
   //(Print dep ["Equal: " NewLine "- " (Show a dep) NewLine "- " (Show b dep)]
   (Compare a b dep
-  let a = (Reduce 1 a)
-  let b = (Reduce 1 b)
+  let a = (Reduce 2 a)
+  let b = (Reduce 2 b)
   (Compare a b dep
   (Similar a b dep)))
 
@@ -531,7 +549,7 @@
   (Checker.pure Set)))
 (Infer.match (App fun arg) dep) =
   (Checker.bind (Infer fun dep) λfun_typ
-  ((IfAll (Reduce 1 fun_typ)
+  ((IfAll (Reduce 2 fun_typ)
     λfun_nam λfun_typ.inp λfun_typ.bod λfun λarg
       (Checker.bind (Check 0 arg fun_typ.inp dep) λvty
       (Checker.pure (fun_typ.bod arg)))
@@ -545,7 +563,7 @@
   (Checker.pure Set))
 (Infer.match (Ins val) dep) =
   (Checker.bind (Infer val dep) λvty
-  ((IfSlf (Reduce 1 vty)
+  ((IfSlf (Reduce 2 vty)
     λvty.nam λvty.typ λvty.bod λval
       (Checker.pure (vty.bod (Ins val)))
     λval
@@ -590,7 +608,7 @@
 (Check src term type dep) = (Check.match src term type dep)
 
 (Check.match src (Lam term.nam term.bod) type dep) =
-  ((IfAll (Reduce 1 type)
+  ((IfAll (Reduce 2 type)
     λtype.nam λtype.inp λtype.bod λterm.bod
       let ann  = (Ann (Var term.nam dep) type.inp)
       let term = (term.bod ann)
@@ -600,7 +618,7 @@
       (Infer (Lam term.nam term.bod) dep))
     term.bod)
 (Check.match src (Ins term.val) type dep) =
-  ((IfSlf (Reduce 1 type)
+  ((IfSlf (Reduce 2 type)
     λtype.nam λtype.typ λtype.bod λterm.val
       (Check 0 term.val (type.bod (Ins term.val)) dep)
     λterm.val
@@ -694,12 +712,11 @@
 
 (Context.show.ann (Ann val typ) dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
 (Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
-//(Context.show.ann val           dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 (Infer val dep) dep) dep) "}"])
 
 (Message.show (FoundHole name type ctx dep)) =
   let bold  = (String.color BRIGHT)
   let reset = (String.color RESET)
-  let type  = (Show (Normal 0 type dep) dep)
+  let type  = (Show (Normal 1 type dep) dep)
   let ctx   = (Context.show ctx dep)
   (String.join [bold "HOLE:" reset " ?" name " :: " type ctx])
 (Message.show (NonFunApp term dep)) =
@@ -709,9 +726,9 @@
   let term = (Show term dep)
   (String.join ["CANT_INFER: " term])
 (Message.show (TypeMismatch src detected expected value dep)) =
-  let det = (Show (Normal 0 detected dep) dep)
-  let exp = (Show (Normal 0 expected dep) dep)
-  let val = (Show (Normal 0 value dep) dep)
+  let det = (Show (Normal 1 detected dep) dep)
+  let exp = (Show (Normal 1 expected dep) dep)
+  let val = (Show (Normal 1 value dep) dep)
   (String.join [(String.color BRIGHT) "TYPE_MISMATCH" NewLine
     "- expected: " (String.color RESET) (String.color GREEN) exp NewLine (String.color RESET) (String.color BRIGHT)
     "- detected: " (String.color RESET) (String.color RED)   det NewLine (String.color RESET) (String.color BRIGHT)
@@ -719,7 +736,7 @@
     "##LOC{" (U60.show src) "}LOC##" NewLine
   ])
 (Message.show (Fill hole value dep)) =
-  let val = (Show (Normal 0 value dep) dep)
+  let val = (Show (Normal 1 value dep) dep)
   (String.join ["FILL: _" hole " = " val])
 
 // Compilation
@@ -798,9 +815,9 @@ Compile.primitives = [
       (Pair.get (API.check.fill sub logs) λfilled λsub
       (If filled
         // case true:
-        (HVM.print "Solving..." (API.check (Ref nam sub def)))
+        (API.check (Ref nam sub def))
         // case false:
-        (HVM.print "Done!" 1))))
+        1)))
     // case fail:
     λlogs λerror
       (API.check.log logs

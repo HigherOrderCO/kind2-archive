@@ -1,7 +1,6 @@
 test8
-: ∀(a: #U60) (#U60)
-= λa 
-  (U60.if a #U60 "test")
+: ∀(b: Bool) (~b λx(*) #U60 #U60)
+= λb (~b _h ?A ?B)
 
 //test8
 //: #U60
