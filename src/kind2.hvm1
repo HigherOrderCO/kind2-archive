@@ -9,7 +9,7 @@
   //= False
   //| True
 
-//data Pair
+//data Pair_
   //= (Pair fst snd)
 
 //data Term
@@ -30,6 +30,71 @@
   //| (Hol nam ctx val)
   //| (Var nam idx) 
   //| (Src src val)
+
+//data Message
+  //= (FoundHole name type ctx dep)
+  //| (NonFunApp term dep)
+  //| (CantInfer term dep)
+  //| (TypeMismatch src detected expected value dep)
+  //| (Fill hole value dep)
+  //| (NonSlfIns value)
+
+//data Result
+  //= (Done logs value)
+  //| (Fail logs error)
+
+//data Oper
+  //= ADD
+  //| MUL
+  //| SUB
+  //| DIV
+  //| MOD
+  //| EQ
+  //| NE
+  //| LT
+  //| GT
+  //| LTE
+  //| GTE
+  //| AND
+  //| OR
+  //| XOR
+  //| LSH
+  //| RSH
+
+//data Bits
+  //= E
+  //| (I bits)
+  //| (O bits)
+
+//data Color
+  //= RESET
+  //| BRIGHT
+  //| DIM
+  //| UNDERSCORE
+  //| BLINK
+  //| REVERSE
+  //| HIDDEN
+  //| BLACK
+  //| RED
+  //| GREEN
+  //| YELLOW
+  //| BLUE
+  //| MAGENTA
+  //| CYAN
+  //| WHITE
+  //| GRAY
+  //| BG_BLACK
+  //| BG_RED
+  //| BG_GREEN
+  //| BG_YELLOW
+  //| BG_BLUE
+  //| BG_MAGENTA
+  //| BG_CYAN
+  //| BG_WHITE
+  //| BG_GRAY
+
+//data Unexpected
+  //=  (UNEXPECTED val)
 
 // Prelude
 // -------
@@ -707,6 +772,9 @@
 (Message.show (Fill hole value dep)) =
   let val = (Show (Normal 0 value dep) dep)
   (String.join ["FILL: ?" hole " = " val])
+(Message.show (NonSlfIns value)) =
+  let val = (Show value)
+  (String.join ["NON_SELF_INS: " val])
 
 // Compilation
 // -----------
@@ -773,6 +841,7 @@ Compile.primitives = [
 // Normalizes a definition.
 (API.normal (Ref nam sub val)) =
   (Compile (Subst sub val))
+(API.normal term) = (HVM.log (UNEXPECTED (Show term 0)) 0)
 
 // Checks a definition.
 (API.check (Ref nam sub def)) =
@@ -787,6 +856,7 @@ Compile.primitives = [
     ((API.check.log logs)
     ((API.check.log [error]) 0))
   (Result.match (Checker.run (API.check.do (Subst sub def))) done fail)
+(API.check term) = (HVM.log (UNEXPECTED (Show term 0)) 0)
 
 // Calls check on typed defs and infer on untyped defs.
 (API.check.do (Ann val typ)) = (Check 0 val typ 0)
