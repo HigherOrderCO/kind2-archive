@@ -27,7 +27,7 @@
   //| (Op2 opr fst snd)
   //| (Mat nam x z s p)
   //| (Txt txt)
-  //| (Hol nam ctx val)
+  //| (Hol nam ctx)
   //| (Var nam idx) 
   //| (Src src val)
 
@@ -163,7 +163,7 @@
 (Reduce lv (Let nam val bod)) = (Reduce lv (bod val))
 (Reduce lv (Op2 opr fst snd)) = (Reduce.op2 lv opr (Reduce lv fst) (Reduce lv snd))
 (Reduce lv (Mat nam x z s p)) = (Reduce.mat lv nam (Reduce lv x) z s p)
-(Reduce lv (Hol nam ctx val)) = (Reduce.hol lv nam ctx val)
+(Reduce lv (Met nam val))     = (Reduce.met lv nam val)
 (Reduce lv (Txt txt))         = (Reduce.txt lv txt)
 (Reduce lv (Src src val))     = (Reduce lv val)
 (Reduce lv val)               = val
@@ -198,8 +198,8 @@
 (Reduce.ref 1  nam sub val) = (Reduce 1 (Subst sub val))
 (Reduce.ref lv nam sub val) = (Ref nam sub val)
 
-(Reduce.hol lv nam ctx None)     = (Hol nam ctx None)
-(Reduce.hol lv nam ctx (Some x)) = (Reduce lv x)
+(Reduce.met lv nam None)     = (Met nam None)
+(Reduce.met lv nam (Some x)) = (Reduce lv x)
 
 (Reduce.txt lv (String.cons x xs)) = (Reduce lv (App (App Book.String.cons (Num x)) (Txt xs)))
 (Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
@@ -215,7 +215,8 @@
 (Normal.term lv (Ins val)         dep) = (Ins (Normal lv val dep))
 (Normal.term lv (Ref nam sub val) dep) = (Ref nam sub (Normal lv val dep))
 (Normal.term lv (Let nam val bod) dep) = (Let nam (Normal lv val dep) λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
-(Normal.term lv (Hol nam ctx val) dep) = (Hol nam ctx (Maybe.match val λx(Some (Normal lv x dep)) None))
+(Normal.term lv (Hol nam ctx)     dep) = (Hol nam ctx)
+(Normal.term lv (Met nam val)     dep) = (Met nam (Maybe.match val λx(Some (Normal lv x dep)) None))
 (Normal.term lv Set               dep) = Set
 (Normal.term lv U60               dep) = U60
 (Normal.term lv (Num val)         dep) = (Num val)
@@ -291,7 +292,9 @@
   (Checker.pure (& e.fun e.arg))))
 (Similar (Slf a.nam a.typ a.bod) (Slf b.nam b.typ b.bod) dep) =
   (Similar (Reduce 0 a.typ) (Reduce 0 b.typ) dep) // <- must call Similar, NOT Equal
-(Similar (Hol a.nam a.ctx a.val) (Hol b.nam b.ctx a.val) dep) =
+(Similar (Hol a.nam a.ctx) (Hol b.nam b.ctx) dep) =
+  (Checker.pure (Same a.nam b.nam))
+(Similar (Met a.nam a.val) (Met b.nam b.val) dep) =
   (Checker.pure (Same a.nam b.nam))
 (Similar (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) =
   (Checker.bind (Equal a.fst b.fst dep) λe.fst
@@ -339,11 +342,13 @@
   (Identical a.val b dep)
 (Identical.go a (Ann b.val b.typ) dep) =
   (Identical a b.val dep)
-(Identical.go (Hol a.nam a.ctx (Some a.val)) b dep) =
+(Identical.go (Met a.nam (Some a.val)) b dep) =
   (Identical a.val b dep)
-(Identical.go a (Hol b.nam b.ctx (Some b.val)) dep) =
+(Identical.go a (Met b.nam (Some b.val)) dep) =
   (Identical a b.val dep)
-(Identical.go (Hol a.nam a.ctx a.val) (Hol b.nam b.ctx a.val) dep) =
+(Identical.go (Met a.nam None) (Met b.nam None) dep) =
+  (Checker.pure (Same a.nam b.nam))
+(Identical.go (Hol a.nam a.ctx) (Hol b.nam b.ctx) dep) =
   (Checker.pure (Same a.nam b.nam))
 (Identical.go U60 U60 dep) =
   (Checker.pure 1)
@@ -400,30 +405,31 @@
       (else)))
 
 // Unify.skp : Term -> Bool
-(Unify.skp (App fun arg))      = (Unify.skp fun)
-(Unify.skp (Ann val typ))      = (Unify.skp val)
-(Unify.skp (Ins val))          = (Unify.skp val)
-(Unify.skp (Src src val))      = (Unify.skp val)
-(Unify.skp (Hol nam ctx None)) = 1
-(Unify.skp other)              = 0
+(Unify.skp (App fun arg))  = (Unify.skp fun)
+(Unify.skp (Ann val typ))  = (Unify.skp val)
+(Unify.skp (Ins val))      = (Unify.skp val)
+(Unify.skp (Src src val))  = (Unify.skp val)
+(Unify.skp (Met nam None)) = 1
+(Unify.skp (Hol nam ctx))  = 1
+(Unify.skp other)          = 0
 
 // Unify.pat : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
 (Unify.pat (App fun (Var nam idx)) b dep ctx) =
   (Maybe.bind (Map.ins λaλb(== a b) idx $x ctx) λctx
   (Maybe.bind (Unify.pat fun b dep ctx) λkv 
   (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.pat (Hol nam ctx None) b dep ctx) =
+(Unify.pat (Met nam None) b dep ctx) =
   (Maybe.bind (Unify.sub b dep nam ctx) λneo
   (Maybe.pure (Pair nam neo)))
-(Unify.pat (App fun (Ann val _))          b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Ins val))            b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Src _ val))          b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Hol _ _ (Some val))) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (Ann val typ)                  b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Ins val)                      b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Src src val)                  b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Hol nam ctx (Some val))       b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat other                          b dep ctx) = None
+(Unify.pat (App fun (Ann val _))        b dep ctx) = (Unify.pat (App fun val) b dep ctx)
+(Unify.pat (App fun (Ins val))          b dep ctx) = (Unify.pat (App fun val) b dep ctx)
+(Unify.pat (App fun (Src _ val))        b dep ctx) = (Unify.pat (App fun val) b dep ctx)
+(Unify.pat (App fun (Met _ (Some val))) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
+(Unify.pat (Ann val typ)                b dep ctx) = (Unify.pat val b dep ctx)
+(Unify.pat (Ins val)                    b dep ctx) = (Unify.pat val b dep ctx)
+(Unify.pat (Src src val)                b dep ctx) = (Unify.pat val b dep ctx)
+(Unify.pat (Met nam (Some val))         b dep ctx) = (Unify.pat val b dep ctx)
+(Unify.pat other                        b dep ctx) = None
 
 // Unify.sub : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
 (Unify.sub (All nam inp bod) dep hol ctx) =
@@ -452,11 +458,14 @@
   (Maybe.bind (Unify.sub val dep hol ctx) λval
   (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
   (Maybe.pure (Let nam val λ_(bod)))))
-(Unify.sub (Hol nam ctx None) dep hol ctx) =
-  (If (Same nam hol) None (Maybe.pure (Hol nam ctx None)))
-(Unify.sub (Hol nam ctx (Some val)) dep hol ctx) =
+(Unify.sub (Met nam None) dep hol ctx) =
+  None
+  //(If (Same nam hol) None (Maybe.pure (Met nam None)))
+(Unify.sub (Met nam (Some val)) dep hol ctx) =
   (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.pure (Hol nam ctx val)))
+  (Maybe.pure (Met nam (Some val))))
+(Unify.sub (Hol nam _) dep hol ctx) =
+  (Maybe.pure (Hol nam [])) // FIXME?
 (Unify.sub Set dep hol ctx) =
   (Maybe.pure Set)
 (Unify.sub U60 dep hol ctx) =
@@ -566,10 +575,12 @@
   (Checker.fail (CantInfer (Lam nam bod) dep))
 (Infer.match (Let nam val bod) dep) =
   (Checker.fail (CantInfer (Let nam val bod) dep))
-(Infer.match (Hol nam ctx (Some val)) dep) =
+(Infer.match (Hol nam ctx) dep) =
+  (Checker.fail (CantInfer (Hol nam ctx) dep))
+(Infer.match (Met nam (Some val)) dep) =
   (Infer.match val dep)
-(Infer.match (Hol nam ctx None) dep) =
-  (Checker.fail (CantInfer (Hol nam ctx None) dep))
+(Infer.match (Met nam None) dep) =
+  (Checker.fail (CantInfer (Met nam None) dep))
 (Infer.match (Var nam idx) dep) =
   (Checker.fail (CantInfer (Var nam idx) dep))
 (Infer.match (Src src val) dep) =
@@ -597,11 +608,13 @@
     term.val)
 (Check.match src (Let term.nam term.val term.bod) type dep) =
   (Check 0 (term.bod term.val) type (+ 1 dep))
-(Check.match src (Hol term.nam term.ctx (Some term.val)) type dep) =
-  (Check src term.val type dep)
-(Check.match src (Hol term.nam term.ctx None) type dep) =
+(Check.match src (Hol term.nam term.ctx) type dep) =
   (Checker.bind (Checker.log (FoundHole term.nam type term.ctx dep)) λx
   (Checker.pure 0))
+(Check.match src (Met term.nam (Some term.val)) type dep) =
+  (Check src term.val type dep)
+(Check.match src (Met term.nam None) type dep) =
+  (Checker.pure 0)
 (Check.match src (Ref term.nam term.sub (Ann term.val term.typ)) type dep) = // better printing
   (Checker.bind (Equal type term.typ dep) λequal
   (Check.report src equal term.typ type (Ref term.nam term.sub term.val) dep))
@@ -639,7 +652,8 @@
 (Show (Op2 opr fst snd) dep) = (String.join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
 (Show (Mat nam x z s p) dep) = (String.join ["#match " nam " = " (Show x dep) " { #0: " (Show z dep) " #+: " (Show (s (Var (String.concat nam "-1") dep)) (+ dep 1)) " }: " (Show (p (Var nam dep)) dep)])
 (Show (Txt txt)         dep) = (String.join [Quote txt Quote])
-(Show (Hol nam ctx val) dep) = (String.join ["?" nam "[" (Maybe.match val λx(Show x 0) "") "]"])
+(Show (Hol nam ctx)     dep) = (String.join ["?" nam])
+(Show (Met nam val)     dep) = (String.join ["_" nam "[" (Maybe.match val λx(Show x 0) "") "]"])
 (Show (Var nam idx)     dep) = (String.join [nam])
 (Show (Src src val)     dep) = (Show val dep)
 //(Show (Src src val)     dep) = (String.join ["!" (Show val dep)])
@@ -706,7 +720,7 @@
   ])
 (Message.show (Fill hole value dep)) =
   let val = (Show (Normal 0 value dep) dep)
-  (String.join ["FILL: ?" hole " = " val])
+  (String.join ["FILL: _" hole " = " val])
 
 // Compilation
 // -----------
@@ -737,7 +751,7 @@ Compile.primitives = [
 (Compile (Op2 opr fst snd)) = (Compile.op2 opr (Compile fst) (Compile snd))
 (Compile (Mat nam x z s p)) = (Compile.mat (Compile x) (Compile z) λx(Compile (s (Var "" x))))
 (Compile (Txt txt))         = (Str.make txt)
-(Compile (Hol nam ctx val)) = 0
+(Compile (Hol nam ctx))     = 0
 (Compile (Var nam val))     = val
 (Compile (Src src val))     = (Compile val)
 
@@ -765,7 +779,7 @@ Compile.primitives = [
 (Compile.mat n z s) = (s (- n 1))
 
 (Compile.ref (List.cons (Pair prim_name prim_func) prims) nam val) = (If (Same prim_name nam) prim_func (Compile.ref prims nam val))
-(Compile.ref List.nil nam val) = (Compile val)
+(Compile.ref List.nil                                     nam val) = (Compile val)
 
 // API
 // ---

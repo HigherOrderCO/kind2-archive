@@ -36,6 +36,7 @@ enum Term {
   Let { nam: String, val: Box<Term>, bod: Box<Term> },
   Var { nam: String },
   Hol { nam: String },
+  Met { nam: String },
   Src { src: u64, val: Box<Term> },
 }
 
@@ -139,6 +140,7 @@ impl Term {
       Term::Txt { txt } => format!("\"{}\"", txt),
       Term::Let { nam, val, bod } => format!("let {} = {} in {}", nam, val.show(), bod.show()),
       Term::Hol { nam } => format!("?{}", nam),
+      Term::Met { nam } => format!("_{}", nam),
       Term::Var { nam } => nam.clone(),
       Term::Src { src: _, val } => val.show(),
     }
@@ -146,7 +148,7 @@ impl Term {
 
   fn to_hvm1(&self, env: im::Vector<String>) -> String {
     fn binder(name: &str) -> String {
-      format!("_{}", name.replace("-", "._."))
+      format!("x{}", name.replace("-", "._."))
     }
     match self {
       Term::All { nam, inp, bod } => format!("(All \"{}\" {} λ{} {})", nam, inp.to_hvm1(env.clone()), binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
@@ -162,59 +164,61 @@ impl Term {
       Term::Mat { nam, x, z, s, p } => format!("(Mat \"{}\" {} {} λ{} {} λ{} {})", nam, x.to_hvm1(env.clone()), z.to_hvm1(env.clone()), binder(&format!("{}-1",nam)), s.to_hvm1(cons(&env, format!("{}-1",nam))), binder(nam), p.to_hvm1(cons(&env, nam.clone()))),
       Term::Txt { txt } => format!("(Txt \"{}\")", txt),
       Term::Let { nam, val, bod } => format!("(Let \"{}\" {} λ{} {})", nam, val.to_hvm1(env.clone()), binder(nam), bod.to_hvm1(cons(&env, nam.clone()))),
-      Term::Hol { nam } => format!("(Hol \"{}\" [{}] {})", nam, env.iter().map(|n| binder(n)).collect::<Vec<_>>().join(","), format!("h_{}",nam)),
+      Term::Hol { nam } => format!("(Hol \"{}\" [{}])", nam, env.iter().map(|n| binder(n)).collect::<Vec<_>>().join(",")),
+      Term::Met { nam } => format!("(Met \"{}\" {})", nam, format!("_{}",nam)),
       Term::Var { nam } => if env.contains(nam) { format!("{}", binder(nam)) } else { format!("(Book.{})", nam) },
       Term::Src { src, val } => format!("(Src {} {})", src, val.to_hvm1(env)),
     }
   }
 
-  fn get_free_vars(&self, env: im::Vector<String>, free_vars: &mut BTreeSet<String>, holes: &mut BTreeSet<String>) {
+  fn get_free_vars(&self, env: im::Vector<String>, free_vars: &mut BTreeSet<String>, metas: &mut BTreeSet<String>) {
     match self {
       Term::All { nam, inp, bod } => {
-        inp.get_free_vars(env.clone(), free_vars, holes);
-        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
+        inp.get_free_vars(env.clone(), free_vars, metas);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, metas);
       },
       Term::Lam { nam, bod } => {
-        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, metas);
       },
       Term::App { fun, arg } => {
-        fun.get_free_vars(env.clone(), free_vars, holes);
-        arg.get_free_vars(env.clone(), free_vars, holes);
+        fun.get_free_vars(env.clone(), free_vars, metas);
+        arg.get_free_vars(env.clone(), free_vars, metas);
       },
       Term::Ann { val, typ } => {
-        val.get_free_vars(env.clone(), free_vars, holes);
-        typ.get_free_vars(env.clone(), free_vars, holes);
+        val.get_free_vars(env.clone(), free_vars, metas);
+        typ.get_free_vars(env.clone(), free_vars, metas);
       },
       Term::Slf { nam, typ, bod } => {
-        typ.get_free_vars(env.clone(), free_vars, holes);
-        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
+        typ.get_free_vars(env.clone(), free_vars, metas);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, metas);
       },
       Term::Ins { val } => {
-        val.get_free_vars(env.clone(), free_vars, holes);
+        val.get_free_vars(env.clone(), free_vars, metas);
       },
       Term::Set => {},
       Term::U60 => {},
       Term::Num { val: _ } => {},
       Term::Op2 { opr: _, fst, snd } => {
-        fst.get_free_vars(env.clone(), free_vars, holes);
-        snd.get_free_vars(env.clone(), free_vars, holes);
+        fst.get_free_vars(env.clone(), free_vars, metas);
+        snd.get_free_vars(env.clone(), free_vars, metas);
       },
       Term::Mat { nam, x, z, s, p } => {
-        x.get_free_vars(env.clone(), free_vars, holes);
-        z.get_free_vars(env.clone(), free_vars, holes);
-        s.get_free_vars(cons(&env, format!("{}-1",nam)), free_vars, holes);
-        p.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
+        x.get_free_vars(env.clone(), free_vars, metas);
+        z.get_free_vars(env.clone(), free_vars, metas);
+        s.get_free_vars(cons(&env, format!("{}-1",nam)), free_vars, metas);
+        p.get_free_vars(cons(&env, nam.clone()), free_vars, metas);
       },
       Term::Txt { txt: _ } => {},
       Term::Let { nam, val, bod } => {
-        val.get_free_vars(env.clone(), free_vars, holes);
-        bod.get_free_vars(cons(&env, nam.clone()), free_vars, holes);
+        val.get_free_vars(env.clone(), free_vars, metas);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars, metas);
       },
-      Term::Hol { nam } => {
-        holes.insert(nam.clone());
+      Term::Hol { nam: _ } => {},
+      Term::Met { nam } => {
+        metas.insert(nam.clone());
       },
       Term::Src { src: _, val } => {
-        val.get_free_vars(env, free_vars, holes);
+        val.get_free_vars(env, free_vars, metas);
       },
       Term::Var { nam } => {
         if !env.contains(nam) {
@@ -399,6 +403,14 @@ impl<'i> KindParser<'i> {
         let src = new_src(fid, ini, end);
         Ok(Term::Src { src, val: Box::new(Term::Hol { nam }) })
       }
+      Some('_') => {
+        let ini = *self.index() as u64;
+        self.consume("_")?;
+        let nam = self.parse_name()?;
+        let end = *self.index() as u64;
+        let src = new_src(fid, ini, end);
+        Ok(Term::Src { src, val: Box::new(Term::Met { nam }) })
+      }
       Some('\'') => {
         let ini = *self.index() as u64;
         let chr = self.parse_quoted_char()?;
@@ -481,7 +493,7 @@ impl Book {
       term.get_free_vars(im::Vector::new(), &mut vars, &mut hols);
       let mut mets = String::new();
       for hol in &hols {
-        mets = format!("{} λh_{}", mets, hol);
+        mets = format!("{} λ_{}", mets, hol);
       }
       let subs = hols.iter().map(|h| format!("(Pair \"{}\" None)", h)).collect::<Vec<_>>().join(",");
       code.push_str(&format!("Book.{} = (Ref \"{}\" [{}] {}{})\n", name, name, subs, mets, term.to_hvm1(im::Vector::new())));
