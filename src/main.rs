@@ -8,9 +8,8 @@ use std::fs::File;
 use std::io::Write;
 use std::process::Command;
 use highlight_error::highlight_error;
-//use std::fmt;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Oper {
   Add , Sub , Mul , Div ,
   Mod , Eq  , Ne  , Lt  ,
@@ -18,8 +17,25 @@ enum Oper {
   Or  , Xor , Lsh , Rsh ,
 }
 
-// Term variables use Bruijn Levels.
-#[derive(Clone)]
+// <term> ::=
+//   ALL | ∀(<name>: <term>) <term>
+//   LAM | λ<name> <term>
+//   APP | (<term> <term>)
+//   ANN | {<term>: <term>}
+//   SLF | $(<name>: <term>) <term>
+//   INS | ~<term>
+//   SET | *
+//   U60 | #U60
+//   NUM | #<uint>
+//   OP2 | #(<oper> <term> <term>)
+//   MAT | #match <name> = <term> { #0: <term>; #+: <term> }: <term>
+//   MET | ?<name>
+//   HOL | _
+//   CHR | '<char>'
+//   STR | "<string>"
+//   LET | let <name> = <term> <term>
+//   VAR | <name>
+#[derive(Clone, Debug)]
 enum Term {
   All { nam: String, inp: Box<Term>, bod: Box<Term> },
   Lam { nam: String, bod: Box<Term> },
@@ -40,9 +56,41 @@ enum Term {
   Src { src: u64, val: Box<Term> },
 }
 
+#[derive(Clone, Debug)]
+// <book> ::=
+//   DEF_ANN | <name> : <term> = <term> <book>
+//   DEF_VAL | <name> = <term> <book>
+//   END     | <eof>
 struct Book {
   defs: BTreeMap<String, Term>,
   fids: BTreeMap<String, u64>,
+}
+
+// <message> ::=
+//   FOUND | #found{?<name> <term>}
+//   ERROR | #error{<term> <term> <term> <uint>}
+//   SOLVE | #solve{_<name> <term>}
+//   VAGUE | #vague{_<name>}
+#[derive(Clone, Debug)]
+enum Message {
+  Found {
+    nam: String,
+    typ: Term,
+    ctx: Vec<Term>,
+  },
+  Error {
+    exp: Term,
+    det: Term,
+    bad: Term,
+    src: u64,
+  },
+  Solve {
+    nam: String,
+    val: Term,
+  },
+  Vague {
+    nam: String,
+  }
 }
 
 fn name(numb: usize) -> String {
@@ -244,6 +292,52 @@ impl Term {
       Term::Met {} => 1,
       Term::Var { nam: _ } => 0,
       Term::Src { src: _, val } => { val.count_metas() }
+    }
+  }
+}
+
+impl Message {
+  fn show(&self) -> String {
+    match self {
+      Message::Found { nam, typ, ctx } => {
+        let ctx = ctx.iter().map(|x| x.show()).collect::<Vec<_>>().join(" ");
+        format!("#found{{?{} {} [{}]}}", nam, typ.show(), ctx)
+      },
+      Message::Error { exp, det, bad, src } => {
+        format!("#error{{{} {} {} {}}}", exp.show(), det.show(), bad.show(), src)
+      },
+      Message::Solve { nam, val } => {
+        format!("#solve{{_{} {}}}", nam, val.show())
+      },
+      Message::Vague { nam } => {
+        format!("#vague{{?{}}}", nam)
+      }
+    }
+  }
+
+  fn pretty(&self, book: &Book) -> String {
+    match self {
+      Message::Found { nam, typ, ctx } => {
+        let msg = format!("?{} :: {}", nam, typ.show());
+        let ctx = ctx.iter().map(|x| x.show()).collect::<Vec<_>>().join("\n- ");
+        format!("\x1b[1mHOLE:\x1b[0m {}{}", msg, ctx)
+      },
+      Message::Error { exp, det, bad, src } => {
+        let exp  = format!("- expected: \x1b[32m{}\x1b[0m", exp.show());
+        let det  = format!("- detected: \x1b[31m{}\x1b[0m", det.show());
+        let bad  = format!("- bad_term: \x1b[2m{}\x1b[0m", bad.show());
+        let file = book.get_file_name(src_fid(*src)).unwrap_or_else(|| "unknown".to_string());
+        let text = std::fs::read_to_string(&file).unwrap_or_else(|_| "Could not read source file.".to_string());
+        let orig = highlight_error(src_ini(*src) as usize, src_end(*src) as usize, &text);
+        let src  = format!("\x1b[4m{}\x1b[0m\n{}", file, orig);
+        format!("\x1b[1mERROR:\x1b[0m\n{}\n{}\n{}\n{}", exp, det, bad, src)
+      },
+      Message::Solve { nam, val } => {
+        format!("SOLVE: _{} = {}", nam, val.show())
+      },
+      Message::Vague { nam } => {
+        format!("VAGUE: _{}", nam)
+      }
     }
   }
 
@@ -465,7 +559,7 @@ impl<'i> KindParser<'i> {
       }
     }
   }
-  
+
   fn parse_def(&mut self, fid: u64) -> Result<(String, Term), String> {
     self.skip_trivia();
     let nam = self.parse_name()?;
@@ -491,6 +585,81 @@ impl<'i> KindParser<'i> {
       self.skip_trivia();
     }
     Ok(book)
+  }
+
+  fn parse_message(&mut self) -> Result<Message, String> {
+    self.skip_trivia();
+    match self.peek_one() {
+      Some('#') => {
+        self.consume("#")?;
+        match self.peek_one() {
+          Some('f') => {
+            self.consume("found")?;
+            self.consume("{")?;
+            let nam = self.parse_name()?;
+            let typ = self.parse_term(0)?;
+            self.consume("[")?;
+            let mut ctx = Vec::new();
+            while self.peek_one() != Some(']') {
+              ctx.push(self.parse_term(0)?);
+              self.skip_trivia();
+            }
+            self.consume("]")?;
+            self.consume("}")?;
+            Ok(Message::Found { nam, typ, ctx })
+          }
+          Some('e') => {
+            self.consume("error")?;
+            self.consume("{")?;
+            let exp = self.parse_term(0)?;
+            let det = self.parse_term(0)?;
+            let bad = self.parse_term(0)?;
+            let src = self.parse_u64()?;
+            self.consume("}")?;
+            Ok(Message::Error {
+              exp: exp,
+              det: det,
+              bad: bad,
+              src: src,
+            })
+          }
+          Some('s') => {
+            self.consume("solve")?;
+            self.consume("{")?;
+            let nam = self.parse_name()?;
+            let val = self.parse_term(0)?;
+            self.consume("}")?;
+            Ok(Message::Solve { nam, val })
+          }
+          Some('v') => {
+            self.consume("vague")?;
+            self.consume("{")?;
+            let nam = self.parse_name()?;
+            self.consume("}")?;
+            Ok(Message::Vague { nam })
+          }
+          _ => self.expected("message type (solve, found, error)"),
+        }
+      }
+      _ => self.expected("# (start of message)"),
+    }
+  }
+  
+  fn parse_messages(&mut self) -> Result<Vec<Message>, String> {
+    let mut messages = Vec::new();
+    while *self.index() < self.input().len() {
+      let parsed_message = self.parse_message();
+      match parsed_message {
+        Ok(msg) => {
+          messages.push(msg);
+          self.skip_trivia();
+        }
+        Err(_) => {
+          break;
+        }
+      }
+    }
+    Ok(messages)
   }
 
 }
@@ -581,45 +750,31 @@ impl Book {
     None
   }
 
-  fn inject_sources(&self, input: &str) -> Result<String, String> {
-    let mut result = input.to_string();
-    let ini_sym = "##LOC{";
-    let end_sym = "}LOC##";
-    while let (Some(ini), Some(end)) = (result.find(ini_sym), result.find(end_sym)) {
-      let got = &result[ini + ini_sym.len()..end];
-      let loc = got.parse::<u64>().map_err(|_| "Failed to parse location")?;
-      let fid = src_fid(loc);
-      let ini = src_ini(loc) as usize;
-      let end = src_end(loc) as usize;
-      if loc == 0 {
-        result = result.replace(&format!("{}{}{}", ini_sym, got, end_sym), "");
-      } else if let Some(file_name) = self.get_file_name(fid) {
-        let source_file = std::fs::read_to_string(&file_name).map_err(|_| "Failed to read source file")?;
-        let context_str = highlight_error(ini, end, &source_file);
-        let context_str = format!("\x1b[4m{}\x1b[0m\n{}", file_name, context_str);
-        result = result.replace(&format!("{}{}{}", ini_sym, got, end_sym), &context_str);
-      } else {
-        return Err("File ID not found".to_string());
-      }
-    }
-    Ok(result)
-  }
+  //fn inject_sources(&self, input: &str) -> Result<String, String> {
+    //let mut result = input.to_string();
+    //let ini_sym = "##LOC{";
+    //let end_sym = "}LOC##";
+    //while let (Some(ini), Some(end)) = (result.find(ini_sym), result.find(end_sym)) {
+      //let got = &result[ini + ini_sym.len()..end];
+      //let loc = got.parse::<u64>().map_err(|_| "Failed to parse location")?;
+      //let fid = src_fid(loc);
+      //let ini = src_ini(loc) as usize;
+      //let end = src_end(loc) as usize;
+      //if loc == 0 {
+        //result = result.replace(&format!("{}{}{}", ini_sym, got, end_sym), "");
+      //} else if let Some(file_name) = self.get_file_name(fid) {
+        //let source_file = std::fs::read_to_string(&file_name).map_err(|_| "Failed to read source file")?;
+        //let context_str = highlight_error(ini, end, &source_file);
+        //let context_str = format!("\x1b[4m{}\x1b[0m\n{}", file_name, context_str);
+        //result = result.replace(&format!("{}{}{}", ini_sym, got, end_sym), &context_str);
+      //} else {
+        //return Err("File ID not found".to_string());
+      //}
+    //}
+    //Ok(result)
+  //}
 
 }
-
-//fn run() -> Result<(), String> {
-  //let book = Book::load("Nat")?;
-  //println!("{}", book.show());
-  //println!("{}", book.to_hvm1());
-  //return Ok(());
-//}
-
-//fn main() {
-  //if let Err(e) = run() {
-    //eprintln!("{}", e);
-  //}
-//}
-
 
 fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
   //let used_defs = book.defs.keys().collect::<Vec<_>>().iter().map(|name| format!("(Pair \"{}\" Book.{})", name, name)).collect::<Vec<_>>().join(" ");
@@ -650,27 +805,32 @@ fn main() {
     "check" | "run" => {
       match Book::load(arg) {
         Ok(book) => {
-          //println!("loaded!");
+          // Generates the HVM1 checker.
           let check_hvm1 = generate_check_hvm1(&book, cmd, arg);
-
-          // Saves it to a file.
           let mut file = File::create(".check.hvm1").expect("Failed to create '.check.hvm1'.");
           file.write_all(check_hvm1.as_bytes()).expect("Failed to write '.check.hvm1'.");
 
+          // Calls HVM1 and get outputs.
           let output = Command::new("hvm1").arg("run").arg("-t").arg("1").arg("-c").arg("-f").arg(".check.hvm1").arg("(Main)").output().expect("Failed to execute command");
-          //let stdout : Result<String,String> = Ok(format!("{}", String::from_utf8_lossy(&output.stdout)));
-          let stdout = book.inject_sources(&format!("{}", String::from_utf8_lossy(&output.stdout)));
+          let stdout = String::from_utf8_lossy(&output.stdout);
           let stderr = String::from_utf8_lossy(&output.stderr);
 
-          match stdout {
-            //Ok(output) => println!("{}", output.replace("(ERRORS_FOUND)","")),
-            Ok(output) => println!("{}", output),
-            Err(error) => eprintln!("{}", error),
+          // Parses and print stdout messages.
+          let parsed = KindParser::new(&stdout).parse_messages();
+          match parsed {
+            Ok(msgs) => {
+              for msg in &msgs {
+                println!("{}", msg.pretty(&book))
+              }
+              if msgs.len() == 0 {
+                println!("check!");
+              }
+            }
+            Err(err) => println!("{}", err),
           }
-
-          if !output.stderr.is_empty() {
-            eprintln!("{}", stderr);
-          }
+          
+          // Prints stdout errors and stats.
+          eprintln!("{}", stderr);
         },
         Err(e) => {
           eprintln!("{}", e);

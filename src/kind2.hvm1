@@ -86,6 +86,9 @@
 (String.join List.nil)         = ""
 (String.join (List.cons x xs)) = (String.concat x (String.join xs))
 
+(String.tail String.nil)         = String.nil
+(String.tail (String.cons x xs)) = xs
+
 (Pair.fst (Pair fst snd)) = fst
 (Pair.snd (Pair fst snd)) = snd
 
@@ -416,7 +419,7 @@
   (Maybe.match (Unify.solve a b dep Map.new)
     // If successful, logs the solution
     λkv(Pair.get kv λkλv
-      (Checker.bind (Checker.log (Fill k v dep)) λx
+      (Checker.bind (Checker.log (Solve k v dep)) λx
       (Checker.pure 1)))
     // Otherwise, signals to skip equality if this is a pattern
     (If (Unify.skip a)
@@ -538,7 +541,7 @@
       (Checker.bind (Check 0 arg fun_typ.inp dep) λvty
       (Checker.pure (fun_typ.bod arg)))
     λfun λarg
-      (Checker.fail (NonFunApp (App fun arg) dep)))
+      (Checker.fail (Error 0 fun_typ (All "x" (Hol "_" []) (Hol "_" [])) (App fun arg) dep)))
     fun arg))
 (Infer.match (Ann val typ) dep) =
   (Checker.pure typ)
@@ -574,17 +577,17 @@
   (Checker.bind (Check 0 (s (Ann (Var (String.concat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (String.concat nam "-1") dep))) (+ dep 1)) λs_typ
   (Checker.pure (p x))))))
 (Infer.match (Lam nam bod) dep) =
-  (Checker.fail (CantInfer (Lam nam bod) dep))
+  (Checker.fail (Error 0 (Hol "" []) (All "x" (Hol "_" []) (Hol "_" [])) (Lam nam bod) dep))
 (Infer.match (Let nam val bod) dep) =
-  (Checker.fail (CantInfer (Let nam val bod) dep))
+  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Let nam val bod) dep))
 (Infer.match (Hol nam ctx) dep) =
-  (Checker.fail (CantInfer (Hol nam ctx) dep))
+  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Hol nam ctx) dep))
 (Infer.match (Met nam (Some val)) dep) =
   (Infer.match val dep)
 (Infer.match (Met nam None) dep) =
-  (Checker.fail (CantInfer (Met nam None) dep))
+  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Met nam None) dep))
 (Infer.match (Var nam idx) dep) =
-  (Checker.fail (CantInfer (Var nam idx) dep))
+  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Var nam idx) dep))
 (Infer.match (Src src val) dep) =
   (Infer.match val dep)
 
@@ -611,7 +614,7 @@
 (Check.match src (Let term.nam term.val term.bod) type dep) =
   (Check 0 (term.bod term.val) type (+ 1 dep))
 (Check.match src (Hol term.nam term.ctx) type dep) =
-  (Checker.bind (Checker.log (FoundHole term.nam type term.ctx dep)) λx
+  (Checker.bind (Checker.log (Found term.nam type term.ctx dep)) λx
   (Checker.pure 0))
 (Check.match src (Met term.nam (Some term.val)) type dep) =
   (Check src term.val type dep)
@@ -633,36 +636,79 @@
   (Check.report src equal infer type term dep)))
 
 (Check.report src 0 detected expected value dep) =
-  (Checker.fail (TypeMismatch src detected expected value dep))
+  (Checker.fail (Error src detected expected value dep))
 (Check.report src n detected expected value dep) =
   (Checker.pure 0)
 
 // Syntax
 // ------
 
-(Show (All nam inp bod) dep) = (String.join ["∀(" nam ": " (Show inp dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show (Lam nam bod)     dep) = (String.join ["λ" nam " " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show (App fun arg)     dep) = (String.join ["(" (Show.unwrap (Show fun dep)) " " (Show arg dep) ")"])
-(Show (Ann val typ)     dep) = (String.join ["{" (Show val dep) ": " (Show typ dep) "}"])
-(Show (Slf nam typ bod) dep) = (String.join ["$(" nam ": " (Show typ dep) ") " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show (Ins val)         dep) = (String.join ["~" (Show val dep)])
-(Show (Ref nam sub val) dep) = nam
-(Show (Let nam val bod) dep) = (String.join ["let " nam " = " (Show val dep) "; " (Show (bod (Var nam dep)) (+ dep 1))])
-(Show Set               dep) = (String.join ["*"])
-(Show U60               dep) = "#U60"
-(Show (Num val)         dep) = (String.join ["#" (U60.show val)])
-(Show (Op2 opr fst snd) dep) = (String.join ["#(" (Op2.show opr) " " (Show fst dep) " " (Show snd dep) ")"])
-(Show (Mat nam x z s p) dep) = (String.join ["#match " nam " = " (Show x dep) " { #0: " (Show z dep) " #+: " (Show (s (Var (String.concat nam "-1") dep)) (+ dep 1)) " }: " (Show (p (Var nam dep)) dep)])
-(Show (Txt txt)         dep) = (String.join [Quote txt Quote])
-(Show (Hol nam ctx)     dep) = (String.join ["?" nam])
-(Show (Met nam val)     dep) = (String.join ["_" nam "[" (Maybe.match val λx(Show x 0) "") "]"])
-(Show (Var nam idx)     dep) = (String.join [nam])
-(Show (Src src val)     dep) = (Show val dep)
-//(Show (Src src val)     dep) = (String.join ["!" (Show val dep)])
-//(Show (Var nam idx)     dep) = (String.join [nam "'" (U60.show idx)])
+(Show (All nam inp bod) dep) =
+  let nam = nam
+  let inp = (Show inp dep)
+  let bod = (Show (bod (Var nam dep)) (+ dep 1))
+  (String.join ["∀(" nam ": " inp ") " bod])
+(Show (Lam nam bod) dep) =
+  let nam = nam
+  let bod = (Show (bod (Var nam dep)) (+ dep 1))
+  (String.join ["λ" nam " " bod])
+(Show (App fun arg) dep) =
+  let fun = (Show.unwrap (Show fun dep))
+  let arg = (Show arg dep)
+  (String.join ["(" fun " " arg ")"])
+(Show (Ann val typ) dep) =
+  let val = (Show val dep)
+  let typ = (Show typ dep)
+  (String.join ["{" val ": " typ "}"])
+(Show (Slf nam typ bod) dep) =
+  let nam = nam
+  let typ = (Show typ dep)
+  let bod = (Show (bod (Var nam dep)) (+ dep 1))
+  (String.join ["$(" nam ": " typ ") " bod])
+(Show (Ins val) dep) =
+  let val = (Show val dep)
+  (String.join ["~" val])
+(Show (Ref nam sub val) dep) =
+  nam
+(Show (Let nam val bod) dep) =
+  let nam = nam
+  let val = (Show val dep)
+  let bod = (Show (bod (Var nam dep)) (+ dep 1))
+  (String.join ["let " nam " = " val "; " bod])
+(Show Set dep) =
+  "*"
+(Show U60 dep) =
+  "#U60"
+(Show (Num val) dep) =
+  let val = (U60.show val)
+  (String.join ["#" val])
+(Show (Op2 opr fst snd) dep) =
+  let opr = (Op2.show opr)
+  let fst = (Show fst dep)
+  let snd = (Show snd dep)
+  (String.join ["#(" opr " " fst " " snd ")"])
+(Show (Mat nam x z s p) dep) =
+  let nam = nam
+  let x   = (Show x dep)
+  let z   = (Show z dep)
+  let s   = (Show (s (Var (String.concat nam "-1") dep)) (+ dep 1))
+  let p   = (Show (p (Var nam dep)) dep)
+  (String.join ["#match " nam " = " x " { #0: " z " #+: " s " }: " p])
+(Show (Txt txt) dep) =
+  (String.join [Quote txt Quote])
+(Show (Hol nam ctx) dep) =
+  (String.join ["? " nam])
+(Show (Met nam None) dep) =
+  "_"
+(Show (Met nam (Some val)) dep) =
+  (Show val dep)
+(Show (Var nam idx) dep) =
+  nam
+(Show (Src src val) dep) =
+  (Show val dep)
 
-(Show.many List.nil         dep) = ""
-(Show.many (List.cons x xs) dep) = (String.join [" " (Show x dep) (Show.many xs dep)])
+//(Show.many List.nil         dep) = ""
+//(Show.many (List.cons x xs) dep) = (String.join [" " (Show x dep) (Show.many xs dep)])
 
 (Show.trim (String.cons ' ' xs)) = xs
 (Show.trim str)                  = str
@@ -692,36 +738,25 @@
 (Op2.show RSH) = ">>"
 
 (Context.show List.nil         dep) = ""
-(Context.show (List.cons x xs) dep) = (String.join [NewLine "- " (Context.show.ann x dep) (Context.show xs dep)])
+(Context.show (List.cons x xs) dep) = (String.join [" " (Context.show.ann x dep) (Context.show xs dep)])
 
 (Context.show.ann (Ann val typ) dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
 (Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
 
-(Message.show (FoundHole name type ctx dep)) =
-  let bold  = (String.color BRIGHT)
-  let reset = (String.color RESET)
+(Message.show (Found name type ctx dep)) =
   let type  = (Show (Normal 1 type dep) dep)
-  let ctx   = (Context.show ctx dep)
-  (String.join [bold "HOLE:" reset " ?" name " :: " type ctx])
-(Message.show (NonFunApp term dep)) =
-  let term = (Show term dep)
-  (String.join ["NON_FUNCTION: " term])
-(Message.show (CantInfer term dep)) =
-  let term = (Show term dep)
-  (String.join ["CANT_INFER: " term])
-(Message.show (TypeMismatch src detected expected value dep)) =
+  let ctx   = (String.tail (Context.show ctx dep))
+  (String.join ["#found{" name " " type " [" ctx "]}"])
+(Message.show (Error src detected expected value dep)) =
   let det = (Show (Normal 1 detected dep) dep)
   let exp = (Show (Normal 1 expected dep) dep)
   let val = (Show (Normal 1 value dep) dep)
-  (String.join [(String.color BRIGHT) "TYPE_MISMATCH" NewLine
-    "- expected: " (String.color RESET) (String.color GREEN) exp NewLine (String.color RESET) (String.color BRIGHT)
-    "- detected: " (String.color RESET) (String.color RED)   det NewLine (String.color RESET) (String.color BRIGHT)
-    "- bad_term: " (String.color RESET) (String.color DIM)   val NewLine (String.color RESET)
-    "##LOC{" (U60.show src) "}LOC##" NewLine
-  ])
-(Message.show (Fill hole value dep)) =
-  let val = (Show (Normal 1 value dep) dep)
-  (String.join ["FILL: _" hole " = " val])
+  (String.join ["#error{" exp " " det " " val " " (U60.show src) "}"])
+(Message.show (Solve name term dep)) =
+  let term = (Show (Normal 1 term dep) dep)
+  (String.join ["#solve{" name " "  term "}"])
+(Message.show (Vague name)) =
+  (String.join ["#vague{" name "}"])
 
 // Compilation
 // -----------
@@ -795,13 +830,13 @@ Compile.primitives = [
   (Result.match (Checker.run (API.check.do (Subst sub def)))
     // case done:
     λlogs λvalue
-      (API.check.log logs
+      //(API.check.log logs
       (Pair.get (API.check.fill sub logs) λfilled λsub
       (If filled
         // case true:
         (API.check (Ref nam sub def))
         // case false:
-        (API.check.solved sub))))
+        (API.check.vague sub)))
     // case fail:
     λlogs λerror
       (API.check.log logs
@@ -816,15 +851,15 @@ Compile.primitives = [
 (API.check.do val)           = (Infer val 0)
 
 // Moves solutions from the checker logs to a ref's subst list.
-(API.check.fill sub (List.cons (Fill k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (Map.set λxλy(Same x y) k (Some v) sub)))
-(API.check.fill sub (List.cons message xs))      = (API.check.fill sub xs)
-(API.check.fill sub List.nil)                    = (Pair 0 sub)
+(API.check.fill sub (List.cons (Solve k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (Map.set λxλy(Same x y) k (Some v) sub)))
+(API.check.fill sub (List.cons message xs))       = (API.check.fill sub xs)
+(API.check.fill sub List.nil)                     = (Pair 0 sub)
 
 // Prints all messages returned by the checker.
 (API.check.log (List.cons msg msgs) then) = (HVM.print (Message.show msg) (API.check.log msgs then))
 (API.check.log List.nil             then) = then
 
 // Reports solved holdes
-(API.check.solved (List.cons (Pair name None)    xs)) = (HVM.print (String.join ["UNSOLVED: _" name]) (& 0 (API.check.solved xs)))
-(API.check.solved (List.cons (Pair nam (Some x)) xs)) = (API.check.solved xs)
-(API.check.solved List.nil)                           = 1
+(API.check.vague (List.cons (Pair name None)     xs)) = (HVM.print (Message.show (Vague name)) (& 0 (API.check.vague xs)))
+(API.check.vague (List.cons (Pair name (Some x)) xs)) = (API.check.vague xs)
+(API.check.vague List.nil)                            = 1
