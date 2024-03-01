@@ -541,7 +541,7 @@
       (Checker.bind (Check 0 arg fun_typ.inp dep) λvty
       (Checker.pure (fun_typ.bod arg)))
     λfun λarg
-      (Checker.fail (Error 0 fun_typ (All "x" (Hol "_" []) (Hol "_" [])) (App fun arg) dep)))
+      (Checker.fail (Error 0 fun_typ (Hol "function" []) (App fun arg) dep)))
     fun arg))
 (Infer.match (Ann val typ) dep) =
   (Checker.pure typ)
@@ -577,17 +577,17 @@
   (Checker.bind (Check 0 (s (Ann (Var (String.concat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (String.concat nam "-1") dep))) (+ dep 1)) λs_typ
   (Checker.pure (p x))))))
 (Infer.match (Lam nam bod) dep) =
-  (Checker.fail (Error 0 (Hol "" []) (All "x" (Hol "_" []) (Hol "_" [])) (Lam nam bod) dep))
+  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Lam nam bod) dep))
 (Infer.match (Let nam val bod) dep) =
-  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Let nam val bod) dep))
+  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Let nam val bod) dep))
 (Infer.match (Hol nam ctx) dep) =
-  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Hol nam ctx) dep))
+  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Hol nam ctx) dep))
 (Infer.match (Met nam (Some val)) dep) =
   (Infer.match val dep)
 (Infer.match (Met nam None) dep) =
-  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Met nam None) dep))
+  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Met nam None) dep))
 (Infer.match (Var nam idx) dep) =
-  (Checker.fail (Error 0 (Hol "" []) (Hol "type" []) (Var nam idx) dep))
+  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Var nam idx) dep))
 (Infer.match (Src src val) dep) =
   (Infer.match val dep)
 
@@ -750,7 +750,7 @@
 (Message.show (Error src detected expected value dep)) =
   let det = (Show (Normal 1 detected dep) dep)
   let exp = (Show (Normal 1 expected dep) dep)
-  let val = (Show (Normal 1 value dep) dep)
+  let val = (Show (Normal 0 value dep) dep)
   (String.join ["#error{" exp " " det " " val " " (U60.show src) "}"])
 (Message.show (Solve name term dep)) =
   let term = (Show (Normal 1 term dep) dep)

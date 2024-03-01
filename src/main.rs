@@ -326,7 +326,7 @@ impl Message {
         let exp  = format!("- expected: \x1b[32m{}\x1b[0m", exp.show());
         let det  = format!("- detected: \x1b[31m{}\x1b[0m", det.show());
         let bad  = format!("- bad_term: \x1b[2m{}\x1b[0m", bad.show());
-        let file = book.get_file_name(src_fid(*src)).unwrap_or_else(|| "unknown".to_string());
+        let file = book.get_file_name(src_fid(*src)).unwrap_or_else(|| "unknown_file".to_string());
         let text = std::fs::read_to_string(&file).unwrap_or_else(|_| "Could not read source file.".to_string());
         let orig = highlight_error(src_ini(*src) as usize, src_end(*src) as usize, &text);
         let src  = format!("\x1b[4m{}\x1b[0m\n{}", file, orig);
