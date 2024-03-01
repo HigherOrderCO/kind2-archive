@@ -1,6 +1,11 @@
 Kind.Term.parser.u60
 : (Parser.Guard Kind.PreTerm)
-= (Parser.Guard.text Kind.PreTerm "#U60"
-  (Kind.Term.parser.bind Unit (Parser.text "#U60") λ_
-  (Kind.Term.parser.pure λscp 
-  Kind.u60)))
+= (Parser.Guard.text
+    Kind.PreTerm
+    "#U60"
+    (Kind.Term.parser.bind
+      Unit
+      (Parser.text "#U60")
+      λ_ (Kind.Term.parser.pure λscp Kind.u60)
+    )
+  )

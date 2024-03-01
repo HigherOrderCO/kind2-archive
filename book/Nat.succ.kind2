@@ -1,5 +1,3 @@
 Nat.succ
 : ∀(n: Nat) Nat
-= λn
-  ~λP λsucc λzero
-  (succ n)
+= λn ~λP λsucc λzero (succ n)

@@ -1,6 +1,5 @@
 Maybe
-: ∀(T: *)
-  *
+: ∀(T: *) *
 = λT
   $(self: (Maybe T))
   ∀(P: ∀(x: (Maybe T)) *)

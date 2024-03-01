@@ -1,4 +1,3 @@
 Kind.PreTerm
 : *
-= ∀(ctx: Kind.Scope)
-  Kind.Term
+= ∀(ctx: Kind.Scope) Kind.Term

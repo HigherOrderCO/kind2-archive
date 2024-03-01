@@ -1,8 +1,25 @@
 Kind.Term.parser.lam
 : (Parser.Guard Kind.PreTerm)
-= (Parser.Guard.text Kind.PreTerm "λ"
-  (Kind.Term.parser.bind Unit         (Parser.text "λ") λ_
-  (Kind.Term.parser.bind String       Parser.name       λnam
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser  λbod
-  (Kind.Term.parser.pure λscp 
-  (Kind.lam nam λx(bod (Kind.Scope.extend nam x scp))))))))
+= (Parser.Guard.text
+    Kind.PreTerm
+    "λ"
+    (Kind.Term.parser.bind
+      Unit
+      (Parser.text "λ")
+      λ_
+      (Kind.Term.parser.bind
+        String
+        Parser.name
+        λnam
+        (Kind.Term.parser.bind
+          Kind.PreTerm
+          Kind.Term.parser
+          λbod
+          (Kind.Term.parser.pure
+            λscp
+            (Kind.lam nam λx (bod (Kind.Scope.extend nam x scp)))
+          )
+        )
+      )
+    )
+  )

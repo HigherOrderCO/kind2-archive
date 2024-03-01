@@ -1,5 +1,4 @@
-// Creates a new node with size = 1 + (max lft.size rgt.size)
- BBT.new_node
+BBT.new_node
 : ∀(K: *)
   ∀(V: *)
   ∀(key: K)
@@ -8,9 +7,9 @@
   ∀(rgt: (BBT K V))
   (BBT K V)
 = λK λV λkey λval λlft λrgt
-  let P   = λx(BBT K V)
+  let P = λx (BBT K V)
   let new = λlft.size λlft
-    let P   = λx(BBT K V)
+    let P = λx (BBT K V)
     let new = λrgt.size λrgt
       let new_size = #(+ #1 (U60.max rgt.size lft.size))
       (BBT.bin K V new_size key val lft rgt)

@@ -1,8 +1,7 @@
 Bool.show
-: ∀(x: Bool)
-  String
+: ∀(x: Bool) String
 = λx
-  let P     = λx(String)
-  let true  = "true"
+  let P = λx String
+  let true = "true"
   let false = "false"
   (~x P true false)

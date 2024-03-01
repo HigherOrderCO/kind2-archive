@@ -1,0 +1,3 @@
+QBool.true
+: QBool
+= ~λP ~λS λp (p #0 λx x)

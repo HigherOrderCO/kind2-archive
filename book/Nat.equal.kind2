@@ -1,16 +1,14 @@
 Nat.equal
-: ∀(a: Nat)
-  ∀(b: Nat)
-  Bool
+: ∀(a: Nat) ∀(b: Nat) Bool
 = λa λb
-  let P    = λx ∀(b: Nat) (Bool)
+  let P = λx ∀(b: Nat) Bool
   let succ = λa.pred λb
-    let P    = λx ∀(a.pred: Nat) (Bool)
+    let P = λx ∀(a.pred: Nat) Bool
     let succ = λb.pred λa.pred (Nat.equal a.pred b.pred)
     let zero = λa.pred Bool.false
     (~b P succ zero a.pred)
   let zero = λb
-    let P    = λx Bool
+    let P = λx Bool
     let succ = λb.pred Bool.false
     let zero = Bool.true
     (~b P succ zero)

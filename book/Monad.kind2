@@ -3,45 +3,12 @@ Monad
 = λM
   $(self: (Monad M))
   ∀(P: ∀(x: (Monad M)) *)
-  ∀(new:
-    ∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
+  ∀(new: 
+    ∀(bind: 
+      ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B))
+      (M B)
+    )
     ∀(pure: ∀(A: *) ∀(a: A) (M A))
-    (P (Monad.new M bind pure)))
+    (P (Monad.new M bind pure))
+  )
   (P self)
-
-Monad.new
-: ∀(M: ∀(T: *) *)
-  ∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
-  ∀(pure: ∀(A: *) ∀(a: A) (M A))
-  (Monad M)
-= λM λbind λpure
-  ~λP λnew
-  (new bind pure)
-
-// TODO: lawful monads https://wiki.haskell.org/Monad_laws
-
-//Monad
-//: ∀(M: ∀(T: *) *) *
-//= λM
-  //$self
-  //∀(P: ∀(x: (Monad M)) *)
-  //∀(new:
-    //∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
-    //∀(pure: ∀(A: *) ∀(a: A) (M A))
-    //∀(id_L: ∀(A: *) ∀(a: A) ∀(f: ∀(a: A) (M A)) (Equal (M A) (bind A A (pure A a) f) (f a)))
-    //∀(id_R: ∀(A: *) ∀(m: (M A)) (Equal (M A) (bind A A m pure) m))
-    //∀(asoc: ∀(A: *) ∀(B: *) ∀(C: *) ∀(m: (M A)) ∀(f: ∀(a: A) (M B)) ∀(g: ∀(b: B) (M C)) (Equal (M C) (bind B C (bind A B m f) g) (bind A C m (λx (bind B C (f x) g)))))
-    //(P (Monad.new M bind pure id_L id_R asoc)))
-  //(P self)
-
-//Monad.new
-//: ∀(M: ∀(T: *) *)
-  //∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
-  //∀(pure: ∀(A: *) ∀(a: A) (M A))
-  //∀(id_L: ∀(A: *) ∀(a: A) ∀(f: ∀(a: A) (M A)) (Equal (M A) (bind A A (pure A a) f) (f a)))
-  //∀(id_R: ∀(A: *) ∀(m: (M A)) (Equal (M A) (bind A A m pure) m))
-  //∀(asoc: ∀(A: *) ∀(B: *) ∀(C: *) ∀(m: (M A)) ∀(f: ∀(a: A) (M B)) ∀(g: ∀(b: B) (M C)) (Equal (M C) (bind B C (bind A B m f) g) (bind A C m (λx (bind B C (f x) g)))))
-  //(Monad M)
-//= λM λbind λpure λid_L λid_R λasoc
-  //~λP λnew
-  //(new bind pure id_L id_R asoc)

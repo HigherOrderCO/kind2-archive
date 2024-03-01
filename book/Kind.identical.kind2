@@ -1,7 +1,3 @@
 Kind.identical
-: ∀(a: Kind.Term)
-  ∀(b: Kind.Term)
-  ∀(dep: Nat)
-  Bool
-= λa λb λdep
-  (Kind.comparer Kind.identical a b dep)
+: ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+= λa λb λdep (Kind.comparer Kind.identical a b dep)

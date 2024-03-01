@@ -1,7 +1,3 @@
 String.Map.has
-: ∀(V: *)
-  ∀(key: String)
-  ∀(map: (BBT String V))
-  Bool
-= λV λkey λmap
-  (BBT.has String V String.cmp key map)
+: ∀(V: *) ∀(key: String) ∀(map: (BBT String V)) Bool
+= λV λkey λmap (BBT.has String V String.cmp key map)

@@ -1,6 +1,7 @@
-// Returns a list with all the references of given term.
 Kind.Term.get_refs
-: ∀(term: Kind.Term)
-  (List String)
+: ∀(term: Kind.Term) (List String)
 = λterm
-  (List.Concatenator.build String (Kind.Term.get_refs.go term))
+  (List.Concatenator.build
+    String
+    (Kind.Term.get_refs.go term)
+  )

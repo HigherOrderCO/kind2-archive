@@ -1,6 +1,7 @@
 use crate::{*};
 use std::collections::BTreeSet;
 
+mod format;
 mod parse;
 mod show;
 mod to_hvm1;
@@ -221,6 +222,95 @@ impl Term {
       Term::Src { val, .. } => {
         let val = val.count_metas();
         val
+      },
+    }
+  }
+
+  pub fn clean(&self) -> Term {
+    match self {
+      Term::All { nam, inp, bod } => {
+        Term::All {
+          nam: nam.clone(),
+          inp: Box::new(inp.clean()),
+          bod: Box::new(bod.clean()),
+        }
+      },
+      Term::Lam { nam, bod } => {
+        Term::Lam {
+          nam: nam.clone(),
+          bod: Box::new(bod.clean()),
+        }
+      },
+      Term::App { fun, arg } => {
+        Term::App {
+          fun: Box::new(fun.clean()),
+          arg: Box::new(arg.clean()),
+        }
+      },
+      Term::Ann { val, typ } => {
+        Term::Ann {
+          val: Box::new(val.clean()),
+          typ: Box::new(typ.clean()),
+        }
+      },
+      Term::Slf { nam, typ, bod } => {
+        Term::Slf {
+          nam: nam.clone(),
+          typ: Box::new(typ.clean()),
+          bod: Box::new(bod.clean()),
+        }
+      },
+      Term::Ins { val } => {
+        Term::Ins {
+          val: Box::new(val.clean()),
+        }
+      },
+      Term::Set => {
+        Term::Set
+      },
+      Term::U60 => {
+        Term::U60
+      },
+      Term::Num { val } => {
+        Term::Num { val: *val }
+      },
+      Term::Op2 { opr, fst, snd } => {
+        Term::Op2 {
+          opr: *opr,
+          fst: Box::new(fst.clean()),
+          snd: Box::new(snd.clean()),
+        }
+      },
+      Term::Mat { nam, x, z, s, p } => {
+        Term::Mat {
+          nam: nam.clone(),
+          x: Box::new(x.clean()),
+          z: Box::new(z.clean()),
+          s: Box::new(s.clean()),
+          p: Box::new(p.clean()),
+        }
+      },
+      Term::Txt { txt } => {
+        Term::Txt { txt: txt.clone() }
+      },
+      Term::Let { nam, val, bod } => {
+        Term::Let {
+          nam: nam.clone(),
+          val: Box::new(val.clean()),
+          bod: Box::new(bod.clean()),
+        }
+      },
+      Term::Var { nam } => {
+        Term::Var { nam: nam.clone() }
+      },
+      Term::Hol { nam } => {
+        Term::Hol { nam: nam.clone() }
+      },
+      Term::Met {} => {
+        Term::Met {}
+      },
+      Term::Src { src: _, val } => {
+        val.clean()
       },
     }
   }

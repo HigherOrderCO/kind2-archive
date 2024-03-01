@@ -1,4 +1,3 @@
 Kind.Term.parser.pure
-: ∀(value: Kind.PreTerm)
-  (Parser Kind.PreTerm)
+: ∀(value: Kind.PreTerm) (Parser Kind.PreTerm)
 = (Parser.pure Kind.PreTerm)

@@ -1,10 +1,7 @@
-// Checks if a character is within a specified range, inclusive.
 Char.is_between
-: ∀(min: Char)
-  ∀(max: Char)
-  ∀(chr: Char)
-  Bool
+: ∀(min: Char) ∀(max: Char) ∀(chr: Char) Bool
 = λmin λmax λchr
   (Bool.and
     (U60.to_bool #(>= chr min))
-    (U60.to_bool #(<= chr max)))
+    (U60.to_bool #(<= chr max))
+  )

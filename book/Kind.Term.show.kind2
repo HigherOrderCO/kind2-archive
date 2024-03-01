@@ -1,6 +1,4 @@
 Kind.Term.show
-: ∀(term: Kind.Term)
-  ∀(dep: Nat)
-  String
+: ∀(term: Kind.Term) ∀(dep: Nat) String
 = λterm λdep
   (String.Concatenator.build (Kind.Term.show.go term dep))

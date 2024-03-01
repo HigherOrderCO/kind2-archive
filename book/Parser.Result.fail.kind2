@@ -1,7 +1,3 @@
 Parser.Result.fail
-: ∀(T: *)
-  ∀(error: String)
-  (Parser.Result T)
-= λT λerror
-  ~λP λdone λfail
-  (fail error)
+: ∀(T: *) ∀(error: String) (Parser.Result T)
+= λT λerror ~λP λdone λfail (fail error)

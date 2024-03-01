@@ -1,5 +1,3 @@
 Empty
 : *
-= $(self: Empty)
-  ∀(P: ∀(x: Empty) *)
-  (P self)
+= $(self: Empty) ∀(P: ∀(x: Empty) *) (P self)

@@ -1,6 +1,3 @@
-// b = (left.right ~ right)
-// a = (left.left ~ b)
-// return a
 BBT.rgt_rotate
 : ∀(K: *)
   ∀(V: *)
@@ -11,13 +8,11 @@ BBT.rgt_rotate
   ∀(rgt: (BBT K V))
   (BBT K V)
 = λK λV λsize λkey λval λlft λrgt
-  let P   = λx ∀(key: K) ∀(val: V) ∀(rgt: (BBT K V)) (BBT K V)
-  let bin = λ_size λlft.key λlft.val λlft.lft λlft.rgt 
-            λkey λval λrgt  
-    let b = (BBT.new_node K V  key     val     lft.rgt rgt)
-    let a = (BBT.new_node K V  lft.key lft.val lft.lft b  )
+  let P = λx ∀(key: K) ∀(val: V) ∀(rgt: (BBT K V)) (BBT K V)
+  let bin = λ_size λlft.key λlft.val λlft.lft λlft.rgt λkey λval λrgt
+    let b = (BBT.new_node K V key val lft.rgt rgt)
+    let a = (BBT.new_node K V lft.key lft.val lft.lft b)
     a
-  let tip = 
-            λkey λval λrgt  
+  let tip = λkey λval λrgt
     (BBT.bin K V size key val (BBT.tip K V) rgt)
-  ((~lft P bin tip) key val rgt)
+  (~lft P bin tip key val rgt)

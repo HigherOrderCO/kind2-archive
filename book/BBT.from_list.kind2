@@ -5,10 +5,11 @@ BBT.from_list
   ∀(list: (List (Pair K V)))
   (BBT K V)
 = λK λV λcmp λlist
-  let P    = λx(BBT K V)
+  let P = λx (BBT K V)
   let cons = λhead λtail
-    let P   = λx(BBT K V)
-    let new = λkey λval (BBT.set K V cmp key val (BBT.from_list K V cmp tail))
+    let P = λx (BBT K V)
+    let new = λkey λval
+      (BBT.set K V cmp key val (BBT.from_list K V cmp tail))
     (~head P new)
-  let nil  = (BBT.tip K V)
+  let nil = (BBT.tip K V)
   (~list P cons nil)

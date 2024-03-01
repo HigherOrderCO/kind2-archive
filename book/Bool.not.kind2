@@ -1,7 +1,7 @@
 Bool.not
 : ∀(x: Bool) Bool
 = λx
-  let P     = λx(Bool)
-  let true  = Bool.false
+  let P = λx Bool
+  let true = Bool.false
   let false = Bool.true
   (~x P true false)

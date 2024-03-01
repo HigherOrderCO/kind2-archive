@@ -1,15 +1,13 @@
 List.find
-: ∀(A: *)
-  ∀(cond: ∀(x: A) Bool)
-  ∀(list: (List A))
+: ∀(A: *) ∀(cond: ∀(x: A) Bool) ∀(list: (List A))
   (Maybe A)
 = λA λcond λlist
-  let P    = λx(Maybe A)
+  let P = λx (Maybe A)
   let cons = λhead λtail
     let found = (cond head)
-    let P     = λx(Maybe A)
-    let true  = (Maybe.some A head)
+    let P = λx (Maybe A)
+    let true = (Maybe.some A head)
     let false = (List.find A cond tail)
     (~found P true false)
-  let nil  = (Maybe.none A)
+  let nil = (Maybe.none A)
   (~list P cons nil)

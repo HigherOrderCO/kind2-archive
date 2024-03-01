@@ -1,5 +1,19 @@
 U60.parser.decimal
 : (Parser #U60)
-= (Parser.bind String #U60 Parser.decimal λchars
-  (Parser.pure #U60
-  (List.fold Char chars ∀(r:#U60)#U60 λhλtλr(t #(+ #(- h '0') #(* r #10))) λr(r) #0)))
+= (Parser.bind
+    String
+    #U60
+    Parser.decimal
+    λchars
+    (Parser.pure
+      #U60
+      (List.fold
+        Char
+        chars
+        ∀(r: #U60) #U60
+        λh λt λr (t #(+ #(- h #48) #(* r #10)))
+        λr r
+        #0
+      )
+    )
+  )

@@ -5,10 +5,17 @@ IO.bind
   ∀(b: ∀(x: A) (IO B))
   (IO B)
 = λA λB λa λb
-  let P     = λx ∀(b: ∀(x: A) (IO B)) (IO B)
-  let print = λtext λthen λb (IO.print B text λx(IO.bind A B (then x) b))
-  let load  = λfile λthen λb (IO.load B file λs(IO.bind A B (then s) b))
-  let save  = λfile λdata λthen λb (IO.save B file data λx(IO.bind A B (then Unit.one) b))
-  let done  = λterm λb (b term)
-  ((~a P print load save done) b)
-
+  let P = λx ∀(b: ∀(x: A) (IO B)) (IO B)
+  let print = λtext λthen λb
+    (IO.print B text λx (IO.bind A B (then x) b))
+  let load = λfile λthen λb
+    (IO.load B file λs (IO.bind A B (then s) b))
+  let save = λfile λdata λthen λb
+    (IO.save
+      B
+      file
+      data
+      λx (IO.bind A B (then Unit.one) b)
+    )
+  let done = λterm λb (b term)
+  (~a P print load save done b)

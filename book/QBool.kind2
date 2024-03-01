@@ -1,72 +1,18 @@
-// Ideal:
-// 
-// QBool.true  : QBool = ~λP (#0, λx x)
-// QBool.false : QBool = ~λP (#1, λx x)
-// 
-// QBool : * =
-//   $self
-//   ∀(P: ∀(x: QBool) *) 
-//   Σ(t: #U60)
-//   ∀(x: match t {
-//     0: (P QBool.true)
-//     1: (P QBool.false)
-//     +: ∀(x: Empty) *
-//   })
-//   (P self)
-// 
-// QBool.match
-// : ∀(a: QBool)
-//   ∀(P: ∀(x: QBool) *)
-//   ∀(t: (P QBool.true))
-//   ∀(f: (P QBool.false))
-//   (P a)
-// = λa λP λt λf
-//   let (tag, val) = (~a P)
-//   #match tag = tag {
-//     #0: (val t)
-//     #1: (val f)
-//     #+: (val λe (Empty.absurd e *))
-//   }
-
-QBool.true : QBool =
-  ~λP ~λS λp (p #0 λx x)
-
-QBool.false : QBool =
-  ~λP ~λS λp (p #1 λx x)
-
-QBool : * =
-  $(self: QBool)
-  ∀(P: ∀(x: QBool) *) 
-  (Sigma #U60 λt
-  ∀(x: #match t = t {
-    #0: (P QBool.true)
-    #+: #match t = t-1 {
-      #0: (P QBool.false)
-      #+: ∀(x: Empty) *
-    }: *
-  }: *)
-  (P self))
-
-QBool.match
-: ∀(a: QBool)
+QBool
+: *
+= $(self: QBool)
   ∀(P: ∀(x: QBool) *)
-  ∀(t: (P QBool.true))
-  ∀(f: (P QBool.false))
-  (P a)
-= λa λP λt λf
-  (~(~a P) λx(P a) λtag #match tag = tag {
-    #0: λx (x t)
-    #+: λx ((#match tag_1 = tag-1 {
-      #0: λx (x f)
-      #+: λx (x λe (Empty.absurd e *))
-    }: ∀(x: ∀(x: #match tag_1 = tag_1 {
-      #0: (P QBool.false)
-      #+: ∀(x: Empty) *
-    }: *) (P a)) (P a)) x)
-  }: ∀(x: (∀(x: #match tag = tag {
-    #0: (P QBool.true)
-    #+: #match tag_1 = tag-1 {
-      #0: (P QBool.false)
-      #+: ∀(x: Empty) *
-    }: *
-  }: *) (P a))) (P a))
+  (Sigma
+    #U60
+    λt
+    ∀(x: 
+      #match t = t {
+        #0: (P QBool.true)
+        #+: #match t = t-1 {
+          #0: (P QBool.false)
+          #+: ∀(x: Empty) * 
+        }: * 
+      }: *
+    )
+    (P self)
+  )

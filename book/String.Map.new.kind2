@@ -1,5 +1,3 @@
 String.Map.new
-:  ∀(V: *)
-  (String.Map V)
+: ∀(V: *) (String.Map V)
 = λV (BBT.tip String V)
-

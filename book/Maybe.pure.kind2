@@ -1,5 +1,3 @@
 Maybe.pure
-: ∀(T: *)
-  ∀(x: T)
-  (Maybe T) 
+: ∀(T: *) ∀(x: T) (Maybe T)
 = Maybe.some

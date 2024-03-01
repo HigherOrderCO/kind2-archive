@@ -1,8 +1,3 @@
 BBT.tip
-: ∀(K: *)
-  ∀(V: *)
-  (BBT K V)
-= λK λV
-  ~λP λbin λtip
-  tip
-
+: ∀(K: *) ∀(V: *) (BBT K V)
+= λK λV ~λP λbin λtip tip

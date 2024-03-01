@@ -1,11 +1,8 @@
 List.app
-: ∀(A: *)
-  ∀(B: *)
-  ∀(f: ∀(x: A) B)
-  ∀(x: (List A))
+: ∀(A: *) ∀(B: *) ∀(f: ∀(x: A) B) ∀(x: (List A))
   (List B)
 = λA λB λf λx
-  let P    = λx(List B)
+  let P = λx (List B)
   let cons = λh λt (List.cons B (f h) (List.app A B f t))
-  let nil  = (List.nil B)
+  let nil = (List.nil B)
   (~x P cons nil)

@@ -8,7 +8,4 @@ BBT.bin
   ∀(rgt: (BBT K V))
   (BBT K V)
 = λK λV λsize λkey λval λlft λrgt
-  ~λP λbin λtip
-  (bin size key val lft rgt)
-  
-  
+  ~λP λbin λtip (bin size key val lft rgt)

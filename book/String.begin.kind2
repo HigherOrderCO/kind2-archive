@@ -1,5 +1,3 @@
 String.begin
-: ∀(str: String)
-  String
-= λstr
-  (List.begin Char str)
+: ∀(str: String) String
+= λstr (List.begin Char str)

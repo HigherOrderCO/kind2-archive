@@ -1,7 +1,5 @@
 String.Map.has.linear
-: ∀(V: *)
-  ∀(key: String)
-  ∀(map: (BBT String V))
+: ∀(V: *) ∀(key: String) ∀(map: (BBT String V))
   (Pair Bool (BBT String V))
 = λV λkey λmap
   (BBT.has.linear String V String.cmp key map)

@@ -1,93 +1,145 @@
 Kind.comparer
-: ∀(rec: ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool)
-  ∀(a  : Kind.Term)
-  ∀(b  : Kind.Term)
+: ∀(rec: 
+    ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  )
+  ∀(a: Kind.Term)
+  ∀(b: Kind.Term)
   ∀(dep: Nat)
   Bool
 = λrec λa λb λdep
   let VAR = Kind.var
   let SUC = Nat.succ
-  // Skips Ins, Ann and Let
   let a = (Kind.skip a)
   let b = (Kind.skip b)
-  // Checks if A is hole
-  let R = ∀(b:Kind.Term) ∀(dep:Nat) Bool
+  let R = ∀(b: Kind.Term) ∀(dep: Nat) Bool
   let Y = λa.nam λa.ctx λb λdep Bool.true
   let N = λa λb λdep
-    // Checks if B is hole
-    let R = ∀(dep:Nat) ∀(a:Kind.Term) Bool
+    let R = ∀(dep: Nat) ∀(a: Kind.Term) Bool
     let Y = λb.nam λb.ctx λdep λa Bool.true
     let N = λb λdep λa
-      // Checks if both are equal
-      let P   = λx ∀(b: Kind.Term) ∀(dep: Nat) Bool
+      let P = λx ∀(b: Kind.Term) ∀(dep: Nat) Bool
       let all = λa.nam λa.inp λa.bod λb λdep
-        let P = ∀(dep:Nat) Bool
-        let Y = λb.nam λb.inp λb.bod λdep (Bool.and (rec a.inp b.inp dep) (rec (a.bod (VAR a.nam dep)) (b.bod (VAR b.nam dep)) (SUC dep)))
+        let P = ∀(dep: Nat) Bool
+        let Y = λb.nam λb.inp λb.bod λdep
+          (Bool.and
+            (rec a.inp b.inp dep)
+            (rec
+              (a.bod (VAR a.nam dep))
+              (b.bod (VAR b.nam dep))
+              (SUC dep)
+            )
+          )
         let N = λval λdep Bool.false
         (Kind.if.all b P Y N dep)
       let lam = λa.nam λa.bod λb λdep
-        let P = ∀(dep:Nat) Bool
-        let Y = λb.nam λb.bod λdep (rec (a.bod (VAR a.nam dep)) (b.bod (VAR b.nam dep)) (SUC dep))
+        let P = ∀(dep: Nat) Bool
+        let Y = λb.nam λb.bod λdep
+          (rec
+            (a.bod (VAR a.nam dep))
+            (b.bod (VAR b.nam dep))
+            (SUC dep)
+          )
         let N = λval λdep Bool.false
         (Kind.if.lam b P Y N dep)
       let app = λa.fun λa.arg λb λdep
-        let P = ∀(dep:Nat) Bool
-        let Y = λb.fun λb.arg λdep (Bool.and (rec a.fun b.fun dep) (rec a.arg b.arg dep))
+        let P = ∀(dep: Nat) Bool
+        let Y = λb.fun λb.arg λdep
+          (Bool.and (rec a.fun b.fun dep) (rec a.arg b.arg dep))
         let N = λval λdep Bool.false
         (Kind.if.app b P Y N dep)
-      let ann = λa.val λa.typ λb λdep
-        Bool.false // unreachable
+      let ann = λa.val λa.typ λb λdep Bool.false
       let slf = λa.nam λa.bod λb λdep
-        let P = ∀(dep:Nat) Bool
-        let Y = λb.nam λb.bod λdep (rec (a.bod (VAR a.nam dep)) (b.bod (VAR b.nam dep)) (SUC dep))
+        let P = ∀(dep: Nat) Bool
+        let Y = λb.nam λb.bod λdep
+          (rec
+            (a.bod (VAR a.nam dep))
+            (b.bod (VAR b.nam dep))
+            (SUC dep)
+          )
         let N = λval λdep Bool.false
         (Kind.if.slf b P Y N dep)
-      let ins = λa.val λb λdep
-        Bool.false // unreachable
+      let ins = λa.val λb λdep Bool.false
       let ref = λa.nam λa.val λb λdep
-        let P = ∀(dep:Nat) Bool
+        let P = ∀(dep: Nat) Bool
         let Y = λb.nam λb.val λdep (String.equal a.nam b.nam)
         let N = λval λdep Bool.false
         (Kind.if.ref b P Y N dep)
-      let def = λa.nam λa.val λa.bod λb λdep
-        Bool.false // unreachable
+      let def = λa.nam λa.val λa.bod λb λdep Bool.false
       let set = λb λdep
-        let P = ∀(dep:Nat) Bool
+        let P = ∀(dep: Nat) Bool
         let Y = λdep Bool.true
         let F = λval λdep Bool.false
         (Kind.if.set b P Y F dep)
       let u60 = λb λdep
-        let P = ∀(dep:Nat) Bool
+        let P = ∀(dep: Nat) Bool
         let Y = λdep Bool.true
         let N = λval λdep Bool.false
         (Kind.if.u60 b P Y N dep)
       let num = λa.val λb λdep
-        let P = ∀(dep:Nat) Bool
+        let P = ∀(dep: Nat) Bool
         let Y = λb.val λdep (U60.equal a.val b.val)
         let N = λval λdep Bool.false
         (Kind.if.num b P Y N dep)
       let op2 = λa.opr λa.fst λa.snd λb λdep
-        let P = ∀(dep:Nat) Bool
-        let Y = λb.opr λb.fst λb.snd λdep (Bool.and (rec a.fst b.fst dep) (rec a.snd b.snd dep))
+        let P = ∀(dep: Nat) Bool
+        let Y = λb.opr λb.fst λb.snd λdep
+          (Bool.and (rec a.fst b.fst dep) (rec a.snd b.snd dep))
         let N = λval λdep Bool.false
         (Kind.if.op2 b P Y N dep)
       let mat = λa.nam λa.x λa.z λa.s λa.p λb λdep
-        let P = ∀(dep:Nat) Bool
-        let Y = λb.nam λb.x λb.z λb.s λb.p λdep (Bool.and (rec a.x b.x dep) (Bool.and (rec a.z b.z dep) (Bool.and (rec (a.s (VAR (String.concat a.nam "-1") dep)) (b.s (VAR (String.concat b.nam "-1") dep)) (SUC dep)) (rec (a.p (VAR a.nam dep)) (b.p (VAR b.nam dep)) (SUC dep)))))
+        let P = ∀(dep: Nat) Bool
+        let Y = λb.nam λb.x λb.z λb.s λb.p λdep
+          (Bool.and
+            (rec a.x b.x dep)
+            (Bool.and
+              (rec a.z b.z dep)
+              (Bool.and
+                (rec
+                  (a.s (VAR (String.concat a.nam "-1") dep))
+                  (b.s (VAR (String.concat b.nam "-1") dep))
+                  (SUC dep)
+                )
+                (rec
+                  (a.p (VAR a.nam dep))
+                  (b.p (VAR b.nam dep))
+                  (SUC dep)
+                )
+              )
+            )
+          )
         let N = λval λdep Bool.false
         (Kind.if.mat b P Y N dep)
       let txt = λa.txt λb λdep
-        let P = ∀(dep:Nat) Bool
+        let P = ∀(dep: Nat) Bool
         let Y = λb.txt λdep (String.equal a.txt b.txt)
         let N = λval λdep Bool.false
         (Kind.if.txt b P Y N dep)
-      let hol = λa.nam λa.ctx λb λdep
-        Bool.false // unreachable
+      let hol = λa.nam λa.ctx λb λdep Bool.false
       let var = λa.nam λa.idx λb λdep
-        let P = ∀(dep:Nat) Bool
+        let P = ∀(dep: Nat) Bool
         let Y = λb.nam λb.idx λdep (Nat.equal a.idx b.idx)
         let N = λval λdep Bool.false
         (Kind.if.var b P Y N dep)
-      (~a P all lam app ann slf ins ref def set u60 num op2 mat txt hol var b dep)
+      (~a
+        P
+        all
+        lam
+        app
+        ann
+        slf
+        ins
+        ref
+        def
+        set
+        u60
+        num
+        op2
+        mat
+        txt
+        hol
+        var
+        b
+        dep
+      )
     (Kind.if.hol b R Y N dep a)
   (Kind.if.hol a R Y N b dep)

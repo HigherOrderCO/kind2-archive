@@ -1,13 +1,13 @@
 // exp : ∀(n: Nat) Nat = λn λm λP λs λz (m ∀(x:P)P (n P))
-_EXP = (Kind.all "n" _Nat λn(Kind.all "m" _Nat λm(_Nat)))
-_exp = (Kind.lam "n" λn(Kind.lam "m" λm(Kind.lam "P" λP(Kind.app (Kind.app m (Kind.all "x" P λx(P))) (Kind.app n P)))))
+T_EXP = (Kind.all "n" _Nat λn(Kind.all "m" _Nat λm(_Nat)))
+T_exp = (Kind.lam "n" λn(Kind.lam "m" λm(Kind.lam "P" λP(Kind.app (Kind.app m (Kind.all "x" P λx(P))) (Kind.app n P)))))
 
 // C2 : Nat = λs λz (s (s z))
-_C2 = _Nat
-_c2 = (Kind.lam "P" λP(Kind.lam "s" λs(Kind.lam "z" λz(Kind.app s (Kind.app s z)))))
+T_C2 = _Nat
+T_c2 = (Kind.lam "P" λP(Kind.lam "s" λs(Kind.lam "z" λz(Kind.app s (Kind.app s z)))))
 
 // Checks if (work 2^4) is propositionally equal to true
 test10
 : String
-= let term = (Kind.app (Kind.app _exp _c2) _c2)
+= let term = (Kind.app (Kind.app T_exp T_c2) T_c2)
   (Kind.Term.show (Kind.normal Bool.true term Nat.zero) Nat.zero)

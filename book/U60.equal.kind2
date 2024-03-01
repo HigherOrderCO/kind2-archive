@@ -1,8 +1,7 @@
 U60.equal
-: ∀(a: #U60)
-  ∀(b: #U60)
-  Bool
-= λa λb #match x = #(== a b) {
-  #0: Bool.false
-  #+: Bool.true
-}: Bool
+: ∀(a: #U60) ∀(b: #U60) Bool
+= λa λb
+  #match x = #(== a b) {
+    #0: Bool.false
+    #+: Bool.true 
+  }: Bool

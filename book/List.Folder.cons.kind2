@@ -1,8 +1,5 @@
 List.Folder.cons
-: ∀(T: *)
-  ∀(head: T)
-  ∀(tail: (List.Folder T))
+: ∀(T: *) ∀(head: T) ∀(tail: (List.Folder T))
   (List.Folder T)
-= λT λhead λtail
-  λP λcons λnil
+= λT λhead λtail λP λcons λnil
   (cons head (tail P cons nil))

@@ -5,7 +5,4 @@ U60.match
   ∀(z: (P #0))
   (P x)
 = λx λP λs λz
-  #match self = x {
-    #0: z
-    #+: (s self-1)
-  }: (P self)
+  #match self = x { #0: z #+: (s self-1) }: (P self)

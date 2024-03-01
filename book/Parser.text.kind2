@@ -1,12 +1,23 @@
 Parser.text
-: ∀(text: String)
-  (Parser Unit)
+: ∀(text: String) (Parser Unit)
 = λtext
-  (Parser.skip Unit
-  (Parser.bind Bool Unit (Parser.test text) λsuccess
-  (Bool.if success (Parser Unit)
-    // then
-    (Parser.bind String Unit (Parser.take (String.length text)) λx
-    (Parser.pure Unit Unit.one))
-    // else
-    (Parser.fail Unit "error"))))
+  (Parser.skip
+    Unit
+    (Parser.bind
+      Bool
+      Unit
+      (Parser.test text)
+      λsuccess
+      (Bool.if
+        success
+        (Parser Unit)
+        (Parser.bind
+          String
+          Unit
+          (Parser.take (String.length text))
+          λx (Parser.pure Unit Unit.one)
+        )
+        (Parser.fail Unit "error")
+      )
+    )
+  )

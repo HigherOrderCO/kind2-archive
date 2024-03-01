@@ -1,6 +1,0 @@
-Kind.Term.to_hvm
-: ∀(term: Kind.Term)
-  ∀(dep: Nat)
-  String
-= λterm λdep
-  (String.Concatenator.build (Kind.Term.to_hvm.go term dep Bool.true Nat.zero))

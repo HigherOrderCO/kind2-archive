@@ -7,4 +7,4 @@ Equal.apply
   ∀(e: (Equal A a b))
   (Equal B (f a) (f b))
 = λA λB λf λa λb λe
-  (e λx(Equal B (f a) (f x)) λP λx x)
+  (e λx (Equal B (f a) (f x)) λP λx x)

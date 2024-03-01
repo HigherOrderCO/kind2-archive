@@ -1,5 +1,3 @@
 Kind.Binder.new
-: ∀(nam: String) ∀(typ: Kind.Term)
-  Kind.Binder
-= λnam λtyp
-  (Pair.new String Kind.Term nam typ)
+: ∀(nam: String) ∀(typ: Kind.Term) Kind.Binder
+= λnam λtyp (Pair.new String Kind.Term nam typ)

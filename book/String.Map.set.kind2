@@ -6,4 +6,3 @@ String.Map.set
   (String.Map V)
 = λV λkey λval λmap
   (BBT.set String V String.cmp key val map)
-

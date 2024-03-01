@@ -1,28 +1,94 @@
 Kind.Book.parser
 : (Parser Kind.Book)
-= (Parser.bind Bool Kind.Book Parser.is_eof λis_eof
-  let P     = λx(Parser Kind.Book)
-  // If EOF, return an empty book
-  let true  =
-    (Parser.pure Kind.Book (String.Map.new Kind.Term))
-  // Otherwise, parse a definition
-  let false =
-    (Parser.bind String Kind.Book Parser.name λnam
-    (Parser.bind Bool Kind.Book (Parser.skip Bool (Parser.test ":")) λann
-    let P     = λx(Parser Kind.Book)
-    // If annotated, parses the annotation
-    let true  = 
-      (Parser.bind Unit Kind.Book (Parser.text ":") λ_
-      (Parser.bind Kind.PreTerm Kind.Book Kind.Term.parser λtyp
-      (Parser.bind Unit Kind.Book (Parser.text "=") λ_
-      (Parser.bind Kind.PreTerm Kind.Book Kind.Term.parser λval
-      (Parser.bind Kind.Book Kind.Book Kind.Book.parser λbook
-      (Parser.pure Kind.Book (String.Map.set Kind.Term nam (Kind.ann (val (List.nil Kind.Binder)) (typ (List.nil Kind.Binder))) book)))))))
-    // Otherwise, parses just the value
-    let false = 
-      (Parser.bind Unit Kind.Book (Parser.text "=") λ_
-      (Parser.bind Kind.PreTerm Kind.Book Kind.Term.parser λval
-      (Parser.bind Kind.Book Kind.Book Kind.Book.parser λbook
-      (Parser.pure Kind.Book (String.Map.set Kind.Term nam (val (List.nil Kind.Binder)) book)))))
-    (~ann P true false)))
-  (~is_eof P true false))
+= (Parser.bind
+    Bool
+    Kind.Book
+    Parser.is_eof
+    λis_eof
+    let P = λx (Parser Kind.Book)
+    let true = (Parser.pure Kind.Book (String.Map.new Kind.Term))
+    let false = (Parser.bind
+        String
+        Kind.Book
+        Parser.name
+        λnam
+        (Parser.bind
+          Bool
+          Kind.Book
+          (Parser.skip Bool (Parser.test ":"))
+          λann
+          let P = λx (Parser Kind.Book)
+          let true = (Parser.bind
+              Unit
+              Kind.Book
+              (Parser.text ":")
+              λ_
+              (Parser.bind
+                Kind.PreTerm
+                Kind.Book
+                Kind.Term.parser
+                λtyp
+                (Parser.bind
+                  Unit
+                  Kind.Book
+                  (Parser.text "=")
+                  λ_
+                  (Parser.bind
+                    Kind.PreTerm
+                    Kind.Book
+                    Kind.Term.parser
+                    λval
+                    (Parser.bind
+                      Kind.Book
+                      Kind.Book
+                      Kind.Book.parser
+                      λbook
+                      (Parser.pure
+                        Kind.Book
+                        (String.Map.set
+                          Kind.Term
+                          nam
+                          (Kind.ann
+                            (val (List.nil Kind.Binder))
+                            (typ (List.nil Kind.Binder))
+                          )
+                          book
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          let false = (Parser.bind
+              Unit
+              Kind.Book
+              (Parser.text "=")
+              λ_
+              (Parser.bind
+                Kind.PreTerm
+                Kind.Book
+                Kind.Term.parser
+                λval
+                (Parser.bind
+                  Kind.Book
+                  Kind.Book
+                  Kind.Book.parser
+                  λbook
+                  (Parser.pure
+                    Kind.Book
+                    (String.Map.set
+                      Kind.Term
+                      nam
+                      (val (List.nil Kind.Binder))
+                      book
+                    )
+                  )
+                )
+              )
+            )
+          (~ann P true false)
+        )
+      )
+    (~is_eof P true false)
+  )

@@ -3,5 +3,4 @@ List.Concatenator.concat
   ∀(xs: (List.Concatenator T))
   ∀(ys: (List.Concatenator T))
   (List.Concatenator T)
-= λT λxs λys
-  λnil (xs (ys nil))
+= λT λxs λys λnil (xs (ys nil))

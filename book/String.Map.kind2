@@ -1,4 +1,3 @@
-String.Map 
-:  ∀(V: *) 
-   *
+String.Map
+: ∀(V: *) *
 = λV (BBT String V)

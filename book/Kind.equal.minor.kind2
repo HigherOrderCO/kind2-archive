@@ -5,10 +5,15 @@ Kind.equal.minor
   ∀(dep: Nat)
   Bool
 = λe λa λb λdep
-  let P     = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
-  let true  = λa λb λdep Bool.true
+  let P = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  let true = λa λb λdep Bool.true
   let false = λa λb λdep
     let a_wnf = (Kind.reduce Bool.false a)
     let b_wnf = (Kind.reduce Bool.false b)
-    (Kind.equal.major (Kind.identical a_wnf b_wnf dep) a_wnf b_wnf dep)
+    (Kind.equal.major
+      (Kind.identical a_wnf b_wnf dep)
+      a_wnf
+      b_wnf
+      dep
+    )
   (~e P true false a b dep)

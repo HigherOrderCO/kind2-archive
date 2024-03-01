@@ -1,8 +1,7 @@
 Kind.skip
-: ∀(x: Kind.Term)
-  Kind.Term
+: ∀(x: Kind.Term) Kind.Term
 = λx
-  let P   = λx Kind.Term
+  let P = λx Kind.Term
   let all = Kind.all
   let lam = Kind.lam
   let app = Kind.app
@@ -19,4 +18,22 @@ Kind.skip
   let txt = Kind.txt
   let hol = Kind.hol
   let var = Kind.var
-  (~x P all lam app ann slf ins ref def set u60 num op2 mat txt hol var)
+  (~x
+    P
+    all
+    lam
+    app
+    ann
+    slf
+    ins
+    ref
+    def
+    set
+    u60
+    num
+    op2
+    mat
+    txt
+    hol
+    var
+  )

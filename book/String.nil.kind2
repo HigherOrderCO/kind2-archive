@@ -1,4 +1,3 @@
 String.nil
 : String
-= ~λP λcons λnil
-  nil
+= ~λP λcons λnil nil

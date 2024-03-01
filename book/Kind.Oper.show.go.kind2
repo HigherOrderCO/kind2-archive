@@ -1,22 +1,39 @@
 Kind.Oper.show.go
-: ∀(oper: Kind.Oper)
-  String.Concatenator
+: ∀(oper: Kind.Oper) String.Concatenator
 = λoper
-  let P   = λX(String.Concatenator)
+  let P = λX String.Concatenator
   let add = (Kind.Text.show.go "+")
   let mul = (Kind.Text.show.go "*")
   let sub = (Kind.Text.show.go "-")
   let div = (Kind.Text.show.go "/")
   let mod = (Kind.Text.show.go "%")
-  let eq  = (Kind.Text.show.go "==")
-  let ne  = (Kind.Text.show.go "!=")
-  let lt  = (Kind.Text.show.go "<")
-  let gt  = (Kind.Text.show.go ">")
+  let eq = (Kind.Text.show.go "==")
+  let ne = (Kind.Text.show.go "!=")
+  let lt = (Kind.Text.show.go "<")
+  let gt = (Kind.Text.show.go ">")
   let lte = (Kind.Text.show.go "<=")
   let gte = (Kind.Text.show.go ">=")
   let and = (Kind.Text.show.go "&")
-  let or  = (Kind.Text.show.go "|")
+  let or = (Kind.Text.show.go "|")
   let xor = (Kind.Text.show.go "^")
   let lsh = (Kind.Text.show.go "<<")
   let rsh = (Kind.Text.show.go ">>")
-  (~oper P add mul sub div mod eq ne lt gt lte gte and or xor lsh rsh)
+  (~oper
+    P
+    add
+    mul
+    sub
+    div
+    mod
+    eq
+    ne
+    lt
+    gt
+    lte
+    gte
+    and
+    or
+    xor
+    lsh
+    rsh
+  )

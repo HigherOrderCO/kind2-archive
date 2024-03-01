@@ -3,15 +3,17 @@ Kind.reduce.mat
   ∀(nam: String)
   ∀(x: Kind.Term)
   ∀(z: Kind.Term)
-  ∀(s: ∀(x:Kind.Term)Kind.Term)
-  ∀(p: ∀(x:Kind.Term)Kind.Term)
+  ∀(s: ∀(x: Kind.Term) Kind.Term)
+  ∀(p: ∀(x: Kind.Term) Kind.Term)
   Kind.Term
 = λmaj λnam λx λz λs λp
-  let P = ∀(z: Kind.Term) ∀(s: ∀(x:Kind.Term)Kind.Term) Kind.Term
+  let P = ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
+    Kind.Term
   let Y = λx.val
     #match x = x.val {
       #0: λz λs (Kind.reduce maj z)
-      #+: λz λs (Kind.reduce maj (s (Kind.num x-1)))
-    }: ∀(z: Kind.Term) ∀(s: ∀(x:Kind.Term)Kind.Term) Kind.Term
+      #+: λz λs (Kind.reduce maj (s (Kind.num x-1))) 
+    }: ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
+    Kind.Term
   let N = λx λz λs (Kind.mat nam x z s p)
-  ((Kind.if.num x P Y N) z s)
+  (Kind.if.num x P Y N z s)

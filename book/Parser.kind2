@@ -1,5 +1,3 @@
 Parser
 : ∀(A: *) *
-= λA
-  ∀(code: String)
-  (Parser.Result A)
+= λA ∀(code: String) (Parser.Result A)

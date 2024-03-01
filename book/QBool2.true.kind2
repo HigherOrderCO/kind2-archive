@@ -1,0 +1,3 @@
+QBool2.true
+: QBool2
+= ~λP λnew (new #0)

@@ -5,6 +5,4 @@ IO.save
   ∀(then: ∀(x: Unit) (IO A))
   (IO A)
 = λA λfile λdata λthen
-  ~λP λprint λload λsave λdone
-  (save file data then)
-
+  ~λP λprint λload λsave λdone (save file data then)

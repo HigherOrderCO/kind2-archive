@@ -12,6 +12,6 @@ BBT.has
     let ltn = λcmp λkey (BBT.has K V cmp key next.lft)
     let eql = λcmp λkey Bool.true
     let gtn = λcmp λkey (BBT.has K V cmp key next.rgt)
-    ((~(cmp key next.key) P ltn eql gtn) cmp key)
+    (~(cmp key next.key) P ltn eql gtn cmp key)
   let tip = Bool.false
   (~map P bin tip)

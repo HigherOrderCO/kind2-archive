@@ -1,7 +1,0 @@
-Kind.Book.to_hvm
-: ∀(book: Kind.Book)
-  String
-= λbook
-  (String.Concatenator.build
-  (Kind.Book.to_hvm.go
-  (String.Map.to_list Kind.Term book)))

@@ -1,10 +1,34 @@
 Kind.Term.parser.op2
 : (Parser.Guard Kind.PreTerm)
-= (Parser.Guard.text Kind.PreTerm "#("
-  (Kind.Term.parser.bind Unit         (Parser.text "#(") λ_
-  (Kind.Term.parser.bind Kind.Oper    Kind.Oper.parser   λopr
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λfst
-  (Kind.Term.parser.bind Kind.PreTerm Kind.Term.parser   λsnd
-  (Kind.Term.parser.bind Unit         (Parser.text ")")  λ_
-  (Kind.Term.parser.pure λscp 
-  (Kind.op2 opr (fst scp) (snd scp)))))))))
+= (Parser.Guard.text
+    Kind.PreTerm
+    "#("
+    (Kind.Term.parser.bind
+      Unit
+      (Parser.text "#(")
+      λ_
+      (Kind.Term.parser.bind
+        Kind.Oper
+        Kind.Oper.parser
+        λopr
+        (Kind.Term.parser.bind
+          Kind.PreTerm
+          Kind.Term.parser
+          λfst
+          (Kind.Term.parser.bind
+            Kind.PreTerm
+            Kind.Term.parser
+            λsnd
+            (Kind.Term.parser.bind
+              Unit
+              (Parser.text ")")
+              λ_
+              (Kind.Term.parser.pure
+                λscp (Kind.op2 opr (fst scp) (snd scp))
+              )
+            )
+          )
+        )
+      )
+    )
+  )

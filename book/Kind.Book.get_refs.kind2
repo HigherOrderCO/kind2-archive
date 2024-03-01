@@ -1,7 +1,9 @@
 Kind.Book.get_refs
-: ∀(book: Kind.Book)
-  (List String)
+: ∀(book: Kind.Book) (List String)
 = λbook
-  (List.Concatenator.build String
-  (Kind.Book.get_refs.go
-  (String.Map.to_list Kind.Term book)))
+  (List.Concatenator.build
+    String
+    (Kind.Book.get_refs.go
+      (String.Map.to_list Kind.Term book)
+    )
+  )

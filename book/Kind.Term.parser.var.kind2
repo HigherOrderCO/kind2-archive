@@ -1,6 +1,11 @@
 Kind.Term.parser.var
 : (Parser.Guard Kind.PreTerm)
-= (Parser.Guard.pass Kind.PreTerm
-  (Kind.Term.parser.bind String Parser.name λnam
-  (Kind.Term.parser.pure λscp 
-  (Kind.Scope.find nam scp))))
+= (Parser.Guard.pass
+    Kind.PreTerm
+    (Kind.Term.parser.bind
+      String
+      Parser.name
+      λnam
+      (Kind.Term.parser.pure λscp (Kind.Scope.find nam scp))
+    )
+  )

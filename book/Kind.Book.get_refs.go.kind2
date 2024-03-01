@@ -2,13 +2,14 @@ Kind.Book.get_refs.go
 : ∀(book: (List (Pair String Kind.Term)))
   (List.Concatenator String)
 = λbook
-  let P    = λx (List.Concatenator String)
+  let P = λx (List.Concatenator String)
   let cons = λhead λtail
-    let P   = λx (List.Concatenator String)
+    let P = λx (List.Concatenator String)
     let new = λhead.fst λhead.snd λnil
-      ((Kind.Term.get_refs.go head.snd)
-      ((Kind.Book.get_refs.go tail)
-      nil))
+      (Kind.Term.get_refs.go
+        head.snd
+        (Kind.Book.get_refs.go tail nil)
+      )
     (~head P new)
-  let nil  = λnil nil
+  let nil = λnil nil
   (~book P cons nil)

@@ -1,11 +1,9 @@
 Kind.Scope.find
-: ∀(nam: String)
-  ∀(scp: Kind.Scope)
-  Kind.Term
+: ∀(nam: String) ∀(scp: Kind.Scope) Kind.Term
 = λname λscope
-  let cond  = λbnd (~bnd λx(Bool) λnλt(String.equal name n))
+  let cond = λbnd (~bnd λx Bool λn λt (String.equal name n))
   let found = (List.find Kind.Binder cond scope)
-  let P     = λx(Kind.Term)
-  let some  = λbnd (~bnd λx(Kind.Term) λnλt(t))
-  let none  = (Kind.ref name Kind.set) // FIXME: handle unbound reference
+  let P = λx Kind.Term
+  let some = λbnd (~bnd λx Kind.Term λn λt t)
+  let none = (Kind.ref name Kind.set)
   (~found P some none)

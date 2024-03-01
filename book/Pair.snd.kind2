@@ -1,9 +1,5 @@
 Pair.snd
-: ∀(A: *)
-  ∀(B: *)
-  ∀(p: (Pair A B))
-  B
-= λA λB λp
-  let P   = λx(B)
+: ∀(A: *) ∀(B: *) ∀(p: (Pair A B)) B
+= λA λB λp let P = λx B
   let new = λa λb b
   (~p P new)

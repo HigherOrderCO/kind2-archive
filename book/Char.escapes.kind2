@@ -1,13 +1,43 @@
-Char.escapes 
+Char.escapes
 : (List (Pair Char Char))
-= (List.cons (Pair Char Char) (Pair.new Char Char #98  #8)  // '\b'
-  (List.cons (Pair Char Char) (Pair.new Char Char #102 #12) // '\f'
-  (List.cons (Pair Char Char) (Pair.new Char Char #110 #10) // '\n'
-  (List.cons (Pair Char Char) (Pair.new Char Char #114 #13) // '\r'
-  (List.cons (Pair Char Char) (Pair.new Char Char #116 #9)  // '\t'
-  (List.cons (Pair Char Char) (Pair.new Char Char #118 #11) // '\v'
-  (List.cons (Pair Char Char) (Pair.new Char Char #92  #92) // '\\'
-  (List.cons (Pair Char Char) (Pair.new Char Char #34  #34) // '\"'
-  (List.cons (Pair Char Char) (Pair.new Char Char #48  #0)  // '\0'
-  (List.cons (Pair Char Char) (Pair.new Char Char #39  #39) // '\''
-  (List.nil (Pair Char Char))))))))))))
+= (List.cons
+    (Pair Char Char)
+    (Pair.new Char Char #98 #8)
+    (List.cons
+      (Pair Char Char)
+      (Pair.new Char Char #102 #12)
+      (List.cons
+        (Pair Char Char)
+        (Pair.new Char Char #110 #10)
+        (List.cons
+          (Pair Char Char)
+          (Pair.new Char Char #114 #13)
+          (List.cons
+            (Pair Char Char)
+            (Pair.new Char Char #116 #9)
+            (List.cons
+              (Pair Char Char)
+              (Pair.new Char Char #118 #11)
+              (List.cons
+                (Pair Char Char)
+                (Pair.new Char Char #92 #92)
+                (List.cons
+                  (Pair Char Char)
+                  (Pair.new Char Char #34 #34)
+                  (List.cons
+                    (Pair Char Char)
+                    (Pair.new Char Char #48 #0)
+                    (List.cons
+                      (Pair Char Char)
+                      (Pair.new Char Char #39 #39)
+                      (List.nil (Pair Char Char))
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )

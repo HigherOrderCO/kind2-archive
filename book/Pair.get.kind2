@@ -5,7 +5,4 @@ Pair.get
   ∀(P: *)
   ∀(f: ∀(a: A) ∀(b: B) P)
   P
-= λA λB λp λP λf
-  (~p λx(P) f)
-  
-  
+= λA λB λp λP λf (~p λx P f)

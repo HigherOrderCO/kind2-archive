@@ -1,6 +1,4 @@
 Parser.Guard.pass
-: ∀(A: *)
-  ∀(then: (Parser A))
-  (Parser.Guard A)
+: ∀(A: *) ∀(then: (Parser A)) (Parser.Guard A)
 = λA λthen
   (Parser.Guard.new A (Parser.pure Bool Bool.true) then)

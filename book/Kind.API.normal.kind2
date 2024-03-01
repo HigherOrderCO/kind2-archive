@@ -1,9 +1,29 @@
 Kind.API.normal
-: ∀(term: Kind.Term)
-  (IO Unit)
+: ∀(term: Kind.Term) (IO Unit)
 = λterm
-  (IO.run Unit
-  (Kind.if.ref term (IO Unit) λnam λval (Kind.API.normal val) λterm
-  (Kind.if.ann term (IO Unit) λval λtyp (Kind.API.normal val) λterm
-  (IO.bind Unit Unit (IO.print.do (Kind.Term.show (Kind.normal Bool.true term Nat.zero) Nat.zero)) λx
-  (IO.done Unit Unit.one)))))
+  (IO.run
+    Unit
+    (Kind.if.ref
+      term
+      (IO Unit)
+      λnam λval (Kind.API.normal val)
+      λterm
+      (Kind.if.ann
+        term
+        (IO Unit)
+        λval λtyp (Kind.API.normal val)
+        λterm
+        (IO.bind
+          Unit
+          Unit
+          (IO.print.do
+            (Kind.Term.show
+              (Kind.normal Bool.true term Nat.zero)
+              Nat.zero
+            )
+          )
+          λx (IO.done Unit Unit.one)
+        )
+      )
+    )
+  )

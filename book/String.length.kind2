@@ -1,5 +1,3 @@
 String.length
-: ∀(a: String)
-  Nat
-= λa
-  (List.length Char a)
+: ∀(a: String) Nat
+= λa (List.length Char a)

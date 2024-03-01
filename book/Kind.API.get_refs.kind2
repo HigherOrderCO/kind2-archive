@@ -1,9 +1,20 @@
 Kind.API.get_refs
-: ∀(name: String)
-  (IO Unit)
+: ∀(name: String) (IO Unit)
 = λname
-  (IO.run Unit
-  (IO.bind Kind.Book Unit (Kind.load.code name) λbook
-  (IO.bind Unit Unit (IO.print.do (String.join String.newline (Kind.Book.get_refs book))) λx
-  (IO.done Unit Unit.one))))
-
+  (IO.run
+    Unit
+    (IO.bind
+      Kind.Book
+      Unit
+      (Kind.load.code name)
+      λbook
+      (IO.bind
+        Unit
+        Unit
+        (IO.print.do
+          (String.join String.newline (Kind.Book.get_refs book))
+        )
+        λx (IO.done Unit Unit.one)
+      )
+    )
+  )

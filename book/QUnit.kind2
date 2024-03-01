@@ -1,11 +1,12 @@
-QUnit.one : QUnit =
-  ~λP ~λSP λnew (new #0 λone one)
-
-QUnit : * =
-  $(self: QUnit)
-  ∀(P: ∀(x: QUnit) *) 
-  (Sigma #U60 λtag
-  #match tag = tag {
-    #0: ∀(one: (P QUnit.one)) (P self)
-    #+: Empty
-  }: *)
+QUnit
+: *
+= $(self: QUnit)
+  ∀(P: ∀(x: QUnit) *)
+  (Sigma
+    #U60
+    λtag
+    #match tag = tag {
+      #0: ∀(one: (P QUnit.one)) (P self)
+      #+: Empty 
+    }: *
+  )

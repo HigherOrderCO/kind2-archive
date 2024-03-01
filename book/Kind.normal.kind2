@@ -1,7 +1,4 @@
 Kind.normal
-: ∀(maj: Bool)
-  ∀(term: Kind.Term)
-  ∀(dep: Nat)
-  Kind.Term
+: ∀(maj: Bool) ∀(term: Kind.Term) ∀(dep: Nat) Kind.Term
 = λmaj λterm λdep
   (Kind.normal.go maj (Kind.reduce maj term) dep)

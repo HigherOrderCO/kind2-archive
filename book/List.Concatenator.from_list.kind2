@@ -1,9 +1,12 @@
 List.Concatenator.from_list
-: ∀(T: *)
-  ∀(xs: (List T))
-  (List.Concatenator T)
+: ∀(T: *) ∀(xs: (List T)) (List.Concatenator T)
 = λT λxs
-  let P    = λxs (List.Concatenator T)
-  let cons = λhead λtail λnil (List.cons T head ((List.Concatenator.from_list T tail) nil))
-  let nil  = λnil nil
+  let P = λxs (List.Concatenator T)
+  let cons = λhead λtail λnil
+    (List.cons
+      T
+      head
+      (List.Concatenator.from_list T tail nil)
+    )
+  let nil = λnil nil
   (~xs P cons nil)

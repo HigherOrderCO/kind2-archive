@@ -4,6 +4,4 @@ IO.load
   ∀(then: ∀(x: String) (IO A))
   (IO A)
 = λA λfile λthen
-  ~λP λprint λload λsave λdone
-  (load file then)
-
+  ~λP λprint λload λsave λdone (load file then)

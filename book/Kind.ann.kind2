@@ -1,7 +1,5 @@
 Kind.ann
-: ∀(val: Kind.Term)
-  ∀(typ: Kind.Term)
-  Kind.Term
+: ∀(val: Kind.Term) ∀(typ: Kind.Term) Kind.Term
 = λval λtyp
   ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
   (ann val typ)
