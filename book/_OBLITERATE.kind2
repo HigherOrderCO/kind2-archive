@@ -56,4 +56,4 @@ T_main = (Kind.lam "P" λP(Kind.lam "refl" λrefl(refl)))
 // Checks if `(work 2^4)` is propositionally equal to `true`
 _OBLITERATE
 : String
-= (~(Kind.check T_main T_MAIN) λx(String) λt("check") "error")
+= (~(Kind.check T_main T_MAIN Nat.zero) λx(String) λt("check") "error")
