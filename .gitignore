@@ -1,3 +1,6 @@
 /target
 .tmp/
 .kind21/
+plans.txt
+.check.hvm1
+demo/

@@ -1,0 +1,297 @@
+dup
+: ∀(A: *)
+  ∀(x: A)
+  (Pair A A)
+= λA λx (Pair.new A A x x)
+
+_main
+: ∀(a: Bool) ∀(b: Bool) Bool
+//= λa λb (Bool.match a λa(Bool) (Bool.match b _ Bool.true Bool.true) Bool.true)
+= λa λb (Bool.if a _ (Bool.if b _ ?A Bool.true) Bool.true)
+
+
+//Main
+//: ∀(b: Bool) (~b λx(*) Nat String)
+//= λb (~b ?A Nat.zero "foo")
+
+
+
+//Main
+//: ∀(a: #U60)
+  //∀(b: #U60)
+  //#U60
+//= λa λb
+  //#(> a b)
+
+
+//(?A Bool.true) == (~b λx(*) Nat String)
+
+
+//Main = (List.cons ?A #1 (List.cons ?B #2 (List.nil ?C)))
+
+//Main
+//: #U60
+//= "foo"
+
+//Main
+//: ∀(P: ∀(x: Bool) *)
+  //∀(f: ∀(x: Bool) (P x))
+  //(P (Bool.not (Bool.not Bool.true)))
+//= λP λf
+  //?a
+
+//TYPE_MISMATCH
+//- expected: (Pair (Maybe V) (String.Map V))
+//- detected: (Pair (Maybe V) (BBT String V))
+//- bad_term: (BBT.got String V String.cmp key map)
+//./String.Map.kind2
+  //20 |   (BBT.got String V String.cmp key map)
+
+//(List.cons (Pair Char Char) (Pair.new Char Char Char  #8)  // '\b'
+  //(List.nil (Pair Char Char)))
+
+
+//Main
+//: (IO Unit)
+//= (IO.run Unit
+  //(IO.bind Unit Unit (IO.print.do "hello") λx
+  //(IO.bind Kind.Book Unit (Kind.load "Bool") λbook
+  //(IO.bind Unit Unit (IO.print.do (Kind.Book.to_hvm book)) λx
+  //(IO.done Unit Unit.one)))))
+
+//Main
+//= Kind.API.check
+
+
+//Main = Kind.load.dependency
+
+//Main
+//: Unit
+//= let map = (String.Map.new Unit)
+  //let map = (String.Map.set Unit "Bool" Unit.one map)
+  //let map = (String.Map.set Unit "Bool.true" Unit.one map)
+  //let has = (String.Map.has Unit "Bool.false" map)
+  //(HVM.print Unit (Bool.show has)
+  //Unit.one)
+
+//Main
+//: (IO Unit)
+//= (IO.run Unit
+  //(IO.load Unit "B.kind2" λfile
+  //(IO.print Unit file λx
+  //(IO.done Unit Unit.one))))
+
+//FOO
+//: Kind.Book
+//= (HVM.load Kind.Book "B.kind2" λdata (Kind.Book.parse data))
+
+//Main
+//: (String.Map Kind.Book)
+//=
+  ////(HVM.load ?k "B.kind2" λcode
+  ////let book = (Kind.Book.parse code)
+
+  
+  //let book = (HVM.load ?k "B.kind2" λdata (Kind.Book.parse data))
+
+  //let seen = (String.Map.new Kind.Book)
+  //let seen = (String.Map.set Kind.Book "Bool" book seen)
+  //seen
+  ////)
+
+//Main
+//: (String.Map Unit)
+//= let unit = Unit.one
+  //let seen = (String.Map.new Unit)
+  //let seen = (String.Map.set Unit "Bool" unit seen)
+  //seen
+
+//: (String.Map Kind.Book)
+//= let book = (Kind.load "Bool")
+  //book
+
+  //(HVM.print Unit (Kind.Book.show book)
+  //Unit.one)
+
+//Main = Kind.load.code
+
+//Main = Kind.load.go.defs
+
+//Main
+//: Unit
+//=
+////= (HVM.print Unit (Kind.Book.to_hvm (Kind.API.load "Bool.and"))
+  //Unit.one
+  //)
+
+//Main
+//: (Maybe #U60)
+//= let map = (String.Map.new #U60)
+  //let map = (String.Map.set #U60 "foo" #1 map)
+  //let map = (String.Map.set #U60 "bar" #2 map)
+  //let map = (String.Map.set #U60 "tic" #3 map)
+  //let map = (String.Map.set #U60 "tac" #4 map)
+  //let val = (String.Map.get #U60 "bar" map)
+  //val
+
+//Main
+//: Kind.Book
+//=
+  //let book = (Kind.API.load "Bool.and")
+  //book
+
+  //let code = (Kind.Book.to_hvm book)
+  //let refs = (Kind.Book.get_refs book)
+  //(HVM.print Unit code
+  //Unit.one)
+
+//BOOK
+//: String
+//= "id = λx x
+//Bool : * = $self ∀(P: ∀(x: Bool) *) ∀(t: (P Bool.true)) ∀(f: (P Bool.false)) (P self)
+//Bool.true  : Bool = ~λP λt λf t
+//Bool.false : Bool = ~λP λt λf f
+//"
+
+//Main
+//: String
+//= (Kind.Book.show (Kind.Book.parse BOOK))
+
+//Main = Kind.Term.parser.app
+
+//Main
+//: String
+//= let P    = λx(String)
+  //let done = λcode λok (~ok λx(String) "A" "B")
+  //let fail = λerror "C"
+  //(~(Parser.is_eof "      k   skdafjkfd") P done fail)
+
+//Main
+//: String
+//= let CON   = String.concat
+  //let P     = λx(String)
+  //let done  = λcode λvalue (CON "done: " (CON code (CON " ## RESULT={{" (CON value "}}"))))
+  //let fail  = λcode λvalue (CON "fail: " code)
+  //let parse = (Parser.until Char (Parser.text "ABC") Parser.take)
+  ////let parse = (Parser.bind Unit String (Parser.text "ABC") λx(Parser.pure String "ok"))
+  //(~(parse "oi tudo bem bar aaaaaaaa    tic tac") P done fail)
+
+//Main = Parser.until
+
+//Main
+//: String
+//= let CON  = String.concat
+  //let parse = (Parser.char.escaped 'n' #32)
+  //let P    = λx(String)
+  //let done = λcode λvalue (CON code (CON " || " (String.cons value String.nil)))
+  //let fail = λcode λvalue "fail"
+  //(~(parse "\nfoo") P done fail)
+
+//Main = Parser.char
+
+//Main 
+//: String
+//= let OPT  = (List.cons (Parser String))
+  //let END  = (List.nil (Parser String))
+  //let CON  = String.concat
+  //let P    = λx(String)
+  //let done = λcode λvalue (CON "done: " (CON (String.cons value String.nil) (CON " ## left: " code)))
+  //let fail = λcode λvalue (CON "fail: " code)
+  //(~(Parser.char "\\bc") P done fail)
+
+//Main = Parser.until
+//Main = Char.escapes
+//Main = Kind.Term.parser
+//Main = Kind.Scope.find
+
+//Main = List.fold
+
+//Main
+//: (List.Folder #U60)
+//= λP λcons λnil (cons #0 (cons #1 (cons #2 nil)))
+
+//Main
+//: #U60
+//= let list =
+    //(List.cons #U60 #1 
+    //(List.cons #U60 #2
+    //(List.cons #U60 #3 
+    //(List.nil #U60))))
+  //((List.fold #U60 list) #U60 λhλt#(+ h t) #0)
+
+
+//Main
+//: String
+//= let OPT  = (List.cons (Parser String))
+  //let END  = (List.nil (Parser String))
+  //let CON  = String.concat
+  //let NIL  = String.nil
+  //let P    = λx(String)
+  //let done = λcode λvalue (CON "done: " (CON value (CON " ## left: " code)))
+  //let fail = λcode λerror (CON "fail: " code)
+  //let opts =
+    //(OPT (Parser.bind Unit String (Parser.text (String.cons Char.slash (String.cons 'n' String.nil))) λx
+         //(Parser.pure String "parsed_0"))
+    //(OPT (Parser.bind Unit String (Parser.text "farinha") λx
+         //(Parser.pure String "parsed_1"))
+    //(OPT (Parser.bind Unit String (Parser.text "alpiste") λx
+         //(Parser.pure String "parsed_2"))
+    //END))) 
+  //let text = "\nalpiste medula oblongata"
+  //(~(Parser.options String opts text) P done fail)
+
+//Main
+//: String
+//= let P    = λx(String)
+  //let done = λcode λvalue (CON "done: " (CON (Bool.if value String "Y" "N") (CON " ## left: " code)))
+  //let fail = λerror (CON "fail: " error)
+  //(~(Parser.test "testador de" "testador de testes") P done fail)
+
+//Main
+//: String
+//= let P   = λx(String)
+  //let new = λcode λword word
+  //(~(Parser.word Char.is_name "foo bar tic tac") P new)
+
+//Main
+//: Bool
+//= (Char.is_name 'D')
+
+//Main
+//: String
+//= (String.cons 'a' String.nil)
+
+//Main
+//: String
+//= let str = "    foo bar"
+  //(String.skip str)
+
+//Main
+//: (Maybe #U60)
+//= let list =
+    //(List.cons #U60 #10
+    //(List.cons #U60 #20
+    //(List.cons #U60 #30
+    //(List.cons #U60 #40
+    //(List.cons #U60 #50
+    //(List.nil #U60))))))
+  //(List.find #U60 (U60.equal #30) list)
+
+//Main
+//: Bool
+//= (String.equal "abcd" "abcd")
+
+//Main
+//: String
+//= (U60.name #703)
+
+//Main
+//: String
+//= #match x = #2 {
+  //#0: "0"
+  //#+: #match y = x-1 {
+    //#0: "1"
+    //#+: ">"
+  //}: String
+//}: String
+

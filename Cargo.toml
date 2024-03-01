@@ -8,6 +8,6 @@ name = "kind2"
 path = "src/main.rs"
 
 [dependencies]
-TSPL = "0.0.4"
+TSPL = "0.0.6"
 highlight_error = "0.1.1"
 im = "15.1.0"

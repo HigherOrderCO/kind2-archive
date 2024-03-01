@@ -743,19 +743,19 @@
 (Context.show.ann (Ann val typ) dep) = (String.join ["{" (Show (Normal 0 val dep) dep) ": " (Show (Normal 0 typ dep) dep) "}"])
 (Context.show.ann term          dep) = (Show (Normal 0 term dep) dep)
 
-(Message.show (Found name type ctx dep)) =
+(Info.show (Found name type ctx dep)) =
   let type  = (Show (Normal 1 type dep) dep)
   let ctx   = (String.tail (Context.show ctx dep))
   (String.join ["#found{" name " " type " [" ctx "]}"])
-(Message.show (Error src detected expected value dep)) =
+(Info.show (Error src detected expected value dep)) =
   let det = (Show (Normal 1 detected dep) dep)
   let exp = (Show (Normal 1 expected dep) dep)
   let val = (Show (Normal 0 value dep) dep)
   (String.join ["#error{" exp " " det " " val " " (U60.show src) "}"])
-(Message.show (Solve name term dep)) =
+(Info.show (Solve name term dep)) =
   let term = (Show (Normal 1 term dep) dep)
   (String.join ["#solve{" name " "  term "}"])
-(Message.show (Vague name)) =
+(Info.show (Vague name)) =
   (String.join ["#vague{" name "}"])
 
 // Compilation
@@ -836,7 +836,7 @@ Compile.primitives = [
         // case true:
         (API.check (Ref nam sub def))
         // case false:
-        (API.check.vague sub)))
+        (API.check.log logs 1)))
     // case fail:
     λlogs λerror
       (API.check.log logs
@@ -852,14 +852,14 @@ Compile.primitives = [
 
 // Moves solutions from the checker logs to a ref's subst list.
 (API.check.fill sub (List.cons (Solve k v d) xs)) = (Pair.get (API.check.fill sub xs) λokλmap(Pair 1 (Map.set λxλy(Same x y) k (Some v) sub)))
-(API.check.fill sub (List.cons message xs))       = (API.check.fill sub xs)
+(API.check.fill sub (List.cons info xs))          = (API.check.fill sub xs)
 (API.check.fill sub List.nil)                     = (Pair 0 sub)
 
 // Prints all messages returned by the checker.
-(API.check.log (List.cons msg msgs) then) = (HVM.print (Message.show msg) (API.check.log msgs then))
+(API.check.log (List.cons msg msgs) then) = (HVM.print (Info.show msg) (API.check.log msgs then))
 (API.check.log List.nil             then) = then
 
 // Reports solved holdes
-(API.check.vague (List.cons (Pair name None)     xs)) = (HVM.print (Message.show (Vague name)) (& 0 (API.check.vague xs)))
+(API.check.vague (List.cons (Pair name None)     xs)) = (HVM.print (Info.show (Vague name)) (& 0 (API.check.vague xs)))
 (API.check.vague (List.cons (Pair name (Some x)) xs)) = (API.check.vague xs)
 (API.check.vague List.nil)                            = 1
