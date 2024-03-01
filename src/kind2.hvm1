@@ -554,7 +554,7 @@
     λvty.nam λvty.typ λvty.bod λval
       (Checker.pure (vty.bod (Ins val)))
     λval
-      (Checker.fail (NonSlfIns (Ins val))))
+      (Checker.fail (Error 0 vty (Hol "self-type" []) (Ins val) dep)))
     val))
 (Infer.match (Ref nam sub val) dep) = 
   (Infer val dep)
