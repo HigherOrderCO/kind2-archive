@@ -268,10 +268,10 @@
 // --------
 
 // The conversion checkers works as follows:
-//   1. If the two sides are structurally identical, they're equal.
-//   2. Otherwise, reduce both sides.
-//   3. If the two sides are structurally identical, they're equal.
-//   4. Otherwise, recurse on both sides and check if all fields are equal.
+// - 1. If the two sides are structurally identical, they're equal.
+// - 2. Otherwise, reduce both sides.
+// - 3. If the two sides are structurally identical, they're equal.
+// - 4. Otherwise, recurse on both sides and check if all fields are equal.
 // This algorithm will return true when both sides reduce to the same normal
 // form, but it will halt early if both sides become identical at any point
 // during the reduction, allowing checking recursive terms. This is enough to
@@ -408,128 +408,112 @@
 //   3. The LHS hole, `?A`, doesn't occur in the RHS, `B`.
 // If it is successful, it outputs the following substitution:
 //   ?A = λx λy λz ... B
-// The `Unify.pat` fn will just recurse on the LHS apps, reaching the hole.
-// The `Unify.sub` fn will try to generate the subst, respecting the criteria.
-// The `Unify.rec` fn checks the 3rd condition, preventing recursive substs.
+// In this checker, we don't allow holes to occur in solutions at all.
 
 // Unify.try : Term -> Term -> U60 -> (Checker U60) -> (Checker U60)
 (Unify.try a b dep else) =
-  (Maybe.match (Unify.pat a b dep Map.new)
+  // Attempts to unify the pattern
+  (Maybe.match (Unify.solve a b dep Map.new)
+    // If successful, logs the solution
     λkv(Pair.get kv λkλv
       (Checker.bind (Checker.log (Fill k v dep)) λx
       (Checker.pure 1)))
-    (If (Unify.skp a)
+    // Otherwise, signals to skip equality if this is a pattern
+    (If (Unify.skip a)
       (Checker.pure 1)
       (else)))
 
-// Unify.skp : Term -> Bool
-(Unify.skp (App fun arg))  = (Unify.skp fun)
-(Unify.skp (Ann val typ))  = (Unify.skp val)
-(Unify.skp (Ins val))      = (Unify.skp val)
-(Unify.skp (Src src val))  = (Unify.skp val)
-(Unify.skp (Met nam None)) = 1
-(Unify.skp (Hol nam ctx))  = 1
-(Unify.skp other)          = 0
-
-// Unify.pat : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
-(Unify.pat (App fun (Var nam idx)) b dep ctx) =
+// If LHS is a solveable pattern, generates its solution.
+// Unify.solve : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
+(Unify.solve (App fun (Var nam idx)) b dep ctx) =
   (Maybe.bind (Map.ins λaλb(== a b) idx $x ctx) λctx
-  (Maybe.bind (Unify.pat fun b dep ctx) λkv 
+  (Maybe.bind (Unify.solve fun b dep ctx) λkv 
   (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.pat (Met nam None) b dep ctx) =
-  (Maybe.bind (Unify.sub b dep nam ctx) λneo
+(Unify.solve (Met nam None) b dep ctx) =
+  (Maybe.bind (Unify.solution b dep nam ctx) λneo
   (Maybe.pure (Pair nam neo)))
-(Unify.pat (App fun (Ann val _))        b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Ins val))          b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Src _ val))        b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Met _ (Some val))) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (Ann val typ)                b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Ins val)                    b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Src src val)                b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Met nam (Some val))         b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat other                        b dep ctx) = None
+(Unify.solve (App fun (Ann val _))        b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Ins val))          b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Src _ val))        b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Met _ (Some val))) b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (Ann val typ)                b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Ins val)                    b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Src src val)                b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Met nam (Some val))         b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve other                        b dep ctx) = None
 
-// Unify.sub : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
-(Unify.sub (All nam inp bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub inp dep hol ctx) λinp
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ dep 1) hol ctx) λbod
+// If LHS is an unsolveable pattern, skips its type-checking.
+// Unify.skip : Term -> Bool
+(Unify.skip (App fun arg))  = (Unify.skip fun)
+(Unify.skip (Ann val typ))  = (Unify.skip val)
+(Unify.skip (Ins val))      = (Unify.skip val)
+(Unify.skip (Src src val))  = (Unify.skip val)
+(Unify.skip (Met nam None)) = 1
+(Unify.skip (Hol nam ctx))  = 1
+(Unify.skip other)          = 0
+
+// Attempts to convert RHS to a solution, checking the criteria.
+// Unify.solution : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
+(Unify.solution (All nam inp bod) dep hol ctx) =
+  (Maybe.bind (Unify.solution inp dep hol ctx) λinp
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ dep 1) hol ctx) λbod
   (Maybe.pure (All nam inp λ_(bod)))))
-(Unify.sub (Lam nam bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
+(Unify.solution (Lam nam bod) dep hol ctx) =
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
   (Maybe.pure (Lam nam λ_(bod))))
-(Unify.sub (App fun arg) dep hol ctx) =
-  (Maybe.bind (Unify.sub fun dep hol ctx) λfun
-  (Maybe.bind (Unify.sub arg dep hol ctx) λarg
+(Unify.solution (App fun arg) dep hol ctx) =
+  (Maybe.bind (Unify.solution fun dep hol ctx) λfun
+  (Maybe.bind (Unify.solution arg dep hol ctx) λarg
   (Maybe.pure (App fun arg))))
-(Unify.sub (Ann val typ) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.bind (Unify.sub typ dep hol ctx) λtyp
+(Unify.solution (Ann val typ) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
+  (Maybe.bind (Unify.solution typ dep hol ctx) λtyp
   (Maybe.pure (Ann val typ))))
-(Unify.sub (Slf nam typ bod) dep hol ctx) =
-  (Unify.sub typ dep hol ctx)
-(Unify.sub (Ins val) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
+(Unify.solution (Slf nam typ bod) dep hol ctx) =
+  (Unify.solution typ dep hol ctx)
+(Unify.solution (Ins val) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
   (Maybe.pure (Ins val)))
-(Unify.sub (Ref nam sub val) dep hol ctx) =
+(Unify.solution (Ref nam sub val) dep hol ctx) =
   (Maybe.pure (Ref nam sub val))
-(Unify.sub (Let nam val bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
+(Unify.solution (Let nam val bod) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
   (Maybe.pure (Let nam val λ_(bod)))))
-(Unify.sub (Met nam None) dep hol ctx) =
-  None
+(Unify.solution (Met nam None) dep hol ctx) =
+  None // holes can't appear in the solution
   //(If (Same nam hol) None (Maybe.pure (Met nam None)))
-(Unify.sub (Met nam (Some val)) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
+(Unify.solution (Met nam (Some val)) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
   (Maybe.pure (Met nam (Some val))))
-(Unify.sub (Hol nam _) dep hol ctx) =
+(Unify.solution (Hol nam _) dep hol ctx) =
   (Maybe.pure (Hol nam [])) // FIXME?
-(Unify.sub Set dep hol ctx) =
+(Unify.solution Set dep hol ctx) =
   (Maybe.pure Set)
-(Unify.sub U60 dep hol ctx) =
+(Unify.solution U60 dep hol ctx) =
   (Maybe.pure U60)
-(Unify.sub (Num val) dep hol ctx) =
+(Unify.solution (Num val) dep hol ctx) =
   (Maybe.pure (Num val))
-(Unify.sub (Op2 opr fst snd) dep hol ctx) =
-  (Maybe.bind (Unify.sub fst dep hol ctx) λfst
-  (Maybe.bind (Unify.sub snd dep hol ctx) λsnd
+(Unify.solution (Op2 opr fst snd) dep hol ctx) =
+  (Maybe.bind (Unify.solution fst dep hol ctx) λfst
+  (Maybe.bind (Unify.solution snd dep hol ctx) λsnd
   (Maybe.pure (Op2 opr fst snd))))
-(Unify.sub (Mat nam x z s p) dep hol ctx) =
-  (Maybe.bind (Unify.sub x dep hol ctx) λx
-  (Maybe.bind (Unify.sub z dep hol ctx) λz
-  (Maybe.bind (Unify.sub (s (Var (String.concat nam "-1") dep)) dep hol ctx) λs
-  (Maybe.bind (Unify.sub (p (Var nam dep)) dep hol ctx) λp
+(Unify.solution (Mat nam x z s p) dep hol ctx) =
+  (Maybe.bind (Unify.solution x dep hol ctx) λx
+  (Maybe.bind (Unify.solution z dep hol ctx) λz
+  (Maybe.bind (Unify.solution (s (Var (String.concat nam "-1") dep)) dep hol ctx) λs
+  (Maybe.bind (Unify.solution (p (Var nam dep)) dep hol ctx) λp
   (Maybe.pure (Mat nam x z λ_(s) λ_(p)))))))
-(Unify.sub (Txt val) dep hol ctx) =
+(Unify.solution (Txt val) dep hol ctx) =
   (Maybe.pure (Txt val))
-(Unify.sub (Var nam idx) dep hol ctx) =
+(Unify.solution (Var nam idx) dep hol ctx) =
   (Maybe.bind (Map.get λaλb(== a b) idx ctx) λval
   (Maybe.pure val))
-(Unify.sub (Src src val) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
+(Unify.solution (Src src val) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
   (Maybe.pure (Src src val)))
-(Unify.sub term dep hol ctx) =
-  (HVM.log (UNEXPECTED (Show term dep)) None)
-
-// TODO: use this
-// Unify.rec : Fill -> Term -> String -> Bool
-//(Unify.rec fill (All nam inp bod) hol) = (| (Unify.rec fill inp hol) (Unify.rec fill (bod Set) hol))
-//(Unify.rec fill (Lam nam bod)     hol) = (Unify.rec fill (bod Set) hol)
-//(Unify.rec fill (App fun arg)     hol) = (| (Unify.rec fill fun hol) (Unify.rec fill arg hol))
-//(Unify.rec fill (Ann val typ)     hol) = (| (Unify.rec fill val hol) (Unify.rec fill typ hol))
-//(Unify.rec fill (Slf nam typ bod) hol) = (Unify.rec fill typ hol)
-//(Unify.rec fill (Ins val)         hol) = (Unify.rec fill val hol)
-//(Unify.rec fill (Ref nam sub val) hol) = 0
-//(Unify.rec fill (Let nam val bod) hol) = (| (Unify.rec fill val hol) (Unify.rec fill (bod Set) hol))
-//(Unify.rec fill Set               hol) = 0
-//(Unify.rec fill U60               hol) = 0
-//(Unify.rec fill (Num val)         hol) = 0
-//(Unify.rec fill (Op2 opr fst snd) hol) = (| (Unify.rec fill fst hol) (Unify.rec fill snd hol))
-//(Unify.rec fill (Mat nam x z s p) hol) = (| (Unify.rec fill x hol) (| (Unify.rec fill z hol) (| (Unify.rec fill (s Set) hol) (Unify.rec fill (p Set) hol))))
-//(Unify.rec fill (Txt val)         hol) = 0
-//(Unify.rec fill (Var nam idx)     hol) = 0
-//(Unify.rec fill (Src src val)     hol) = (Unify.rec fill val hol)
-//(Unify.rec fill (Hol nam ctx)     hol) = (If (Same nam hol) 1 (Maybe.match (Map.get λaλb(Same a b) nam fill) λgot(Unify.rec fill got hol) 0))
+(Unify.solution term dep hol ctx) =
+  (HVM.log (UNREACHALBE (Show term dep)) None)
 
 // Type-Checking
 // -------------
@@ -817,7 +801,7 @@ Compile.primitives = [
         // case true:
         (API.check (Ref nam sub def))
         // case false:
-        1)))
+        (API.check.solved sub))))
     // case fail:
     λlogs λerror
       (API.check.log logs
@@ -840,16 +824,24 @@ Compile.primitives = [
 (API.check.log (List.cons msg msgs) then) = (HVM.print (Message.show msg) (API.check.log msgs then))
 (API.check.log List.nil             then) = then
 
-Book.Char = (Ref "Char" [] (Ann (Src 5497569673231 (U60)) (Src 5497565478920 (Set))))
-Book.List = (Ref "List" [] (Ann (Src 6597093884094 (Lam "T" λxT (Src 6597100175550 (Slf "self" (Src 6597108564013 (App (Src 6597109612586 (Book.List)) (Src 6597114855468 xT))) λxself (Src 6597121147070 (All "P" (Src 6597128486987 (All "xs" (Src 6597136875592 (App (Src 6597137924165 (Book.List)) (Src 6597143167047 xT))) λxxs (Src 6597147361355 (Set)))) λxP (Src 6597152604350 (All "cons" (Src 6597163090069 (All "head" (Src 6597173575780 xT) λxhead (Src 6597176721557 (All "tail" (Src 6597187207288 (App (Src 6597188255861 (Book.List)) (Src 6597193498743 xT))) λxtail (Src 6597197693077 (App (Src 6597198741628 xP) (Src 6597200838804 (App (App (App (Src 6597201887367 (Book.List.cons)) (Src 6597212373129 xT)) (Src 6597214470286 xhead)) (Src 6597219713171 xtail))))))))) λxcons (Src 6597230198974 (All "nil" (Src 6597239636146 (App (Src 6597240684708 xP) (Src 6597242781873 (App (Src 6597243830446 (Book.List.nil)) (Src 6597253267632 xT))))) λxnil (Src 6597260607678 (App (Src 6597261656248 xP) (Src 6597263753405 xself))))))))))))) (Src 6597077106708 (All "T" (Src 6597084446735 (Set)) λxT (Src 6597089689620 (Set))))))
-Book.List.cons = (Ref "List.cons" [] (Ann (Src 7696656892032 (Lam "T" λxT (Src 7696661086336 (Lam "head" λxhead (Src 7696668426368 (Lam "tail" λxtail (Src 7696677863552 (Ins (Src 7696678912128 (Lam "P" λxP (Src 7696683106432 (Lam "cons" λxcons (Src 7696690446464 (Lam "nil" λxnil (Src 7696698835072 (App (App (Src 7696699883637 xcons) (Src 7696705126522 xhead)) (Src 7696710369407 xtail))))))))))))))))) (Src 7696593977413 (All "T" (Src 7696601317396 (Set)) λxT (Src 7696606560325 (All "head" (Src 7696617046051 xT) λxhead (Src 7696622288965 (All "tail" (Src 7696632774713 (App (Src 7696633823286 (Book.List)) (Src 7696639066168 xT))) λxtail (Src 7696645357637 (App (Src 7696646406210 (Book.List)) (Src 7696651649092 xT)))))))))))
-Book.List.nil = (Ref "List.nil" [] (Ann (Src 8796128673855 (Lam "T" λxT (Src 8796134965311 (Ins (Src 8796136013887 (Lam "P" λxP (Src 8796140208191 (Lam "cons" λxcons (Src 8796147548223 (Lam "nil" λxnil (Src 8796155936831 xnil))))))))))) (Src 8796104556575 (All "T" (Src 8796111896595 (Set)) λxT (Src 8796117139487 (App (Src 8796118188060 (Book.List)) (Src 8796123430942 xT)))))))
-Book.Pair = (Ref "Pair" [] (Ann (Src 2199059955884 (Lam "A" λxA (Src 2199064150188 (Lam "B" λxB (Src 2199070441644 (Slf "self" (Src 2199078830143 (App (App (Src 2199079878714 (Book.Pair)) (Src 2199085121596 xA)) (Src 2199087218750 xB))) λxself (Src 2199093510316 (All "P" (Src 2199100850273 (All "pair" (Src 2199111336030 (App (App (Src 2199112384601 (Book.Pair)) (Src 2199117627483 xA)) (Src 2199119724637 xB))) λxpair (Src 2199123918945 (Set)))) λxP (Src 2199129161900 (All "new" (Src 2199138599072 (All "fst" (Src 2199148036216 xA) λxfst (Src 2199151181984 (All "snd" (Src 2199160619140 xB) λxsnd (Src 2199163764896 (App (Src 2199164813448 xP) (Src 2199166910623 (App (App (App (App (Src 2199167959186 (Book.Pair.new)) (Src 2199177396372 xA)) (Src 2199179493526 xB)) (Src 2199181590682 xfst)) (Src 2199185784990 xsnd))))))))) λxnew (Src 2199195222188 (App (Src 2199196270758 xP) (Src 2199198367915 xself))))))))))))) (Src 2199030595616 (All "A" (Src 2199037935631 (Set)) λxA (Src 2199043178528 (All "B" (Src 2199050518555 (Set)) λxB (Src 2199055761440 (Set))))))))
-Book.Pair.new = (Ref "Pair.new" [] (Ann (Src 3298610380910 (Lam "A" λxA (Src 3298614575214 (Lam "B" λxB (Src 3298618769518 (Lam "a" λxa (Src 3298622963822 (Lam "b" λxb (Src 3298629255278 (Ins (Src 3298630303854 (Lam "P" λxP (Src 3298634498158 (Lam "new" λxnew (Src 3298640789614 (App (App (Src 3298641838185 xnew) (Src 3298646032491 xa)) (Src 3298648129645 xb))))))))))))))))) (Src 3298546417733 (All "A" (Src 3298553757715 (Set)) λxA (Src 3298559000645 (All "B" (Src 3298566340639 (Set)) λxB (Src 3298571583557 (All "a" (Src 3298578923563 xA) λxa (Src 3298584166469 (All "b" (Src 3298591506487 xB) λxb (Src 3298596749381 (App (App (Src 3298597797952 (Book.Pair)) (Src 3298603040834 xA)) (Src 3298605137988 xB)))))))))))))
-Book.String = (Ref "String" [] (Ann (Src 4398060142616 (App (Src 4398061191186 (Book.List)) (Src 4398066434071 (Book.Char)))) (Src 4398055948298 (Set))))
-Book.String.cons = (Ref "String.cons" [] (Ann (Src 9895668613233 (Lam "head" λxhead (Src 9895675953265 (Lam "tail" λxtail (Src 9895685390449 (Ins (Src 9895686439025 (Lam "P" λxP (Src 9895690633329 (Lam "cons" λxcons (Src 9895697973361 (Lam "nil" λxnil (Src 9895706361969 (App (App (Src 9895707410534 xcons) (Src 9895712653419 xhead)) (Src 9895717896304 xtail))))))))))))))) (Src 9895619330106 (All "head" (Src 9895629815836 (Book.Char)) λxhead (Src 9895638204474 (All "tail" (Src 9895648690224 (Book.String)) λxtail (Src 9895659175994 (Book.String))))))))
-Book.String.nil = (Ref "String.nil" [] (Ann (Src 10995139346477 (Ins (Src 10995140395053 (Lam "P" λxP (Src 10995144589357 (Lam "cons" λxcons (Src 10995151929389 (Lam "nil" λxnil (Src 10995160317997 xnil))))))))) (Src 10995129909267 (Book.String))))
-Book._main = (Ref "_main" [(Pair "A" None),(Pair "B" None),(Pair "C" None),(Pair "D" None),(Pair "E" None),(Pair "F" None),(Pair "G" None),(Pair "H" None)]  λ_A λ_B λ_C λ_D λ_E λ_F λ_G λ_H(Ann (Src 1099599708393 (Let "x" (Src 1099608096871 (App (App (Src 1099609145440 (Book.dup)) (Src 1099613339747 (Met "B" _B))) (Src 1099616485478 (Num 0)))) λxx (Src 1099622777065 (Let "x" (Src 1099631165564 (App (App (Src 1099632214134 (Book.dup)) (Src 1099636408441 (Met "C" _C))) (Src 1099639554171 xx))) λxx (Src 1099644797161 (Let "x" (Src 1099653185681 (App (App (Src 1099654234251 (Book.dup)) (Src 1099658428558 (Met "D" _D))) (Src 1099661574288 xx))) λxx (Src 1099666817257 (Let "x" (Src 1099675205798 (App (App (Src 1099676254368 (Book.dup)) (Src 1099680448675 (Met "E" _E))) (Src 1099683594405 xx))) λxx (Src 1099688837353 (Let "x" (Src 1099697225915 (App (App (Src 1099698274485 (Book.dup)) (Src 1099702468792 (Met "F" _F))) (Src 1099705614522 xx))) λxx (Src 1099710857449 (Let "x" (Src 1099719246032 (App (App (Src 1099720294602 (Book.dup)) (Src 1099724488909 (Met "G" _G))) (Src 1099727634639 xx))) λxx (Src 1099732877545 (Let "x" (Src 1099741266149 (App (App (Src 1099742314719 (Book.dup)) (Src 1099746509026 (Met "H" _H))) (Src 1099749654756 xx))) λxx (Src 1099754897641 xx))))))))))))))) (Src 1099594465361 (Met "A" _A))))
-Book.dup = (Ref "dup" [] (Ann (Src 1099556716613 (Lam "A" λxA (Src 1099560910917 (Lam "x" λxx (Src 1099565105221 (App (App (App (App (Src 1099566153788 (Book.Pair.new)) (Src 1099575590974 xA)) (Src 1099577688128 xA)) (Src 1099579785282 xx)) (Src 1099581882436 xx))))))) (Src 1099517919272 (All "A" (Src 1099525259278 (Set)) λxA (Src 1099530502184 (All "x" (Src 1099537842202 xA) λxx (Src 1099543085096 (App (App (Src 1099544133667 (Book.Pair)) (Src 1099549376549 xA)) (Src 1099551473703 xA)))))))))
+// Reports solved holdes
+(API.check.solved (List.cons (Pair name None)    xs)) = (HVM.print (String.join ["UNSOLVED: _" name]) (& 0 (API.check.solved xs)))
+(API.check.solved (List.cons (Pair nam (Some x)) xs)) = (API.check.solved xs)
+(API.check.solved List.nil)                           = 1
 
-Main = (API.check Book._main)
+Book.Char = (Ref "Char" [] (Ann (Src 6597081301007 (U60)) (Src 6597077106696 (Set))))
+Book.IO = (Ref "IO" [] (Ann (Src 2199043178912 (Lam "A" λxA (Src 2199049470368 (Slf "self" (Src 2199057858599 (App (Src 2199058907172 (Book.IO)) (Src 2199062052902 xA))) λxself (Src 2199068344736 (All "P" (Src 2199075684418 (All "x" (Src 2199083024447 (App (Src 2199084073020 (Book.IO)) (Src 2199087218750 xA))) λxx (Src 2199091413058 (Set)))) λxP (Src 2199096656288 (All "print" (Src 2199108190364 (All "text" (Src 2199118676065 (Book.String)) λxtext (Src 2199127064732 (All "then" (Src 2199137550464 (All "x" (Src 2199144890488 (Book.Unit)) λxx (Src 2199151181952 (App (Src 2199152230525 (Book.IO)) (Src 2199155376255 xA))))) λxthen (Src 2199159570588 (App (Src 2199160619140 xP) (Src 2199162716315 (App (App (App (Src 2199163764878 (Book.IO.print)) (Src 2199173202064 xA)) (Src 2199175299221 xtext)) (Src 2199180542106 xthen))))))))) λxprint (Src 2199191028128 (All "load" (Src 2199201513718 (All "file" (Src 2199211999418 (Book.String)) λxfile (Src 2199220388086 (All "then" (Src 2199230873819 (All "x" (Src 2199238213843 (Book.String)) λxx (Src 2199246602459 (App (Src 2199247651032 (Book.IO)) (Src 2199250796762 xA))))) λxthen (Src 2199254991094 (App (Src 2199256039647 xP) (Src 2199258136821 (App (App (App (Src 2199259185384 (Book.IO.load)) (Src 2199267573994 xA)) (Src 2199269671151 xfile)) (Src 2199274914036 xthen))))))))) λxload (Src 2199285399968 (All "save" (Src 2199295885669 (All "file" (Src 2199306371348 (Book.String)) λxfile (Src 2199314760037 (All "data" (Src 2199325245734 (Book.String)) λxdata (Src 2199333634405 (All "then" (Src 2199344120133 (All "x" (Src 2199351460157 (Book.Unit)) λxx (Src 2199357751621 (App (Src 2199358800194 (Book.IO)) (Src 2199361945924 xA))))) λxthen (Src 2199366140261 (App (Src 2199367188809 xP) (Src 2199369285988 (App (App (App (App (Src 2199370334546 (Book.IO.save)) (Src 2199378723156 xA)) (Src 2199380820313 xfile)) (Src 2199386063198 xdata)) (Src 2199391306083 xthen))))))))))) λxsave (Src 2199401791904 (All "done" (Src 2199412277652 (All "term" (Src 2199422763390 xA) λxterm (Src 2199425909140 (App (Src 2199426957698 xP) (Src 2199429054867 (App (App (Src 2199430103435 (Book.IO.done)) (Src 2199438492045 xA)) (Src 2199440589202 xterm))))))) λxdone (Src 2199451074976 (App (Src 2199452123546 xP) (Src 2199454220703 xself))))))))))))))))) (Src 2199028498448 (All "A" (Src 2199035838477 (Set)) λxA (Src 2199038984208 (Set))))))
+Book.IO.done = (Ref "IO.done" [] (Ann (Src 3298583117930 (Lam "A" λxA (Src 3298587312234 (Lam "term" λxterm (Src 3298596749418 (Ins (Src 3298597797994 (Lam "P" λxP (Src 3298601992298 (Lam "print" λxprint (Src 3298610380906 (Lam "load" λxload (Src 3298617720938 (Lam "save" λxsave (Src 3298625060970 (Lam "done" λxdone (Src 3298634498154 (App (Src 3298635546724 xdone) (Src 3298640789609 xterm))))))))))))))))))) (Src 3298545369131 (All "A" (Src 3298552709138 (Set)) λxA (Src 3298557952043 (All "term" (Src 3298568437793 xA) λxterm (Src 3298573680683 (App (Src 3298574729256 (Book.IO)) (Src 3298577874986 xA)))))))))
+Book.IO.load = (Ref "IO.load" [] (Ann (Src 1099601805470 (Lam "A" λxA (Src 1099605999774 (Lam "file" λxfile (Src 1099613339806 (Lam "then" λxthen (Src 1099622776990 (Ins (Src 1099623825566 (Lam "P" λxP (Src 1099628019870 (Lam "print" λxprint (Src 1099636408478 (Lam "load" λxload (Src 1099643748510 (Lam "save" λxsave (Src 1099651088542 (Lam "done" λxdone (Src 1099660525726 (App (App (Src 1099661574291 xload) (Src 1099666817176 xfile)) (Src 1099672060061 xthen))))))))))))))))))))) (Src 1099522113619 (All "A" (Src 1099529453586 (Set)) λxA (Src 1099534696531 (All "file" (Src 1099545182246 (Book.String)) λxfile (Src 1099555668051 (All "then" (Src 1099566153801 (All "x" (Src 1099573493825 (Book.String)) λxx (Src 1099581882441 (App (Src 1099582931014 (Book.IO)) (Src 1099586076744 xA))))) λxthen (Src 1099592368211 (App (Src 1099593416784 (Book.IO)) (Src 1099596562514 xA)))))))))))
+Book.IO.print = (Ref "IO.print" [] (Ann (Src 4398135640222 (Lam "A" λxA (Src 4398139834526 (Lam "text" λxtext (Src 4398147174558 (Lam "then" λxthen (Src 4398156611742 (Ins (Src 4398157660318 (Lam "P" λxP (Src 4398161854622 (Lam "print" λxprint (Src 4398170243230 (Lam "load" λxload (Src 4398177583262 (Lam "save" λxsave (Src 4398184923294 (Lam "done" λxdone (Src 4398194360478 (App (App (Src 4398195409043 xprint) (Src 4398201700504 xtext)) (Src 4398206943389 xthen))))))))))))))))))))) (Src 4398058045522 (All "A" (Src 4398065385491 (Set)) λxA (Src 4398070628434 (All "text" (Src 4398081114151 (Book.String)) λxtext (Src 4398091599954 (All "then" (Src 4398102085704 (All "x" (Src 4398109425728 (Book.Unit)) λxx (Src 4398115717192 (App (Src 4398116765765 (Book.IO)) (Src 4398119911495 xA))))) λxthen (Src 4398126202962 (App (Src 4398127251535 (Book.IO)) (Src 4398130397265 xA)))))))))))
+Book.IO.save = (Ref "IO.save" [] (Ann (Src 13194248585404 (Lam "A" λxA (Src 13194252779708 (Lam "file" λxfile (Src 13194260119740 (Lam "data" λxdata (Src 13194267459772 (Lam "then" λxthen (Src 13194276896956 (Ins (Src 13194277945532 (Lam "P" λxP (Src 13194282139836 (Lam "print" λxprint (Src 13194290528444 (Lam "load" λxload (Src 13194297868476 (Lam "save" λxsave (Src 13194305208508 (Lam "done" λxdone (Src 13194314645692 (App (App (App (Src 13194315694252 xsave) (Src 13194320937137 xfile)) (Src 13194326180022 xdata)) (Src 13194331422907 xthen))))))))))))))))))))))) (Src 13194150019173 (All "A" (Src 13194157359122 (Set)) λxA (Src 13194162602085 (All "file" (Src 13194173087782 (Book.String)) λxfile (Src 13194183573605 (All "data" (Src 13194194059322 (Book.String)) λxdata (Src 13194204545125 (All "then" (Src 13194215030875 (All "x" (Src 13194222370899 (Book.Unit)) λxx (Src 13194228662363 (App (Src 13194229710936 (Book.IO)) (Src 13194232856666 xA))))) λxthen (Src 13194239148133 (App (Src 13194240196706 (Book.IO)) (Src 13194243342436 xA)))))))))))))
+Book.List = (Ref "List" [] (Ann (Src 7696605511870 (Lam "T" λxT (Src 7696611803326 (Slf "self" (Src 7696620191789 (App (Src 7696621240362 (Book.List)) (Src 7696626483244 xT))) λxself (Src 7696632774846 (All "P" (Src 7696640114763 (All "xs" (Src 7696648503368 (App (Src 7696649551941 (Book.List)) (Src 7696654794823 xT))) λxxs (Src 7696658989131 (Set)))) λxP (Src 7696664232126 (All "cons" (Src 7696674717845 (All "head" (Src 7696685203556 xT) λxhead (Src 7696688349333 (All "tail" (Src 7696698835064 (App (Src 7696699883637 (Book.List)) (Src 7696705126519 xT))) λxtail (Src 7696709320853 (App (Src 7696710369404 xP) (Src 7696712466580 (App (App (App (Src 7696713515143 (Book.List.cons)) (Src 7696724000905 xT)) (Src 7696726098062 xhead)) (Src 7696731340947 xtail))))))))) λxcons (Src 7696741826750 (All "nil" (Src 7696751263922 (App (Src 7696752312484 xP) (Src 7696754409649 (App (Src 7696755458222 (Book.List.nil)) (Src 7696764895408 xT))))) λxnil (Src 7696772235454 (App (Src 7696773284024 xP) (Src 7696775381181 xself))))))))))))) (Src 7696588734484 (All "T" (Src 7696596074511 (Set)) λxT (Src 7696601317396 (Set))))))
+Book.List.cons = (Ref "List.cons" [] (Ann (Src 8796168519808 (Lam "T" λxT (Src 8796172714112 (Lam "head" λxhead (Src 8796180054144 (Lam "tail" λxtail (Src 8796189491328 (Ins (Src 8796190539904 (Lam "P" λxP (Src 8796194734208 (Lam "cons" λxcons (Src 8796202074240 (Lam "nil" λxnil (Src 8796210462848 (App (App (Src 8796211511413 xcons) (Src 8796216754298 xhead)) (Src 8796221997183 xtail))))))))))))))))) (Src 8796105605189 (All "T" (Src 8796112945172 (Set)) λxT (Src 8796118188101 (All "head" (Src 8796128673827 xT) λxhead (Src 8796133916741 (All "tail" (Src 8796144402489 (App (Src 8796145451062 (Book.List)) (Src 8796150693944 xT))) λxtail (Src 8796156985413 (App (Src 8796158033986 (Book.List)) (Src 8796163276868 xT)))))))))))
+Book.List.nil = (Ref "List.nil" [] (Ann (Src 9895640301631 (Lam "T" λxT (Src 9895646593087 (Ins (Src 9895647641663 (Lam "P" λxP (Src 9895651835967 (Lam "cons" λxcons (Src 9895659175999 (Lam "nil" λxnil (Src 9895667564607 xnil))))))))))) (Src 9895616184351 (All "T" (Src 9895623524371 (Set)) λxT (Src 9895628767263 (App (Src 9895629815836 (Book.List)) (Src 9895635058718 xT)))))))
+Book.String = (Ref "String" [] (Ann (Src 5497571770392 (App (Src 5497572818962 (Book.List)) (Src 5497578061847 (Book.Char)))) (Src 5497567576074 (Set))))
+Book.String.cons = (Ref "String.cons" [] (Ann (Src 14293715124337 (Lam "head" λxhead (Src 14293722464369 (Lam "tail" λxtail (Src 14293731901553 (Ins (Src 14293732950129 (Lam "P" λxP (Src 14293737144433 (Lam "cons" λxcons (Src 14293744484465 (Lam "nil" λxnil (Src 14293752873073 (App (App (Src 14293753921638 xcons) (Src 14293759164523 xhead)) (Src 14293764407408 xtail))))))))))))))) (Src 14293665841210 (All "head" (Src 14293676326940 (Book.Char)) λxhead (Src 14293684715578 (All "tail" (Src 14293695201328 (Book.String)) λxtail (Src 14293705687098 (Book.String))))))))
+Book.String.nil = (Ref "String.nil" [] (Ann (Src 15393185857581 (Ins (Src 15393186906157 (Lam "P" λxP (Src 15393191100461 (Lam "cons" λxcons (Src 15393198440493 (Lam "nil" λxnil (Src 15393206829101 xnil))))))))) (Src 15393176420371 (Book.String))))
+Book.Unit = (Ref "Unit" [] (Ann (Src 10995127812181 (Slf "self" (Src 10995136200727 (Book.Unit)) λxself (Src 10995144589397 (All "P" (Src 10995151929392 (All "x" (Src 10995159269421 (Book.Unit)) λxx (Src 10995165560880 (Set)))) λxP (Src 10995170803797 (All "one" (Src 10995180240969 (App (Src 10995181289535 xP) (Src 10995183386696 (Book.Unit.one)))) λxone (Src 10995197018197 (App (Src 10995198066767 xP) (Src 10995200163924 xself))))))))) (Src 10995123617800 (Set))))
+Book.Unit.one = (Ref "Unit.one" [] (Ann (Src 12094646779936 (Ins (Src 12094647828512 (Lam "P" λxP (Src 12094652022816 (Lam "one" λxone (Src 12094658314272 xone))))))) (Src 12094639439887 (Book.Unit))))
+
+Main = (API.check Book.IO.load)

@@ -268,10 +268,10 @@
 // --------
 
 // The conversion checkers works as follows:
-//   1. If the two sides are structurally identical, they're equal.
-//   2. Otherwise, reduce both sides.
-//   3. If the two sides are structurally identical, they're equal.
-//   4. Otherwise, recurse on both sides and check if all fields are equal.
+// - 1. If the two sides are structurally identical, they're equal.
+// - 2. Otherwise, reduce both sides.
+// - 3. If the two sides are structurally identical, they're equal.
+// - 4. Otherwise, recurse on both sides and check if all fields are equal.
 // This algorithm will return true when both sides reduce to the same normal
 // form, but it will halt early if both sides become identical at any point
 // during the reduction, allowing checking recursive terms. This is enough to
@@ -408,128 +408,112 @@
 //   3. The LHS hole, `?A`, doesn't occur in the RHS, `B`.
 // If it is successful, it outputs the following substitution:
 //   ?A = λx λy λz ... B
-// The `Unify.pat` fn will just recurse on the LHS apps, reaching the hole.
-// The `Unify.sub` fn will try to generate the subst, respecting the criteria.
-// The `Unify.rec` fn checks the 3rd condition, preventing recursive substs.
+// In this checker, we don't allow holes to occur in solutions at all.
 
 // Unify.try : Term -> Term -> U60 -> (Checker U60) -> (Checker U60)
 (Unify.try a b dep else) =
-  (Maybe.match (Unify.pat a b dep Map.new)
+  // Attempts to unify the pattern
+  (Maybe.match (Unify.solve a b dep Map.new)
+    // If successful, logs the solution
     λkv(Pair.get kv λkλv
       (Checker.bind (Checker.log (Fill k v dep)) λx
       (Checker.pure 1)))
-    (If (Unify.skp a)
+    // Otherwise, signals to skip equality if this is a pattern
+    (If (Unify.skip a)
       (Checker.pure 1)
       (else)))
 
-// Unify.skp : Term -> Bool
-(Unify.skp (App fun arg))  = (Unify.skp fun)
-(Unify.skp (Ann val typ))  = (Unify.skp val)
-(Unify.skp (Ins val))      = (Unify.skp val)
-(Unify.skp (Src src val))  = (Unify.skp val)
-(Unify.skp (Met nam None)) = 1
-(Unify.skp (Hol nam ctx))  = 1
-(Unify.skp other)          = 0
-
-// Unify.pat : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
-(Unify.pat (App fun (Var nam idx)) b dep ctx) =
+// If LHS is a solveable pattern, generates its solution.
+// Unify.solve : Term -> Term -> U60 -> (Map U60 Term) -> (Maybe (Pair nam Term))
+(Unify.solve (App fun (Var nam idx)) b dep ctx) =
   (Maybe.bind (Map.ins λaλb(== a b) idx $x ctx) λctx
-  (Maybe.bind (Unify.pat fun b dep ctx) λkv 
+  (Maybe.bind (Unify.solve fun b dep ctx) λkv 
   (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.pat (Met nam None) b dep ctx) =
-  (Maybe.bind (Unify.sub b dep nam ctx) λneo
+(Unify.solve (Met nam None) b dep ctx) =
+  (Maybe.bind (Unify.solution b dep nam ctx) λneo
   (Maybe.pure (Pair nam neo)))
-(Unify.pat (App fun (Ann val _))        b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Ins val))          b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Src _ val))        b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (App fun (Met _ (Some val))) b dep ctx) = (Unify.pat (App fun val) b dep ctx)
-(Unify.pat (Ann val typ)                b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Ins val)                    b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Src src val)                b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat (Met nam (Some val))         b dep ctx) = (Unify.pat val b dep ctx)
-(Unify.pat other                        b dep ctx) = None
+(Unify.solve (App fun (Ann val _))        b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Ins val))          b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Src _ val))        b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Met _ (Some val))) b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (Ann val typ)                b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Ins val)                    b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Src src val)                b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Met nam (Some val))         b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve other                        b dep ctx) = None
 
-// Unify.sub : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
-(Unify.sub (All nam inp bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub inp dep hol ctx) λinp
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ dep 1) hol ctx) λbod
+// If LHS is an unsolveable pattern, skips its type-checking.
+// Unify.skip : Term -> Bool
+(Unify.skip (App fun arg))  = (Unify.skip fun)
+(Unify.skip (Ann val typ))  = (Unify.skip val)
+(Unify.skip (Ins val))      = (Unify.skip val)
+(Unify.skip (Src src val))  = (Unify.skip val)
+(Unify.skip (Met nam None)) = 1
+(Unify.skip (Hol nam ctx))  = 1
+(Unify.skip other)          = 0
+
+// Attempts to convert RHS to a solution, checking the criteria.
+// Unify.solution : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
+(Unify.solution (All nam inp bod) dep hol ctx) =
+  (Maybe.bind (Unify.solution inp dep hol ctx) λinp
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ dep 1) hol ctx) λbod
   (Maybe.pure (All nam inp λ_(bod)))))
-(Unify.sub (Lam nam bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
+(Unify.solution (Lam nam bod) dep hol ctx) =
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
   (Maybe.pure (Lam nam λ_(bod))))
-(Unify.sub (App fun arg) dep hol ctx) =
-  (Maybe.bind (Unify.sub fun dep hol ctx) λfun
-  (Maybe.bind (Unify.sub arg dep hol ctx) λarg
+(Unify.solution (App fun arg) dep hol ctx) =
+  (Maybe.bind (Unify.solution fun dep hol ctx) λfun
+  (Maybe.bind (Unify.solution arg dep hol ctx) λarg
   (Maybe.pure (App fun arg))))
-(Unify.sub (Ann val typ) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.bind (Unify.sub typ dep hol ctx) λtyp
+(Unify.solution (Ann val typ) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
+  (Maybe.bind (Unify.solution typ dep hol ctx) λtyp
   (Maybe.pure (Ann val typ))))
-(Unify.sub (Slf nam typ bod) dep hol ctx) =
-  (Unify.sub typ dep hol ctx)
-(Unify.sub (Ins val) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
+(Unify.solution (Slf nam typ bod) dep hol ctx) =
+  (Unify.solution typ dep hol ctx)
+(Unify.solution (Ins val) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
   (Maybe.pure (Ins val)))
-(Unify.sub (Ref nam sub val) dep hol ctx) =
+(Unify.solution (Ref nam sub val) dep hol ctx) =
   (Maybe.pure (Ref nam sub val))
-(Unify.sub (Let nam val bod) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
-  (Maybe.bind (Unify.sub (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
+(Unify.solution (Let nam val bod) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
   (Maybe.pure (Let nam val λ_(bod)))))
-(Unify.sub (Met nam None) dep hol ctx) =
-  None
+(Unify.solution (Met nam None) dep hol ctx) =
+  None // holes can't appear in the solution
   //(If (Same nam hol) None (Maybe.pure (Met nam None)))
-(Unify.sub (Met nam (Some val)) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
+(Unify.solution (Met nam (Some val)) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
   (Maybe.pure (Met nam (Some val))))
-(Unify.sub (Hol nam _) dep hol ctx) =
+(Unify.solution (Hol nam _) dep hol ctx) =
   (Maybe.pure (Hol nam [])) // FIXME?
-(Unify.sub Set dep hol ctx) =
+(Unify.solution Set dep hol ctx) =
   (Maybe.pure Set)
-(Unify.sub U60 dep hol ctx) =
+(Unify.solution U60 dep hol ctx) =
   (Maybe.pure U60)
-(Unify.sub (Num val) dep hol ctx) =
+(Unify.solution (Num val) dep hol ctx) =
   (Maybe.pure (Num val))
-(Unify.sub (Op2 opr fst snd) dep hol ctx) =
-  (Maybe.bind (Unify.sub fst dep hol ctx) λfst
-  (Maybe.bind (Unify.sub snd dep hol ctx) λsnd
+(Unify.solution (Op2 opr fst snd) dep hol ctx) =
+  (Maybe.bind (Unify.solution fst dep hol ctx) λfst
+  (Maybe.bind (Unify.solution snd dep hol ctx) λsnd
   (Maybe.pure (Op2 opr fst snd))))
-(Unify.sub (Mat nam x z s p) dep hol ctx) =
-  (Maybe.bind (Unify.sub x dep hol ctx) λx
-  (Maybe.bind (Unify.sub z dep hol ctx) λz
-  (Maybe.bind (Unify.sub (s (Var (String.concat nam "-1") dep)) dep hol ctx) λs
-  (Maybe.bind (Unify.sub (p (Var nam dep)) dep hol ctx) λp
+(Unify.solution (Mat nam x z s p) dep hol ctx) =
+  (Maybe.bind (Unify.solution x dep hol ctx) λx
+  (Maybe.bind (Unify.solution z dep hol ctx) λz
+  (Maybe.bind (Unify.solution (s (Var (String.concat nam "-1") dep)) dep hol ctx) λs
+  (Maybe.bind (Unify.solution (p (Var nam dep)) dep hol ctx) λp
   (Maybe.pure (Mat nam x z λ_(s) λ_(p)))))))
-(Unify.sub (Txt val) dep hol ctx) =
+(Unify.solution (Txt val) dep hol ctx) =
   (Maybe.pure (Txt val))
-(Unify.sub (Var nam idx) dep hol ctx) =
+(Unify.solution (Var nam idx) dep hol ctx) =
   (Maybe.bind (Map.get λaλb(== a b) idx ctx) λval
   (Maybe.pure val))
-(Unify.sub (Src src val) dep hol ctx) =
-  (Maybe.bind (Unify.sub val dep hol ctx) λval
+(Unify.solution (Src src val) dep hol ctx) =
+  (Maybe.bind (Unify.solution val dep hol ctx) λval
   (Maybe.pure (Src src val)))
-(Unify.sub term dep hol ctx) =
-  (HVM.log (UNEXPECTED (Show term dep)) None)
-
-// TODO: use this
-// Unify.rec : Fill -> Term -> String -> Bool
-//(Unify.rec fill (All nam inp bod) hol) = (| (Unify.rec fill inp hol) (Unify.rec fill (bod Set) hol))
-//(Unify.rec fill (Lam nam bod)     hol) = (Unify.rec fill (bod Set) hol)
-//(Unify.rec fill (App fun arg)     hol) = (| (Unify.rec fill fun hol) (Unify.rec fill arg hol))
-//(Unify.rec fill (Ann val typ)     hol) = (| (Unify.rec fill val hol) (Unify.rec fill typ hol))
-//(Unify.rec fill (Slf nam typ bod) hol) = (Unify.rec fill typ hol)
-//(Unify.rec fill (Ins val)         hol) = (Unify.rec fill val hol)
-//(Unify.rec fill (Ref nam sub val) hol) = 0
-//(Unify.rec fill (Let nam val bod) hol) = (| (Unify.rec fill val hol) (Unify.rec fill (bod Set) hol))
-//(Unify.rec fill Set               hol) = 0
-//(Unify.rec fill U60               hol) = 0
-//(Unify.rec fill (Num val)         hol) = 0
-//(Unify.rec fill (Op2 opr fst snd) hol) = (| (Unify.rec fill fst hol) (Unify.rec fill snd hol))
-//(Unify.rec fill (Mat nam x z s p) hol) = (| (Unify.rec fill x hol) (| (Unify.rec fill z hol) (| (Unify.rec fill (s Set) hol) (Unify.rec fill (p Set) hol))))
-//(Unify.rec fill (Txt val)         hol) = 0
-//(Unify.rec fill (Var nam idx)     hol) = 0
-//(Unify.rec fill (Src src val)     hol) = (Unify.rec fill val hol)
-//(Unify.rec fill (Hol nam ctx)     hol) = (If (Same nam hol) 1 (Maybe.match (Map.get λaλb(Same a b) nam fill) λgot(Unify.rec fill got hol) 0))
+(Unify.solution term dep hol ctx) =
+  (HVM.log (UNREACHALBE (Show term dep)) None)
 
 // Type-Checking
 // -------------
@@ -817,7 +801,7 @@ Compile.primitives = [
         // case true:
         (API.check (Ref nam sub def))
         // case false:
-        1)))
+        (API.check.solved sub))))
     // case fail:
     λlogs λerror
       (API.check.log logs
@@ -839,3 +823,8 @@ Compile.primitives = [
 // Prints all messages returned by the checker.
 (API.check.log (List.cons msg msgs) then) = (HVM.print (Message.show msg) (API.check.log msgs then))
 (API.check.log List.nil             then) = then
+
+// Reports solved holdes
+(API.check.solved (List.cons (Pair name None)    xs)) = (HVM.print (String.join ["UNSOLVED: _" name]) (& 0 (API.check.solved xs)))
+(API.check.solved (List.cons (Pair nam (Some x)) xs)) = (API.check.solved xs)
+(API.check.solved List.nil)                           = 1
