@@ -320,13 +320,13 @@
 (Similar (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) =
   (Checker.bind (Equal a.fst b.fst dep) λe.fst
   (Checker.bind (Equal a.snd b.snd dep) λe.snd
-  (Checker.pure (Same e.fst e.snd))))
+  (Checker.pure (& e.fst e.snd))))
 (Similar (Mat a.nam a.x a.z a.s a.p) (Mat b.nam b.x b.z b.s b.p) dep) =
   (Checker.bind (Equal a.x b.x dep) λe.x
   (Checker.bind (Equal a.z b.z dep) λe.z
   (Checker.bind (Equal (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) λe.s
   (Checker.bind (Equal (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep) λe.p
-  (& e.x (& e.z (& e.s e.p)))))))
+  (Checker.pure (& e.x (& e.z (& e.s e.p))))))))
 (Similar a b dep) =
   (Checker.pure 0)
 
@@ -384,7 +384,7 @@
   (Checker.bind (Identical a.z b.z dep) λi.z
   (Checker.bind (Identical (a.s (Var (String.concat a.nam "-1") dep)) (b.s (Var (String.concat b.nam "-1") dep)) dep) λi.s
   (Checker.bind (Identical (a.p (Var a.nam dep)) (b.p (Var b.nam dep)) dep) λi.p
-  (& i.x (& i.z (& i.s i.p)))))))
+  (Checker.pure (& i.x (& i.z (& i.s i.p))))))))
 (Identical.go (Txt a.txt) (Txt b.txt) dep) =
   (Checker.pure (Same a.txt b.txt))
 (Identical.go (Src a.src a.val) b dep) =

@@ -1,0 +1,27 @@
+QBool2.match
+: ∀(a: QBool2)
+  ∀(P: ∀(x: QBool2) *)
+  ∀(t: (P QBool2.true))
+  ∀(f: (P QBool2.false))
+  (P a)
+= λa λP λt λf
+  (~a
+    P
+    λtag
+    #match tag = tag {
+      #0: t
+      #+: #match tag_1 = tag-1 {
+        #0: f
+        #+: λe (~e λx *) 
+      }: #match tag_1 = tag_1 {
+        #0: (P QBool2.false)
+        #+: ∀(e: Empty) * 
+      }: * 
+    }: #match tag = tag {
+      #0: (P QBool2.true)
+      #+: #match tag_1 = tag-1 {
+        #0: (P QBool2.false)
+        #+: ∀(e: Empty) * 
+      }: * 
+    }: *
+  )
