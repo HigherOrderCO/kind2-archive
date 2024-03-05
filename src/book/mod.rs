@@ -65,7 +65,7 @@ impl Book {
     if let Some(id) = self.fids.get(name) {
       *id
     } else {
-      let id = self.fids.len() as u64 + 1;
+      let id = self.fids.len() as u64;
       self.fids.insert(name.to_string(), id);
       id
     }

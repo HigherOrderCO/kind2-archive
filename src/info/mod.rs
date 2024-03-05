@@ -45,7 +45,8 @@ impl Info {
         let det  = format!("- detected: \x1b[31m{}\x1b[0m", det.show());
         let bad  = format!("- bad_term: \x1b[2m{}\x1b[0m", bad.show());
         let file = book.get_file_name(src.fid).unwrap_or_else(|| "unknown_file".to_string());
-        let text = std::fs::read_to_string(&file).unwrap_or_else(|_| "Could not read source file.".to_string());
+        let path = format!("{file}.kind2");
+        let text = std::fs::read_to_string(path).unwrap_or_else(|_| format!("Could not read source file: {file}"));
         let orig = highlight_error(src.ini as usize, src.end as usize, &text);
         let src  = format!("\x1b[4m{}\x1b[0m\n{}", file, orig);
         format!("\x1b[1mERROR:\x1b[0m\n{}\n{}\n{}\n{}", exp, det, bad, src)
