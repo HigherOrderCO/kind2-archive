@@ -3,10 +3,10 @@ use crate::{*};
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-mod parse;
+mod compile;
 mod format;
+mod parse;
 mod show;
-mod to_hvm1;
 
 // <book> ::=
 //   DEF_ANN | <name> : <term> = <term> <book>

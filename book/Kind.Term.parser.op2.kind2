@@ -4,11 +4,11 @@ Kind.Term.parser.op2
     Kind.PreTerm
     "#("
     (Kind.Term.parser.bind
-      Unit
+      _
       (Parser.text "#(")
       λ_
       (Kind.Term.parser.bind
-        Kind.Oper
+        _
         Kind.Oper.parser
         λopr
         (Kind.Term.parser.bind
@@ -16,7 +16,7 @@ Kind.Term.parser.op2
           Kind.Term.parser
           λfst
           (Kind.Term.parser.bind
-            Kind.PreTerm
+            _
             Kind.Term.parser
             λsnd
             (Kind.Term.parser.bind

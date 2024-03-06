@@ -1,4 +1,4 @@
 _main
 : ∀(a: Bool) ∀(b: Bool) Bool
 = λa λb
-  (Bool.if a _ (Bool.if b _ ?A Bool.true) Bool.true)
+  (Bool.if a _ (Bool.if b _ Bool.true Bool.true) Bool.true)

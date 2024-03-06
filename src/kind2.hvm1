@@ -149,6 +149,36 @@
 (Map.get eq k (List.cons (Pair key val) map)) = (If (eq key k) (Some val) (Map.get eq k map))
 (Map.get eq k List.nil)                       = None
 
+// data BM A = BM.leaf | (BM.node A BM BM)
+
+// Returns true if value is present on BM
+(BM.has E        (BM.node (Some val) lft rgt)) = 1
+(BM.has (O bits) (BM.node val lft rgt))        = (BM.has bits lft)
+(BM.has (I bits) (BM.node val lft rgt))        = (BM.has bits rgt)
+(BM.has key      val)                          = 0
+
+// Gets a value from a BM
+(BM.get E        (BM.leaf))             = None
+(BM.get E        (BM.node val lft rgt)) = val
+(BM.get (O bits) (BM.leaf))             = None
+(BM.get (O bits) (BM.node val lft rgt)) = (BM.get bits lft)
+(BM.get (I bits) (BM.leaf))             = None
+(BM.get (I bits) (BM.node val lft rgt)) = (BM.get bits rgt)
+
+// Sets a value on a BM
+(BM.set E        val (BM.leaf))           = (BM.node (Some val) BM.leaf BM.leaf)
+(BM.set E        val (BM.node _ lft rgt)) = (BM.node (Some val) lft rgt)
+(BM.set (O bits) val (BM.leaf))           = (BM.node None (BM.set bits val BM.leaf) BM.leaf)
+(BM.set (O bits) val (BM.node v lft rgt)) = (BM.node v (BM.set bits val lft) rgt)
+(BM.set (I bits) val (BM.leaf))           = (BM.node None BM.leaf (BM.set bits val BM.leaf))
+(BM.set (I bits) val (BM.node v lft rgt)) = (BM.node v lft (BM.set bits val rgt))
+
+// Map wrapper with U60 keys
+(U60.Map.new)             = BM.leaf
+(U60.Map.has key map)     = (BM.has (U60.to_bits key) map)
+(U60.Map.get key map)     = (BM.get (U60.to_bits key) map)
+(U60.Map.set key val map) = (BM.set (U60.to_bits key) val map)
+
 // Holes
 // -----
 
@@ -171,7 +201,6 @@
 (Reduce lv (Let nam val bod)) = (Reduce lv (bod val))
 (Reduce lv (Op2 opr fst snd)) = (Reduce.op2 lv opr (Reduce lv fst) (Reduce lv snd))
 (Reduce lv (Mat nam x z s p)) = (Reduce.mat lv nam (Reduce lv x) z s p)
-(Reduce lv (Met nam val))     = (Reduce.met lv nam val)
 (Reduce lv (Txt txt))         = (Reduce.txt lv txt)
 (Reduce lv (Src src val))     = (Reduce lv val)
 (Reduce lv val)               = val
@@ -214,8 +243,8 @@
 (Reduce.ref 1  nam sub val) = (Ref nam sub val)
 (Reduce.ref lv nam sub val) = (Ref nam sub val)
 
-(Reduce.met lv nam None)     = (Met nam None)
-(Reduce.met lv nam (Some x)) = (Reduce lv x)
+//(Reduce.met lv nam None)     = (Met nam None)
+//(Reduce.met lv nam (Some x)) = (Reduce lv x)
 
 (Reduce.txt lv (String.cons x xs)) = (Reduce lv (App (App Book.String.cons (Num x)) (Txt xs)))
 (Reduce.txt lv String.nil)         = (Reduce lv Book.String.nil)
@@ -237,7 +266,7 @@
 (Normal.go lv (Ref nam sub val) dep) = (Ref nam sub (Normal lv val dep))
 (Normal.go lv (Let nam val bod) dep) = (Let nam (Normal lv val dep) λx(Normal lv (bod (Var nam dep)) (+ 1 dep)))
 (Normal.go lv (Hol nam ctx)     dep) = (Hol nam ctx)
-(Normal.go lv (Met nam val)     dep) = (Met nam (Maybe.match val λx(Some (Normal lv x dep)) None))
+(Normal.go lv (Met uid)         dep) = (Met uid)
 (Normal.go lv Set               dep) = Set
 (Normal.go lv U60               dep) = U60
 (Normal.go lv (Num val)         dep) = (Num val)
@@ -250,22 +279,26 @@
 // Checker
 // -------
 
-// type Result A = (Done Logs A) | (Fail Logs String)
-// type Checker A = Logs -> (Result A)
+// type Result A = (Done Fill Logs A) | (Fail Fill Logs String)
+// type Checker A = Fill -> Logs -> (Result A)
 
-(Result.match (Done logs value) done fail) = (done logs value)
-(Result.match (Fail logs error) done fail) = (fail logs error)     
+(Result.match (Done fill logs value) done fail) = (done fill logs value)
+(Result.match (Fail fill logs error) done fail) = (fail fill logs error)     
 
 //(State.get fill got) = (got fill logs)
 //(State.new)          = []
 
-(Checker.bind a b)  = λlogs (Result.match (a logs) λlogsλvalue((b value) logs) λlogsλerror(Fail logs error))
-(Checker.pure a)    = λlogs (Done logs a)
-(Checker.fail e)    = λlogs (Fail logs e)
-(Checker.run chk)   = (chk [])
-(Checker.log msg)   = λlogs (Done (List.cons msg logs) 1)
-(Checker.save)      = λlogs (Done logs logs)
-(Checker.load logs) = λeras (Done logs 0)
+(Checker.bind a b) = λfill λlogs (Result.match (a fill logs) λfillλlogsλvalue((b value) fill logs) λfillλlogsλerror(Fail fill logs error))
+(Checker.pure a)   = λfill λlogs (Done fill logs a)
+(Checker.fail e)   = λfill λlogs (Fail fill logs e)
+(Checker.run chk)  = (chk [] BM.leaf)
+(Checker.log msg)  = λfill λlogs (Done fill (List.cons msg logs) 1)
+
+(Checker.save) = λfill λlogs
+  (Done fill logs (Pair fill logs))
+
+(Checker.load (Pair fill logs)) =
+  λ_ λ_ (Done fill logs 0)
 
 // Equality
 // --------
@@ -294,11 +327,11 @@
 // If yes, returns 1 (identical) or 2 (suspended)
 // If not, undoes effects (logs, unifications, etc.)
 (Compare a b dep else) =
-  (Checker.bind (Checker.save) λlogs
+  (Checker.bind (Checker.save) λstate
   (Checker.bind (Identical a b dep) λequal
   (If equal
     (Checker.pure equal)
-    (Checker.bind (Checker.load logs) λx (else)))))
+    (Checker.bind (Checker.load state) λx (else)))))
 
 // Checks if all components of a term are equal
 (Similar (All a.nam a.inp a.bod) (All b.nam b.inp b.bod) dep) =
@@ -315,8 +348,8 @@
   (Similar (Reduce 0 a.typ) (Reduce 0 b.typ) dep) // <- must call Similar, NOT Equal
 (Similar (Hol a.nam a.ctx) (Hol b.nam b.ctx) dep) =
   (Checker.pure (Same a.nam b.nam))
-(Similar (Met a.nam a.val) (Met b.nam b.val) dep) =
-  (Checker.pure (Same a.nam b.nam))
+(Similar (Met a.uid) (Met b.uid) dep) =
+  (Checker.pure (== a.uid b.uid))
 (Similar (Op2 a.opr a.fst a.snd) (Op2 b.opr b.fst b.snd) dep) =
   (Checker.bind (Equal a.fst b.fst dep) λe.fst
   (Checker.bind (Equal a.snd b.snd dep) λe.snd
@@ -363,12 +396,12 @@
   (Identical a.val b dep)
 (Identical.go a (Ann b.val b.typ) dep) =
   (Identical a b.val dep)
-(Identical.go (Met a.nam (Some a.val)) b dep) =
-  (Identical a.val b dep)
-(Identical.go a (Met b.nam (Some b.val)) dep) =
-  (Identical a b.val dep)
-(Identical.go (Met a.nam None) (Met b.nam None) dep) =
-  (Checker.pure (Same a.nam b.nam))
+//(Identical.go (Met a.uid) b dep) =
+  //(Identical a.val b dep)
+//(Identical.go a (Met b.uid) dep) =
+  //(Identical a b.val dep)
+(Identical.go (Met a.uid) (Met b.uid) dep) =
+  (Checker.pure (== a.uid b.uid))
 (Identical.go (Hol a.nam a.ctx) (Hol b.nam b.ctx) dep) =
   (Checker.pure (Same a.nam b.nam))
 (Identical.go U60 U60 dep) =
@@ -432,18 +465,18 @@
   (Maybe.bind (Map.ins λaλb(== a b) idx $x ctx) λctx
   (Maybe.bind (Unify.solve fun b dep ctx) λkv 
   (Pair.get kv λkλv(Maybe.pure (Pair k (Lam nam λ$x(v)))))))
-(Unify.solve (Met nam None) b dep ctx) =
-  (Maybe.bind (Unify.solution b dep nam ctx) λneo
-  (Maybe.pure (Pair nam neo)))
-(Unify.solve (App fun (Ann val _))        b dep ctx) = (Unify.solve (App fun val) b dep ctx)
-(Unify.solve (App fun (Ins val))          b dep ctx) = (Unify.solve (App fun val) b dep ctx)
-(Unify.solve (App fun (Src _ val))        b dep ctx) = (Unify.solve (App fun val) b dep ctx)
-(Unify.solve (App fun (Met _ (Some val))) b dep ctx) = (Unify.solve (App fun val) b dep ctx)
-(Unify.solve (Ann val typ)                b dep ctx) = (Unify.solve val b dep ctx)
-(Unify.solve (Ins val)                    b dep ctx) = (Unify.solve val b dep ctx)
-(Unify.solve (Src src val)                b dep ctx) = (Unify.solve val b dep ctx)
-(Unify.solve (Met nam (Some val))         b dep ctx) = (Unify.solve val b dep ctx)
-(Unify.solve other                        b dep ctx) = None
+(Unify.solve (Met uid) b dep ctx) =
+  (Maybe.bind (Unify.solution b dep uid ctx) λneo
+  (Maybe.pure (Pair uid neo)))
+(Unify.solve (App fun (Ann val _)) b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Ins val))   b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (App fun (Src _ val)) b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+//(Unify.solve (App fun (Met uid))   b dep ctx) = (Unify.solve (App fun val) b dep ctx)
+(Unify.solve (Ann val typ)         b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Ins val)             b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve (Src src val)         b dep ctx) = (Unify.solve val b dep ctx)
+//(Unify.solve (Met uid)             b dep ctx) = (Unify.solve val b dep ctx)
+(Unify.solve other                 b dep ctx) = None
 
 // If LHS is an unsolveable pattern, skips its type-checking.
 // Unify.skip : Term -> Bool
@@ -451,71 +484,71 @@
 (Unify.skip (Ann val typ))  = (Unify.skip val)
 (Unify.skip (Ins val))      = (Unify.skip val)
 (Unify.skip (Src src val))  = (Unify.skip val)
-(Unify.skip (Met nam None)) = 1
+(Unify.skip (Met uid))      = 1
 (Unify.skip (Hol nam ctx))  = 1
 (Unify.skip other)          = 0
 
 // Attempts to convert RHS to a solution, checking the criteria.
-// Unify.solution : Term -> U60 -> String -> (Map U60 Term) -> (Maybe Term)
-(Unify.solution (All nam inp bod) dep hol ctx) =
-  (Maybe.bind (Unify.solution inp dep hol ctx) λinp
-  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ dep 1) hol ctx) λbod
+// Unify.solution : Term -> U60 -> U60 -> (Map U60 Term) -> (Maybe Term)
+(Unify.solution (All nam inp bod) dep uid ctx) =
+  (Maybe.bind (Unify.solution inp dep uid ctx) λinp
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ dep 1) uid ctx) λbod
   (Maybe.pure (All nam inp λ_(bod)))))
-(Unify.solution (Lam nam bod) dep hol ctx) =
-  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
+(Unify.solution (Lam nam bod) dep uid ctx) =
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) uid ctx) λbod
   (Maybe.pure (Lam nam λ_(bod))))
-(Unify.solution (App fun arg) dep hol ctx) =
-  (Maybe.bind (Unify.solution fun dep hol ctx) λfun
-  (Maybe.bind (Unify.solution arg dep hol ctx) λarg
+(Unify.solution (App fun arg) dep uid ctx) =
+  (Maybe.bind (Unify.solution fun dep uid ctx) λfun
+  (Maybe.bind (Unify.solution arg dep uid ctx) λarg
   (Maybe.pure (App fun arg))))
-(Unify.solution (Ann val typ) dep hol ctx) =
-  (Maybe.bind (Unify.solution val dep hol ctx) λval
-  (Maybe.bind (Unify.solution typ dep hol ctx) λtyp
+(Unify.solution (Ann val typ) dep uid ctx) =
+  (Maybe.bind (Unify.solution val dep uid ctx) λval
+  (Maybe.bind (Unify.solution typ dep uid ctx) λtyp
   (Maybe.pure (Ann val typ))))
-(Unify.solution (Slf nam typ bod) dep hol ctx) =
-  (Unify.solution typ dep hol ctx)
-(Unify.solution (Ins val) dep hol ctx) =
-  (Maybe.bind (Unify.solution val dep hol ctx) λval
+(Unify.solution (Slf nam typ bod) dep uid ctx) =
+  (Unify.solution typ dep uid ctx)
+(Unify.solution (Ins val) dep uid ctx) =
+  (Maybe.bind (Unify.solution val dep uid ctx) λval
   (Maybe.pure (Ins val)))
-(Unify.solution (Ref nam sub val) dep hol ctx) =
+(Unify.solution (Ref nam sub val) dep uid ctx) =
   (Maybe.pure (Ref nam sub val))
-(Unify.solution (Let nam val bod) dep hol ctx) =
-  (Maybe.bind (Unify.solution val dep hol ctx) λval
-  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) hol ctx) λbod
+(Unify.solution (Let nam val bod) dep uid ctx) =
+  (Maybe.bind (Unify.solution val dep uid ctx) λval
+  (Maybe.bind (Unify.solution (bod (Var nam dep)) (+ 1 dep) uid ctx) λbod
   (Maybe.pure (Let nam val λ_(bod)))))
-(Unify.solution (Met nam None) dep hol ctx) =
+(Unify.solution (Met uid) dep uid ctx) =
   None // holes can't appear in the solution
   //(If (Same nam hol) None (Maybe.pure (Met nam None)))
-(Unify.solution (Met nam (Some val)) dep hol ctx) =
-  (Maybe.bind (Unify.solution val dep hol ctx) λval
-  (Maybe.pure (Met nam (Some val))))
+//(Unify.solution (Met uid) dep hol ctx) =
+  //(Maybe.bind (Unify.solution val dep hol ctx) λval
+  //(Maybe.pure (Met uid)))
 (Unify.solution (Hol nam _) dep hol ctx) =
   (Maybe.pure (Hol nam [])) // FIXME?
-(Unify.solution Set dep hol ctx) =
+(Unify.solution Set dep uid ctx) =
   (Maybe.pure Set)
-(Unify.solution U60 dep hol ctx) =
+(Unify.solution U60 dep uid ctx) =
   (Maybe.pure U60)
-(Unify.solution (Num val) dep hol ctx) =
+(Unify.solution (Num val) dep uid ctx) =
   (Maybe.pure (Num val))
-(Unify.solution (Op2 opr fst snd) dep hol ctx) =
-  (Maybe.bind (Unify.solution fst dep hol ctx) λfst
-  (Maybe.bind (Unify.solution snd dep hol ctx) λsnd
+(Unify.solution (Op2 opr fst snd) dep uid ctx) =
+  (Maybe.bind (Unify.solution fst dep uid ctx) λfst
+  (Maybe.bind (Unify.solution snd dep uid ctx) λsnd
   (Maybe.pure (Op2 opr fst snd))))
-(Unify.solution (Mat nam x z s p) dep hol ctx) =
-  (Maybe.bind (Unify.solution x dep hol ctx) λx
-  (Maybe.bind (Unify.solution z dep hol ctx) λz
-  (Maybe.bind (Unify.solution (s (Var (String.concat nam "-1") dep)) dep hol ctx) λs
-  (Maybe.bind (Unify.solution (p (Var nam dep)) dep hol ctx) λp
+(Unify.solution (Mat nam x z s p) dep uid ctx) =
+  (Maybe.bind (Unify.solution x dep uid ctx) λx
+  (Maybe.bind (Unify.solution z dep uid ctx) λz
+  (Maybe.bind (Unify.solution (s (Var (String.concat nam "-1") dep)) dep uid ctx) λs
+  (Maybe.bind (Unify.solution (p (Var nam dep)) dep uid ctx) λp
   (Maybe.pure (Mat nam x z λ_(s) λ_(p)))))))
-(Unify.solution (Txt val) dep hol ctx) =
+(Unify.solution (Txt val) dep uid ctx) =
   (Maybe.pure (Txt val))
-(Unify.solution (Var nam idx) dep hol ctx) =
+(Unify.solution (Var nam idx) dep uid ctx) =
   (Maybe.bind (Map.get λaλb(== a b) idx ctx) λval
   (Maybe.pure val))
-(Unify.solution (Src src val) dep hol ctx) =
-  (Maybe.bind (Unify.solution val dep hol ctx) λval
+(Unify.solution (Src src val) dep uid ctx) =
+  (Maybe.bind (Unify.solution val dep uid ctx) λval
   (Maybe.pure (Src src val)))
-(Unify.solution term dep hol ctx) =
+(Unify.solution term dep uid ctx) =
   (HVM.log (UNREACHALBE (Show term dep)) None)
 
 // Type-Checking
@@ -541,7 +574,7 @@
       (Checker.bind (Check 0 arg fun_typ.inp dep) λvty
       (Checker.pure (fun_typ.bod arg)))
     λfun λarg
-      (Checker.fail (Error 0 fun_typ (Hol "function" []) (App fun arg) dep)))
+      (Checker.pure 1))
     fun arg))
 (Infer.match (Ann val typ) dep) =
   (Checker.pure typ)
@@ -582,10 +615,10 @@
   (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Let nam val bod) dep))
 (Infer.match (Hol nam ctx) dep) =
   (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Hol nam ctx) dep))
-(Infer.match (Met nam (Some val)) dep) =
-  (Infer.match val dep)
-(Infer.match (Met nam None) dep) =
-  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Met nam None) dep))
+//(Infer.match (Met nam (Some val)) dep) =
+  //(Infer.match val dep)
+(Infer.match (Met uid) dep) =
+  (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Met uid) dep))
 (Infer.match (Var nam idx) dep) =
   (Checker.fail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Var nam idx) dep))
 (Infer.match (Src src val) dep) =
@@ -616,9 +649,9 @@
 (Check.match src (Hol term.nam term.ctx) type dep) =
   (Checker.bind (Checker.log (Found term.nam type term.ctx dep)) λx
   (Checker.pure 0))
-(Check.match src (Met term.nam (Some term.val)) type dep) =
-  (Check src term.val type dep)
-(Check.match src (Met term.nam None) type dep) =
+//(Check.match src (Met term.nam (Some term.val)) type dep) =
+  //(Check src term.val type dep)
+(Check.match src (Met uid) type dep) =
   (Checker.pure 0)
 (Check.match src (Ref term.nam term.sub (Ann term.val term.typ)) type dep) = // better printing
   (Checker.bind (Equal type term.typ dep) λequal
@@ -698,10 +731,10 @@
   (String.join [Quote txt Quote])
 (Show (Hol nam ctx) dep) =
   (String.join ["? " nam])
-(Show (Met nam None) dep) =
+(Show (Met uid) dep) =
   "_"
-(Show (Met nam (Some val)) dep) =
-  (Show val dep)
+//(Show (Met nam (Some val)) dep) =
+  //(Show val dep)
 (Show (Var nam idx) dep) =
   nam
 (Show (Src src val) dep) =
@@ -829,7 +862,7 @@ Compile.primitives = [
   //(HVM.print (String.join ["API.check: " (Show (Subst sub def) 0)])
   (Result.match (Checker.run (API.check.do (Subst sub def)))
     // case done:
-    λlogs λvalue
+    λfill λlogs λvalue
       //(API.check.log logs
       (Pair.get (API.check.fill sub logs) λfilled λsub
       (If filled
@@ -838,7 +871,7 @@ Compile.primitives = [
         // case false:
         (API.check.log logs 1)))
     // case fail:
-    λlogs λerror
+    λfill λlogs λerror
       (API.check.log logs
       (API.check.log [error] 0)))
 

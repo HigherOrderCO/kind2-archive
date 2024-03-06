@@ -34,6 +34,19 @@ fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
   return hvm1_code;
 }
 
+fn generate_check_hs(book: &Book, command: &str, arg: &str) -> String {
+  let kind_hs = include_str!("./kind2.hs");
+  let kind_hs = kind_hs.lines().filter(|line| !line.starts_with("xString")).collect::<Vec<_>>().join("\n");
+  let book_hs = book.to_hs();
+  let main_hs = match command {
+    "check" => format!("main = (apiCheck {})\n", Term::to_hs_name(arg)),
+    "run"   => format!("Main = (apiNormal {})\n", Term::to_hs_name(arg)),
+    _       => panic!("invalid command"),
+  };
+  let hs_code = format!("{}\n{}\n{}", kind_hs, book_hs, main_hs);
+  return hs_code;
+}
+
 fn main() {
   let args: Vec<String> = env::args().collect();
 
@@ -59,12 +72,23 @@ fn main() {
             .unwrap_or_else(|_| panic!("Failed to auto-format '{}.kind2'.", arg));
 
           // Generates the HVM1 checker.
-          let check_hvm1 = generate_check_hvm1(&book, cmd, arg);
-          let mut file = File::create(".check.hvm1").expect("Failed to create '.check.hvm1'.");
-          file.write_all(check_hvm1.as_bytes()).expect("Failed to write '.check.hvm1'.");
+          //let check_hvm1 = generate_check_hvm1(&book, cmd, arg);
+          //let mut file = File::create(".check.hvm1").expect("Failed to create '.check.hvm1'.");
+          //file.write_all(check_hvm1.as_bytes()).expect("Failed to write '.check.hvm1'.");
 
           // Calls HVM1 and get outputs.
-          let output = Command::new("hvm1").arg("run").arg("-t").arg("1").arg("-c").arg("-f").arg(".check.hvm1").arg("(Main)").output().expect("Failed to execute command");
+          // FIXME: re-enable HVM version
+          //let output = Command::new("hvm1").arg("run").arg("-t").arg("1").arg("-c").arg("-f").arg(".check.hvm1").arg("(Main)").output().expect("Failed to execute command");
+          //let stdout = String::from_utf8_lossy(&output.stdout);
+          //let stderr = String::from_utf8_lossy(&output.stderr);
+          
+          // Generates the Haskell checker.
+          let check_hs = generate_check_hs(&book, cmd, arg);
+          let mut file = File::create(".check.hs").expect("Failed to create '.check.hs'.");
+          file.write_all(check_hs.as_bytes()).expect("Failed to write '.check.hs'.");
+
+          // Calls GHC and get outputs.
+          let output = Command::new("runghc").arg(".check.hs").output().expect("Failed to execute command");
           let stdout = String::from_utf8_lossy(&output.stdout);
           let stderr = String::from_utf8_lossy(&output.stderr);
 
