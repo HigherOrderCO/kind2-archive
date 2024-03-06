@@ -37,7 +37,7 @@ impl Info {
     match self {
       Info::Found { nam, typ, ctx } => {
         let msg = format!("?{} :: {}", nam, typ.show());
-        let ctx = ctx.iter().map(|x| x.show()).collect::<Vec<_>>().join("\n- ");
+        let ctx = ctx.iter().map(|x| format!("\n- {}", x.show())).collect::<Vec<_>>().join("");
         format!("\x1b[1mFOUND:\x1b[0m {}{}", msg, ctx)
       },
       Info::Error { exp, det, bad, src } => {
@@ -59,4 +59,17 @@ impl Info {
     }
   }
 
+  pub fn parse_infos(input: &str) -> Vec<Info> {
+    let mut infos = Vec::new();
+    for line in input.lines() {
+      let mut parser = KindParser::new(line);
+      match parser.parse_info() {
+        Ok(info) => infos.push(info),
+        Err(_)   => println!(">> {}", line),
+      }
+    }
+    infos
+  }
+
 }
+

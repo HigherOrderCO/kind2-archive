@@ -93,19 +93,14 @@ fn main() {
           let stderr = String::from_utf8_lossy(&output.stderr);
 
           // Parses and print stdout infos.
-          let parsed = KindParser::new(&stdout).parse_infos();
-          match parsed {
-            Ok(msgs) => {
-              for msg in &msgs {
-                println!("{}", msg.pretty(&book))
-              }
-              if msgs.len() == 0 {
-                println!("check!");
-              }
-            }
-            Err(err) => println!("{}", err),
+          let infos = Info::parse_infos(&stdout);
+          for info in &infos {
+            println!("{}", info.pretty(&book))
           }
-          
+          if infos.len() == 0 {
+            println!("check!");
+          }
+
           // Prints stdout errors and stats.
           eprintln!("{}", stderr);
         },

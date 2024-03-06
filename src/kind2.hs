@@ -36,7 +36,7 @@ data Term
   | Mat String Term Term (Term -> Term) (Term -> Term)
   | Txt String
   | Hol String [Term]
-  | Met Int
+  | Met Int [Term]
   | Var String Int
   | Src Int Term
 
@@ -46,8 +46,8 @@ data Info
   | Error Int Term Term Term Int
   | Vague String
 
-data State = State [Info] (Map Term) -- state type
-data Res a = Done State a | Fail State Info -- result type
+data State = State (Map Term) [Info] -- state type
+data Res a = Done State a | Fail State -- result type
 data Env a = Env (State -> Res a) -- environment computation
 
 data Bits = O Bits | I Bits | E deriving Show
@@ -77,6 +77,10 @@ listFind name ((nam, val):tail) = if name == nam then Just val else listFind nam
 listMap :: (a -> b) -> [a] -> [b]
 listMap f []     = []
 listMap f (x:xs) = f x : listMap f xs
+
+listPush :: a -> [a] -> [a]
+listPush x []     = [x]
+listPush x (y:ys) = y : listPush x ys
 
 newLine :: String
 newLine = [chr 10]
@@ -154,28 +158,32 @@ mapSet (I bits) val (Node v lft rgt) = Node v lft (mapSet bits val rgt)
 -- Environment
 -- -----------
 
+infoIsSolve :: Info -> Bool
+infoIsSolve (Solve _ _ _) = True
+infoIsSolve _             = False
+
 -- Pattern matches on a computation result
-resMatch :: Res a -> (State -> a -> b) -> (State -> Info -> b) -> b
-resMatch (Done state value) done _    = done state value
-resMatch (Fail state error) _    fail = fail state error
+-- resMatch :: Res a -> (State -> a -> b) -> (State -> Info -> b) -> b
+-- resMatch (Done state value) done _    = done state value
+-- resMatch (Fail state)       _    fail = fail state error
 
 -- Monadic bind function
 envBind :: Env a -> (a -> Env b) -> Env b
 envBind (Env a) b = Env $ \state -> case a state of
   Done state' value -> let Env b' = b value in b' state'
-  Fail state' error -> Fail state' error
+  Fail state'       -> Fail state'
 
 envPure :: a -> Env a
 envPure a = Env $ \state -> Done state a
 
-envFail :: Info -> Env a
-envFail i = Env $ \state -> Fail state i
+envFail :: Env a
+envFail = Env $ \state -> Fail state
 
 envRun :: Env a -> Res a
-envRun (Env chk) = chk (State [] mapNew)
+envRun (Env chk) = chk (State mapNew [])
 
 envLog :: Info -> Env Int
-envLog log = Env $ \(State logs fill) -> Done (State (log : logs) fill) 1
+envLog log = Env $ \(State fill logs) -> Done (State fill (log : logs)) 1
 
 envSnapshot :: Env State
 envSnapshot = Env $ \state -> Done state state
@@ -183,21 +191,30 @@ envSnapshot = Env $ \state -> Done state state
 envRewind :: State -> Env Int
 envRewind state = Env $ \_ -> Done state 0
 
+envFill :: Int -> Term -> Env ()
+envFill k v = Env $ \(State fill logs) -> Done (State (mapSet (key k) v fill) logs) ()
+
 envGetFill :: Env (Map Term)
-envGetFill = Env $ \(State logs fill) -> Done (State logs fill) fill
+envGetFill = Env $ \(State fill logs) -> Done (State fill logs) fill
+
+envTakeLogs :: Env [Info]
+envTakeLogs = Env $ \(State fill logs) -> Done (State fill []) logs
+
+envSetLogs :: [Info] -> Env ()
+envSetLogs logs = Env $ \(State fill _) -> Done (State fill logs) ()
 
 instance Functor Env where
   fmap f (Env chk) = Env $ \logs -> case chk logs of
     Done logs' a -> Done logs' (f a)
-    Fail logs' e -> Fail logs' e
+    Fail logs' -> Fail logs'
 
 instance Applicative Env where
   pure = envPure
   (Env chkF) <*> (Env chkA) = Env $ \logs -> case chkF logs of
     Done logs' f -> case chkA logs' of
       Done logs'' a -> Done logs'' (f a)
-      Fail logs'' e -> Fail logs'' e
-    Fail logs' e -> Fail logs' e
+      Fail logs'' -> Fail logs''
+    Fail logs' -> Fail logs'
 
 instance Monad Env where
   (Env a) >>= b = envBind (Env a) b
@@ -220,14 +237,24 @@ termReduce fill lv (Op2 opr fst snd) = termReduceOp2 fill lv opr (termReduce fil
 termReduce fill lv (Mat nam x z s p) = termReduceMat fill lv nam (termReduce fill lv x) z s p
 termReduce fill lv (Txt txt)         = termReduceTxt fill lv txt
 termReduce fill lv (Src src val)     = termReduce fill lv val
-termReduce fill lv (Met uid)         = termReduceMet fill lv uid
+termReduce fill lv (Met uid spn)     = termReduceMet fill lv uid spn
 termReduce fill lv val               = val
 
 termReduceApp :: Map Term -> Int -> Term -> Term -> Term
 termReduceApp fill 2  (Ref nam val) arg = termReduceApp fill 2 val arg
 termReduceApp fill 1  (Ref nam val) arg = termReduceApp fill 1 val arg
+termReduceApp fill lv (Met uid spn) arg = termReduce fill lv (Met uid (listPush arg spn))
 termReduceApp fill lv (Lam nam bod) arg = termReduce fill lv (bod (termReduce fill 0 arg))
 termReduceApp fill lv fun arg           = App fun arg
+
+termReduceMet :: Map Term -> Int -> Int -> [Term] -> Term
+termReduceMet fill lv uid spn = case mapGet (key uid) fill of
+  Just val -> termReduce fill lv (termReduceMetSpine val spn)
+  Nothing  -> Met uid spn
+
+termReduceMetSpine :: Term -> [Term] -> Term
+termReduceMetSpine val []       = val
+termReduceMetSpine val (x : xs) = termReduceMetSpine (App val x) xs
 
 termReduceOp2 :: Map Term -> Int -> Oper -> Term -> Term -> Term
 termReduceOp2 fill 1  op  (Ref _ x) (Num snd) = termReduceOp2 fill 1 op x (Num snd)
@@ -260,11 +287,6 @@ termReduceRef fill 2  nam val = termReduce fill 2 val
 termReduceRef fill 1  nam val = Ref nam val
 termReduceRef fill lv nam val = Ref nam val
 
-termReduceMet :: Map Term -> Int -> Int -> Term
-termReduceMet fill lv uid = case mapGet (key uid) fill of
-  Just val -> termReduce fill lv val
-  Nothing  -> Met uid
-
 termReduceTxt :: Map Term -> Int -> String -> Term
 termReduceTxt fill lv txt = Txt txt
 
@@ -272,12 +294,13 @@ termReduceTxt fill lv txt = Txt txt
 -- -------------
 
 termNormal :: Map Term -> Int -> Term -> Int -> Term
-termNormal fill lv term dep = termNormalGo fill lv (termNormalPrefer fill (termReduce fill 0 term) (termReduce fill lv term)) dep where
+-- termNormal fill lv term dep = termNormalGo fill lv (termNormalPrefer fill (termReduce fill 0 term) (termReduce fill lv term)) dep where
+termNormal fill lv term dep = termNormalGo fill lv (termReduce fill lv term) dep where
 
-  termNormalPrefer fill soft (Lam _ _)   = soft
-  termNormalPrefer fill soft (Slf _ _ _) = soft
-  termNormalPrefer fill soft (All _ _ _) = soft
-  termNormalPrefer fill soft hard        = hard
+  -- termNormalPrefer fill soft (Lam _ _)   = soft
+  -- termNormalPrefer fill soft (Slf _ _ _) = soft
+  -- termNormalPrefer fill soft (All _ _ _) = soft
+  -- termNormalPrefer fill soft hard        = hard
 
   termNormalGo fill lv (All nam inp bod) dep = All nam (termNormal fill lv inp dep) (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
   termNormalGo fill lv (Lam nam bod)     dep = Lam nam (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
@@ -296,20 +319,18 @@ termNormal fill lv term dep = termNormalGo fill lv (termNormalPrefer fill (termR
   termNormalGo fill lv (Txt val)         dep = Txt val
   termNormalGo fill lv (Var nam idx)     dep = Var nam idx
   termNormalGo fill lv (Src src val)     dep = Src src (termNormal fill lv val dep)
-  termNormalGo fill lv (Met uid)         dep = Met uid
+  termNormalGo fill lv (Met uid spn)     dep = Met uid spn -- TODO: normalize spine
 
 -- Equality
 -- --------
 
 termEqual :: Term -> Term -> Int -> Env Bool
-termEqual a b dep =
-  -- trace ("equal: " ++ termShow a dep ++ "\n    == " ++ termShow b dep) $
-  termTryIdentical a b dep $ do
-    fill <- envGetFill
-    let a' = termReduce fill 2 a
-    let b' = termReduce fill 2 b
-    termTryIdentical a' b' dep $ do
-      termSimilar a' b' dep
+termEqual a b dep = do
+  fill <- envGetFill
+  let a' = termReduce fill 2 a
+  let b' = termReduce fill 2 b
+  termTryIdentical a' b' dep $ do
+    termSimilar a' b' dep
 
 termTryIdentical :: Term -> Term -> Int -> Env Bool -> Env Bool
 termTryIdentical a b dep cont = do
@@ -332,10 +353,10 @@ termSimilar (App aFun aArg) (App bFun bArg) dep = do
   envPure (eFun && eArg)
 termSimilar (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
   termSimilar (termReduce mapNew 0 aTyp) (termReduce mapNew 0 bTyp) dep
-termSimilar (Hol aNam aCtx) (Hol bNam bCtx) dep =
-  envPure (aNam == bNam)
-termSimilar (Met aUid) (Met bUid) dep =
-  envPure (aUid == bUid)
+-- termSimilar (Hol aNam aCtx) (Hol bNam bCtx) dep =
+  -- envPure (aNam == bNam)
+-- termSimilar (Met aUid aSpn) (Met bUid bSpn) dep =
+  -- envPure (aUid == bUid)
 termSimilar (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep = do
   eFst <- termEqual aFst bFst dep
   eSnd <- termEqual aSnd bSnd dep
@@ -349,10 +370,7 @@ termSimilar (Mat aNam aX aZ aS aP) (Mat bNam bX bZ bS bP) dep = do
 termSimilar a b dep = envPure False
 
 termIdentical :: Term -> Term -> Int -> Env Bool
-termIdentical a b dep = 
-  -- termUnifyTry a b dep $
-  -- termUnifyTry b a dep $
-  termIdenticalGo a b dep
+termIdentical a b dep = termIdenticalGo a b dep
 
 termIdenticalGo :: Term -> Term -> Int -> Env Bool
 termIdenticalGo (All aNam aInp aBod) (All bNam bInp bBod) dep =
@@ -381,8 +399,16 @@ termIdenticalGo (Ann aVal aTyp) b dep =
   termIdentical aVal b dep
 termIdenticalGo a (Ann bVal bTyp) dep =
   termIdentical a bVal dep
-termIdenticalGo (Met aUid) (Met bUid) dep =
-  envPure (aUid == bUid)
+-- termIdenticalGo (Met aUid aSpn) (Met bUid bSpn) dep =
+  -- envPure (aUid == bUid)
+termIdenticalGo (Met aUid aSpn) b dep =
+  -- traceShow ("unify: " ++ show aUid ++ " x=" ++ termShow (Met aUid aSpn) dep ++ " t=" ++ termShow b dep) $
+  envBind (termUnify aUid aSpn b dep) $ \_ ->
+  envPure True
+termIdenticalGo a (Met bUid bSpn) dep =
+  -- traceShow ("unify: " ++ show bUid ++ " x=" ++ termShow (Met bUid bSpn) dep ++ " t=" ++ termShow a dep) $
+  envBind (termUnify bUid bSpn a dep) $ \_ ->
+  envPure True
 termIdenticalGo (Hol aNam aCtx) (Hol bNam bCtx) dep =
   envPure (aNam == bNam)
 termIdenticalGo U60 U60 dep =
@@ -415,112 +441,67 @@ termIdenticalGo a b dep =
 -- Unification
 -- -----------
 
--- TODO: the code below has been implemented in HVM, an untyped Haskell-like
--- functional language. We're porting it to Haskell.
+-- The unification algorithm is a simple pattern unifier, based on smalltt:
+-- > https://github.com/AndrasKovacs/elaboration-zoo/blob/master/03-holes/Main.hs
+-- The pattern unification problem provides a solution to the following problem:
+--   (?X x y z ...) = K
+-- When:
+--   1. The LHS spine, `x y z ...`, consists of distinct variables.
+--   2. Every free var of the RHS, `K`, occurs in the spine.
+--   3. The LHS hole, `?A`, doesn't occur in the RHS, `K`.
+-- If these conditions are met, ?X is solved as:
+--   ?X = λx λy λz ... K
+-- In this implementation, checking condition `2` is not necessary, because we
+-- subst holes directly where they occur (rather than on top-level definitions),
+-- so, it is impossible for unbound variables to appear. We also don't check for
+-- condition 3, and just allow recursive solutions.
 
--- // The unification algorithm is a simple pattern unifier, based on smalltt:
--- // > https://github.com/AndrasKovacs/elaboration-zoo/blob/master/03-holes/Main.hs
--- // The 'Unify.try' fn will attempt to match the following pattern:
--- //   (?A x y z ...) = B
--- // Where:
--- //   1. The LHS spine, `x y z ...`, consists of distinct variables.
--- //   2. Every free var of the RHS, `B`, occurs in the spine.
--- //   3. The LHS hole, `?A`, doesn't occur in the RHS, `B`.
--- // If it is successful, it outputs the following substitution:
--- //   ?A = λx λy λz ... B
--- // In this checker, we don't allow holes to occur in solutions at all.
+-- If possible, solves a `(?X x y z ...) = K` problem, generating a subst.
+termUnify :: Int -> [Term] -> Term -> Int -> Env ()
+termUnify uid spn b dep = do
+  fill <- envGetFill
+  let unsolved = not (mapHas (key uid) fill)
+  let solvable = termUnifyValid fill spn []
+  if unsolved && solvable then do
+    let solution = termUnifySolve fill uid spn b
+    envLog (Solve uid solution dep)
+    envFill uid solution
+  else
+    return ()
 
-termUnifyTry :: Term -> Term -> Int -> Env Bool -> Env Bool
-termUnifyTry a b dep cont = do
-  (maybeMatch (termUnifyMatch a b dep mapNew)
-    (\(key, val) ->
-      envBind (envLog (Solve key val dep)) $ \_ ->
-      envPure True)
-    (if termUnifySkip a
-      then envPure True
-      else cont))
+-- Checks if an problem is solveable by pattern unification.
+termUnifyValid :: Map Term -> [Term] -> [Int] -> Bool
+termUnifyValid fill []        vars = True
+termUnifyValid fill (x : spn) vars = case termReduce fill 0 x of
+  (Var nam idx) -> not (elem idx vars) && termUnifyValid fill spn (idx : vars)
+  otherwise     -> False
+  
+-- Generates the solution, adding binders and renaming variables.
+termUnifySolve :: Map Term -> Int -> [Term] -> Term -> Term
+termUnifySolve fill uid []        b = b
+termUnifySolve fill uid (x : spn) b = case termReduce fill 0 x of
+  (Var nam idx) -> Lam nam $ \x -> termUnifySubst idx x (termUnifySolve fill uid spn b)
+  otherwise     -> error "unreachable"         
 
-termUnifyMatch :: Term -> Term -> Int -> Map Term -> Maybe (Int, Term)
-termUnifyMatch (App fun (Var nam idx)) b dep ctx | mapHas (key idx) ctx = Nothing
-termUnifyMatch (App fun (Var nam idx)) b dep ctx | otherwise =
-  let ctx' = mapSet (key idx) (Var nam dep) ctx in
-  maybeBind (termUnifyMatch fun b (dep + 1) ctx') $ \(key,val) ->
-  maybePure (key, Lam nam $ \x -> val) -- TODO: subst [var dep <- x]
-termUnifyMatch (Met uid) b dep ctx =
-  maybeBind (termUnifySolution b dep uid ctx) $ \neo ->
-  maybePure (uid, neo)
-termUnifyMatch (App fun (Ann val _)) b dep ctx = termUnifyMatch (App fun val) b dep ctx
-termUnifyMatch (App fun (Ins val))   b dep ctx = termUnifyMatch (App fun val) b dep ctx
-termUnifyMatch (App fun (Src _ val)) b dep ctx = termUnifyMatch (App fun val) b dep ctx
-termUnifyMatch (Ann val typ)         b dep ctx = termUnifyMatch val b dep ctx
-termUnifyMatch (Ins val)             b dep ctx = termUnifyMatch val b dep ctx
-termUnifyMatch (Src src val)         b dep ctx = termUnifyMatch val b dep ctx
-termUnifyMatch other                 b dep ctx = Nothing
-
-termUnifySkip :: Term -> Bool
-termUnifySkip (App fun arg)  = termUnifySkip fun
-termUnifySkip (Ann val typ)  = termUnifySkip val
-termUnifySkip (Ins val)      = termUnifySkip val
-termUnifySkip (Src src val)  = termUnifySkip val
-termUnifySkip (Met uid)      = True
-termUnifySkip (Hol nam ctx)  = True
-termUnifySkip other          = False
-
-termUnifySolution :: Term -> Int -> Int -> Map Term -> Maybe Term
-termUnifySolution (All nam inp bod) dep uid ctx =
-  maybeBind (termUnifySolution inp dep uid ctx) $ \inp' ->
-  maybeBind (termUnifySolution (bod (Var nam dep)) (dep + 1) uid ctx) $ \bod' ->
-  maybePure (All nam inp' (\_ -> bod'))
-termUnifySolution (Lam nam bod) dep uid ctx =
-  maybeBind (termUnifySolution (bod (Var nam dep)) (dep + 1) uid ctx) $ \bod' ->
-  maybePure (Lam nam (\_ -> bod'))
-termUnifySolution (App fun arg) dep uid ctx =
-  maybeBind (termUnifySolution fun dep uid ctx) $ \fun' ->
-  maybeBind (termUnifySolution arg dep uid ctx) $ \arg' ->
-  maybePure (App fun' arg')
-termUnifySolution (Ann val typ) dep uid ctx =
-  maybeBind (termUnifySolution val dep uid ctx) $ \val' ->
-  maybeBind (termUnifySolution typ dep uid ctx) $ \typ' ->
-  maybePure (Ann val' typ')
-termUnifySolution (Slf nam typ bod) dep uid ctx =
-  termUnifySolution typ dep uid ctx
-termUnifySolution (Ins val) dep uid ctx =
-  maybeBind (termUnifySolution val dep uid ctx) $ \val' ->
-  maybePure (Ins val')
-termUnifySolution (Ref nam val) dep uid ctx =
-  maybePure (Ref nam val)
-termUnifySolution (Let nam val bod) dep uid ctx =
-  maybeBind (termUnifySolution val dep uid ctx) $ \val' ->
-  maybeBind (termUnifySolution (bod (Var nam dep)) (dep + 1) uid ctx) $ \bod' ->
-  maybePure (Let nam val' (\_ -> bod'))
-termUnifySolution (Met uid') dep uid ctx =
-  Nothing
-termUnifySolution (Hol nam _) dep hol ctx =
-  maybePure (Hol nam [])
-termUnifySolution Set dep uid ctx =
-  maybePure Set
-termUnifySolution U60 dep uid ctx =
-  maybePure U60
-termUnifySolution (Num val) dep uid ctx =
-  maybePure (Num val)
-termUnifySolution (Op2 opr fst snd) dep uid ctx =
-  maybeBind (termUnifySolution fst dep uid ctx) $ \fst' ->
-  maybeBind (termUnifySolution snd dep uid ctx) $ \snd' ->
-  maybePure (Op2 opr fst' snd')
-termUnifySolution (Mat nam x z s p) dep uid ctx =
-  maybeBind (termUnifySolution x dep uid ctx) $ \x' ->
-  maybeBind (termUnifySolution z dep uid ctx) $ \z' ->
-  maybeBind (termUnifySolution (s (Var (stringConcat nam "-1") dep)) dep uid ctx) $ \s' ->
-  maybeBind (termUnifySolution (p (Var nam dep)) dep uid ctx) $ \p' ->
-  maybePure (Mat nam x' z' (\_ -> s') (\_ -> p'))
-termUnifySolution (Txt val) dep uid ctx =
-  maybePure (Txt val)
-termUnifySolution (Var nam idx) dep uid ctx =
-  maybeBind (mapGet (key idx) ctx) $ \val ->
-  maybePure val
-termUnifySolution (Src src val) dep uid ctx =
-  maybeBind (termUnifySolution val dep uid ctx) $ \val' ->
-  maybePure (Src src val')
+-- Substitutes a Bruijn level variable by a `neo` value in `term`.
+termUnifySubst :: Int -> Term -> Term -> Term
+termUnifySubst lvl neo (All nam inp bod) = All nam (termUnifySubst lvl neo inp) (\x -> termUnifySubst lvl neo (bod x))
+termUnifySubst lvl neo (App fun arg)     = App (termUnifySubst lvl neo fun) (termUnifySubst lvl neo arg)
+termUnifySubst lvl neo (Ann val typ)     = Ann (termUnifySubst lvl neo val) (termUnifySubst lvl neo typ)
+termUnifySubst lvl neo (Slf nam typ bod) = Slf nam (termUnifySubst lvl neo typ) (\x -> termUnifySubst lvl neo (bod x))
+termUnifySubst lvl neo (Ins val)         = Ins (termUnifySubst lvl neo val)
+termUnifySubst lvl neo (Ref nam val)     = Ref nam (termUnifySubst lvl neo val)
+termUnifySubst lvl neo (Let nam val bod) = Let nam (termUnifySubst lvl neo val) (\x -> termUnifySubst lvl neo (bod x))
+termUnifySubst lvl neo (Met uid spn)     = Met uid (map (termUnifySubst lvl neo) spn)
+termUnifySubst lvl neo (Hol nam ctx)     = Hol nam (map (termUnifySubst lvl neo) ctx)
+termUnifySubst lvl neo Set               = Set
+termUnifySubst lvl neo U60               = U60
+termUnifySubst lvl neo (Num n)           = Num n
+termUnifySubst lvl neo (Op2 opr fst snd) = Op2 opr (termUnifySubst lvl neo fst) (termUnifySubst lvl neo snd)
+termUnifySubst lvl neo (Mat nam x z s p) = Mat nam (termUnifySubst lvl neo x) (termUnifySubst lvl neo z) (\k -> termUnifySubst lvl neo (s k)) (\k -> termUnifySubst lvl neo (p k))
+termUnifySubst lvl neo (Txt txt)         = Txt txt
+termUnifySubst lvl neo (Var nam idx)     = if lvl == idx then neo else Var nam idx
+termUnifySubst lvl neo (Src src val)     = Src src (termUnifySubst lvl neo val)
 
 -- Type-Checking
 -- -------------
@@ -550,8 +531,9 @@ termInferGo (App fun arg) dep =
     (\fun_nam fun_typ_inp fun_typ_bod fun arg ->
       envBind (termCheck 0 arg fun_typ_inp dep) $ \_ ->
       envPure (fun_typ_bod arg))
-    (\fun arg ->
-      envFail (Error 0 fun_typ (Hol "function" []) (App fun arg) dep))
+    (\fun arg -> do
+      envLog (Error 0 fun_typ (Hol "function" []) (App fun arg) dep)
+      envFail)
     fun arg)
 termInferGo (Ann val typ) dep =
   envPure typ
@@ -564,8 +546,9 @@ termInferGo (Ins val) dep =
   (termIfSlf (termReduce fill 2 vty)
     (\vty_nam vty_typ vty_bod val ->
       envPure (vty_bod (Ins val)))
-    (\val ->
-      envFail (Error 0 vty (Hol "self-type" []) (Ins val) dep))
+    (\val -> do
+      envLog (Error 0 vty (Hol "self-type" []) (Ins val) dep)
+      envFail)
     val)
 termInferGo (Ref nam val) dep = 
   termInfer val dep
@@ -587,25 +570,30 @@ termInferGo (Mat nam x z s p) dep =
   envBind (termCheck 0 z (p (Num 0)) dep) $ \_ ->
   envBind (termCheck 0 (s (Ann (Var (stringConcat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (stringConcat nam "-1") dep))) (dep + 1)) $ \_ ->
   envPure (p x)
-termInferGo (Lam nam bod) dep =
-  envFail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Lam nam bod) dep)
-termInferGo (Let nam val bod) dep =
-  envFail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Let nam val bod) dep)
-termInferGo (Hol nam ctx) dep =
-  envFail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Hol nam ctx) dep)
-termInferGo (Met uid) dep =
-  envFail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Met uid) dep)
-termInferGo (Var nam idx) dep =
-  envFail (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Var nam idx) dep)
+termInferGo (Lam nam bod) dep = do
+  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Lam nam bod) dep)
+  envFail
+termInferGo (Let nam val bod) dep = do
+  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Let nam val bod) dep)
+  envFail
+termInferGo (Hol nam ctx) dep = do
+  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Hol nam ctx) dep)
+  envFail
+termInferGo (Met uid spn) dep = do
+  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Met uid spn) dep)
+  envFail
+termInferGo (Var nam idx) dep = do
+  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Var nam idx) dep)
+  envFail
 termInferGo (Src src val) dep =
   termInfer val dep
 
-termCheck :: Int -> Term -> Term -> Int -> Env Int
+termCheck :: Int -> Term -> Term -> Int -> Env ()
 termCheck src val typ dep =
   -- trace ("check: " ++ termShow val dep ++ "\n    :: " ++ termShow typ dep) $
   termCheckGo src val typ dep
 
-termCheckGo :: Int -> Term -> Term -> Int -> Env Int
+termCheckGo :: Int -> Term -> Term -> Int -> Env ()
 termCheckGo src (Lam termNam termBod) typx dep =
   envBind envGetFill $ \fill ->
   (termIfAll (termReduce fill 2 typx)
@@ -616,7 +604,7 @@ termCheckGo src (Lam termNam termBod) typx dep =
       in termCheck 0 term typx (dep + 1))
     (\termBod ->
       envBind (termInfer (Lam termNam termBod) dep) $ \x ->
-      envPure 0)
+      envPure ())
     termBod)
 termCheckGo src (Ins termVal) typx dep =
   envBind envGetFill $ \fill ->
@@ -625,15 +613,15 @@ termCheckGo src (Ins termVal) typx dep =
       termCheck 0 termVal (typeBod (Ins termVal)) dep)
     (\termVal ->
       envBind (termInfer (Ins termVal) dep) $ \x ->
-      envPure 0)
+      envPure ())
     termVal)
 termCheckGo src (Let termNam termVal termBod) typx dep =
   termCheck 0 (termBod termVal) typx (dep + 1)
 termCheckGo src (Hol termNam termCtx) typx dep =
   envBind (envLog (Found termNam typx termCtx dep)) $ \x ->
-  envPure 0
-termCheckGo src (Met uid) typx dep =
-  envPure 0
+  envPure ()
+termCheckGo src (Met uid spn) typx dep =
+  envPure ()
 termCheckGo src (Ref termNam (Ann termVal termTyp)) typx dep =
   envBind (termEqual typx termTyp dep) $ \equal ->
   termCheckReport src equal termTyp typx termVal dep
@@ -642,17 +630,23 @@ termCheckGo src (Src termSrc termVal) typx dep =
 termCheckGo src term typx dep =
   termCheckVerify src term typx dep
 
-termCheckVerify :: Int -> Term -> Term -> Int -> Env Int
+termCheckVerify :: Int -> Term -> Term -> Int -> Env ()
 termCheckVerify src term typx dep =
   envBind (termInfer term dep) $ \infer ->
   envBind (termEqual typx infer dep) $ \equal ->
   termCheckReport src equal infer typx term dep
 
-termCheckReport :: Int -> Bool -> Term -> Term -> Term -> Int -> Env Int
-termCheckReport src False detected expected value dep =
-  envFail (Error src detected expected value dep)
+termCheckReport :: Int -> Bool -> Term -> Term -> Term -> Int -> Env ()
+termCheckReport src False detected expected value dep = do
+  envLog (Error src detected expected value dep)
+  envFail
 termCheckReport src True detected expected value dep =
-  envPure 0
+  envPure ()
+
+termCheckDef :: Term -> Env ()
+termCheckDef (Ref nam (Ann val typ)) = termCheck 0 val typ 0 >> return ()
+termCheckDef (Ref nam val)           = termInfer val 0 >> return ()
+termCheckDef other                   = error "invalid top-level definition"
 
 -- Stringification
 -- ---------------
@@ -676,10 +670,7 @@ termShow (Ann val typ) dep =
       typ' = termShow typ dep
   in stringJoin ["{" , val' , ": " , typ' , "}"]
 termShow (Slf nam typ bod) dep =
-  let nam' = nam
-      typ' = termShow typ dep
-      bod' = termShow (bod (Var nam dep)) (dep + 1)
-  in stringJoin ["$(" , nam' , ": " , typ' , ") " , bod']
+  termShow typ dep
 termShow (Ins val) dep =
   let val' = termShow val dep
   in stringJoin ["~" , val']
@@ -707,10 +698,15 @@ termShow (Mat nam x z s p) dep =
       p'   = termShow (p (Var nam dep)) dep
   in stringJoin ["#match " , nam' , " = " , x' , " { #0: " , z' , " #+: " , s' , " }: " , p']
 termShow (Txt txt) dep = stringJoin [quote , txt , quote]
-termShow (Hol nam ctx) dep = stringJoin ["? " , nam]
-termShow (Met uid) dep = "_"
+termShow (Hol nam ctx) dep = stringJoin ["?" , nam]
+termShow (Met uid spn) dep = stringJoin ["(_", termShowSpn (reverse spn) dep, ")"]
 termShow (Var nam idx) dep = nam
-termShow (Src src val) dep = stringJoin ["!", (termShow val dep)]
+-- termShow (Src src val) dep = stringJoin ["!", (termShow val dep)]
+termShow (Src src val) dep = termShow val dep
+
+termShowSpn :: [Term] -> Int -> String
+termShowSpn []       dep = ""
+termShowSpn (x : xs) dep = stringJoin [" ", termShow x dep, termShowSpn xs dep]
 
 operShow :: Oper -> String
 operShow ADD = "+"
@@ -758,22 +754,31 @@ infoShow fill (Vague name) =
 -- ---
 
 apiCheck :: Term -> IO ()
-apiCheck (Ref nam def) =
-  (resMatch (envRun (apiCheckDo def))
-    -- done
-    (\(State logs fill) value -> do
-      print "ok")
-    -- fail
-    (\(State logs fill) error -> do
-      putStrLn $ infoShow fill error))
+apiCheck term = case envRun $ apiCheckGo 0 term of
+  Done state value -> apiPrintLogs state
+  Fail state       -> apiPrintLogs state
 
-apiCheckDo :: Term -> Env Int
-apiCheckDo (Ann val typ) = do
-  termCheck 0 val typ 0
-  return 0
-apiCheckDo val = do
-  termInfer val 0
-  return 0
+apiCheckGo :: Int -> Term -> Env ()
+apiCheckGo 9 term = return ()
+apiCheckGo n term = do
+  termCheckDef term
+  logs <- envTakeLogs
+  if any infoIsSolve logs then
+    apiCheckGo (n + 1) term
+  else 
+    envSetLogs logs
+
+-- TODO: IMPLEMENT FUNCTION THAT SHOWS LIST OF INFOS
+infosShow :: [Info] -> String
+infosShow []           = ""
+infosShow (info:infos) = infoShow mapNew info ++ "; " ++ infosShow infos
+
+apiPrintLogs :: State -> IO ()
+apiPrintLogs (State fill (log : logs)) = do
+  putStrLn $ infoShow fill log
+  apiPrintLogs (State fill logs)
+apiPrintLogs (State fill []) = do
+  return ()
 
 -- Main
 -- ----

@@ -1,5 +1,8 @@
 use crate::{*};
 
+//./../main.rs//
+//./mod.rs//
+
 impl<'i> KindParser<'i> {
 
   pub fn parse_info(&mut self) -> Result<Info, String> {
@@ -58,23 +61,6 @@ impl<'i> KindParser<'i> {
       }
       _ => self.expected("# (start of info)"),
     }
-  }
-  
-  pub fn parse_infos(&mut self) -> Result<Vec<Info>, String> {
-    let mut infos = Vec::new();
-    while *self.index() < self.input().len() {
-      let parsed_info = self.parse_info();
-      match parsed_info {
-        Ok(msg) => {
-          infos.push(msg);
-          self.skip_trivia();
-        }
-        Err(_) => {
-          break;
-        }
-      }
-    }
-    Ok(infos)
   }
 
 }
