@@ -25,7 +25,7 @@ data Term
   = All String Term (Term -> Term)
   | Lam String (Term -> Term)
   | App Term Term
-  | Ann Term Term
+  | Ann Bool Term Term
   | Slf String Term (Term -> Term)
   | Ins Term
   | Ref String Term
@@ -231,7 +231,7 @@ instance Monad Env where
 
 termReduce :: Map Term -> Int -> Term -> Term
 termReduce fill lv (App fun arg)     = termReduceApp fill lv (termReduce fill lv fun) arg
-termReduce fill lv (Ann val typ)     = termReduce fill lv val
+termReduce fill lv (Ann chk val typ) = termReduce fill lv val
 termReduce fill lv (Ins val)         = termReduce fill lv val
 termReduce fill lv (Ref nam val)     = termReduceRef fill lv nam (termReduce fill lv val)
 termReduce fill lv (Let nam val bod) = termReduce fill lv (bod val)
@@ -307,7 +307,7 @@ termNormal fill lv term dep = termNormalGo fill lv (termReduce fill lv term) dep
   termNormalGo fill lv (All nam inp bod) dep = All nam (termNormal fill lv inp dep) (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
   termNormalGo fill lv (Lam nam bod)     dep = Lam nam (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
   termNormalGo fill lv (App fun arg)     dep = App (termNormal fill lv fun dep) (termNormal fill lv arg dep)
-  termNormalGo fill lv (Ann val typ)     dep = Ann (termNormal fill lv val dep) (termNormal fill lv typ dep)
+  termNormalGo fill lv (Ann chk val typ) dep = Ann chk (termNormal fill lv val dep) (termNormal fill lv typ dep)
   termNormalGo fill lv (Slf nam typ bod) dep = Slf nam typ (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
   termNormalGo fill lv (Ins val)         dep = Ins (termNormal fill lv val dep)
   termNormalGo fill lv (Ref nam val)     dep = Ref nam (termNormal fill lv val dep)
@@ -398,9 +398,9 @@ termIdenticalGo a (Let bNam bVal bBod) dep =
   termIdentical a (bBod bVal) dep
 termIdenticalGo Set Set dep =
   envPure True
-termIdenticalGo (Ann aVal aTyp) b dep =
+termIdenticalGo (Ann chk aVal aTyp) b dep =
   termIdentical aVal b dep
-termIdenticalGo a (Ann bVal bTyp) dep =
+termIdenticalGo a (Ann chk bVal bTyp) dep =
   termIdentical a bVal dep
 -- termIdenticalGo (Met aUid aSpn) (Met bUid bSpn) dep =
   -- envPure (aUid == bUid)
@@ -493,7 +493,7 @@ termUnifySubst :: Int -> Term -> Term -> Term
 termUnifySubst lvl neo (All nam inp bod) = All nam (termUnifySubst lvl neo inp) (\x -> termUnifySubst lvl neo (bod x))
 termUnifySubst lvl neo (Lam nam bod)     = Lam nam (\x -> termUnifySubst lvl neo (bod x))
 termUnifySubst lvl neo (App fun arg)     = App (termUnifySubst lvl neo fun) (termUnifySubst lvl neo arg)
-termUnifySubst lvl neo (Ann val typ)     = Ann (termUnifySubst lvl neo val) (termUnifySubst lvl neo typ)
+termUnifySubst lvl neo (Ann chk val typ) = Ann chk (termUnifySubst lvl neo val) (termUnifySubst lvl neo typ)
 termUnifySubst lvl neo (Slf nam typ bod) = Slf nam (termUnifySubst lvl neo typ) (\x -> termUnifySubst lvl neo (bod x))
 termUnifySubst lvl neo (Ins val)         = Ins (termUnifySubst lvl neo val)
 termUnifySubst lvl neo (Ref nam val)     = Ref nam (termUnifySubst lvl neo val)
@@ -528,7 +528,7 @@ termInfer term dep =
 termInferGo :: Term -> Int -> Env Term
 termInferGo (All nam inp bod) dep = do
   envSusp (Check 0 inp Set dep)
-  envSusp (Check 0 (bod (Ann (Var nam dep) inp)) Set (dep + 1))
+  envSusp (Check 0 (bod (Ann False (Var nam dep) inp)) Set (dep + 1))
   return Set
 termInferGo (App fun arg) dep = do
   ftyp <- termInfer fun dep
@@ -540,10 +540,10 @@ termInferGo (App fun arg) dep = do
     otherwise -> do
       envLog (Error 0 ftyp (Hol "function" []) (App fun arg) dep)
       envFail
-termInferGo (Ann val typ) dep = do
+termInferGo (Ann chk val typ) dep = do
   return typ
 termInferGo (Slf nam typ bod) dep = do
-  envSusp (Check 0 (bod (Ann (Var nam dep) typ)) Set (dep + 1))
+  envSusp (Check 0 (bod (Ann False (Var nam dep) typ)) Set (dep + 1))
   return Set
 termInferGo (Ins val) dep = do
   vtyp <- termInfer val dep
@@ -570,9 +570,9 @@ termInferGo (Op2 opr fst snd) dep = do
   return U60
 termInferGo (Mat nam x z s p) dep = do
   envSusp (Check 0 x U60 dep)
-  envSusp (Check 0 (p (Ann (Var nam dep) U60)) Set dep)
+  envSusp (Check 0 (p (Ann False (Var nam dep) U60)) Set dep)
   envSusp (Check 0 z (p (Num 0)) dep)
-  envSusp (Check 0 (s (Ann (Var (stringConcat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (stringConcat nam "-1") dep))) (dep + 1))
+  envSusp (Check 0 (s (Ann False (Var (stringConcat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (stringConcat nam "-1") dep))) (dep + 1))
   return (p x)
 termInferGo (Lam nam bod) dep = do
   envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Lam nam bod) dep)
@@ -602,7 +602,7 @@ termCheckGo src (Lam termNam termBod) typx dep = do
   fill <- envGetFill
   case termReduce fill 2 typx of
     (All typeNam typeInp typeBod) -> do
-      let ann  = Ann (Var termNam dep) typeInp
+      let ann  = Ann False (Var termNam dep) typeInp
       let term = termBod ann
       let typx = typeBod ann
       termCheck 0 term typx (dep + 1)
@@ -619,7 +619,7 @@ termCheckGo src (Ins termVal) typx dep = do
       return ()
 termCheckGo src (Let termNam termVal termBod) typx dep = do
   termTyp <- termInfer termVal dep
-  termCheck 0 (termBod (Ann (Var termNam dep) termTyp)) typx dep
+  termCheck 0 (termBod (Ann False termVal termTyp)) typx dep
 termCheckGo src (Hol termNam termCtx) typx dep = do
   envLog (Found termNam typx termCtx dep)
   return ()
@@ -650,9 +650,9 @@ termCheckGo src term typx dep = do
   -- envPure ()
 
 termCheckDef :: Term -> Env ()
-termCheckDef (Ref nam (Ann val typ)) = termCheck 0 val typ 0 >> return ()
-termCheckDef (Ref nam val)           = termInfer val 0 >> return ()
-termCheckDef other                   = error "invalid top-level definition"
+termCheckDef (Ref nam (Ann chk val typ)) = termCheck 0 val typ 0 >> return ()
+termCheckDef (Ref nam val)               = termInfer val 0 >> return ()
+termCheckDef other                       = error "invalid top-level definition"
 
 -- Stringification
 -- ---------------
@@ -671,7 +671,7 @@ termShow (App fun arg) dep =
   let fun' = termShow fun dep
       arg' = termShow arg dep
   in stringJoin ["(" , fun' , " " , arg' , ")"]
-termShow (Ann val typ) dep =
+termShow (Ann chk val typ) dep =
   let val' = termShow val dep
       typ' = termShow typ dep
   in stringJoin ["{" , val' , ": " , typ' , "}"]
@@ -738,8 +738,8 @@ contextShow fill []     dep = ""
 contextShow fill (x:xs) dep = stringJoin [" " , contextShowAnn fill x dep , contextShow fill xs dep]
 
 contextShowAnn :: Map Term -> Term -> Int -> String
-contextShowAnn fill (Ann val typ) dep = stringJoin ["{" , termShow (termNormal fill 0 val dep) dep , ": " , termShow (termNormal fill 0 typ dep) dep , "}"]
-contextShowAnn fill term          dep = termShow (termNormal fill 0 term dep) dep
+contextShowAnn fill (Ann chk val typ) dep = stringJoin ["{" , termShow (termNormal fill 0 val dep) dep , ": " , termShow (termNormal fill 0 typ dep) dep , "}"]
+contextShowAnn fill term              dep = termShow (termNormal fill 0 term dep) dep
 
 infoShow :: Map Term -> Info -> String
 infoShow fill (Found name typ ctx dep) =
@@ -747,8 +747,8 @@ infoShow fill (Found name typ ctx dep) =
       ctx' = stringTail (contextShow fill ctx dep)
   in stringJoin ["#found{", name, " ", typ', " [", ctx', "]}"]
 infoShow fill (Error src expected detected value dep) =
-  let det = termShow detected dep
-      exp = termShow expected dep
+  let det = termShow (termNormal fill 1 detected dep) dep
+      exp = termShow (termNormal fill 1 expected dep) dep
       val = termShow (termNormal fill 0 value dep) dep
   in stringJoin ["#error{", exp, " ", det, " ", val, " ", u60Show src, "}"]
 infoShow fill (Solve name term dep) =
@@ -785,7 +785,7 @@ hvmPrint = undefined
 -- ----
 
 xtest :: Term
-xtest = Ref "test" $ Ann val typ where
+xtest = Ref "test" $ Ann True val typ where
   typ = (All "P" Set $ \p -> (All "f" (All "x" p $ \x -> p) $ \f -> (All "x" p $ \x -> p)))
   val = (Lam "P" $ \p -> (Lam "f" $ \f -> (Lam "x" $ \x -> f)))
 

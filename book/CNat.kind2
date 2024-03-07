@@ -1,0 +1,7 @@
+CNat
+: *
+= $(self: CNat)
+  ∀(P: ∀(x: CNat) *)
+  ∀(s: ∀(i: (P self)) (P (CNat.succ i)))
+  ∀(z: (P CNat.zero))
+  (P self)

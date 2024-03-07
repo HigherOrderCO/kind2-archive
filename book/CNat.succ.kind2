@@ -1,0 +1,3 @@
+CNat.succ
+: ∀(n: CNat) CNat
+= λn ~λP λs λz (s (n P s z))
