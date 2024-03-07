@@ -1,3 +1,8 @@
 _main
-: ∀(a: Bool) ∀(b: Bool) Bool
-= λa λb (~a _ (~b _ ?A ?B) (~b _ ?C ?D))
+: ∀(a: Bool) (List Bool)
+= λa
+  let T = Bool.true
+  let F = Bool.false
+  let C = List.cons
+  let N = List.nil
+  (C _ T (C _ ?a (N _)))
