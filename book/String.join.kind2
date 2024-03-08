@@ -1,7 +1,7 @@
 String.join
 : ∀(sep: String) ∀(strs: (List String)) String
 = λsep λstrs
-  let P = λx String
-  let cons = λh λt (String.concat h (String.join.go sep t))
-  let nil = String.nil
+  use P = λx String
+  use cons = λh λt (String.concat h (String.join.go sep t))
+  use nil = String.nil
   (~strs P cons nil)

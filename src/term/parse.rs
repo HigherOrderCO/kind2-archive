@@ -85,7 +85,7 @@ impl<'i> KindParser<'i> {
         self.consume("}")?;
         let end = *self.index() as u64;
         let src = Src::new(fid, ini, end);
-        Ok(Term::Src { src, val: Box::new(Term::Ann { val, typ }) })
+        Ok(Term::Src { src, val: Box::new(Term::Ann { chk: true, val, typ }) })
       }
       Some('$') => {
         let ini = *self.index() as u64;
@@ -205,6 +205,16 @@ impl<'i> KindParser<'i> {
           let end = *self.index() as u64;
           let src = Src::new(fid, ini, end);
           Ok(Term::Src { src, val: Box::new(Term::Let { nam, val, bod }) })
+        } else if self.peek_many(4) == Some("use ") {
+          let ini = *self.index() as u64;
+          self.advance_many(4);
+          let nam = self.parse_name()?;
+          self.consume("=")?;
+          let val = Box::new(self.parse_term(fid)?);
+          let bod = Box::new(self.parse_term(fid)?);
+          let end = *self.index() as u64;
+          let src = Src::new(fid, ini, end);
+          Ok(Term::Src { src, val: Box::new(Term::Use { nam, val, bod }) })
         } else {
           let ini = *self.index() as u64;
           let nam = self.parse_name()?;

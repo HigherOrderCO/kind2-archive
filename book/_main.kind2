@@ -1,8 +1,8 @@
 _main
 : ∀(a: Bool) (List Bool)
 = λa
-  let T = Bool.true
-  let F = Bool.false
-  let C = List.cons
-  let N = List.nil
+  use T = Bool.true
+  use F = Bool.false
+  use C = List.cons
+  use N = List.nil
   (C _ T (C _ ?a (N _)))

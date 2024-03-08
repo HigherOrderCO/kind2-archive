@@ -2,9 +2,9 @@ Kind.verify
 : ∀(term: Kind.Term) ∀(type: Kind.Term) ∀(dep: Nat)
   (Maybe Kind.Term)
 = λterm λtype λdep
-  let bind = (Maybe.bind Kind.Term Kind.Term)
-  let pure = (Maybe.some Kind.Term)
-  let none = (Maybe.none Kind.Term)
+  use bind = (Maybe.bind Kind.Term Kind.Term)
+  use pure = (Maybe.some Kind.Term)
+  use none = (Maybe.none Kind.Term)
   (bind
     (Kind.infer term dep)
     λinfer

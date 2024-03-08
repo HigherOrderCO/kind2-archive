@@ -1,11 +1,11 @@
 Kind.infer
 : ∀(term: Kind.Term) ∀(dep: Nat) (Maybe Kind.Term)
 = λterm λdep
-  let bind = (Maybe.bind Kind.Term Kind.Term)
-  let pure = (Maybe.some Kind.Term)
-  let none = (Maybe.none Kind.Term)
-  let P = λx ∀(dep: Nat) (Maybe Kind.Term)
-  let all = λnam λinp λbod λdep
+  use bind = (Maybe.bind Kind.Term Kind.Term)
+  use pure = (Maybe.some Kind.Term)
+  use none = (Maybe.none Kind.Term)
+  use P = λx ∀(dep: Nat) (Maybe Kind.Term)
+  use all = λnam λinp λbod λdep
     (bind
       (Kind.check inp Kind.set dep)
       λ_
@@ -18,8 +18,8 @@ Kind.infer
         λ_ (pure Kind.set)
       )
     )
-  let lam = λnam λbod λdep none
-  let app = λfun λarg λdep
+  use lam = λnam λbod λdep none
+  use app = λfun λarg λdep
     (bind
       (Kind.infer fun dep)
       λfun_typ
@@ -36,8 +36,8 @@ Kind.infer
         arg
       )
     )
-  let ann = λval λtyp λdep (pure typ)
-  let slf = λnam λbod λdep
+  use ann = λval λtyp λdep (pure typ)
+  use slf = λnam λbod λdep
     (bind
       (Kind.check
         (bod (Kind.ann (Kind.var nam dep) (Kind.slf nam bod)))
@@ -46,7 +46,7 @@ Kind.infer
       )
       λ_ (pure Kind.set)
     )
-  let ins = λval λdep
+  use ins = λval λdep
     (bind
       (Kind.infer val dep)
       λval_typ
@@ -59,19 +59,19 @@ Kind.infer
         val
       )
     )
-  let ref = λnam λval λdep (Kind.infer val dep)
-  let def = λnam λval λbod λdep none
-  let set = λdep (pure Kind.set)
-  let u60 = λdep (pure Kind.set)
-  let num = λnum λdep (pure Kind.u60)
-  let txt = λtxt λdep (pure Kind.Book.String)
-  let op2 = λopr λfst λsnd λdep
+  use ref = λnam λval λdep (Kind.infer val dep)
+  use def = λnam λval λbod λdep none
+  use set = λdep (pure Kind.set)
+  use u60 = λdep (pure Kind.set)
+  use num = λnum λdep (pure Kind.u60)
+  use txt = λtxt λdep (pure Kind.Book.String)
+  use op2 = λopr λfst λsnd λdep
     (bind
       (Kind.check fst Kind.u60 dep)
       λ_
       (bind (Kind.check snd Kind.u60 dep) λ_ (pure Kind.u60))
     )
-  let mat = λnam λx λz λs λp λdep
+  use mat = λnam λx λz λs λp λdep
     (bind
       (Kind.check x Kind.u60 dep)
       λx_typ
@@ -107,8 +107,8 @@ Kind.infer
         )
       )
     )
-  let hol = λnam λctx λdep none
-  let var = λnam λidx λdep none
+  use hol = λnam λctx λdep none
+  use var = λnam λidx λdep none
   (~term
     P
     all

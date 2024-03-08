@@ -7,13 +7,13 @@ Kind.reduce.mat
   ∀(p: ∀(x: Kind.Term) Kind.Term)
   Kind.Term
 = λmaj λnam λx λz λs λp
-  let P = ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
+  use P = ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
     Kind.Term
-  let Y = λx.val
+  use Y = λx.val
     #match x = x.val {
       #0: λz λs (Kind.reduce maj z)
       #+: λz λs (Kind.reduce maj (s (Kind.num x-1))) 
     }: ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
     Kind.Term
-  let N = λx λz λs (Kind.mat nam x z s p)
+  use N = λx λz λs (Kind.mat nam x z s p)
   (Kind.if.num x P Y N z s)

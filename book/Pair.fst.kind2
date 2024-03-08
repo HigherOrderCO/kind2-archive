@@ -1,5 +1,5 @@
 Pair.fst
 : ∀(A: *) ∀(B: *) ∀(p: (Pair A B)) A
-= λA λB λp let P = λx A
-  let new = λa λb a
+= λA λB λp use P = λx A
+  use new = λa λb a
   (~p P new)

@@ -1,8 +1,8 @@
 HVM.print.many
 : ∀(A: *) ∀(msgs: (List String)) ∀(ret: A) A
 = λA λmsgs λret
-  let P = λx A
-  let cons = λmsg λmsgs
+  use P = λx A
+  use cons = λmsg λmsgs
     (HVM.print A msg (HVM.print.many A msgs ret))
-  let nil = ret
+  use nil = ret
   (~msgs P cons nil)

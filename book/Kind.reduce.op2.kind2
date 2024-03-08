@@ -2,27 +2,27 @@ Kind.reduce.op2
 : ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term)
   Kind.Term
 = λopr λfst λsnd
-  let P = ∀(snd: Kind.Term) Kind.Term
-  let Y = λfst_val λsnd
-    let P = ∀(fst_val: #U60) Kind.Term
-    let Y = λsnd_val λfst_val
-      let P = λx ∀(fst_val: #U60) ∀(snd_val: #U60) Kind.Term
-      let add = λfst_val λsnd_val (Kind.num #(+ fst_val snd_val))
-      let mul = λfst_val λsnd_val (Kind.num #(* fst_val snd_val))
-      let sub = λfst_val λsnd_val (Kind.num #(- fst_val snd_val))
-      let div = λfst_val λsnd_val (Kind.num #(/ fst_val snd_val))
-      let mod = λfst_val λsnd_val (Kind.num #(% fst_val snd_val))
-      let eq = λfst_val λsnd_val (Kind.num #(== fst_val snd_val))
-      let ne = λfst_val λsnd_val (Kind.num #(!= fst_val snd_val))
-      let lt = λfst_val λsnd_val (Kind.num #(< fst_val snd_val))
-      let gt = λfst_val λsnd_val (Kind.num #(> fst_val snd_val))
-      let lte = λfst_val λsnd_val (Kind.num #(<= fst_val snd_val))
-      let gte = λfst_val λsnd_val (Kind.num #(>= fst_val snd_val))
-      let and = λfst_val λsnd_val (Kind.num #(& fst_val snd_val))
-      let or = λfst_val λsnd_val (Kind.num #(| fst_val snd_val))
-      let xor = λfst_val λsnd_val (Kind.num #(^ fst_val snd_val))
-      let lsh = λfst_val λsnd_val (Kind.num #(<< fst_val snd_val))
-      let rsh = λfst_val λsnd_val (Kind.num #(>> fst_val snd_val))
+  use P = ∀(snd: Kind.Term) Kind.Term
+  use Y = λfst_val λsnd
+    use P = ∀(fst_val: #U60) Kind.Term
+    use Y = λsnd_val λfst_val
+      use P = λx ∀(fst_val: #U60) ∀(snd_val: #U60) Kind.Term
+      use add = λfst_val λsnd_val (Kind.num #(+ fst_val snd_val))
+      use mul = λfst_val λsnd_val (Kind.num #(* fst_val snd_val))
+      use sub = λfst_val λsnd_val (Kind.num #(- fst_val snd_val))
+      use div = λfst_val λsnd_val (Kind.num #(/ fst_val snd_val))
+      use mod = λfst_val λsnd_val (Kind.num #(% fst_val snd_val))
+      use eq = λfst_val λsnd_val (Kind.num #(== fst_val snd_val))
+      use ne = λfst_val λsnd_val (Kind.num #(!= fst_val snd_val))
+      use lt = λfst_val λsnd_val (Kind.num #(< fst_val snd_val))
+      use gt = λfst_val λsnd_val (Kind.num #(> fst_val snd_val))
+      use lte = λfst_val λsnd_val (Kind.num #(<= fst_val snd_val))
+      use gte = λfst_val λsnd_val (Kind.num #(>= fst_val snd_val))
+      use and = λfst_val λsnd_val (Kind.num #(& fst_val snd_val))
+      use or = λfst_val λsnd_val (Kind.num #(| fst_val snd_val))
+      use xor = λfst_val λsnd_val (Kind.num #(^ fst_val snd_val))
+      use lsh = λfst_val λsnd_val (Kind.num #(<< fst_val snd_val))
+      use rsh = λfst_val λsnd_val (Kind.num #(>> fst_val snd_val))
       (~opr
         P
         add
@@ -44,7 +44,7 @@ Kind.reduce.op2
         fst_val
         snd_val
       )
-    let N = λsnd λfst_val (Kind.op2 opr (Kind.num fst_val) snd)
+    use N = λsnd λfst_val (Kind.op2 opr (Kind.num fst_val) snd)
     (Kind.if.num snd P Y N fst_val)
-  let N = λfst λsnd (Kind.op2 opr fst snd)
+  use N = λfst λsnd (Kind.op2 opr fst snd)
   (Kind.if.num fst P Y N snd)

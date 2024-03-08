@@ -5,7 +5,7 @@ Maybe.bind
   ∀(b: ∀(x: A) (Maybe B))
   (Maybe B)
 = λA λB λa λb
-  let P = λx ∀(b: ∀(x: A) (Maybe B)) (Maybe B)
-  let some = λa.value λb (b a.value)
-  let none = λb (Maybe.none B)
+  use P = λx ∀(b: ∀(x: A) (Maybe B)) (Maybe B)
+  use some = λa.value λb (b a.value)
+  use none = λb (Maybe.none B)
   (~a P some none b)

@@ -5,15 +5,15 @@ Parser.until.go
   ∀(terms: (List.Concatenator A))
   (Parser (List.Concatenator A))
 = λA λuntil λparse λterms λcode
-  let P = λx (Parser.Result (List.Concatenator A))
-  let done = λcode λstop
-    let P = λx
+  use P = λx (Parser.Result (List.Concatenator A))
+  use done = λcode λstop
+    use P = λx
       ∀(code: String) (Parser.Result (List.Concatenator A))
-    let true = λcode
+    use true = λcode
       (Parser.Result.done (List.Concatenator A) code terms)
-    let false = λcode
-      let P = λx (Parser.Result (List.Concatenator A))
-      let done = λcode λvalue
+    use false = λcode
+      use P = λx (Parser.Result (List.Concatenator A))
+      use done = λcode λvalue
         (Parser.until.go
           A
           until
@@ -21,8 +21,8 @@ Parser.until.go
           λx (terms (List.cons A value x))
           code
         )
-      let fail = λerror (Parser.Result.fail (List.Concatenator A) error)
+      use fail = λerror (Parser.Result.fail (List.Concatenator A) error)
       (~(parse code) P done fail)
     (~stop P true false code)
-  let fail = λerror (Parser.Result.fail (List.Concatenator A) error)
+  use fail = λerror (Parser.Result.fail (List.Concatenator A) error)
   (~(until code) P done fail)

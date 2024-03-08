@@ -1,8 +1,8 @@
 Kind.normal.go
 : ∀(maj: Bool) ∀(term: Kind.Term) ∀(dep: Nat) Kind.Term
 = λmaj λterm λdep
-  let P = λx Kind.Term
-  let all = λnam λinp λbod
+  use P = λx Kind.Term
+  use all = λnam λinp λbod
     (Kind.all
       nam
       (Kind.normal maj inp dep)
@@ -13,7 +13,7 @@ Kind.normal.go
         (Nat.succ dep)
       )
     )
-  let lam = λnam λbod
+  use lam = λnam λbod
     (Kind.lam
       nam
       λx
@@ -23,17 +23,17 @@ Kind.normal.go
         (Nat.succ dep)
       )
     )
-  let app = λfun λarg
+  use app = λfun λarg
     (Kind.app
       (Kind.normal maj fun dep)
       (Kind.normal maj arg dep)
     )
-  let ann = λval λtyp
+  use ann = λval λtyp
     (Kind.ann
       (Kind.normal maj val dep)
       (Kind.normal maj typ dep)
     )
-  let slf = λnam λbod
+  use slf = λnam λbod
     (Kind.slf
       nam
       λx
@@ -43,9 +43,9 @@ Kind.normal.go
         (Nat.succ dep)
       )
     )
-  let ins = λval (Kind.ins (Kind.normal maj val dep))
-  let ref = λnam λval (Kind.ref nam (Kind.normal maj val dep))
-  let def = λnam λval λbod
+  use ins = λval (Kind.ins (Kind.normal maj val dep))
+  use ref = λnam λval (Kind.ref nam (Kind.normal maj val dep))
+  use def = λnam λval λbod
     (Kind.def
       nam
       (Kind.normal maj val dep)
@@ -56,16 +56,16 @@ Kind.normal.go
         (Nat.succ dep)
       )
     )
-  let set = Kind.set
-  let u60 = Kind.u60
-  let num = Kind.num
-  let op2 = λopr λfst λsnd
+  use set = Kind.set
+  use u60 = Kind.u60
+  use num = Kind.num
+  use op2 = λopr λfst λsnd
     (Kind.op2
       opr
       (Kind.normal maj fst dep)
       (Kind.normal maj snd dep)
     )
-  let mat = λnam λx λz λs λp
+  use mat = λnam λx λz λs λp
     (Kind.mat
       nam
       (Kind.normal maj x dep)
@@ -75,9 +75,9 @@ Kind.normal.go
       λk
       (Kind.normal maj (p (Kind.var nam dep)) (Nat.succ dep))
     )
-  let txt = λtxt (Kind.txt txt)
-  let hol = λnam λctx (Kind.hol nam ctx)
-  let var = λnam λidx (Kind.var nam idx)
+  use txt = λtxt (Kind.txt txt)
+  use hol = λnam λctx (Kind.hol nam ctx)
+  use var = λnam λidx (Kind.var nam idx)
   (~term
     P
     all

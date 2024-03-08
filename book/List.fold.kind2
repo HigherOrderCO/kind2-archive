@@ -1,7 +1,7 @@
 List.fold
 : ∀(T: *) ∀(list: (List T)) (List.Folder T)
 = λT λlist λP λcons λnil
-  let fold_P = λxs P
-  let fold_cons = λhead λtail (cons head (List.fold T tail P cons nil))
-  let fold_nil = nil
+  use fold_P = λxs P
+  use fold_cons = λhead λtail (cons head (List.fold T tail P cons nil))
+  use fold_nil = nil
   (~list fold_P fold_cons fold_nil)

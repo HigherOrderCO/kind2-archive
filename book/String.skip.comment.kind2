@@ -1,11 +1,11 @@
 String.skip.comment
 : ∀(str: String) String
 = λstr
-  let P = λx String
-  let cons = λc0 λcs
-    let P = λx ∀(c0: Char) ∀(cs: String) String
-    let true = λc0 λcs (String.skip cs)
-    let false = λc0 λcs (String.skip.comment cs)
+  use P = λx String
+  use cons = λc0 λcs
+    use P = λx ∀(c0: Char) ∀(cs: String) String
+    use true = λc0 λcs (String.skip cs)
+    use false = λc0 λcs (String.skip.comment cs)
     (~(Char.is_newline c0) P true false c0 cs)
-  let nil = String.nil
+  use nil = String.nil
   (~str P cons nil)

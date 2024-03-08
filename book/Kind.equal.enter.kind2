@@ -5,7 +5,7 @@ Kind.equal.enter
   ∀(dep: Nat)
   Bool
 = λe λa λb λdep
-  let P = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
-  let true = λa λb λdep Bool.true
-  let false = λa λb λdep (Kind.comparer Kind.equal a b dep)
+  use P = λx ∀(a: Kind.Term) ∀(b: Kind.Term) ∀(dep: Nat) Bool
+  use true = λa λb λdep Bool.true
+  use false = λa λb λdep (Kind.comparer Kind.equal a b dep)
   (~e P true false a b dep)

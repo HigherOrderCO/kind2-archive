@@ -1,8 +1,8 @@
 Kind.load.dependency
 : ∀(name: String) ∀(book: Kind.Book) (IO Kind.Book)
 = λname λbook
-  let has = (String.Map.has Kind.Term name book)
-  let P = λx ∀(book: Kind.Book) (IO Kind.Book)
-  let true = λbook (IO.done Kind.Book book)
-  let false = λbook (Kind.load.name name book)
+  use has = (String.Map.has Kind.Term name book)
+  use P = λx ∀(book: Kind.Book) (IO Kind.Book)
+  use true = λbook (IO.done Kind.Book book)
+  use false = λbook (Kind.load.name name book)
   (~has P true false book)

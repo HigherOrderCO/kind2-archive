@@ -2,8 +2,8 @@ Parser.variant
 : ∀(A: *) ∀(variants: (List (Parser.Guard A)))
   (Parser A)
 = λA λvariants
-  let P = λx (Parser A)
-  let cons = λvariant λothers
+  use P = λx (Parser A)
+  use cons = λvariant λothers
     (Pair.get
       (Parser Bool)
       (Parser A)
@@ -23,5 +23,5 @@ Parser.variant
         )
       )
     )
-  let nil = (Parser.fail A "error")
+  use nil = (Parser.fail A "error")
   (~variants P cons nil)

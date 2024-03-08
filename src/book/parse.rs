@@ -14,7 +14,7 @@ impl<'i> KindParser<'i> {
       let typ = self.parse_term(fid)?;
       self.consume("=")?;
       let val = self.parse_term(fid)?;
-      Ok((nam, Term::Ann { val: Box::new(val), typ: Box::new(typ) }))
+      Ok((nam, Term::Ann { chk: false, val: Box::new(val), typ: Box::new(typ) }))
     } else {
       self.consume("=")?;
       let val = self.parse_term(fid)?;

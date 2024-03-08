@@ -5,9 +5,9 @@ Kind.Book.parser
     Kind.Book
     Parser.is_eof
     λis_eof
-    let P = λx (Parser Kind.Book)
-    let true = (Parser.pure Kind.Book (String.Map.new Kind.Term))
-    let false = (Parser.bind
+    use P = λx (Parser Kind.Book)
+    use true = (Parser.pure Kind.Book (String.Map.new Kind.Term))
+    use false = (Parser.bind
         String
         Kind.Book
         Parser.name
@@ -17,8 +17,8 @@ Kind.Book.parser
           Kind.Book
           (Parser.skip Bool (Parser.test ":"))
           λann
-          let P = λx (Parser Kind.Book)
-          let true = (Parser.bind
+          use P = λx (Parser Kind.Book)
+          use true = (Parser.bind
               Unit
               Kind.Book
               (Parser.text ":")
@@ -60,7 +60,7 @@ Kind.Book.parser
                 )
               )
             )
-          let false = (Parser.bind
+          use false = (Parser.bind
               Unit
               Kind.Book
               (Parser.text "=")

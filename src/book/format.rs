@@ -6,7 +6,7 @@ impl Book {
 
   pub fn format_def(&self, name: &str, term: &Term) -> Box<Form> {
     match term {
-      Term::Ann { val, typ } => {
+      Term::Ann { chk: _, val, typ } => {
         Form::glue("", vec![
           Form::text(name),
           Form::line(),

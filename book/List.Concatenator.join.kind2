@@ -2,12 +2,12 @@ List.Concatenator.join
 : ∀(T: *) ∀(xs: (List (List.Concatenator T)))
   (List.Concatenator T)
 = λT λxs
-  let P = λxs (List.Concatenator T)
-  let cons = λhead λtail
+  use P = λxs (List.Concatenator T)
+  use cons = λhead λtail
     (List.Concatenator.concat
       T
       head
       (List.Concatenator.join T tail)
     )
-  let nil = (List.Concatenator.nil T)
+  use nil = (List.Concatenator.nil T)
   (~xs P cons nil)

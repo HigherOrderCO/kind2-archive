@@ -44,7 +44,7 @@ pub enum Term {
   All { nam: String, inp: Box<Term>, bod: Box<Term> },
   Lam { nam: String, bod: Box<Term> },
   App { fun: Box<Term>, arg: Box<Term> },
-  Ann { val: Box<Term>, typ: Box<Term> },
+  Ann { chk: bool, val: Box<Term>, typ: Box<Term> },
   Slf { nam: String, typ: Box<Term>, bod: Box<Term> },
   Ins { val: Box<Term> },
   Set,
@@ -54,6 +54,7 @@ pub enum Term {
   Mat { nam: String, x: Box<Term>, z: Box<Term>, s: Box<Term>, p: Box<Term> },
   Txt { txt: String },
   Let { nam: String, val: Box<Term>, bod: Box<Term> },
+  Use { nam: String, val: Box<Term>, bod: Box<Term> },
   Var { nam: String },
   Hol { nam: String },
   Met {},
@@ -109,7 +110,7 @@ impl Term {
         fun.get_free_vars(env.clone(), free_vars);
         arg.get_free_vars(env.clone(), free_vars);
       },
-      Term::Ann { val, typ } => {
+      Term::Ann { chk: _, val, typ } => {
         val.get_free_vars(env.clone(), free_vars);
         typ.get_free_vars(env.clone(), free_vars);
       },
@@ -135,6 +136,10 @@ impl Term {
       },
       Term::Txt { txt: _ } => {},
       Term::Let { nam, val, bod } => {
+        val.get_free_vars(env.clone(), free_vars);
+        bod.get_free_vars(cons(&env, nam.clone()), free_vars);
+      },
+      Term::Use { nam, val, bod } => {
         val.get_free_vars(env.clone(), free_vars);
         bod.get_free_vars(cons(&env, nam.clone()), free_vars);
       },
@@ -167,7 +172,7 @@ impl Term {
         let arg = arg.count_metas();
         fun + arg
       },
-      Term::Ann { val, typ } => {
+      Term::Ann { chk: _, val, typ } => {
         let val = val.count_metas();
         let typ = typ.count_metas();
         val + typ
@@ -210,6 +215,11 @@ impl Term {
         let bod = bod.count_metas();
         val + bod
       },
+      Term::Use { val, bod, .. } => {
+        let val = val.count_metas();
+        let bod = bod.count_metas();
+        val + bod
+      },
       Term::Hol { .. } => {
         0
       },
@@ -247,8 +257,9 @@ impl Term {
           arg: Box::new(arg.clean()),
         }
       },
-      Term::Ann { val, typ } => {
+      Term::Ann { chk, val, typ } => {
         Term::Ann {
+          chk: *chk,
           val: Box::new(val.clean()),
           typ: Box::new(typ.clean()),
         }
@@ -295,6 +306,13 @@ impl Term {
       },
       Term::Let { nam, val, bod } => {
         Term::Let {
+          nam: nam.clone(),
+          val: Box::new(val.clean()),
+          bod: Box::new(bod.clean()),
+        }
+      },
+      Term::Use { nam, val, bod } => {
+        Term::Use {
           nam: nam.clone(),
           val: Box::new(val.clean()),
           bod: Box::new(bod.clean()),

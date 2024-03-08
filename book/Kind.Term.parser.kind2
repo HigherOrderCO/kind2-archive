@@ -1,7 +1,7 @@
 Kind.Term.parser
 : (Parser Kind.PreTerm)
-= let TRY = (List.cons (Parser.Guard Kind.PreTerm))
-  let END = (List.nil (Parser.Guard Kind.PreTerm))
+= use TRY = (List.cons (Parser.Guard Kind.PreTerm))
+  use END = (List.nil (Parser.Guard Kind.PreTerm))
   (Parser.variant
     Kind.PreTerm
     (TRY

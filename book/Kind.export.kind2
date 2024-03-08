@@ -1,6 +1,6 @@
 Kind.export
 : Unit
-= let x = Kind.Book.get_refs
-  let x = Kind.Book.parse
-  let x = Kind.Book.to_hvm
+= use x = Kind.Book.get_refs
+  use x = Kind.Book.parse
+  use x = Kind.Book.to_hvm
   Unit.one

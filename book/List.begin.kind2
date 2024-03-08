@@ -1,12 +1,12 @@
 List.begin
 : ∀(A: *) ∀(list: (List A)) (List A)
 = λA λlist
-  let P = λx (List A)
-  let cons = λx0 λxs
-    let P = λx (List A)
-    let cons = λx1 λxs
+  use P = λx (List A)
+  use cons = λx0 λxs
+    use P = λx (List A)
+    use cons = λx1 λxs
       (List.cons A x0 (List.begin A (List.cons A x1 xs)))
-    let nil = (List.nil A)
+    use nil = (List.nil A)
     (~xs P cons nil)
-  let nil = (List.nil A)
+  use nil = (List.nil A)
   (~list P cons nil)

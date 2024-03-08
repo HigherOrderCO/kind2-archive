@@ -2,8 +2,8 @@ Parser.repeat
 : ∀(n: Nat) ∀(A: *) ∀(p: (Parser A))
   (Parser (List A))
 = λn λA λp
-  let P = λx (Parser (List A))
-  let succ = λn.pred
+  use P = λx (Parser (List A))
+  use succ = λn.pred
     (Parser.bind
       A
       (List A)
@@ -16,5 +16,5 @@ Parser.repeat
         λtail (Parser.pure (List A) (List.cons A head tail))
       )
     )
-  let zero = (Parser.pure (List A) (List.nil A))
+  use zero = (Parser.pure (List A) (List.nil A))
   (~n P succ zero)

@@ -30,6 +30,7 @@ data Term
   | Ins Term
   | Ref String Term
   | Let String Term (Term -> Term)
+  | Use String Term (Term -> Term)
   | Set
   | U60
   | Num Int
@@ -235,6 +236,7 @@ termReduce fill lv (Ann chk val typ) = termReduce fill lv val
 termReduce fill lv (Ins val)         = termReduce fill lv val
 termReduce fill lv (Ref nam val)     = termReduceRef fill lv nam (termReduce fill lv val)
 termReduce fill lv (Let nam val bod) = termReduce fill lv (bod val)
+termReduce fill lv (Use nam val bod) = termReduce fill lv (bod val)
 termReduce fill lv (Op2 opr fst snd) = termReduceOp2 fill lv opr (termReduce fill lv fst) (termReduce fill lv snd)
 termReduce fill lv (Mat nam x z s p) = termReduceMat fill lv nam (termReduce fill lv x) z s p
 termReduce fill lv (Txt txt)         = termReduceTxt fill lv txt
@@ -312,6 +314,7 @@ termNormal fill lv term dep = termNormalGo fill lv (termReduce fill lv term) dep
   termNormalGo fill lv (Ins val)         dep = Ins (termNormal fill lv val dep)
   termNormalGo fill lv (Ref nam val)     dep = Ref nam (termNormal fill lv val dep)
   termNormalGo fill lv (Let nam val bod) dep = Let nam (termNormal fill lv val dep) (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
+  termNormalGo fill lv (Use nam val bod) dep = Use nam (termNormal fill lv val dep) (\x -> termNormal fill lv (bod (Var nam dep)) (dep + 1))
   termNormalGo fill lv (Hol nam ctx)     dep = Hol nam ctx
   termNormalGo fill lv Set               dep = Set
   termNormalGo fill lv U60               dep = U60
@@ -395,6 +398,10 @@ termIdenticalGo a (Ins bVal) dep =
 termIdenticalGo (Let aNam aVal aBod) b dep =
   termIdentical (aBod aVal) b dep
 termIdenticalGo a (Let bNam bVal bBod) dep =
+  termIdentical a (bBod bVal) dep
+termIdenticalGo (Use aNam aVal aBod) b dep =
+  termIdentical (aBod aVal) b dep
+termIdenticalGo a (Use bNam bVal bBod) dep =
   termIdentical a (bBod bVal) dep
 termIdenticalGo Set Set dep =
   envPure True
@@ -498,6 +505,7 @@ termUnifySubst lvl neo (Slf nam typ bod) = Slf nam (termUnifySubst lvl neo typ) 
 termUnifySubst lvl neo (Ins val)         = Ins (termUnifySubst lvl neo val)
 termUnifySubst lvl neo (Ref nam val)     = Ref nam (termUnifySubst lvl neo val)
 termUnifySubst lvl neo (Let nam val bod) = Let nam (termUnifySubst lvl neo val) (\x -> termUnifySubst lvl neo (bod x))
+termUnifySubst lvl neo (Use nam val bod) = Use nam (termUnifySubst lvl neo val) (\x -> termUnifySubst lvl neo (bod x))
 termUnifySubst lvl neo (Met uid spn)     = Met uid (map (termUnifySubst lvl neo) spn)
 termUnifySubst lvl neo (Hol nam ctx)     = Hol nam (map (termUnifySubst lvl neo) ctx)
 termUnifySubst lvl neo Set               = Set
@@ -541,6 +549,10 @@ termInferGo (App fun arg) dep = do
       envLog (Error 0 ftyp (Hol "function" []) (App fun arg) dep)
       envFail
 termInferGo (Ann chk val typ) dep = do
+  if chk then do
+    termCheck 0 val typ dep
+  else do
+    return ()
   return typ
 termInferGo (Slf nam typ bod) dep = do
   envSusp (Check 0 (bod (Ann False (Var nam dep) typ)) Set (dep + 1))
@@ -574,20 +586,22 @@ termInferGo (Mat nam x z s p) dep = do
   envSusp (Check 0 z (p (Num 0)) dep)
   envSusp (Check 0 (s (Ann False (Var (stringConcat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (stringConcat nam "-1") dep))) (dep + 1))
   return (p x)
-termInferGo (Lam nam bod) dep = do
-  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Lam nam bod) dep)
-  envFail
 termInferGo (Let nam val bod) dep = do
-  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Let nam val bod) dep)
+  typ <- termInfer val dep
+  termInfer (bod (Ann False (Var nam dep) typ)) dep
+termInferGo (Use nam val bod) dep = do
+  termInfer (bod val) dep
+termInferGo (Lam nam bod) dep = do
+  envLog (Error 0 (Hol "untyped_lambda" []) (Hol "type_annotation" []) (Lam nam bod) dep)
   envFail
 termInferGo (Hol nam ctx) dep = do
-  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Hol nam ctx) dep)
+  envLog (Error 0 (Hol "untyped_hole" []) (Hol "type_annotation" []) (Hol nam ctx) dep)
   envFail
 termInferGo (Met uid spn) dep = do
-  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Met uid spn) dep)
+  envLog (Error 0 (Hol "untyped_meta" []) (Hol "type_annotation" []) (Met uid spn) dep)
   envFail
 termInferGo (Var nam idx) dep = do
-  envLog (Error 0 (Hol "untyped_term" []) (Hol "type_annotation" []) (Var nam idx) dep)
+  envLog (Error 0 (Hol "untyped_variable" []) (Hol "type_annotation" []) (Var nam idx) dep)
   envFail
 termInferGo (Src src val) dep = do
   termInfer val dep
@@ -619,7 +633,9 @@ termCheckGo src (Ins termVal) typx dep = do
       return ()
 termCheckGo src (Let termNam termVal termBod) typx dep = do
   termTyp <- termInfer termVal dep
-  termCheck 0 (termBod (Ann False termVal termTyp)) typx dep
+  termCheck 0 (termBod (Ann False (Var termNam dep) termTyp)) typx dep
+termCheckGo src (Use termNam termVal termBod) typx dep = do
+  termCheck 0 (termBod termVal) typx dep
 termCheckGo src (Hol termNam termCtx) typx dep = do
   envLog (Found termNam typx termCtx dep)
   return ()
@@ -686,6 +702,11 @@ termShow (Let nam val bod) dep =
       val' = termShow val dep
       bod' = termShow (bod (Var nam dep)) (dep + 1)
   in stringJoin ["let " , nam' , " = " , val' , "; " , bod']
+termShow (Use nam val bod) dep =
+  let nam' = nam
+      val' = termShow val dep
+      bod' = termShow (bod (Var nam dep)) (dep + 1)
+  in stringJoin ["use " , nam' , " = " , val' , "; " , bod']
 termShow Set dep = "*"
 termShow U60 dep = "#U60"
 termShow (Num val) dep =

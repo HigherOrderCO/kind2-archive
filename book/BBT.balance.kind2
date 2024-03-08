@@ -9,21 +9,21 @@ BBT.balance
   ∀(rgt: (BBT K V))
   (BBT K V)
 = λK λV λcmp λset_key λnode_key λval λlft λrgt
-  let P = λx (BBT K V)
-  let new = λlft.size λlft
-    let P = λx (BBT K V)
-    let new = λrgt.size λrgt
-      let new_size = #(+ #1 (U60.max lft.size rgt.size))
-      let balance = (U60.abs_diff lft.size rgt.size)
-      let P = λx
+  use P = λx (BBT K V)
+  use new = λlft.size λlft
+    use P = λx (BBT K V)
+    use new = λrgt.size λrgt
+      use new_size = #(+ #1 (U60.max lft.size rgt.size))
+      use balance = (U60.abs_diff lft.size rgt.size)
+      use P = λx
         ∀(new_size: #U60)
         ∀(node_key: K)
         ∀(val: V)
         ∀(lft: (BBT K V))
         ∀(rgt: (BBT K V))
         (BBT K V)
-      let true = λnew_size λnode_key λval λlft λrgt
-        let P = λx
+      use true = λnew_size λnode_key λval λlft λrgt
+        use P = λx
           ∀(K: *)
           ∀(V: *)
           ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
@@ -34,8 +34,8 @@ BBT.balance
           ∀(lft: (BBT K V))
           ∀(rgt: (BBT K V))
           (BBT K V)
-        let true = BBT.balance.lft_heavier
-        let false = BBT.balance.rgt_heavier
+        use true = BBT.balance.lft_heavier
+        use false = BBT.balance.rgt_heavier
         (~(U60.to_bool #(< rgt.size lft.size))
           P
           true
@@ -50,7 +50,7 @@ BBT.balance
           lft
           rgt
         )
-      let false = λnew_size λnode_key λval λlft λrgt
+      use false = λnew_size λnode_key λval λlft λrgt
         (BBT.bin K V new_size node_key val lft rgt)
       (~(U60.to_bool #(> balance #1))
         P

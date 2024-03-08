@@ -6,12 +6,12 @@ BBT.has
   ∀(map: (BBT K V))
   Bool
 = λK λV λcmp λkey λmap
-  let P = λx Bool
-  let bin = λnext.size λnext.key λnext.val λnext.lft λnext.rgt
-    let P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) Bool
-    let ltn = λcmp λkey (BBT.has K V cmp key next.lft)
-    let eql = λcmp λkey Bool.true
-    let gtn = λcmp λkey (BBT.has K V cmp key next.rgt)
+  use P = λx Bool
+  use bin = λnext.size λnext.key λnext.val λnext.lft λnext.rgt
+    use P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) Bool
+    use ltn = λcmp λkey (BBT.has K V cmp key next.lft)
+    use eql = λcmp λkey Bool.true
+    use gtn = λcmp λkey (BBT.has K V cmp key next.rgt)
     (~(cmp key next.key) P ltn eql gtn cmp key)
-  let tip = Bool.false
+  use tip = Bool.false
   (~map P bin tip)

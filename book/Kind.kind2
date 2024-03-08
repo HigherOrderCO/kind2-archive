@@ -1,14 +1,14 @@
 Kind
 : String
-= let a = (Kind.lam
+= use a = (Kind.lam
       "f"
       λf (Kind.lam "x" λx (Kind.app f (Kind.app f x)))
     )
-  let b = (Kind.lam
+  use b = (Kind.lam
       "f"
       λf (Kind.lam "x" λx (Kind.app f (Kind.app f x)))
     )
-  let Test = (Kind.all
+  use Test = (Kind.all
       "A"
       Kind.set
       λA
@@ -18,7 +18,7 @@ Kind
         λB (Kind.all "a" A λa (Kind.all "b" B λb B))
       )
     )
-  let test = (Kind.lam
+  use test = (Kind.lam
       "A"
       λA
       (Kind.lam
@@ -26,8 +26,8 @@ Kind
         λB (Kind.lam "a" λa (Kind.lam "b" λb b))
       )
     )
-  let P = λx String
-  let some = λvalue (Kind.Term.show value Nat.zero)
-  let none = "error"
-  let chk = (Kind.check test Test Nat.zero)
+  use P = λx String
+  use some = λvalue (Kind.Term.show value Nat.zero)
+  use none = "error"
+  use chk = (Kind.check test Test Nat.zero)
   (~chk P some none)

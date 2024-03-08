@@ -2,10 +2,10 @@ Kind.Book.show.go
 : ∀(book: (List (Pair String Kind.Term)))
   String.Concatenator
 = λbook
-  let P = λx String.Concatenator
-  let cons = λhead λtail
-    let P = λx String.Concatenator
-    let new = λhead.fst λhead.snd λnil
+  use P = λx String.Concatenator
+  use cons = λhead λtail
+    use P = λx String.Concatenator
+    use new = λhead.fst λhead.snd λnil
       (Kind.Text.show.go
         head.fst
         (Kind.Text.show.go
@@ -21,5 +21,5 @@ Kind.Book.show.go
         )
       )
     (~head P new)
-  let nil = λnil nil
+  use nil = λnil nil
   (~book P cons nil)

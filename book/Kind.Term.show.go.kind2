@@ -1,8 +1,8 @@
 Kind.Term.show.go
 : ∀(term: Kind.Term) ∀(dep: Nat) String.Concatenator
 = λterm λdep
-  let P = λX String.Concatenator
-  let all = λnam λinp λbod λnil
+  use P = λX String.Concatenator
+  use all = λnam λinp λbod λnil
     (Kind.Text.show.go
       "∀("
       (Kind.Text.show.go
@@ -24,7 +24,7 @@ Kind.Term.show.go
         )
       )
     )
-  let lam = λnam λbod λnil
+  use lam = λnam λbod λnil
     (Kind.Text.show.go
       "λ"
       (Kind.Text.show.go
@@ -39,7 +39,7 @@ Kind.Term.show.go
         )
       )
     )
-  let app = λfun λarg λnil
+  use app = λfun λarg λnil
     (Kind.Text.show.go
       "("
       (Kind.Term.show.go
@@ -51,7 +51,7 @@ Kind.Term.show.go
         )
       )
     )
-  let ann = λval λtyp λnil
+  use ann = λval λtyp λnil
     (Kind.Text.show.go
       "{"
       (Kind.Term.show.go
@@ -63,7 +63,7 @@ Kind.Term.show.go
         )
       )
     )
-  let slf = λnam λbod λnil
+  use slf = λnam λbod λnil
     (Kind.Text.show.go
       "$"
       (Kind.Text.show.go
@@ -78,12 +78,12 @@ Kind.Term.show.go
         )
       )
     )
-  let ins = λval λnil
+  use ins = λval λnil
     (Kind.Text.show.go "~" (Kind.Term.show.go val dep nil))
-  let ref = λnam λval λnil (Kind.Text.show.go nam nil)
-  let def = λnam λval λbod λnil
+  use ref = λnam λval λnil (Kind.Text.show.go nam nil)
+  use def = λnam λval λbod λnil
     (Kind.Text.show.go
-      "let "
+      "use "
       (Kind.Text.show.go
         nam
         (Kind.Text.show.go
@@ -103,10 +103,10 @@ Kind.Term.show.go
         )
       )
     )
-  let set = λnil (Kind.Text.show.go "*" nil)
-  let u60 = λnil (Kind.Text.show.go "#U60" nil)
-  let num = λval λnil (Kind.Text.show.go "#" (U60.show.go val nil))
-  let op2 = λopr λfst λsnd λnil
+  use set = λnil (Kind.Text.show.go "*" nil)
+  use u60 = λnil (Kind.Text.show.go "#U60" nil)
+  use num = λval λnil (Kind.Text.show.go "#" (U60.show.go val nil))
+  use op2 = λopr λfst λsnd λnil
     (Kind.Text.show.go
       "#("
       (Kind.Oper.show.go
@@ -124,7 +124,7 @@ Kind.Term.show.go
         )
       )
     )
-  let mat = λnam λx λz λs λp λnil
+  use mat = λnam λx λz λs λp λnil
     (Kind.Text.show.go
       "#match "
       (Kind.Text.show.go
@@ -160,7 +160,7 @@ Kind.Term.show.go
         )
       )
     )
-  let txt = λtext λnil
+  use txt = λtext λnil
     (Kind.Text.show.go
       String.quote
       (Kind.Text.show.go
@@ -168,9 +168,9 @@ Kind.Term.show.go
         (Kind.Text.show.go String.quote nil)
       )
     )
-  let hol = λnam λctx λnil
+  use hol = λnam λctx λnil
     (Kind.Text.show.go "?" (Kind.Text.show.go nam nil))
-  let var = λnam λidx λnil (Kind.Text.show.go nam nil)
+  use var = λnam λidx λnil (Kind.Text.show.go nam nil)
   (~term
     P
     all

@@ -1,23 +1,23 @@
 String.skip
 : ∀(str: String) String
 = λstr
-  let P = λx String
-  let cons = λc0 λcs
-    let P = λx ∀(c0: Char) ∀(cs: String) String
-    let true = λc0 λcs (String.skip cs)
-    let false = λc0 λcs
-      let P = λx ∀(c0: Char) ∀(cs: String) String
-      let true = λc0 λcs
-        let P = λx ∀(c0: Char) String
-        let cons = λc1 λcs λc0
-          let P = λx ∀(c0: Char) ∀(c1: Char) ∀(cs: String) String
-          let true = λc0 λc1 λcs (String.skip.comment cs)
-          let false = λc0 λc1 λcs (String.cons c0 (String.cons c1 cs))
+  use P = λx String
+  use cons = λc0 λcs
+    use P = λx ∀(c0: Char) ∀(cs: String) String
+    use true = λc0 λcs (String.skip cs)
+    use false = λc0 λcs
+      use P = λx ∀(c0: Char) ∀(cs: String) String
+      use true = λc0 λcs
+        use P = λx ∀(c0: Char) String
+        use cons = λc1 λcs λc0
+          use P = λx ∀(c0: Char) ∀(c1: Char) ∀(cs: String) String
+          use true = λc0 λc1 λcs (String.skip.comment cs)
+          use false = λc0 λc1 λcs (String.cons c0 (String.cons c1 cs))
           (~(Char.is_slash c1) P true false c0 c1 cs)
-        let nil = λc0 (String.cons c0 String.nil)
+        use nil = λc0 (String.cons c0 String.nil)
         (~cs P cons nil c0)
-      let false = λc0 λcs (String.cons c0 cs)
+      use false = λc0 λcs (String.cons c0 cs)
       (~(Char.is_slash c0) P true false c0 cs)
     (~(Char.is_blank c0) P true false c0 cs)
-  let nil = String.nil
+  use nil = String.nil
   (~str P cons nil)

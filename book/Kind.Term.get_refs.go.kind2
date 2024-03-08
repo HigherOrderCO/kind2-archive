@@ -1,42 +1,42 @@
 Kind.Term.get_refs.go
 : ∀(term: Kind.Term) (List.Concatenator String)
 = λterm
-  let P = λx (List.Concatenator String)
-  let all = λnam λinp λbod λnil
+  use P = λx (List.Concatenator String)
+  use all = λnam λinp λbod λnil
     (Kind.Term.get_refs.go
       inp
       (Kind.Term.get_refs.go (bod Kind.set) nil)
     )
-  let lam = λnam λbod λnil
+  use lam = λnam λbod λnil
     (Kind.Term.get_refs.go (bod Kind.set) nil)
-  let app = λfun λarg λnil
+  use app = λfun λarg λnil
     (Kind.Term.get_refs.go
       fun
       (Kind.Term.get_refs.go arg nil)
     )
-  let ann = λval λtyp λnil
+  use ann = λval λtyp λnil
     (Kind.Term.get_refs.go
       val
       (Kind.Term.get_refs.go typ nil)
     )
-  let slf = λnam λbod λnil
+  use slf = λnam λbod λnil
     (Kind.Term.get_refs.go (bod Kind.set) nil)
-  let ins = λval λnil (Kind.Term.get_refs.go val nil)
-  let ref = λnam λval λnil (List.cons String nam nil)
-  let def = λnam λval λbod λnil
+  use ins = λval λnil (Kind.Term.get_refs.go val nil)
+  use ref = λnam λval λnil (List.cons String nam nil)
+  use def = λnam λval λbod λnil
     (Kind.Term.get_refs.go
       val
       (Kind.Term.get_refs.go (bod Kind.set) nil)
     )
-  let set = λnil nil
-  let u60 = λnil nil
-  let num = λval λnil nil
-  let op2 = λopr λfst λsnd λnil
+  use set = λnil nil
+  use u60 = λnil nil
+  use num = λval λnil nil
+  use op2 = λopr λfst λsnd λnil
     (Kind.Term.get_refs.go
       fst
       (Kind.Term.get_refs.go snd nil)
     )
-  let mat = λnam λx λz λs λp λnil
+  use mat = λnam λx λz λs λp λnil
     (Kind.Term.get_refs.go
       x
       (Kind.Term.get_refs.go
@@ -47,9 +47,9 @@ Kind.Term.get_refs.go
         )
       )
     )
-  let txt = λtext λnil nil
-  let hol = λnam λctx λnil nil
-  let var = λnam λidx λnil nil
+  use txt = λtext λnil nil
+  use hol = λnam λctx λnil nil
+  use var = λnam λidx λnil nil
   (~term
     P
     all

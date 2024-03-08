@@ -10,9 +10,9 @@ BBT.balance.lft_heavier
   ∀(rgt: (BBT K V))
   (BBT K V)
 = λK λV λcmp λnew_size λnode_key λset_key λval λlft λrgt
-  let P = λx (BBT K V)
-  let bin = λlft.size λlft.key λlft.val λlft.lft λlft.rgt
-    let P = λx
+  use P = λx (BBT K V)
+  use bin = λlft.size λlft.key λlft.val λlft.lft λlft.rgt
+    use P = λx
       ∀(new_size: #U60)
       ∀(key: K)
       ∀(val: V)
@@ -22,8 +22,8 @@ BBT.balance.lft_heavier
       ∀(lft.rgt: (BBT K V))
       ∀(rgt: (BBT K V))
       (BBT K V)
-    let true = λnew_size λkey λval λlft.key λlft.val λlft.lft λlft.rgt λrgt
-      let lft = (BBT.lft_rotate
+    use true = λnew_size λkey λval λlft.key λlft.val λlft.lft λlft.rgt λrgt
+      use lft = (BBT.lft_rotate
           K
           V
           lft.size
@@ -33,8 +33,8 @@ BBT.balance.lft_heavier
           lft.rgt
         )
       (BBT.rgt_rotate K V new_size key val lft rgt)
-    let false = λnew_size λkey λval λlft.key λlft.val λlft.lft λlft.rgt λrgt
-      let lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
+    use false = λnew_size λkey λval λlft.key λlft.val λlft.lft λlft.rgt λrgt
+      use lft = (BBT.bin K V lft.size lft.key lft.val lft.lft lft.rgt)
       (BBT.rgt_rotate K V new_size key val lft rgt)
     (~(Cmp.is_gtn (cmp set_key lft.key))
       P
@@ -49,5 +49,5 @@ BBT.balance.lft_heavier
       lft.rgt
       rgt
     )
-  let tip = (BBT.tip K V)
+  use tip = (BBT.tip K V)
   (~lft P bin tip)

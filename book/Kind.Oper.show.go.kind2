@@ -1,23 +1,23 @@
 Kind.Oper.show.go
 : ∀(oper: Kind.Oper) String.Concatenator
 = λoper
-  let P = λX String.Concatenator
-  let add = (Kind.Text.show.go "+")
-  let mul = (Kind.Text.show.go "*")
-  let sub = (Kind.Text.show.go "-")
-  let div = (Kind.Text.show.go "/")
-  let mod = (Kind.Text.show.go "%")
-  let eq = (Kind.Text.show.go "==")
-  let ne = (Kind.Text.show.go "!=")
-  let lt = (Kind.Text.show.go "<")
-  let gt = (Kind.Text.show.go ">")
-  let lte = (Kind.Text.show.go "<=")
-  let gte = (Kind.Text.show.go ">=")
-  let and = (Kind.Text.show.go "&")
-  let or = (Kind.Text.show.go "|")
-  let xor = (Kind.Text.show.go "^")
-  let lsh = (Kind.Text.show.go "<<")
-  let rsh = (Kind.Text.show.go ">>")
+  use P = λX String.Concatenator
+  use add = (Kind.Text.show.go "+")
+  use mul = (Kind.Text.show.go "*")
+  use sub = (Kind.Text.show.go "-")
+  use div = (Kind.Text.show.go "/")
+  use mod = (Kind.Text.show.go "%")
+  use eq = (Kind.Text.show.go "==")
+  use ne = (Kind.Text.show.go "!=")
+  use lt = (Kind.Text.show.go "<")
+  use gt = (Kind.Text.show.go ">")
+  use lte = (Kind.Text.show.go "<=")
+  use gte = (Kind.Text.show.go ">=")
+  use and = (Kind.Text.show.go "&")
+  use or = (Kind.Text.show.go "|")
+  use xor = (Kind.Text.show.go "^")
+  use lsh = (Kind.Text.show.go "<<")
+  use rsh = (Kind.Text.show.go ">>")
   (~oper
     P
     add

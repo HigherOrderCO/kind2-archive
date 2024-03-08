@@ -1,8 +1,8 @@
 Kind.Oper.parser
 : (Parser Kind.Oper)
-= let TRY = (List.cons (Parser.Guard Kind.Oper))
-  let END = (List.nil (Parser.Guard Kind.Oper))
-  let OP2 = {λsym λoper
+= use TRY = (List.cons (Parser.Guard Kind.Oper))
+  use END = (List.nil (Parser.Guard Kind.Oper))
+  use OP2 = {λsym λoper
     (Parser.Guard.text
       Kind.Oper
       sym

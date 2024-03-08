@@ -7,9 +7,9 @@ BBT.set
   ∀(map: (BBT K V))
   (BBT K V)
 = λK λV λcmp λkey λval λmap
-  let P = λx ∀(key: K) ∀(val: V) (BBT K V)
-  let bin = λsize λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-    let P = λx
+  use P = λx ∀(key: K) ∀(val: V) (BBT K V)
+  use bin = λsize λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+    use P = λx
       ∀(key: K)
       ∀(next.key: K)
       ∀(next.val: V)
@@ -18,8 +18,8 @@ BBT.set
       ∀(key: K)
       ∀(val: V)
       (BBT K V)
-    let ltn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-      let new_lft = (BBT.set K V cmp key val next.lft)
+    use ltn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+      use new_lft = (BBT.set K V cmp key val next.lft)
       (BBT.balance
         K
         V
@@ -30,10 +30,10 @@ BBT.set
         new_lft
         next.rgt
       )
-    let eql = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+    use eql = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
       (BBT.bin K V size next.key val next.lft next.rgt)
-    let gtn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-      let new_rgt = (BBT.set K V cmp key val next.rgt)
+    use gtn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+      use new_rgt = (BBT.set K V cmp key val next.rgt)
       (BBT.balance
         K
         V
@@ -57,5 +57,5 @@ BBT.set
       key
       val
     )
-  let tip = λkey λval (BBT.singleton K V key val)
+  use tip = λkey λval (BBT.singleton K V key val)
   (~map P bin tip key val)

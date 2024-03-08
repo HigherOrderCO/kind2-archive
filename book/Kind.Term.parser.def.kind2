@@ -2,10 +2,10 @@ Kind.Term.parser.def
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text
     Kind.PreTerm
-    "let "
+    "use "
     (Kind.Term.parser.bind
       Unit
-      (Parser.text "let ")
+      (Parser.text "use ")
       λ_
       (Kind.Term.parser.bind
         String

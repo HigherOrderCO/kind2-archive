@@ -1,5 +1,5 @@
 Kind.load
 : ∀(name: String) (IO Kind.Book)
 = λname
-  let book = (String.Map.new Kind.Term)
+  use book = (String.Map.new Kind.Term)
   (Kind.load.name name book)

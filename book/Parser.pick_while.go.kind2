@@ -1,22 +1,22 @@
 Parser.pick_while.go
 : ∀(cond: ∀(chr: Char) Bool) (Parser String)
 = λcond λcode
-  let P = λx (Parser.Result String)
-  let cons = λhead λtail
-    let P = λx
+  use P = λx (Parser.Result String)
+  use cons = λhead λtail
+    use P = λx
       ∀(head: Char) ∀(tail: String) (Parser.Result String)
-    let true = λhead λtail
-      let P = λx (Parser.Result String)
-      let done = λcode λvalue
+    use true = λhead λtail
+      use P = λx (Parser.Result String)
+      use done = λcode λvalue
         (Parser.Result.done String code (String.cons head value))
-      let fail = λerror (Parser.Result.fail String error)
+      use fail = λerror (Parser.Result.fail String error)
       (~(Parser.pick_while.go cond tail) P done fail)
-    let false = λhead λtail
+    use false = λhead λtail
       (Parser.Result.done
         String
         (String.cons head tail)
         String.nil
       )
     (~(cond head) P true false head tail)
-  let nil = (Parser.Result.done String String.nil String.nil)
+  use nil = (Parser.Result.done String String.nil String.nil)
   (~code P cons nil)

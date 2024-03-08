@@ -1,11 +1,11 @@
 String.indent
 : ∀(tab: Nat) String
 = λtab
-  let P = λx String
-  let succ = λtab.pred
+  use P = λx String
+  use succ = λtab.pred
     (String.cons
       #32
       (String.cons #32 (String.indent tab.pred))
     )
-  let zero = String.nil
+  use zero = String.nil
   (~tab P succ zero)

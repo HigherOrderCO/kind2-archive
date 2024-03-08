@@ -1,9 +1,9 @@
 Kind.Scope.find
 : ∀(nam: String) ∀(scp: Kind.Scope) Kind.Term
 = λname λscope
-  let cond = λbnd (~bnd λx Bool λn λt (String.equal name n))
-  let found = (List.find Kind.Binder cond scope)
-  let P = λx Kind.Term
-  let some = λbnd (~bnd λx Kind.Term λn λt t)
-  let none = (Kind.ref name Kind.set)
+  use cond = λbnd (~bnd λx Bool λn λt (String.equal name n))
+  use found = (List.find Kind.Binder cond scope)
+  use P = λx Kind.Term
+  use some = λbnd (~bnd λx Kind.Term λn λt t)
+  use none = (Kind.ref name Kind.set)
   (~found P some none)

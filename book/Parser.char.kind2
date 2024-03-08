@@ -1,11 +1,11 @@
 Parser.char
 : (Parser Char)
 = λcode
-  let P = λx (Parser.Result Char)
-  let cons = λhead λtail
-    let P = λx (Parser.Result Char)
-    let true = (Parser.Result.done Char tail head)
-    let false = (Parser.Result.done Char tail head)
+  use P = λx (Parser.Result Char)
+  use cons = λhead λtail
+    use P = λx (Parser.Result Char)
+    use true = (Parser.Result.done Char tail head)
+    use false = (Parser.Result.done Char tail head)
     (~(Char.is_slash head) P true false)
-  let nil = (Parser.Result.fail Char "eof")
+  use nil = (Parser.Result.fail Char "eof")
   (~code P cons nil)

@@ -5,25 +5,25 @@ Kind.if.ins
   ∀(N: ∀(val: Kind.Term) P)
   P
 = λterm λP λY λN
-  let P = λx
+  use P = λx
     ∀(Y: ∀(val: Kind.Term) P) ∀(N: ∀(val: Kind.Term) P)
     P
-  let all = λnam λinp λbod λY λN (N (Kind.all nam inp bod))
-  let lam = λnam λbod λY λN (N (Kind.lam nam bod))
-  let app = λfun λarg λY λN (N (Kind.app fun arg))
-  let ann = λval λtyp λY λN (N (Kind.ann val typ))
-  let slf = λnam λbod λY λN (N (Kind.slf nam bod))
-  let ins = λval λY λN (Y val)
-  let ref = λnam λval λY λN (N (Kind.ref nam val))
-  let def = λnam λval λbod λY λN (N (Kind.def nam val bod))
-  let set = λY λN (N Kind.set)
-  let u60 = λY λN (N Kind.u60)
-  let num = λval λY λN (N (Kind.num val))
-  let op2 = λopr λfst λsnd λY λN (N (Kind.op2 opr fst snd))
-  let mat = λnam λx λz λs λp λY λN (N (Kind.mat nam x z s p))
-  let txt = λlit λY λN (N (Kind.txt lit))
-  let hol = λnam λctx λY λN (N (Kind.hol nam ctx))
-  let var = λnam λidx λY λN (N (Kind.var nam idx))
+  use all = λnam λinp λbod λY λN (N (Kind.all nam inp bod))
+  use lam = λnam λbod λY λN (N (Kind.lam nam bod))
+  use app = λfun λarg λY λN (N (Kind.app fun arg))
+  use ann = λval λtyp λY λN (N (Kind.ann val typ))
+  use slf = λnam λbod λY λN (N (Kind.slf nam bod))
+  use ins = λval λY λN (Y val)
+  use ref = λnam λval λY λN (N (Kind.ref nam val))
+  use def = λnam λval λbod λY λN (N (Kind.def nam val bod))
+  use set = λY λN (N Kind.set)
+  use u60 = λY λN (N Kind.u60)
+  use num = λval λY λN (N (Kind.num val))
+  use op2 = λopr λfst λsnd λY λN (N (Kind.op2 opr fst snd))
+  use mat = λnam λx λz λs λp λY λN (N (Kind.mat nam x z s p))
+  use txt = λlit λY λN (N (Kind.txt lit))
+  use hol = λnam λctx λY λN (N (Kind.hol nam ctx))
+  use var = λnam λidx λY λN (N (Kind.var nam idx))
   (~term
     P
     all

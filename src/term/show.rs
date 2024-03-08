@@ -43,7 +43,7 @@ impl Term {
         let arg = arg.show();
         format!("({} {})", fun, arg)
       },
-      Term::Ann { val, typ } => {
+      Term::Ann { chk: _, val, typ } => {
         let val = val.show();
         let typ = typ.show();
         format!("{{{}: {}}}", val, typ)
@@ -85,6 +85,11 @@ impl Term {
         let val = val.show();
         let bod = bod.show();
         format!("let {} = {} in {}", nam, val, bod)
+      },
+      Term::Use { nam, val, bod } => {
+        let val = val.show();
+        let bod = bod.show();
+        format!("use {} = {} in {}", nam, val, bod)
       },
       Term::Hol { nam } => {
         format!("?{}", nam)

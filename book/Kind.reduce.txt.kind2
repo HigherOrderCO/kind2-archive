@@ -1,8 +1,8 @@
 Kind.reduce.txt
 : ∀(txt: Kind.Text) Kind.Term
 = λtxt
-  let P = λx Kind.Term
-  let cons = λx λxs
+  use P = λx Kind.Term
+  use cons = λx λxs
     (Kind.reduce
       Bool.true
       (Kind.app
@@ -10,5 +10,5 @@ Kind.reduce.txt
         (Kind.txt xs)
       )
     )
-  let nil = (Kind.reduce Bool.true Kind.Book.String.nil)
+  use nil = (Kind.reduce Bool.true Kind.Book.String.nil)
   (~txt P cons nil)

@@ -2,38 +2,38 @@ Kind.check
 : ∀(term: Kind.Term) ∀(type: Kind.Term) ∀(dep: Nat)
   (Maybe Kind.Term)
 = λterm λtype λdep
-  let bind = (Maybe.bind Kind.Term Kind.Term)
-  let pure = (Maybe.some Kind.Term)
-  let none = (Maybe.none Kind.Term)
-  let P = λx ∀(type: Kind.Term) ∀(dep: Nat) (Maybe Kind.Term)
-  let all = λterm.nam λterm.inp λterm.bod λtype λdep
+  use bind = (Maybe.bind Kind.Term Kind.Term)
+  use pure = (Maybe.some Kind.Term)
+  use none = (Maybe.none Kind.Term)
+  use P = λx ∀(type: Kind.Term) ∀(dep: Nat) (Maybe Kind.Term)
+  use all = λterm.nam λterm.inp λterm.bod λtype λdep
     (Kind.verify
       (Kind.all term.nam term.inp term.bod)
       type
       dep
     )
-  let lam = λterm.nam λterm.bod λtype λdep
+  use lam = λterm.nam λterm.bod λtype λdep
     (Kind.if.all
       (Kind.reduce Bool.true type)
       ∀(dep: Nat) ∀(term.bod: ∀(x: Kind.Term) Kind.Term)
       (Maybe Kind.Term)
       λtype.nam λtype.inp λtype.bod λdep λterm.bod
-      let ann = (Kind.ann (Kind.var term.nam dep) type.inp)
-      let term = (term.bod ann)
-      let type = (type.bod ann)
+      use ann = (Kind.ann (Kind.var term.nam dep) type.inp)
+      use term = (term.bod ann)
+      use type = (type.bod ann)
       (Kind.check term type (Nat.succ dep))
       λtype λdep λterm.bod
       (Kind.infer (Kind.lam term.nam term.bod) dep)
       dep
       term.bod
     )
-  let app = λterm.fun λterm.arg λtype λdep
+  use app = λterm.fun λterm.arg λtype λdep
     (Kind.verify (Kind.app term.fun term.arg) type dep)
-  let ann = λval λtyp λtype λdep
+  use ann = λval λtyp λtype λdep
     (Kind.verify (Kind.ann val typ) type dep)
-  let slf = λterm.nam λterm.bod λtype λdep
+  use slf = λterm.nam λterm.bod λtype λdep
     (Kind.verify (Kind.slf term.nam term.bod) type dep)
-  let ins = λterm.val λtype λdep
+  use ins = λterm.val λtype λdep
     (Kind.if.slf
       (Kind.reduce Bool.true type)
       ∀(term.val: Kind.Term) (Maybe Kind.Term)
@@ -42,30 +42,30 @@ Kind.check
       λtype λterm.val (Kind.infer (Kind.ins term.val) dep)
       term.val
     )
-  let ref = λterm.nam λterm.val λtype λdep
+  use ref = λterm.nam λterm.val λtype λdep
     (Kind.check term.val type dep)
-  let def = λterm.nam λterm.val λterm.bod λtype λdep
+  use def = λterm.nam λterm.val λterm.bod λtype λdep
     (Kind.check (term.bod term.val) type (Nat.succ dep))
-  let set = λtype λdep (Kind.verify Kind.set type dep)
-  let u60 = λtype λdep (Kind.verify Kind.u60 type dep)
-  let num = λterm.num λtype λdep
+  use set = λtype λdep (Kind.verify Kind.set type dep)
+  use u60 = λtype λdep (Kind.verify Kind.u60 type dep)
+  use num = λterm.num λtype λdep
     (Kind.verify (Kind.num term.num) type dep)
-  let op2 = λterm.opr λterm.fst λterm.snd λtype λdep
+  use op2 = λterm.opr λterm.fst λterm.snd λtype λdep
     (Kind.verify
       (Kind.op2 term.opr term.fst term.snd)
       type
       dep
     )
-  let mat = λterm.nam λterm.x λterm.z λterm.s λterm.p λtype λdep
+  use mat = λterm.nam λterm.x λterm.z λterm.s λterm.p λtype λdep
     (Kind.verify
       (Kind.mat term.nam term.x term.z term.s term.p)
       type
       dep
     )
-  let txt = λterm.txt λtype λdep
+  use txt = λterm.txt λtype λdep
     (Kind.verify (Kind.txt term.txt) type dep)
-  let hol = λterm.nam λterm.ctx λtype λdep (pure Kind.set)
-  let var = λterm.nam λterm.idx λtype λdep
+  use hol = λterm.nam λterm.ctx λtype λdep (pure Kind.set)
+  use var = λterm.nam λterm.idx λtype λdep
     (Kind.verify (Kind.var term.nam term.idx) type dep)
   (~term
     P

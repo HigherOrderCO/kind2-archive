@@ -1,24 +1,24 @@
 Parser.test
 : ∀(test: String) (Parser Bool)
 = λtest λcode
-  let P = λx ∀(code: String) (Parser.Result Bool)
-  let cons = λtest.head λtest.tail λcode
-    let P = λx (Parser.Result Bool)
-    let cons = λcode.head λcode.tail
-      let P = λx
+  use P = λx ∀(code: String) (Parser.Result Bool)
+  use cons = λtest.head λtest.tail λcode
+    use P = λx (Parser.Result Bool)
+    use cons = λcode.head λcode.tail
+      use P = λx
         ∀(code.head: Char) ∀(code.tail: String)
         (Parser.Result Bool)
-      let true = λcode.head λcode.tail
-        let P = λx (Parser.Result Bool)
-        let done = λcode λvalue
+      use true = λcode.head λcode.tail
+        use P = λx (Parser.Result Bool)
+        use done = λcode λvalue
           (Parser.Result.done
             Bool
             (String.cons code.head code)
             value
           )
-        let fail = λerror (Parser.Result.fail Bool error)
+        use fail = λerror (Parser.Result.fail Bool error)
         (~(Parser.test test.tail code.tail) P done fail)
-      let false = λcode.head λcode.tail
+      use false = λcode.head λcode.tail
         (Parser.Result.done
           Bool
           (String.cons code.head code.tail)
@@ -31,7 +31,7 @@ Parser.test
         code.head
         code.tail
       )
-    let nil = (Parser.Result.done Bool String.nil Bool.false)
+    use nil = (Parser.Result.done Bool String.nil Bool.false)
     (~code P cons nil)
-  let nil = λcode (Parser.Result.done Bool code Bool.true)
+  use nil = λcode (Parser.Result.done Bool code Bool.true)
   (~test P cons nil code)

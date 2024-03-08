@@ -141,10 +141,10 @@ impl Term {
         let arg = arg.to_hs(env.clone(), met);
         format!("(App {} {})", fun, arg)
       },
-      Term::Ann { val, typ } => {
+      Term::Ann { chk, val, typ } => {
         let val = val.to_hs(env.clone(), met);
         let typ = typ.to_hs(env.clone(), met);
-        format!("(Ann True {} {})", val, typ)
+        format!("(Ann {} {} {})", if *chk { "True" } else { "False" }, val, typ)
       },
       Term::Slf { nam, typ, bod } => {
         let typ = typ.to_hs(env.clone(), met);
@@ -183,6 +183,11 @@ impl Term {
         let val = val.to_hs(env.clone(), met);
         let bod = bod.to_hs(cons(&env, nam.clone()), met);
         format!("(Let \"{}\" {} $ \\{} -> {})", nam, val, Term::to_hs_name(nam), bod)
+      },
+      Term::Use { nam, val, bod } => {
+        let val = val.to_hs(env.clone(), met);
+        let bod = bod.to_hs(cons(&env, nam.clone()), met);
+        format!("(Use \"{}\" {} $ \\{} -> {})", nam, val, Term::to_hs_name(nam), bod)
       },
       Term::Hol { nam } => {
         let env_str = env.iter().map(|n| Term::to_hs_name(n)).collect::<Vec<_>>().join(",");

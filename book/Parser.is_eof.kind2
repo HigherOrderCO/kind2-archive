@@ -1,12 +1,12 @@
 Parser.is_eof
 : (Parser Bool)
 = λcode
-  let P = λx (Parser.Result Bool)
-  let cons = λcode.head λcode.tail
+  use P = λx (Parser.Result Bool)
+  use cons = λcode.head λcode.tail
     (Parser.Result.done
       Bool
       (String.cons code.head code.tail)
       Bool.false
     )
-  let nil = (Parser.Result.done Bool String.nil Bool.true)
+  use nil = (Parser.Result.done Bool String.nil Bool.true)
   (~(String.skip code) P cons nil)

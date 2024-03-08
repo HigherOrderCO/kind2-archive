@@ -1,11 +1,11 @@
 test2
 : (List #U60)
-= let xs = (List.cons
+= use xs = (List.cons
       #U60
       #0
       (List.cons #U60 #1 (List.cons #U60 #2 (List.nil #U60)))
     )
-  let ys = (List.cons
+  use ys = (List.cons
       #U60
       #3
       (List.cons #U60 #4 (List.cons #U60 #5 (List.nil #U60)))

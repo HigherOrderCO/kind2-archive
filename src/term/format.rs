@@ -86,7 +86,7 @@ impl Term {
         vec.push(Form::text(")"));
         Form::call(" ", vec)
       }
-      Term::Ann { val, typ } => {
+      Term::Ann { chk: _, val, typ } => {
         Form::call("", vec![
           Form::glue("", vec![
             Form::text("{"),
@@ -171,6 +171,18 @@ impl Term {
       Term::Let { nam, val, bod } => {
         Form::glue("", vec![
           Form::text("let "),
+          Form::text(nam),
+          Form::text(" = "),
+          Form::inc(),
+          val.format_go(),
+          Form::dec(),
+          Form::line(),
+          bod.format_go(),
+        ])
+      },
+      Term::Use { nam, val, bod } => {
+        Form::glue("", vec![
+          Form::text("use "),
           Form::text(nam),
           Form::text(" = "),
           Form::inc(),
