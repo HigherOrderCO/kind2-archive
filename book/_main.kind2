@@ -1,8 +1,8 @@
 _main
-: ∀(a: Bool) (List Bool)
-= λa
-  use T = Bool.true
-  use F = Bool.false
-  use C = List.cons
-  use N = List.nil
-  (C _ T (C _ ?a (N _)))
+: use list = 
+    (List.cons _ Nat.zero
+    (List.cons _ (Nat.succ Nat.zero)
+    (List.cons _ (Nat.succ (Nat.succ Nat.zero))
+    (List.nil _))))
+  (The (List Nat) list)
+= ?A

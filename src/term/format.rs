@@ -1,11 +1,5 @@
 use crate::{*};
 
-//CONTEXT:
-//./../form/mod.rs//
-//./../term/show.rs//
-//./../book/format.rs//
-//END CONTEXT
-
 impl Oper {
 
   pub fn format(&self) -> Box<Form> {
@@ -23,9 +17,6 @@ impl Term {
   pub fn format_go(&self) -> Box<Form> {
     match self {
       Term::All { .. } => {
-        // 1. collect all nams/inps, until 'bod' isn't an All
-        // 2. this will flatten (∀(a: A) (∀(b: B) (∀(c: C) bod))) as (∀(a: A) ∀(b: B) ∀(c: C) bod)
-        // 3. glue the nams/inps, and return pile(nam_inps, bod)
         let mut bnd = vec![];
         let mut bod = self;
         while let Term::All { nam, inp, bod: in_bod } = bod {
@@ -46,10 +37,6 @@ impl Term {
         ])
       },
       Term::Lam { .. } => {
-        // 1. collect all nams, until 'bod' isn't a Lam
-        // 2. this will flatten (λa (λb (λc bod))) as (λa λb λc bod)
-        // 3. glue the lambdas, and return pile(bnd, bod)
-        // 4. note: in the output, each name must have a λ before it
         let mut bnd = vec![];
         let mut bod = self;
         while let Term::Lam { nam, bod: in_bod } = bod {
@@ -62,12 +49,6 @@ impl Term {
         ])
       },
       Term::App { .. } => {
-        // 1. collect all args, until 'fun' isn't an App
-        // 2. this will flatten (((f x) y) z ...) as (f x y z ...)
-        // 3. create a new vec, and add glue(["(",fun.format()]) to it
-        // 4. for each argument, add arg.format() to the vec
-        // 5. complete the vec with ")"
-        // 6. return call(vec)
         let mut fun = self;
         let mut spn = vec![];
         while let Term::App { fun: in_fun, arg } = fun {

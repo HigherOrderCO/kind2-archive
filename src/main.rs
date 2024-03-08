@@ -63,13 +63,13 @@ fn main() {
       match Book::load(arg) {
         Ok(book) => {
           // Auto-formats the definition.
-          let defn = book.defs.get(arg).unwrap();
-          let form = book.format_def(arg, defn).flatten(60);
+          //let defn = book.defs.get(arg).unwrap();
+          //let form = book.format_def(arg, defn).flatten(60);
 
           // Overwrites the original file with the formatted version.
-          File::create(&format!("./{}.kind2", arg))
-            .and_then(|mut file| file.write_all(form.as_bytes()))
-            .unwrap_or_else(|_| panic!("Failed to auto-format '{}.kind2'.", arg));
+          //File::create(&format!("./{}.kind2", arg))
+            //.and_then(|mut file| file.write_all(form.as_bytes()))
+            //.unwrap_or_else(|_| panic!("Failed to auto-format '{}.kind2'.", arg));
 
           // Generates the HVM1 checker.
           //let check_hvm1 = generate_check_hvm1(&book, cmd, arg);
@@ -120,35 +120,3 @@ fn show_help() {
   eprintln!("Usage: kind2 [check|run] <name>");
   std::process::exit(1);
 }
-
-
-
-
-
-//fn main() {
-  //let rope = Rope::node(vec![
-    //Rope::text("Foo"),
-    //Rope::text("Bar"),
-    //Rope::node(vec![
-      //Rope::text("Foo"),
-      //Rope::text("Bar"),
-      //Rope::text("Tic"),
-      //Rope::text("Tac"),
-      //Rope::text("Toe"),
-    //]),
-    //Rope::text("Tac"),
-    //Rope::text("Toe"),
-  //]);
-
-  //println!("{}", rope.flatten(10));
-//}
-
-
-
-
-
-
-
-
-
-
