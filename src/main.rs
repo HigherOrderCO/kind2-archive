@@ -118,7 +118,7 @@ fn main() {
 
 //fn main() {
   //env::set_current_dir("./book").expect("Failed to change directory to ./book");
-  //let adt = term::sugar::ADT::load("Bool");
+  //let adt = term::sugar::ADT::load("Vector");
   //println!("{:?}", adt);
 //}
 

@@ -43,10 +43,13 @@ impl Term {
   }
 
   pub fn format_go(&self) -> Box<Form> {
+
+    // Formats a Nat
     if let Some(nat) = self.as_nat() {
       return Form::text(&format!("{}", nat));
     }
 
+    // Formats a List
     if let Some(list) = self.as_list() {
       if list.len() == 0 {
         return Form::text("[]");
@@ -59,64 +62,65 @@ impl Term {
       }
     }
 
-    //if let Some(adt) = self.as_adt() {
-      //return Form::glue("", vec![
-        //Form::text("data "),
-        //Form::text("TODO"),
-        //Form::glue(" ", adt.pars.iter().map(|(x,y)| {
-          //Form::call("", vec![
-            //Form::glue("", vec![
-              //Form::text("("),
-              //Form::text(x),
-              //Form::text(": "),
-            //]),
-            //y.format_go(),
-            //Form::text(")"),
-          //])
-        //}).collect()),
-        //Form::call("", vec![
-          //Form::text(":"),
-          //Form::pile(" ", adt.idxs.iter().map(|(x,y)| {
-            //Form::call("", vec![
-              //Form::glue("", vec![
-                //Form::text("("),
-                //Form::text(x),
-                //Form::text(": "),
-              //]),
-              //y.format_go(),
-              //Form::text(")"),
-            //])
-          //}).collect()),
-        //]),
-        //Form::line(),
-        //Form::glue("", adt.ctrs.iter().map(|ctr| {
-          //let mut vec = vec![
-            //Form::glue("", vec![
-              //Form::text("| "),
-              //Form::text(&ctr.name),
-            //])
-          //];
-          //for (x, y) in &ctr.flds {
-            //vec.push(Form::call("", vec![
-              //Form::glue("", vec![
-                //Form::text("("),
-                //Form::text(x),
-                //Form::text(": "),
-              //]),
-              //y.format_go(),
-              //Form::text(")"),
-            //]));
-          //}
-          //vec.push(Form::call("", vec![
-            //Form::glue("", vec![
-              //Form::text(":"),
-            //]),
-            //ctr.rtyp.format_go(),
-          //]));
-          //Form::pile(" ", vec)
-        //}).collect()),
-      //]);
-    //}
+    // Formats an ADT
+    if let Some(adt) = self.as_adt() {
+      let mut adt_form = vec![];
+
+      // ADT name
+      adt_form.push(Form::glue("", vec![
+        Form::text("data "),
+        Form::text(&adt.name),
+      ]));
+
+      // ADT indices
+      for (nam,typ) in adt.idxs.iter() {
+        adt_form.push(Form::call("", vec![
+          Form::glue("", vec![
+            Form::text("("),
+            Form::text(nam),
+            Form::text(": "),
+          ]),
+          typ.format_go(),
+          Form::text(")"),
+        ]));
+      }
+
+      // ADT constructors
+      adt_form.push(Form::glue("", adt.ctrs.iter().map(|ctr| {
+        let mut ctr_form = vec![];
+
+        // Constructor Name
+        ctr_form.push(Form::glue("", vec![
+          Form::line(),
+          Form::text("| "),
+          Form::text(&ctr.name),
+        ]));
+
+        // Constructor Fields
+        for (nam,typ) in ctr.flds.iter() {
+          ctr_form.push(Form::call("", vec![
+            Form::glue("", vec![
+              Form::text("("),
+              Form::text(nam),
+              Form::text(": "),
+            ]),
+            typ.format_go(),
+            Form::text(")"),  
+          ]));
+        }
+
+        // Constructor Return
+        ctr_form.push(Form::glue("", vec![
+          Form::text(": "),
+          ctr.rtyp.format_go(),
+        ]));
+
+        return Form::call(" ", ctr_form);
+
+      }).collect()));
+
+      return Form::glue(" ", adt_form);
+    }
 
     match self {
       Term::All { .. } => {

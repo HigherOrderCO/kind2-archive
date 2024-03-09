@@ -136,8 +136,12 @@ impl Form {
         out.push_str(value)
       },
       Form::Line => {
-        out.push('\n');
-        out.push_str(&"  ".repeat(*tab));
+        if fmt {
+          out.push('\n');
+          out.push_str(&"  ".repeat(*tab));
+        } else {
+          out.push_str("; ");
+        }
       },
       Form::Inc => {
         *tab += 1
