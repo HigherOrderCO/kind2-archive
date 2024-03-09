@@ -6,7 +6,6 @@ use std::collections::BTreeSet;
 mod compile;
 mod format;
 mod parse;
-mod show;
 
 // <book> ::=
 //   DEF_ANN | <name> : <term> = <term> <book>
@@ -20,13 +19,17 @@ pub struct Book {
 
 impl Book {
 
+  pub fn show(&self) -> String {
+    return self.format().flatten(None);
+  }
+
   pub fn new() -> Self {
     Book {
       defs: BTreeMap::new(),
       fids: BTreeMap::new(),
     }
   }
-  
+
   pub fn load(name: &str) -> Result<Self, String> {
     fn load_go(name: &str, book: &mut Book) -> Result<(), String> {
       //println!("... {}", name);
@@ -57,6 +60,9 @@ impl Book {
     load_go("String", &mut book)?;
     load_go("String.cons", &mut book)?;
     load_go("String.nil", &mut book)?;
+    load_go("Nat", &mut book)?;
+    load_go("Nat.succ", &mut book)?;
+    load_go("Nat.zero", &mut book)?;
     //println!("DONE!");
     Ok(book)
   }

@@ -1,0 +1,9 @@
+The
+: ∀(A: *)
+  ∀(x: A)
+  *
+= λA λx
+  $(self: (The A x))
+  ∀(P: ∀(x: A) ∀(p: (The A x)) *)
+  ∀(value: ∀(x: A) (P x (The.value A x)))
+  (P x self)

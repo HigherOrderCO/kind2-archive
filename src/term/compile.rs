@@ -1,5 +1,7 @@
 use crate::{*};
 
+//./mod.rs//
+
 impl Oper {
 
   pub fn to_ctr(&self) -> &'static str {
@@ -176,9 +178,6 @@ impl Term {
         let p = p.to_hs(cons(&env, nam.clone()), met);
         format!("(Mat \"{}\" {} {} (\\{} -> {}) (\\{} -> {}))", nam, x, z, Term::to_hs_name(&format!("{}-1", nam)), s, Term::to_hs_name(nam), p)
       },
-      Term::Txt { txt } => {
-        format!("(Txt \"{}\")", txt.replace("\n", "\\n"))
-      },
       Term::Let { nam, val, bod } => {
         let val = val.to_hs(env.clone(), met);
         let bod = bod.to_hs(cons(&env, nam.clone()), met);
@@ -205,6 +204,12 @@ impl Term {
       Term::Src { src, val } => {
         let val = val.to_hs(env, met);
         format!("(Src {} {})", src.to_u64(), val)
+      },
+      Term::Nat { nat } => {
+        format!("(Nat {})", nat)
+      },
+      Term::Txt { txt } => {
+        format!("(Txt \"{}\")", txt.replace("\n", "\\n"))
       },
     }
   }

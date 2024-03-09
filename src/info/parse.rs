@@ -56,6 +56,13 @@ impl<'i> KindParser<'i> {
             self.consume("}")?;
             Ok(Info::Vague { nam })
           }
+          Some('p') => {
+            self.consume("print")?;
+            self.consume("{")?;
+            let val = self.parse_term(0)?;
+            self.consume("}")?;
+            Ok(Info::Print { val })
+          }
           _ => self.expected("info type (solve, found, error)"),
         }
       }

@@ -40,7 +40,7 @@ fn generate_check_hs(book: &Book, command: &str, arg: &str) -> String {
   let book_hs = book.to_hs();
   let main_hs = match command {
     "check" => format!("main = (apiCheck {})\n", Term::to_hs_name(arg)),
-    "run"   => format!("Main = (apiNormal {})\n", Term::to_hs_name(arg)),
+    "run"   => format!("main = (apiNormal {})\n", Term::to_hs_name(arg)),
     _       => panic!("invalid command"),
   };
   let hs_code = format!("{}\n{}\n{}", kind_hs, book_hs, main_hs);
@@ -115,6 +115,12 @@ fn main() {
     },
   }
 }
+
+//fn main() {
+  //env::set_current_dir("./book").expect("Failed to change directory to ./book");
+  //let adt = term::sugar::ADT::load("Bool");
+  //println!("{:?}", adt);
+//}
 
 fn show_help() {
   eprintln!("Usage: kind2 [check|run] <name>");

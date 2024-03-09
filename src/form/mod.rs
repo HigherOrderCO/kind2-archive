@@ -1,3 +1,5 @@
+use crate::Term;
+
 // Example:
 //   ["(" "foo" "arg0" "arg1" "arg2" ")"]
 // Call:
@@ -75,45 +77,49 @@ impl Form {
   }
 
   // Flattens the Form structure into a string, respecting indentation and width limits.
-  pub fn flatten(&self, lim: usize) -> String {
+  pub fn flatten(&self, lim: Option<usize>) -> String {
     let mut out = String::new();
-    self.flatten_into(&mut out, &mut 0, lim);
+    if let Some(lim) = lim {
+      self.flatten_into(&mut out, true, &mut 0, lim);
+    } else {
+      self.flatten_into(&mut out, false, &mut 0, 0);
+    }
     out
   }
 
   // Helper function.
-  pub fn flatten_into(&self, out: &mut String, tab: &mut usize, lim: usize) {
+  pub fn flatten_into(&self, out: &mut String, fmt: bool, tab: &mut usize, lim: usize) {
     match self {
       Form::Many { style, join, child } => {
         match style {
           Style::Call => {
-            let add_lines = Form::no_lines(&child) && self.width(lim) >= lim;
+            let add_lines = fmt && Form::no_lines(&child) && self.width(lim) >= lim;
             for (i, c) in child.iter().enumerate() {
               if add_lines && i > 0 && i < child.len() - 1 {
-                Form::Inc.flatten_into(out, tab, lim);
+                Form::Inc.flatten_into(out, fmt, tab, lim);
               }
               if add_lines && i > 0 {
-                Form::Line.flatten_into(out, tab, lim);
+                Form::Line.flatten_into(out, fmt, tab, lim);
               }
               if !add_lines && i > 0 && i < child.len() - 1 {
                 out.push_str(&join);
               }
-              c.flatten_into(out, tab, lim);
+              c.flatten_into(out, fmt, tab, lim);
               if add_lines && i > 0 && i < child.len() - 1 {
-                Form::Dec.flatten_into(out, tab, lim);
+                Form::Dec.flatten_into(out, fmt, tab, lim);
               }
             }
           },
           Style::Pile => {
-            let add_lines = Form::no_lines(&child) && self.width(lim) >= lim;
+            let add_lines = fmt && Form::no_lines(&child) && self.width(lim) >= lim;
             for (i, c) in child.iter().enumerate() {
               if add_lines && i > 0 {
-                Form::Line.flatten_into(out, tab, lim);
+                Form::Line.flatten_into(out, fmt, tab, lim);
               }
               if !add_lines && i > 0 {
                 out.push_str(&join);
               }
-              c.flatten_into(out, tab, lim);
+              c.flatten_into(out, fmt, tab, lim);
             }
           },
           Style::Glue => {
@@ -121,7 +127,7 @@ impl Form {
               if i > 0 {
                 out.push_str(&join);
               }
-              c.flatten_into(out, tab, lim);
+              c.flatten_into(out, fmt, tab, lim);
             }
           },
         }

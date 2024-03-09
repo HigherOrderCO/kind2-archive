@@ -1,9 +1,37 @@
 use crate::{*};
 
+
+//CONTEXT:
+//./mod.rs//
+//./sugar.rs//
+//./../book/mod.rs//
+//./../../book/Bool.kind2//
+//./../../book/Nat.kind2//
+//./../../book/List.kind2//
+//./../../book/Sigma.kind2//
+//./../../book/Monad.kind2//
+
 impl Oper {
 
   pub fn format(&self) -> Box<Form> {
-    Form::text(self.show())
+    Form::text(match self {
+      Oper::Add => "+",
+      Oper::Sub => "-",
+      Oper::Mul => "*",
+      Oper::Div => "/",
+      Oper::Mod => "%",
+      Oper::Eq  => "==",
+      Oper::Ne  => "!=",
+      Oper::Lt  => "<",
+      Oper::Gt  => ">",
+      Oper::Lte => "<=",
+      Oper::Gte => ">=",
+      Oper::And => "&",
+      Oper::Or  => "|",
+      Oper::Xor => "^",
+      Oper::Lsh => "<<",
+      Oper::Rsh => ">>",
+    })
   }
 
 }
@@ -11,10 +39,85 @@ impl Oper {
 impl Term {
 
   pub fn format(&self) -> Box<Form> {
-    self.clean().format_go()
+    return self.clean().format_go();
   }
 
   pub fn format_go(&self) -> Box<Form> {
+    if let Some(nat) = self.as_nat() {
+      return Form::text(&format!("{}", nat));
+    }
+
+    if let Some(list) = self.as_list() {
+      if list.len() == 0 {
+        return Form::text("[]");
+      } else {
+        return Form::call("", vec![
+          Form::text("["),
+          Form::pile(", ", list.iter().map(|x| x.format_go()).collect()),
+          Form::text("]"),
+        ]);
+      }
+    }
+
+    //if let Some(adt) = self.as_adt() {
+      //return Form::glue("", vec![
+        //Form::text("data "),
+        //Form::text("TODO"),
+        //Form::glue(" ", adt.pars.iter().map(|(x,y)| {
+          //Form::call("", vec![
+            //Form::glue("", vec![
+              //Form::text("("),
+              //Form::text(x),
+              //Form::text(": "),
+            //]),
+            //y.format_go(),
+            //Form::text(")"),
+          //])
+        //}).collect()),
+        //Form::call("", vec![
+          //Form::text(":"),
+          //Form::pile(" ", adt.idxs.iter().map(|(x,y)| {
+            //Form::call("", vec![
+              //Form::glue("", vec![
+                //Form::text("("),
+                //Form::text(x),
+                //Form::text(": "),
+              //]),
+              //y.format_go(),
+              //Form::text(")"),
+            //])
+          //}).collect()),
+        //]),
+        //Form::line(),
+        //Form::glue("", adt.ctrs.iter().map(|ctr| {
+          //let mut vec = vec![
+            //Form::glue("", vec![
+              //Form::text("| "),
+              //Form::text(&ctr.name),
+            //])
+          //];
+          //for (x, y) in &ctr.flds {
+            //vec.push(Form::call("", vec![
+              //Form::glue("", vec![
+                //Form::text("("),
+                //Form::text(x),
+                //Form::text(": "),
+              //]),
+              //y.format_go(),
+              //Form::text(")"),
+            //]));
+          //}
+          //vec.push(Form::call("", vec![
+            //Form::glue("", vec![
+              //Form::text(":"),
+            //]),
+            //ctr.rtyp.format_go(),
+          //]));
+          //Form::pile(" ", vec)
+        //}).collect()),
+      //]);
+    //}
+
     match self {
       Term::All { .. } => {
         let mut bnd = vec![];
@@ -146,9 +249,6 @@ impl Term {
           ]),
         ])
       },
-      Term::Txt { txt } => {
-        Form::text(&format!("\"{}\"", txt))
-      },
       Term::Let { nam, val, bod } => {
         Form::glue("", vec![
           Form::text("let "),
@@ -184,6 +284,12 @@ impl Term {
       },
       Term::Src { src: _, val } => {
         val.format_go()
+      },
+      Term::Txt { txt } => {
+        Form::text(&format!("\"{}\"", txt))
+      },
+      Term::Nat { nat } => {
+        Form::text(&format!("{}", nat))
       },
     }
   }

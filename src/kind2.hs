@@ -36,17 +36,19 @@ data Term
   | Num Int
   | Op2 Oper Term Term
   | Mat String Term Term (Term -> Term) (Term -> Term)
-  | Txt String
   | Hol String [Term]
   | Met Int [Term]
   | Var String Int
   | Src Int Term
+  | Txt String
+  | Nat Integer
 
 data Info
   = Found String Term [Term] Int
   | Solve Int Term Int
   | Error Int Term Term Term Int
   | Vague String
+  | Print Term Int
 
 data Check = Check Int Term Term Int
 data State = State (Map Term) [Check] [Info] -- state type
@@ -195,7 +197,7 @@ envRewind :: State -> Env Int
 envRewind state = Env $ \_ -> Done state 0
 
 envSusp :: Check -> Env ()
-envSusp chk = Env $ \(State fill susp logs) -> Done (State fill (chk : susp) logs) ()
+envSusp chk = Env $ \(State fill susp logs) -> Done (State fill (listPush chk susp) logs) ()
 
 envFill :: Int -> Term -> Env ()
 envFill k v = Env $ \(State fill susp logs) -> Done (State (mapSet (key k) v fill) susp logs) ()
@@ -240,6 +242,7 @@ termReduce fill lv (Use nam val bod) = termReduce fill lv (bod val)
 termReduce fill lv (Op2 opr fst snd) = termReduceOp2 fill lv opr (termReduce fill lv fst) (termReduce fill lv snd)
 termReduce fill lv (Mat nam x z s p) = termReduceMat fill lv nam (termReduce fill lv x) z s p
 termReduce fill lv (Txt txt)         = termReduceTxt fill lv txt
+termReduce fill lv (Nat val)         = termReduceNat fill lv val
 termReduce fill lv (Src src val)     = termReduce fill lv val
 termReduce fill lv (Met uid spn)     = termReduceMet fill lv uid spn
 termReduce fill lv val               = val
@@ -292,7 +295,12 @@ termReduceRef fill 1  nam val = Ref nam val
 termReduceRef fill lv nam val = Ref nam val
 
 termReduceTxt :: Map Term -> Int -> String -> Term
-termReduceTxt fill lv txt = Txt txt
+termReduceTxt fill lv []     = termReduce fill lv xString_nil
+termReduceTxt fill lv (x:xs) = termReduce fill lv (App (App xString_cons (Num (ord x))) (Txt xs))
+
+termReduceNat :: Map Term -> Int -> Integer -> Term
+termReduceNat fill lv 0 = xNat_zero
+termReduceNat fill lv n = App xNat_succ (termReduceNat fill lv (n - 1))
 
 -- Normalization
 -- -------------
@@ -322,6 +330,7 @@ termNormal fill lv term dep = termNormalGo fill lv (termReduce fill lv term) dep
   termNormalGo fill lv (Op2 opr fst snd) dep = Op2 opr (termNormal fill lv fst dep) (termNormal fill lv snd dep)
   termNormalGo fill lv (Mat nam x z s p) dep = Mat nam (termNormal fill lv x dep) (termNormal fill lv z dep) (\k -> termNormal fill lv (s (Var (stringConcat nam "-1") dep)) dep) (\k -> termNormal fill lv (p (Var nam dep)) dep)
   termNormalGo fill lv (Txt val)         dep = Txt val
+  termNormalGo fill lv (Nat val)         dep = Nat val
   termNormalGo fill lv (Var nam idx)     dep = Var nam idx
   termNormalGo fill lv (Src src val)     dep = Src src (termNormal fill lv val dep)
   termNormalGo fill lv (Met uid spn)     dep = Met uid spn -- TODO: normalize spine
@@ -437,6 +446,8 @@ termIdenticalGo (Mat aNam aX aZ aS aP) (Mat bNam bX bZ bS bP) dep =
   envPure (iX && iZ && iS && iP)
 termIdenticalGo (Txt aTxt) (Txt bTxt) dep =
   envPure (aTxt == bTxt)
+termIdenticalGo (Nat aVal) (Nat bVal) dep =
+  envPure (aVal == bVal)
 termIdenticalGo (Src aSrc aVal) b dep =
   termIdentical aVal b dep
 termIdenticalGo a (Src bSrc bVal) dep =
@@ -514,6 +525,7 @@ termUnifySubst lvl neo (Num n)           = Num n
 termUnifySubst lvl neo (Op2 opr fst snd) = Op2 opr (termUnifySubst lvl neo fst) (termUnifySubst lvl neo snd)
 termUnifySubst lvl neo (Mat nam x z s p) = Mat nam (termUnifySubst lvl neo x) (termUnifySubst lvl neo z) (\k -> termUnifySubst lvl neo (s k)) (\k -> termUnifySubst lvl neo (p k))
 termUnifySubst lvl neo (Txt txt)         = Txt txt
+termUnifySubst lvl neo (Nat val)         = Nat val
 termUnifySubst lvl neo (Var nam idx)     = if lvl == idx then neo else Var nam idx
 termUnifySubst lvl neo (Src src val)     = Src src (termUnifySubst lvl neo val)
 
@@ -576,6 +588,8 @@ termInferGo (Num num) dep = do
   return U60
 termInferGo (Txt txt) dep = do
   return xString
+termInferGo (Nat val) dep = do
+  return xNat
 termInferGo (Op2 opr fst snd) dep = do
   envSusp (Check 0 fst U60 dep)
   envSusp (Check 0 snd U60 dep)
@@ -725,6 +739,7 @@ termShow (Mat nam x z s p) dep =
       p'   = termShow (p (Var nam dep)) dep
   in stringJoin ["#match " , nam' , " = " , x' , " { #0: " , z' , " #+: " , s' , " }: " , p']
 termShow (Txt txt) dep = stringJoin [quote , txt , quote]
+termShow (Nat val) dep = show val
 termShow (Hol nam ctx) dep = stringJoin ["?" , nam]
 termShow (Met uid spn) dep = stringJoin ["(_", termShowSpn (reverse spn) dep, ")"]
 termShow (Var nam idx) dep = nam
@@ -777,10 +792,18 @@ infoShow fill (Solve name term dep) =
   in stringJoin ["#solve{", show name, " ",  term', "}"]
 infoShow fill (Vague name) =
   stringJoin ["#vague{", name, "}"]
+infoShow fill (Print value dep) =
+  let val = termShow (termNormal fill 0 value dep) dep
+  in stringJoin ["#print{", val, "}"]
 
 -- API
 -- ---
 
+-- Normalizes a term
+apiNormal :: Term -> IO ()
+apiNormal term = putStrLn $ infoShow mapNew (Print (termNormal mapNew 2 term 0) 0)
+
+-- Type-checks a term
 apiCheck :: Term -> IO ()
 apiCheck term = case envRun $ termCheckDef term of
   Done state value -> apiPrintLogs state
@@ -810,4 +833,4 @@ xtest = Ref "test" $ Ann True val typ where
   typ = (All "P" Set $ \p -> (All "f" (All "x" p $ \x -> p) $ \f -> (All "x" p $ \x -> p)))
   val = (Lam "P" $ \p -> (Lam "f" $ \f -> (Lam "x" $ \x -> f)))
 
-xString = undefined
+xString = undefined; xString_cons = undefined; xString_nil = undefined; xNat = undefined; xNat_succ = undefined; xNat_zero = undefined

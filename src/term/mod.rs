@@ -1,10 +1,10 @@
 use crate::{*};
 use std::collections::BTreeSet;
 
-mod compile;
-mod format;
-mod parse;
-mod show;
+pub mod compile;
+pub mod format;
+pub mod parse;
+pub mod sugar;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Oper {
@@ -33,8 +33,8 @@ pub struct Src {
 //   NUM | #<uint>
 //   OP2 | #(<oper> <term> <term>)
 //   MAT | #match <name> = <term> { #0: <term>; #+: <term> }: <term>
-//   MET | ?<name>
-//   HOL | _
+//   HOL | ?<name>
+//   MET | _
 //   CHR | '<char>'
 //   STR | "<string>"
 //   LET | let <name> = <term> <term>
@@ -52,13 +52,14 @@ pub enum Term {
   Num { val: u64 },
   Op2 { opr: Oper, fst: Box<Term>, snd: Box<Term> },
   Mat { nam: String, x: Box<Term>, z: Box<Term>, s: Box<Term>, p: Box<Term> },
-  Txt { txt: String },
   Let { nam: String, val: Box<Term>, bod: Box<Term> },
   Use { nam: String, val: Box<Term>, bod: Box<Term> },
   Var { nam: String },
   Hol { nam: String },
   Met {},
   Src { src: Src, val: Box<Term> },
+  Nat { nat: u64 },
+  Txt { txt: String },
 }
 
 impl Src {
@@ -95,7 +96,17 @@ pub fn cons<A>(vector: &im::Vector<A>, value: A) -> im::Vector<A> where A: Clone
   new_vector
 }
 
+impl Oper {
+  pub fn show(&self) -> String {
+    return self.format().flatten(None);
+  }
+}
+
 impl Term {
+
+  pub fn show(&self) -> String {
+    return self.format().flatten(None);
+  }
 
   pub fn get_free_vars(&self, env: im::Vector<String>, free_vars: &mut BTreeSet<String>) {
     match self {
@@ -134,6 +145,7 @@ impl Term {
         s.get_free_vars(cons(&env, format!("{}-1",nam)), free_vars);
         p.get_free_vars(cons(&env, nam.clone()), free_vars);
       },
+      Term::Nat { nat: _ } => {},
       Term::Txt { txt: _ } => {},
       Term::Let { nam, val, bod } => {
         val.get_free_vars(env.clone(), free_vars);
@@ -206,6 +218,9 @@ impl Term {
         let s = s.count_metas();
         let p = p.count_metas();
         x + z + s + p
+      },
+      Term::Nat { .. } => {
+        0
       },
       Term::Txt { .. } => {
         0
@@ -300,6 +315,9 @@ impl Term {
           s: Box::new(s.clean()),
           p: Box::new(p.clean()),
         }
+      },
+      Term::Nat { nat } => {
+        Term::Nat { nat: *nat }
       },
       Term::Txt { txt } => {
         Term::Txt { txt: txt.clone() }

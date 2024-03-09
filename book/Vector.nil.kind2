@@ -1,0 +1,3 @@
+Vector.nil
+: ∀(T: *) (Vector T Nat.zero)
+= λT ~λP λcons λnil nil

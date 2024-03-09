@@ -1,0 +1,8 @@
+Vector
+: ∀(T: *) ∀(len: Nat) *
+= λT λlen
+  $(self: (Vector T len))
+  ∀(P: ∀(len: Nat) ∀(xs: (Vector T len)) *)
+  ∀(cons: ∀(len: Nat) ∀(head: T) ∀(tail: (Vector T len)) (P (Nat.succ len) (Vector.cons T len head tail)))
+  ∀(nil: (P Nat.zero (Vector.nil T)))
+  (P len self)

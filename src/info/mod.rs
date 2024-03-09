@@ -27,7 +27,10 @@ pub enum Info {
   },
   Vague {
     nam: String,
-  }
+  },
+  Print {
+    val: Term,
+  },
 }
 
 
@@ -55,6 +58,9 @@ impl Info {
       },
       Info::Vague { nam } => {
         format!("VAGUE: _{}", nam)
+      },
+      Info::Print { val } => {
+        format!("{}", val.show())
       }
     }
   }

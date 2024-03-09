@@ -1,5 +1,7 @@
 use crate::{*};
 
+//./mod.rs//
+
 impl Info {
 
   pub fn show(&self) -> String {
@@ -16,6 +18,9 @@ impl Info {
       },
       Info::Vague { nam } => {
         format!("#vague{{?{}}}", nam)
+      },
+      Info::Print { val } => {
+        format!("#print{{{}}}", val.show())
       }
     }
   }

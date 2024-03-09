@@ -1,7 +1,7 @@
 _main
 : use list = 
     (List.cons _ Nat.zero
-    (List.cons _ (Nat.succ Nat.zero)
+    (List.cons _ 1
     (List.cons _ (Nat.succ (Nat.succ Nat.zero))
     (List.nil _))))
   (The (List Nat) list)

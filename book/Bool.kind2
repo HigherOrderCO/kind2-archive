@@ -2,6 +2,6 @@ Bool
 : *
 = $(self: Bool)
   ∀(P: ∀(x: Bool) *)
-  ∀(t: (P Bool.true))
-  ∀(f: (P Bool.false))
+  ∀(true: (P Bool.true))
+  ∀(false: (P Bool.false))
   (P self)
