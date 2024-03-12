@@ -15,11 +15,10 @@ pub struct ADT {
   pub ctrs: Vec<Constructor>, // constructors
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Constructor {
   pub name: String, // constructor name
   pub flds: Vec<(String,Term)>, // constructor fields
-  //pub rtyp: Term, // constructor type; NOTE: refactored. now, instead of storing `rtyp=(Vec A 0)`, we store just `idxs=[0]`, for ex.
   pub idxs: Vec<Term>, // constructor type indices
 }
 
@@ -564,7 +563,7 @@ impl Term {
       bod: Box::new(term)
     };
 
-    println!("PARSED:\n{}", term.show());
+    //println!("PARSED:\n{}", term.show());
 
     // 8. Return 'term'
     return term;
@@ -576,7 +575,7 @@ impl ADT {
   
   // Loads an ADT from its λ-encoded file.
   pub fn load(name: &str) -> Result<ADT, String> {
-    let book = Book::load(name)?;
+    let book = Book::boot(name)?;
     if let Some(term) = book.defs.get(name) {
       let mut term = &term.clean();
       // Skips all Anns
@@ -719,11 +718,11 @@ impl Match {
 
 impl<'i> KindParser<'i> {
 
-  pub fn parse_list(&mut self, fid: u64) -> Result<crate::sugar::List, String> {
+  pub fn parse_list(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::List, String> {
     self.consume("[")?;
     let mut vals = Vec::new();
     while self.peek_one() != Some(']') {
-      vals.push(Box::new(self.parse_term(fid)?));
+      vals.push(Box::new(self.parse_term(fid, uses)?));
       self.skip_trivia();
       if self.peek_one() == Some(',') {
         self.consume(",")?;
@@ -733,16 +732,19 @@ impl<'i> KindParser<'i> {
     return Ok(crate::sugar::List { vals });
   }
 
-  pub fn parse_adt(&mut self, fid: u64) -> Result<crate::sugar::ADT, String> {
+  // FIXME: handle shadowing
+  pub fn parse_adt(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::ADT, String> {
     self.consume("data ")?;
     let name = self.parse_name()?;
     let mut pars = Vec::new();
     let mut idxs = Vec::new();
+    let mut uses = uses.clone();
     // Parses ADT parameters (if any)
     self.skip_trivia();
     while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
       let par = self.parse_name()?;
       self.skip_trivia();
+      uses = shadow(&par, &uses);
       pars.push(par);
     }
     // Parses ADT fields
@@ -750,8 +752,9 @@ impl<'i> KindParser<'i> {
       self.consume("(")?;
       let idx_name = self.parse_name()?;
       self.consume(":")?;
-      let idx_type = self.parse_term(fid)?;
+      let idx_type = self.parse_term(fid, &uses)?;
       self.consume(")")?;
+      uses = shadow(&idx_name, &uses);
       idxs.push((idx_name, idx_type));
       self.skip_trivia();
     }
@@ -761,6 +764,7 @@ impl<'i> KindParser<'i> {
     while self.peek_one() == Some('|') {
       self.consume("|")?;
       let ctr_name = self.parse_name()?;
+      let mut uses = uses.clone();
       let mut flds = Vec::new();
       // Parses constructor fields
       self.skip_trivia();
@@ -768,8 +772,9 @@ impl<'i> KindParser<'i> {
         self.consume("(")?;
         let fld_name = self.parse_name()?;
         self.consume(":")?;
-        let fld_type = self.parse_term(fid)?;
+        let fld_type = self.parse_term(fid, &uses)?;
         self.consume(")")?;
+        uses = shadow(&fld_name, &uses);
         flds.push((fld_name, fld_type));
         self.skip_trivia();
       }
@@ -791,7 +796,7 @@ impl<'i> KindParser<'i> {
           }
           // Parses the indices
           while self.peek_one() != Some(')') {
-            let ctr_index = self.parse_term(fid)?;
+            let ctr_index = self.parse_term(fid, &uses)?;
             ctr_indices.push(ctr_index);
             self.skip_trivia();
           }
@@ -817,51 +822,74 @@ impl<'i> KindParser<'i> {
   // The ADT match syntax is similar to the numeric match syntax, including the same optionals,
   // but it allows any number of <name>:<term> cases. Also, similarly to the List syntax, there
   // is no built-in "Mat" syntax on the Term type, so we must convert it to an applicative form:
-  //   match x = val {
+  //   match x:
   //     List.cons: x.head
   //     List.nil: #0
-  //   }: #U60
+  //   : #U60
   // Would be converted to:
   //   (~val _ (λx.head λx.tail x.tail) 0)
   // Which is the same as:
   //   (APP (APP (APP (INS (VAR "val")) MET) (LAM "x.head" (LAM "x.tail" (VAR "x.head")))) (NUM 0))
-  pub fn parse_match(&mut self, fid: u64) -> Result<Match, String> {
+  // FIXME: handle shadowing
+  pub fn parse_match(&mut self, fid: u64, uses: &Uses) -> Result<Match, String> {
+    // Parses the header: 'match <name> = <expr>'
     self.consume("match ")?;
     let name = self.parse_name()?;
     self.skip_trivia();
     let expr = if self.peek_one() == Some('=') { 
       self.consume("=")?;
-      self.parse_term(fid)?
+      self.parse_term(fid, uses)?
     } else {
       Term::Var { nam: name.clone() }  
     };
+    // Parses the cases: '{ Type.constructor: value ... }'
     self.consume("{")?;
+    let mut adt = "Empty".to_string();
     let mut cses = Vec::new();
     while self.peek_one() != Some('}') {
-      let ctr_name = self.parse_name()?;
+      let cse_name = self.parse_name()?;
+      let cse_name = uses.get(&cse_name).unwrap_or(&cse_name).to_string();
+      // Infers the local ADT name
+      let adt_name = {
+        let pts = cse_name.split('.').collect::<Vec<&str>>();
+        if pts.len() < 2 {
+          return self.expected("Type.constructor");
+        } else {
+          pts[..pts.len() - 1].join(".")
+        }
+      };
+      // Sets the global ADT name
+      if adt == "Empty" {
+        adt = adt_name.clone();
+      } else if adt != adt_name {
+        return self.expected(&format!("{}.constructor", adt));
+      }
+      // Finds this case's constructor
+      let cnm = cse_name.split('.').last().unwrap().to_string();
+      let ctr = ADT::load(&adt).ok().and_then(|adt| adt.ctrs.iter().find(|ctr| ctr.name == cnm).cloned());
+      if ctr.is_none() {
+        return self.expected(&format!("a valid constructor ({}.{} doesn't exit)", adt_name, cnm));
+      }
+      // Shadows this constructor's field variables
+      let mut uses = uses.clone();
+      for (fld_name, _) in &ctr.unwrap().flds {
+        uses = shadow(&format!("{}.{}", name, fld_name), &uses);
+      }
+      // Parses the return value
       self.consume(":")?;
-      let ctr_body = self.parse_term(fid)?;
-      cses.push((ctr_name, ctr_body));
+      let cse_body = self.parse_term(fid, &uses)?;
+      cses.push((cse_name, cse_body));
       self.skip_trivia();
     }
     self.consume("}")?;
+    // Parses the motive: ': return_type'
     let moti = if self.peek_one() == Some(':') {
       self.consume(":")?;
-      Some(self.parse_term(fid)?)
+      Some(self.parse_term(fid, uses)?)
     } else {
       None
     };
-    let adt_name = if cses.is_empty() {
-      "Empty".to_string()
-    } else {
-      let first_case = &cses[0].0;
-      let parts: Vec<&str> = first_case.split('.').collect();
-      if parts.len() < 2 {
-        return Err("Expected a constructor with a datatype (e.g., 'DataType.constructor')".to_string());
-      }
-      parts[..parts.len()-1].join(".")
-    };
-    Ok(Match { adt: adt_name, name, expr, cses, moti })
+    return Ok(Match { adt, name, expr, cses, moti });
   }
 
 }

@@ -1,5 +1,6 @@
 use crate::{*};
 
+
 impl<'i> KindParser<'i> {
 
   pub fn parse_oper(&mut self) -> Result<Oper, String> {
@@ -33,7 +34,7 @@ impl<'i> KindParser<'i> {
     }
   }
 
-  pub fn parse_term(&mut self, fid: u64) -> Result<Term, String> {
+  pub fn parse_term(&mut self, fid: u64, uses: &Uses) -> Result<Term, String> {
     self.skip_trivia();
     //println!("parsing ||{}", self.input[self.index..].replace("\n",""));
 
@@ -44,9 +45,9 @@ impl<'i> KindParser<'i> {
       self.consume("(")?;
       let nam = self.parse_name()?;
       self.consume(":")?;
-      let inp = Box::new(self.parse_term(fid)?);
+      let inp = Box::new(self.parse_term(fid, uses)?);
       self.consume(")")?;
-      let bod = Box::new(self.parse_term(fid)?);
+      let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::All { nam, inp, bod }) });
@@ -57,7 +58,7 @@ impl<'i> KindParser<'i> {
       let ini = *self.index() as u64;
       self.consume("λ")?;
       let nam = self.parse_name()?;
-      let bod = Box::new(self.parse_term(fid)?);
+      let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::Lam { nam, bod }) });
@@ -67,10 +68,10 @@ impl<'i> KindParser<'i> {
     if self.starts_with("(") {
       let ini = *self.index() as u64;
       self.consume("(")?;
-      let fun = Box::new(self.parse_term(fid)?);
+      let fun = Box::new(self.parse_term(fid, uses)?);
       let mut args = Vec::new();
       while self.peek_one() != Some(')') {
-        args.push(Box::new(self.parse_term(fid)?));
+        args.push(Box::new(self.parse_term(fid, uses)?));
         self.skip_trivia();
       }
       self.consume(")")?;
@@ -87,9 +88,9 @@ impl<'i> KindParser<'i> {
     if self.starts_with("{") {
       let ini = *self.index() as u64;
       self.consume("{")?;
-      let val = Box::new(self.parse_term(fid)?);
+      let val = Box::new(self.parse_term(fid, uses)?);
       self.consume(":")?;
-      let typ = Box::new(self.parse_term(fid)?);
+      let typ = Box::new(self.parse_term(fid, uses)?);
       self.consume("}")?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
@@ -103,9 +104,9 @@ impl<'i> KindParser<'i> {
       self.consume("(")?;
       let nam = self.parse_name()?;
       self.consume(":")?;
-      let typ = Box::new(self.parse_term(fid)?);
+      let typ = Box::new(self.parse_term(fid, uses)?);
       self.consume(")")?;
-      let bod = Box::new(self.parse_term(fid)?);
+      let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::Slf { nam, typ, bod }) });
@@ -115,7 +116,7 @@ impl<'i> KindParser<'i> {
     if self.starts_with("~") {
       let ini = *self.index() as u64;
       self.consume("~")?;
-      let val = Box::new(self.parse_term(fid)?);
+      let val = Box::new(self.parse_term(fid, uses)?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::Ins { val }) });
@@ -144,8 +145,8 @@ impl<'i> KindParser<'i> {
       let ini = *self.index() as u64;
       self.consume("#(")?;
       let opr = self.parse_oper()?;
-      let fst = Box::new(self.parse_term(fid)?);
-      let snd = Box::new(self.parse_term(fid)?);
+      let fst = Box::new(self.parse_term(fid, uses)?);
+      let snd = Box::new(self.parse_term(fid, uses)?);
       self.consume(")")?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
@@ -162,21 +163,21 @@ impl<'i> KindParser<'i> {
       self.skip_trivia();
       let x = if self.peek_one() == Some('=') {
         self.consume("=")?;
-        Box::new(self.parse_term(fid)?)
+        Box::new(self.parse_term(fid, uses)?)
       } else {
         Box::new(Term::Var { nam: nam.clone() })
       };
       self.consume("{")?;
       self.consume("#0")?;
       self.consume(":")?;
-      let z = Box::new(self.parse_term(fid)?);
+      let z = Box::new(self.parse_term(fid, uses)?);
       self.consume("#+")?;
       self.consume(":")?;
-      let s = Box::new(self.parse_term(fid)?);
+      let s = Box::new(self.parse_term(fid, &shadow(&format!("{}-1",nam), uses))?);
       self.consume("}")?;
       let p = if self.peek_one() == Some(':') {
         self.consume(":")?;
-        Box::new(self.parse_term(fid)?)
+        Box::new(self.parse_term(fid, &shadow(&nam, uses))?)
       } else {
         Box::new(Term::Met {})
       };
@@ -229,8 +230,8 @@ impl<'i> KindParser<'i> {
       self.consume("let ")?;
       let nam = self.parse_name()?;
       self.consume("=")?;
-      let val = Box::new(self.parse_term(fid)?);
-      let bod = Box::new(self.parse_term(fid)?);
+      let val = Box::new(self.parse_term(fid, uses)?);
+      let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::Let { nam, val, bod }) });
@@ -242,8 +243,8 @@ impl<'i> KindParser<'i> {
       self.consume("use ")?;
       let nam = self.parse_name()?;
       self.consume("=")?;
-      let val = Box::new(self.parse_term(fid)?);
-      let bod = Box::new(self.parse_term(fid)?);
+      let val = Box::new(self.parse_term(fid, uses)?);
+      let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::Use { nam, val, bod }) });
@@ -261,7 +262,7 @@ impl<'i> KindParser<'i> {
     // LST ::= [ <term> , ... ]
     if self.starts_with("[") {
       let ini = *self.index() as u64;
-      let lst = self.parse_list(fid)?;
+      let lst = self.parse_list(fid, uses)?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       let val = Box::new(Term::new_list(&lst));
@@ -283,7 +284,7 @@ impl<'i> KindParser<'i> {
     // | ...
     if self.starts_with("data ") {
       let ini = *self.index() as u64;
-      let adt = self.parse_adt(fid)?;
+      let adt = self.parse_adt(fid, uses)?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::new_adt(&adt)) });
@@ -292,7 +293,7 @@ impl<'i> KindParser<'i> {
     // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>
     if self.starts_with("match ") {
       let ini = *self.index() as u64;
-      let mat = self.parse_match(fid)?;
+      let mat = self.parse_match(fid, uses)?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
       return Ok(Term::Src { src, val: Box::new(Term::new_match(&mat)) });
@@ -300,11 +301,19 @@ impl<'i> KindParser<'i> {
 
     // VAR ::= <name>
     let ini = *self.index() as u64;
-    let nam = self.parse_name()?;
+    let old = self.parse_name()?;
+    let nam = uses.get(&old).unwrap_or(&old).to_string();
+    //if old != nam { println!("{} -> {}", old, nam); }
     let end = *self.index() as u64;
     let src = Src::new(fid, ini, end);
     return Ok(Term::Src { src, val: Box::new(Term::Var { nam }) });
 
   }
+
+  // Parses a name that can be aliased (via the 'uses' map)
+  //pub fn parse_nick(&mut self, uses: &Uses) -> Result<String, String> {
+    //let nam = self.parse_name()?;
+    //Ok(uses.get(&nam).cloned().unwrap_or(nam))
+  //}
 
 }

@@ -1,7 +1,3 @@
-Bool
-: *
-= $(self: Bool)
-  ∀(P: ∀(x: Bool) *)
-  ∀(true: (P Bool.true))
-  ∀(false: (P Bool.false))
-  (P self)
+data Bool
+| true
+| false

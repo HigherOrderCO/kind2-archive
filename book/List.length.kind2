@@ -1,7 +1,10 @@
-List.length
-: ∀(A: *) ∀(a: (List A)) Nat
-= λA λa
-  match a {
-    List.cons: (Nat.succ (List.length A a.tail))
-    List.nil: Nat.zero
+use List.{cons,nil}
+use Nat.{succ,zero}
+
+length A (xs: (List A)) : Nat =
+  match xs {
+    cons:
+      (succ (length A xs.tail))
+    nil:
+      zero
   }

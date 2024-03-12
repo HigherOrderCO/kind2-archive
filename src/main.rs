@@ -62,7 +62,7 @@ fn main() {
   //println!("loading");
   match cmd.as_str() {
     "check" | "run" => {
-      match Book::load(arg) {
+      match Book::boot(arg) {
         Ok(book) => {
           // Auto-formats the definition.
           //let defn = book.defs.get(arg).unwrap();

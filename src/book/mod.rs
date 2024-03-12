@@ -8,17 +8,30 @@ mod parse;
 mod show;
 
 // <book> ::=
-//   DEF_ANN | <name> : <term> = <term> <book>
-//   DEF_VAL | <name> = <term> <book>
-//   END     | <eof>
+//   USE | use <alias> <book>
+//   ADT | <adt> <book>
+//   ANN | <name> : <term> = <term> <book>
+//   DEF | <name> = <term> <book>
+//   END | <eof>
 #[derive(Clone, Debug)]
 pub struct Book {
   pub defs: BTreeMap<String, Term>,
   pub fids: BTreeMap<String, u64>,
 }
 
+// Shadows a name on the uses map
+pub fn shadow(key: &str, uses: &Uses) -> Uses {
+  let mut uses = uses.clone();
+  uses.insert(key.to_string(), key.to_string());
+  return uses;
+}
+
+// Maps short names ("cons") to full names ("Data.List.cons")
+pub type Uses = im::HashMap<String, String>;
+
 impl Book {
 
+  // Creates an empty book
   pub fn new() -> Self {
     Book {
       defs: BTreeMap::new(),
@@ -26,43 +39,51 @@ impl Book {
     }
   }
 
-  pub fn load(name: &str) -> Result<Self, String> {
-    fn load_go(name: &str, book: &mut Book) -> Result<(), String> {
-      //println!("... {}", name);
-      if !book.defs.contains_key(name) {
-        let file = format!("./{}.kind2", name);
-        let text = std::fs::read_to_string(&file).map_err(|_| format!("Could not read file: {}", file))?;
-        let fid  = book.get_file_id(&file);
-        //println!("... parsing: {}", name);
-        let defs = KindParser::new(&text).parse_book(fid)?;
-        //println!("... parsed: {}", name);
-        for (def_name, def_value) in &defs.defs {
-          book.defs.insert(def_name.clone(), def_value.clone());
-        }
-        //println!("laoding deps for: {}", name);
-        for (_, def_term) in defs.defs.into_iter() {
-          let mut dependencies = BTreeSet::new();
-          def_term.get_free_vars(im::Vector::new(), &mut dependencies);
-          //println!("{} deps: {:?}", name, dependencies);
-          for ref_name in dependencies {
-            load_go(&ref_name, book)?;
+  // Creates a book, loading a term, its dependencies, and stdlib
+  pub fn boot(name: &str) -> Result<Self, String> {
+    let mut book = Book::new();
+    book.load(name)?;
+    book.load("String")?;
+    book.load("String.cons")?;
+    book.load("String.nil")?;
+    book.load("Nat")?;
+    book.load("Nat.succ")?;
+    book.load("Nat.zero")?;
+    return Ok(book);
+  }
+
+  // Handles an unbound definition
+  pub fn handle_unbound(&self, file: &str, name: &str) -> Result<(), String> {
+    return Err(format!("ERROR\n- unbound: '{}'\n- on_file: {}", name, file));
+  }
+
+  // Same as load, mutably adding to a 'book'
+  pub fn load(&mut self, name: &str) -> Result<(), String> {
+    if !self.defs.contains_key(name) {
+      // Parses a file into a new book
+      let file = format!("./{}.kind2", name);
+      let text = std::fs::read_to_string(&file).map_err(|_| format!("Could not read file: {}", file))?;
+      let fid  = self.get_file_id(&file);
+      let defs = KindParser::new(&text).parse_book(name, fid)?;
+      // Merges new book into book
+      for (def_name, def_value) in &defs.defs {
+        self.defs.insert(def_name.clone(), def_value.clone());
+      }
+      // Finds dependencies and loads them
+      for (_, def_term) in defs.defs.into_iter() {
+        let mut dependencies = BTreeSet::new();
+        def_term.get_free_vars(im::Vector::new(), &mut dependencies);
+        for ref_name in dependencies {
+          if let Err(_) = self.load(&ref_name) {
+            self.handle_unbound(&file, &ref_name)?;
           }
         }
       }
-      return Ok(());
     }
-    let mut book = Book::new();
-    load_go(name, &mut book)?;
-    load_go("String", &mut book)?;
-    load_go("String.cons", &mut book)?;
-    load_go("String.nil", &mut book)?;
-    load_go("Nat", &mut book)?;
-    load_go("Nat.succ", &mut book)?;
-    load_go("Nat.zero", &mut book)?;
-    //println!("DONE!");
-    Ok(book)
+    return Ok(());
   }
 
+  // Gets a file id from its name
   pub fn get_file_id(&mut self, name: &str) -> u64 {
     if let Some(id) = self.fids.get(name) {
       *id
@@ -73,7 +94,7 @@ impl Book {
     }
   }
 
-  // FIXME: asymptotics
+  // Gets a file name from its id (FIXME: asymptotics)
   pub fn get_file_name(&self, id: u64) -> Option<String> {
     for (name, &fid) in &self.fids {
       if fid == id {

@@ -1,7 +1,9 @@
-Bool.and
-: ∀(a: Bool) ∀(b: Bool) Bool
-= λa
-  use P = λa ∀(b: Bool) Bool
-  use true = λb b
-  use false = λb Bool.false
-  (~a P true false)
+Bool.and (a: Bool) (b: Bool) : Bool =
+  match b {
+    Bool.true: b
+    Bool.false: Bool.false
+  }
+  //use P = λa ∀(b: Bool) Bool
+  //use true = λb b
+  //use false = λb Bool.false
+  //((~a P true false) b)
