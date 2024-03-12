@@ -2,9 +2,8 @@ use crate::{*};
 use std::collections::BTreeSet;
 
 pub mod compile;
-pub mod format;
 pub mod parse;
-pub mod sugar;
+pub mod show;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Oper {
@@ -96,17 +95,7 @@ pub fn cons<A>(vector: &im::Vector<A>, value: A) -> im::Vector<A> where A: Clone
   new_vector
 }
 
-impl Oper {
-  pub fn show(&self) -> String {
-    return self.format().flatten(None);
-  }
-}
-
 impl Term {
-
-  pub fn show(&self) -> String {
-    return self.format().flatten(None);
-  }
 
   pub fn get_free_vars(&self, env: im::Vector<String>, free_vars: &mut BTreeSet<String>) {
     match self {

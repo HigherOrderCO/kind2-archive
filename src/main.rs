@@ -2,13 +2,15 @@
 #![allow(unused_imports)]
 
 mod book;
-mod form;
 mod info;
+mod show;
+mod sugar;
 mod term;
 
 use book::{*};
-use form::{*};
 use info::{*};
+use show::{*};
+use sugar::{*};
 use term::{*};
 
 use TSPL::Parser;

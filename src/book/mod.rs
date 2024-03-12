@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 mod compile;
-mod format;
 mod parse;
+mod show;
 
 // <book> ::=
 //   DEF_ANN | <name> : <term> = <term> <book>
@@ -18,10 +18,6 @@ pub struct Book {
 }
 
 impl Book {
-
-  pub fn show(&self) -> String {
-    return self.format().flatten(None);
-  }
 
   pub fn new() -> Self {
     Book {

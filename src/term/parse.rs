@@ -261,19 +261,10 @@ impl<'i> KindParser<'i> {
     // LST ::= [ <term> , ... ]
     if self.starts_with("[") {
       let ini = *self.index() as u64;
-      self.consume("[")?;
-      let mut list = Vec::new();
-      while self.peek_one() != Some(']') {
-        list.push(Box::new(self.parse_term(fid)?));
-        self.skip_trivia();
-        if self.peek_one() == Some(',') {
-          self.consume(",")?;
-        }
-      }
-      self.consume("]")?;
+      let lst = self.parse_list(fid)?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
-      let val = Box::new(Term::new_list(&crate::sugar::list::List { vals: list }));
+      let val = Box::new(Term::new_list(&lst));
       return Ok(Term::Src { src, val });
     }
 
@@ -287,75 +278,15 @@ impl<'i> KindParser<'i> {
       return Ok(Term::Src { src, val });
     }
 
-    // Let's now create the ADT parse.
     // ADT ::= data <name> <name> ... (<name> : <term>) ...
     // | <name> (<name> : <term>) ... : (<Type> <Params> ... <term> ...)
     // | ...
     if self.starts_with("data ") {
       let ini = *self.index() as u64;
-      self.consume("data ")?;
-      let name = self.parse_name()?;
-      let mut pars = Vec::new();
-      let mut idxs = Vec::new();
-      // Parses ADT parameters (if any)
-      self.skip_trivia();
-      while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
-        let par = self.parse_name()?;
-        self.skip_trivia();
-        pars.push(par);
-      }
-      // Parses ADT fields
-      while self.peek_one() == Some('(') {
-        self.consume("(")?;
-        let idx_name = self.parse_name()?;
-        self.consume(":")?;
-        let idx_type = self.parse_term(fid)?;
-        self.consume(")")?;
-        idxs.push((idx_name, idx_type));
-        self.skip_trivia();
-      }
-      // Parses ADT constructors
-      let mut ctrs = Vec::new();
-      self.skip_trivia();
-      while self.peek_one() == Some('|') {
-        self.consume("|")?;
-        let ctr_name = self.parse_name()?;
-        let mut flds = Vec::new();
-        // Parses constructor fields
-        self.skip_trivia();
-        while self.peek_one() == Some('(') {
-          self.consume("(")?;
-          let fld_name = self.parse_name()?;
-          self.consume(":")?;
-          let fld_type = self.parse_term(fid)?;
-          self.consume(")")?;
-          flds.push((fld_name, fld_type));
-          self.skip_trivia();
-        }
-        // Parses constructor return
-        self.consume(":")?;
-        let mut ctr_indices = Vec::new();
-        self.consume("(")?;
-        // Parses the type (must be fixed, equal to 'name')
-        self.consume(&name)?;
-        // Parses each parameter (must be fixed, equal to 'pars')
-        for par in &pars {
-          self.consume(par)?;
-        }
-        // Parses the indices
-        while self.peek_one() != Some(')') {
-          let ctr_index = self.parse_term(fid)?;
-          ctr_indices.push(ctr_index);
-          self.skip_trivia();
-        }
-        self.consume(")")?;
-        ctrs.push(sugar::adt::Constructor { name: ctr_name, flds, idxs: ctr_indices });
-        self.skip_trivia();
-      }
+      let adt = self.parse_adt(fid)?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
-      let adt = sugar::adt::ADT { name, pars, idxs, ctrs };
-      return Ok(Term::Src { src, val: Box::new(Term::new_adt(adt)) });
+      return Ok(Term::Src { src, val: Box::new(Term::new_adt(&adt)) });
     }
 
     // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>

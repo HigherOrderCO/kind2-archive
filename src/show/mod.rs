@@ -25,58 +25,58 @@ pub enum Style {
   Glue,
 }
 
-// A Form is a pre-format string of trees
+// A Show is a pre-format string of trees
 #[derive(Debug)]
-pub enum Form {
-  Many { style: Style, join: String, child: Vec<Box<Form>> }, // combines many texts
+pub enum Show {
+  Many { style: Style, join: String, child: Vec<Box<Show>> }, // combines many texts
   Text { value: String }, // inserts a text
   Line, // causes a line break, indenting the next line
   Inc, // increments the indentation level
   Dec, // decrements the indentation level
 }
 
-impl Form {
+impl Show {
   // Allocs a new Text node from a string slice.
-  pub fn text(txt: &str) -> Box<Form> {
-    Box::new(Form::Text { value: txt.to_string() })
+  pub fn text(txt: &str) -> Box<Show> {
+    Box::new(Show::Text { value: txt.to_string() })
   }
 
   // Allocs a new Many node.
-  pub fn many(style: Style, join: &str, child: Vec<Box<Form>>) -> Box<Form> {
-    Box::new(Form::Many { style: style, join: join.to_string(), child: child })
+  pub fn many(style: Style, join: &str, child: Vec<Box<Show>>) -> Box<Show> {
+    Box::new(Show::Many { style: style, join: join.to_string(), child: child })
   }
 
   // Allocs a new Call with given children.
-  pub fn call(join: &str, child: Vec<Box<Form>>) -> Box<Form> {
-    Form::many(Style::Call, join, child)
+  pub fn call(join: &str, child: Vec<Box<Show>>) -> Box<Show> {
+    Show::many(Style::Call, join, child)
   }
 
   // Allocs a new Pile with given children.
-  pub fn pile(join: &str, child: Vec<Box<Form>>) -> Box<Form> {
-    Form::many(Style::Pile, join, child)
+  pub fn pile(join: &str, child: Vec<Box<Show>>) -> Box<Show> {
+    Show::many(Style::Pile, join, child)
   }
 
   // Allocs a new Glue with given children.
-  pub fn glue(join: &str, child: Vec<Box<Form>>) -> Box<Form> {
-    Form::many(Style::Glue, join, child)
+  pub fn glue(join: &str, child: Vec<Box<Show>>) -> Box<Show> {
+    Show::many(Style::Glue, join, child)
   }
     
   // Allocs a new Line node.
-  pub fn line() -> Box<Form> {
-    Box::new(Form::Line)
+  pub fn line() -> Box<Show> {
+    Box::new(Show::Line)
   }
 
   // Allocs a new Inc node.
-  pub fn inc() -> Box<Form> {
-    Box::new(Form::Inc)
+  pub fn inc() -> Box<Show> {
+    Box::new(Show::Inc)
   }
 
   // Allocs a new Dec node.
-  pub fn dec() -> Box<Form> {
-    Box::new(Form::Dec)
+  pub fn dec() -> Box<Show> {
+    Box::new(Show::Dec)
   }
 
-  // Flattens the Form structure into a string, respecting indentation and width limits.
+  // Flattens the Show structure into a string, respecting indentation and width limits.
   pub fn flatten(&self, lim: Option<usize>) -> String {
     let mut out = String::new();
     if let Some(lim) = lim {
@@ -90,31 +90,31 @@ impl Form {
   // Helper function.
   pub fn flatten_into(&self, out: &mut String, fmt: bool, tab: &mut usize, lim: usize) {
     match self {
-      Form::Many { style, join, child } => {
+      Show::Many { style, join, child } => {
         match style {
           Style::Call => {
-            let add_lines = fmt && Form::no_lines(&child) && self.width(lim) >= lim;
+            let add_lines = fmt && Show::no_lines(&child) && self.width(lim) >= lim;
             for (i, c) in child.iter().enumerate() {
               if add_lines && i > 0 && i < child.len() - 1 {
-                Form::Inc.flatten_into(out, fmt, tab, lim);
+                Show::Inc.flatten_into(out, fmt, tab, lim);
               }
               if add_lines && i > 0 {
-                Form::Line.flatten_into(out, fmt, tab, lim);
+                Show::Line.flatten_into(out, fmt, tab, lim);
               }
               if !add_lines && i > 0 && i < child.len() - 1 {
                 out.push_str(&join);
               }
               c.flatten_into(out, fmt, tab, lim);
               if add_lines && i > 0 && i < child.len() - 1 {
-                Form::Dec.flatten_into(out, fmt, tab, lim);
+                Show::Dec.flatten_into(out, fmt, tab, lim);
               }
             }
           },
           Style::Pile => {
-            let add_lines = fmt && Form::no_lines(&child) && self.width(lim) >= lim;
+            let add_lines = fmt && Show::no_lines(&child) && self.width(lim) >= lim;
             for (i, c) in child.iter().enumerate() {
               if add_lines && i > 0 {
-                Form::Line.flatten_into(out, fmt, tab, lim);
+                Show::Line.flatten_into(out, fmt, tab, lim);
               }
               if !add_lines && i > 0 {
                 out.push_str(&join);
@@ -132,21 +132,19 @@ impl Form {
           },
         }
       },
-      Form::Text { value } => {
+      Show::Text { value } => {
         out.push_str(value)
       },
-      Form::Line => {
+      Show::Line => {
         if fmt {
           out.push('\n');
           out.push_str(&"  ".repeat(*tab));
-        } else {
-          out.push_str("; ");
         }
       },
-      Form::Inc => {
+      Show::Inc => {
         *tab += 1
       },
-      Form::Dec => {
+      Show::Dec => {
         *tab -= 1
       },
     }
@@ -156,10 +154,10 @@ impl Form {
   fn width(&self, lim: usize) -> usize {
     let mut total_width = 0;
     match self {
-      Form::Text { value } => {
+      Show::Text { value } => {
         total_width += value.len();
       },
-      Form::Many { join, child, .. } => {
+      Show::Many { join, child, .. } => {
         for (i, child) in child.iter().enumerate() {
           if i > 0 {
             total_width += join.len();
@@ -176,9 +174,9 @@ impl Form {
   }
 
   // Checks if there is no `Line` in a vector of ropes.
-  fn no_lines(child: &Vec<Box<Form>>) -> bool {
+  fn no_lines(child: &Vec<Box<Show>>) -> bool {
     for child in child {
-      if let Form::Line = **child {
+      if let Show::Line = **child {
         return false;
       }
     }
