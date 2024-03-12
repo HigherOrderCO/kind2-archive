@@ -1,3 +1,10 @@
+Vector
+: ∀(A: *) ∀(len: Nat) *
+= λA λlen
+  data Vector A (len: Nat)
+  | cons (len: Nat) (head: A) (tail: (Vector A len)) : (Vector A (Nat.succ len))
+  | nil : (Vector A Nat.zero)
+
 _main
 : use list = 
     (List.cons _ Nat.zero
@@ -6,3 +13,30 @@ _main
     (List.nil _))))
   (The (List Nat) list)
 = ?A
+
+//C0
+//All { nam: "len", inp: Var { nam: "Nat" }, bod:
+//All { nam: "head", inp: Var { nam: "A" }, bod:
+//All { nam: "tail", inp: App { fun: App { fun: Var { nam: "Vector" }, arg: Var { nam: "A" } }, arg: Var { nam: "len" } }, bod:
+//App { fun: App { fun: Var { nam: "P" }, arg: App { fun: Var { nam: "Nat.succ" }, arg: Var { nam: "len" } } }, arg: App { fun: App { fun: App { fun: App { fun: Var { nam: "Vector.cons" }, arg: Var { nam: "A" } }, arg: Var { nam: "len" } }, arg: Var { nam: "head" } }, arg: Var { nam: "tail" } } } } } }
+
+//ADT {
+  //name: "Vector",
+  //pars: ["A"],
+  //idxs: [("len", Var { nam: "Nat" })],
+  //ctrs: [
+    //Constructor {
+      //name: "cons",
+      //flds: [("len", Var { nam: "Nat" }), ("head", Var { nam: "A" }), ("tail", App { fun: App { fun: Var { nam: "Vector" }, arg: Var { nam: "A" } }, arg: Var { nam: "len" } })],
+      //idxs: [App { fun: Var { nam: "Nat.succ" }, arg: Var { nam: "len" } }, App { fun: App { fun: App { fun: App { fun: Var { nam: "Vector.cons" }, arg: Var { nam: "A" } }, arg: Var { nam: "len" } }, arg: Var { nam: "head" } }, arg: Var { nam: "tail" } }]
+    //},
+    //Constructor {
+      //name: "nil",
+      //flds: [],
+      //idxs: [
+        //Var { nam: "Nat.zero" },
+        //App { fun: Var { nam: "Vector.nil" }, arg: Var { nam: "A" } }
+      //]
+    //}
+  //]
+//}

@@ -1,16 +1,5 @@
 use crate::{*};
 
-
-//CONTEXT:
-//./mod.rs//
-//./sugar.rs//
-//./../book/mod.rs//
-//./../../book/Bool.kind2//
-//./../../book/Nat.kind2//
-//./../../book/List.kind2//
-//./../../book/Sigma.kind2//
-//./../../book/Monad.kind2//
-
 impl Oper {
 
   pub fn format(&self) -> Box<Form> {
@@ -51,75 +40,12 @@ impl Term {
 
     // Formats a List
     if let Some(list) = self.as_list() {
-      if list.len() == 0 {
-        return Form::text("[]");
-      } else {
-        return Form::call("", vec![
-          Form::text("["),
-          Form::pile(", ", list.iter().map(|x| x.format_go()).collect()),
-          Form::text("]"),
-        ]);
-      }
+      return list.format();
     }
 
     // Formats an ADT
     if let Some(adt) = self.as_adt() {
-      let mut adt_form = vec![];
-
-      // ADT name
-      adt_form.push(Form::glue("", vec![
-        Form::text("data "),
-        Form::text(&adt.name),
-      ]));
-
-      // ADT indices
-      for (nam,typ) in adt.idxs.iter() {
-        adt_form.push(Form::call("", vec![
-          Form::glue("", vec![
-            Form::text("("),
-            Form::text(nam),
-            Form::text(": "),
-          ]),
-          typ.format_go(),
-          Form::text(")"),
-        ]));
-      }
-
-      // ADT constructors
-      adt_form.push(Form::glue("", adt.ctrs.iter().map(|ctr| {
-        let mut ctr_form = vec![];
-
-        // Constructor Name
-        ctr_form.push(Form::glue("", vec![
-          Form::line(),
-          Form::text("| "),
-          Form::text(&ctr.name),
-        ]));
-
-        // Constructor Fields
-        for (nam,typ) in ctr.flds.iter() {
-          ctr_form.push(Form::call("", vec![
-            Form::glue("", vec![
-              Form::text("("),
-              Form::text(nam),
-              Form::text(": "),
-            ]),
-            typ.format_go(),
-            Form::text(")"),  
-          ]));
-        }
-
-        // Constructor Return
-        ctr_form.push(Form::glue("", vec![
-          Form::text(": "),
-          ctr.rtyp.format_go(),
-        ]));
-
-        return Form::call(" ", ctr_form);
-
-      }).collect()));
-
-      return Form::glue(" ", adt_form);
+      return adt.format();
     }
 
     match self {
@@ -296,6 +222,103 @@ impl Term {
         Form::text(&format!("{}", nat))
       },
     }
+  }
+
+}
+
+impl crate::sugar::list::List {
+  
+  pub fn format(&self) -> Box<Form> {
+    if self.vals.len() == 0 {
+      return Form::text("[]");
+    } else {
+      return Form::call("", vec![
+        Form::text("["),
+        Form::pile(", ", self.vals.iter().map(|x| x.format_go()).collect()),
+        Form::text("]"),
+      ]);
+    }
+  }
+
+}
+
+impl crate::sugar::adt::ADT {
+  
+  pub fn format(&self) -> Box<Form> {
+
+    let mut adt_form = vec![];
+
+    // ADT name
+    adt_form.push(Form::glue("", vec![
+      Form::text("data "),
+      Form::text(&self.name),
+    ]));
+
+    // ADT parameters
+    for par in self.pars.iter() {
+      adt_form.push(Form::text(par));
+    }
+
+    // ADT indices
+    for (nam,typ) in self.idxs.iter() {
+      adt_form.push(Form::call("", vec![
+        Form::glue("", vec![
+          Form::text("("),
+          Form::text(nam),
+          Form::text(": "),
+        ]),
+        typ.format_go(),
+        Form::text(")"),
+      ]));
+    }
+
+    // ADT constructors
+    adt_form.push(Form::glue("", self.ctrs.iter().map(|ctr| {
+      let mut ctr_form = vec![];
+
+      // Constructor Name
+      ctr_form.push(Form::glue("", vec![
+        Form::line(),
+        Form::text("| "),
+        Form::text(&ctr.name),
+      ]));
+
+      // Constructor Fields
+      for (nam,typ) in ctr.flds.iter() {
+        ctr_form.push(Form::call("", vec![
+          Form::glue("", vec![
+            Form::text("("),
+            Form::text(nam),
+            Form::text(": "),
+          ]),
+          typ.format_go(),
+          Form::text(")"),  
+        ]));
+      }
+
+      // Constructor Return
+      ctr_form.push(Form::glue("", vec![
+        Form::text(": "),
+        Form::call(" ", {
+          let mut call = vec![];
+          call.push(Form::text(&format!("({}", &self.name)));
+          for par in &self.pars {
+            call.push(Form::text(par));
+          }
+          for idx in &ctr.idxs {
+            call.push(idx.format_go());
+          }
+          call.push(Form::text(")"));
+          call
+        })
+      ]));
+
+      return Form::call(" ", ctr_form);
+
+    }).collect()));
+
+    return Form::glue(" ", adt_form);
+
   }
 
 }
