@@ -1,8 +1,3 @@
-List
-: ∀(T: *) *
-= λT
-  $(self: (List T))
-  ∀(P: ∀(xs: (List T)) *)
-  ∀(cons: ∀(head: T) ∀(tail: (List T)) (P (List.cons T head tail)))
-  ∀(nil: (P (List.nil T)))
-  (P self)
+data List T
+| cons (head: T) (tail: (List T))
+| nil

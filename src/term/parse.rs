@@ -290,31 +290,13 @@ impl<'i> KindParser<'i> {
     }
 
     // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>
-    // The ADT match syntax is similar to the numeric match syntax, including the same optionals,
-    // but it allows any number of <name>:<term> cases. Also, similarly to the List syntax, there
-    // is no built-in "Mat" syntax on the Term type, so we must convert it to an applicative form:
-    //   match x = val {
-    //     List.cons: x.head
-    //     List.nil: #0
-    //   }: #U60
-    // Would be converted to:
-    //   (~val _ (λx.head λx.tail x.tail) 0)
-    // Which is the same as:
-    //   (APP (APP (APP (INS (VAR "val")) MET) (LAM "x.head" (LAM "x.tail" (VAR "x.head")))) (NUM 0))
-    // Note that, in our notation, fields are NOT written by the user. For example, this is WRONG:
-    //   match x = val {
-    //     (List.cons head tail): head
-    //     List.nil: #0
-    //   }: #U60
-    // Instead, we write only the constructors, and infer the fields from the datatype. To make
-    // this possible, we need to FIND the datatype that is currently matched. To do so, we get the
-    // first constructor name, remove the last `.part` (ex: `Foo.Bar.Tic.tac` will become
-    // `Foo.Bar.Tic`), and call the function `ADT::load(name: &str) -> ADT`. This will return a
-    // struct including the type's constructors and fields. We can then use it to create the
-    // lambdas when desugaring. For example, in the case above, the `λx.head` and `λx.tail` lambdas
-    // were created on the `List.cons` case, because the matched name is `x`, and the cons
-    // constructor has a `head` and a `tail` field.
-    // (TODO)
+    if self.starts_with("match ") {
+      let ini = *self.index() as u64;
+      let mat = self.parse_match(fid)?;
+      let end = *self.index() as u64;
+      let src = Src::new(fid, ini, end);
+      return Ok(Term::Src { src, val: Box::new(Term::new_match(&mat)) });
+    }
 
     // VAR ::= <name>
     let ini = *self.index() as u64;

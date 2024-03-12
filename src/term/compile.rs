@@ -1,7 +1,5 @@
 use crate::{*};
 
-//./mod.rs//
-
 impl Oper {
 
   pub fn to_ctr(&self) -> &'static str {

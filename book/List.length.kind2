@@ -1,7 +1,7 @@
 List.length
 : ∀(A: *) ∀(a: (List A)) Nat
 = λA λa
-  use P = λx Nat
-  use cons = λa.head λa.tail (Nat.succ (List.length A a.tail))
-  use nil = Nat.zero
-  (~a P cons nil)
+  match a {
+    List.cons: (Nat.succ (List.length A a.tail))
+    List.nil: Nat.zero
+  }

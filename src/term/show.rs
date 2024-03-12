@@ -195,7 +195,7 @@ impl Term {
           Show::inc(),
           val.format_go(),
           Show::dec(),
-          Show::line(),
+          Show::semi(),
           bod.format_go(),
         ])
       },
@@ -207,7 +207,7 @@ impl Term {
           Show::inc(),
           val.format_go(),
           Show::dec(),
-          Show::line(),
+          Show::semi(),
           bod.format_go(),
         ])
       },

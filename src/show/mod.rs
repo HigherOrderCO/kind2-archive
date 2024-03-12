@@ -31,6 +31,7 @@ pub enum Show {
   Many { style: Style, join: String, child: Vec<Box<Show>> }, // combines many texts
   Text { value: String }, // inserts a text
   Line, // causes a line break, indenting the next line
+  Semi, // like Line, but inserts a Semicolon if inlined
   Inc, // increments the indentation level
   Dec, // decrements the indentation level
 }
@@ -64,6 +65,11 @@ impl Show {
   // Allocs a new Line node.
   pub fn line() -> Box<Show> {
     Box::new(Show::Line)
+  }
+
+  // Allocs a new Semi node.
+  pub fn semi() -> Box<Show> {
+    Box::new(Show::Semi)
   }
 
   // Allocs a new Inc node.
@@ -139,6 +145,14 @@ impl Show {
         if fmt {
           out.push('\n');
           out.push_str(&"  ".repeat(*tab));
+        }
+      },
+      Show::Semi => {
+        if fmt {
+          out.push('\n');
+          out.push_str(&"  ".repeat(*tab));
+        } else {
+          out.push_str("; ");
         }
       },
       Show::Inc => {

@@ -23,6 +23,17 @@ pub struct Constructor {
   pub idxs: Vec<Term>, // constructor type indices
 }
 
+#[derive(Debug)]
+pub struct Match {
+  pub adt: String, // datatype
+  pub name: String, // scrutinee name
+  pub expr: Term, // structinee expression
+  pub cses: Vec<(String,Term)>, // matched cases
+  pub moti: Option<Term>, // motive
+}
+
+// Examples:
+// 
 // The Vector type:
 //
 //   data Vector A (len: Nat)
@@ -78,6 +89,19 @@ pub struct Constructor {
 //       },
 //     ],
 //   };
+//
+// A pattern-match is represented as: 
+//
+//   match name = expr {
+//     ADT.foo: ...
+//     ADT.bar: ...
+//   }: motive
+//
+// Note:
+// 1. The `= expr` can be omitted. Will default to `Var { name }`.
+// 2. The `: motive` can be omitted. Will default to `Met {}`.
+// 3. The ADT is obtained from the 'ADT.ctr' cases.
+// 4. If there are no cases, ADT is defaulted to 'Empty'.
 
 // Nat
 // ---
@@ -444,6 +468,108 @@ impl Term {
     return term;
   }
 
+  // TODO: implement the new_match function.
+  // 
+  // Builds a λ-encoded pattern-match. For example, the expression:
+  //   match x = (f arg) {
+  //     cons: (U60.add x.head (sum x.tail))
+  //     nil: #0
+  //   }: #U60
+  // Is converted to:
+  //   use x.P = λx.len λx #U60
+  //   use x.cons = λx.head λx.tail ((U60.add x.head) (sum x.tail))
+  //   use x.nil = λx.len λx #U60
+  //   (((~(f arg) x.P) x.cons) x.nil)
+  pub fn new_match(mat: &Match) -> Term {
+    let adt = ADT::load(&mat.adt).expect(&format!("Cannot load datatype '{}'", &mat.adt));
+
+    let mut term: Term;
+
+    // 1. Create the motive's term
+    let mut motive;
+    if let Some(moti) = &mat.moti {
+      // Creates the first lambda: 'λx <motive>'
+      motive = Term::Lam {
+        nam: mat.name.clone(),
+        bod: Box::new(moti.clone()),
+      };
+      // Creates a lambda for each index: 'λindices ... λx <motive>'
+      for (idx_name, _) in adt.idxs.iter().rev() {
+        motive = Term::Lam {
+          nam: idx_name.clone(),
+          bod: Box::new(motive),
+        };
+      }
+    } else {
+      // If there is no explicit motive, default to a metavar
+      motive = Term::Met {};
+    }
+
+    // 2. Create each constructor's term
+    let mut ctrs: Vec<Term> = Vec::new();
+    for ctr in &adt.ctrs {
+      // Find this constructor's case
+      let found = mat.cses.iter().find(|(case_name, _)| {
+        return case_name == &format!("{}.{}", adt.name, ctr.name);
+      });
+      if let Some((_, case_term)) = found {
+        // If it is present, build its term
+        let mut ctr_term = case_term.clone();
+        for (fld_name, _) in ctr.flds.iter().rev() {
+          ctr_term = Term::Lam {
+            nam: format!("{}.{}", mat.name, fld_name.clone()),
+            bod: Box::new(ctr_term),
+          };
+        }
+        ctrs.push(ctr_term);
+      } else {
+        // Otherwise, show an error. TODO: improve the error reporting here
+        println!("Missing case for constructor '{}' on {} match.", ctr.name, mat.adt);
+        std::process::exit(0);
+      }
+    }
+
+    // 3. Wrap Ins around term
+    term = Term::Ins {
+      val: Box::new(mat.expr.clone())
+    };
+
+    // 4. Apply the motive, making a Var for it
+    term = Term::App {
+      fun: Box::new(term),
+      arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
+    };
+
+    // 5. Apply each constructor (by name)
+    for ctr in &adt.ctrs {
+      term = Term::App {
+        fun: Box::new(term),
+        arg: Box::new(Term::Var { nam: format!("{}.{}", mat.name, ctr.name) }),
+      };
+    }
+
+    // 6. Create the local 'use' definition for each term
+    for (i,ctr) in adt.ctrs.iter().enumerate().rev() {
+      term = Term::Use {
+        nam: format!("{}.{}", mat.name, ctr.name),
+        val: Box::new(ctrs[i].clone()),
+        bod: Box::new(term)
+      };
+    }
+
+    // 7. Create the local 'use' definition for the motive
+    term = Term::Use {
+      nam: format!("{}.P", mat.name),
+      val: Box::new(motive),
+      bod: Box::new(term)
+    };
+
+    println!("PARSED:\n{}", term.show());
+
+    // 8. Return 'term'
+    return term;
+  }
+
 }
 
 impl ADT {
@@ -558,6 +684,39 @@ impl ADT {
 // Parser
 // ------
 
+impl Match {
+
+  pub fn format(&self) -> Box<Show> {
+    Show::pile(" ", vec![
+      Show::glue(" ", vec![
+        Show::text("match"),
+        Show::text(&self.name),
+        Show::text("="),
+        self.expr.format_go(),  
+      ]),
+      Show::glue(" ", vec![
+        Show::text("{"),
+        Show::pile("; ", self.cses.iter().map(|(name,term)| {
+          Show::glue(" ", vec![
+            Show::text(name),
+            Show::text(":"),
+            term.format_go(),
+          ])
+        }).collect()),
+      ]),
+      if let Some(moti) = &self.moti {
+        Show::glue(" ", vec![
+          Show::text(":"),
+          moti.format_go()
+        ])
+      } else {
+        Show::text("")
+      }
+    ])
+  }
+
+}
+
 impl<'i> KindParser<'i> {
 
   pub fn parse_list(&mut self, fid: u64) -> Result<crate::sugar::List, String> {
@@ -652,6 +811,57 @@ impl<'i> KindParser<'i> {
       self.skip_trivia();
     }
     return Ok(sugar::ADT { name, pars, idxs, ctrs });
+  }
+
+  // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>
+  // The ADT match syntax is similar to the numeric match syntax, including the same optionals,
+  // but it allows any number of <name>:<term> cases. Also, similarly to the List syntax, there
+  // is no built-in "Mat" syntax on the Term type, so we must convert it to an applicative form:
+  //   match x = val {
+  //     List.cons: x.head
+  //     List.nil: #0
+  //   }: #U60
+  // Would be converted to:
+  //   (~val _ (λx.head λx.tail x.tail) 0)
+  // Which is the same as:
+  //   (APP (APP (APP (INS (VAR "val")) MET) (LAM "x.head" (LAM "x.tail" (VAR "x.head")))) (NUM 0))
+  pub fn parse_match(&mut self, fid: u64) -> Result<Match, String> {
+    self.consume("match ")?;
+    let name = self.parse_name()?;
+    self.skip_trivia();
+    let expr = if self.peek_one() == Some('=') { 
+      self.consume("=")?;
+      self.parse_term(fid)?
+    } else {
+      Term::Var { nam: name.clone() }  
+    };
+    self.consume("{")?;
+    let mut cses = Vec::new();
+    while self.peek_one() != Some('}') {
+      let ctr_name = self.parse_name()?;
+      self.consume(":")?;
+      let ctr_body = self.parse_term(fid)?;
+      cses.push((ctr_name, ctr_body));
+      self.skip_trivia();
+    }
+    self.consume("}")?;
+    let moti = if self.peek_one() == Some(':') {
+      self.consume(":")?;
+      Some(self.parse_term(fid)?)
+    } else {
+      None
+    };
+    let adt_name = if cses.is_empty() {
+      "Empty".to_string()
+    } else {
+      let first_case = &cses[0].0;
+      let parts: Vec<&str> = first_case.split('.').collect();
+      if parts.len() < 2 {
+        return Err("Expected a constructor with a datatype (e.g., 'DataType.constructor')".to_string());
+      }
+      parts[..parts.len()-1].join(".")
+    };
+    Ok(Match { adt: adt_name, name, expr, cses, moti })
   }
 
 }
