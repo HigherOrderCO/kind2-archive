@@ -293,10 +293,11 @@ impl<'i> KindParser<'i> {
     // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>
     if self.starts_with("match ") {
       let ini = *self.index() as u64;
-      let mat = self.parse_match(fid, uses)?;
+      let mch = self.parse_match(fid, uses)?;
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
-      return Ok(Term::Src { src, val: Box::new(Term::new_match(&mat)) });
+      return Ok(Term::Src { src, val: Box::new(Term::Mch { mch: Box::new(mch) }) });
+      //return Ok(Term::Src { src, val: Box::new(Term::new_match(&mch)) });
     }
 
     // VAR ::= <name>

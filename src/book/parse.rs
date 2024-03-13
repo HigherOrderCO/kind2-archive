@@ -71,69 +71,139 @@ impl<'i> KindParser<'i> {
     let nam = uses.get(&nam).unwrap_or(&nam).to_string();
     self.skip_trivia();
 
-    // Parameters (optional)
-    let mut pars = vec![];
+    // Untyped Arguments (optional)
+    let mut args = im::Vector::new();
     while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
       let par = self.parse_name()?;
       self.skip_trivia();
-      pars.push(par);
+      args.push_back((par, Term::Met{}));
     }
 
-    // Arguments (optional)
-    let mut args = vec![];
+    // Typed Arguments (optional)
     while self.peek_one() == Some('(') {
       self.consume("(")?;
       let arg_name = self.parse_name()?;
       self.consume(":")?;
       let arg_type = self.parse_term(fid, uses)?;
       self.consume(")")?;
-      args.push((arg_name, arg_type));
+      args.push_back((arg_name, arg_type));
       self.skip_trivia();
     }
 
     // Type annotation (optional)
     let mut typ;
+    let ann;
     if self.peek_one() == Some(':') {
       self.consume(":")?;
       typ = self.parse_term(fid, uses)?;
+      ann = true;
     } else {
       typ = Term::Met {};
+      ann = false;
     }
 
     // Value (mandatory)
     self.consume("=")?;
     let mut val = self.parse_term(fid, uses)?;
 
-    // Adds arguments to val/typ
-    for (arg_nam, arg_typ) in args.iter().rev() {
-      typ = Term::All { nam: arg_nam.clone(), inp: Box::new(arg_typ.clone()), bod: Box::new(typ.clone()) };
-      val = Term::Lam { nam: arg_nam.clone(), bod: Box::new(val.clone()) };
-    }
+    // Adds lambdas/foralls for each argument
+    typ.add_alls(args.clone());
+    val.add_lams(args.clone());
 
-    // Adds parameters to val/typ
-    for par in pars.iter().rev() {
-      typ = Term::All { nam: par.clone(), inp: Box::new(Term::Met{}), bod: Box::new(typ.clone()) };
-      val = Term::Lam { nam: par.clone(), bod: Box::new(val.clone()) };
-    }
+    // Removes syntax-sugars from the AST
+    typ.desugar();
+    val.desugar();
 
-    //println!("- def: {}", nam);
-    //println!("- typ: {}", typ.show());
-    //println!("- val: {}", val.show());
+    //println!("{}", nam);
+    //println!(": {}", typ.show());
+    //println!("= {}", val.show());
+    //println!("");
 
-    return Ok((nam, Term::Ann { chk: false, val: Box::new(val), typ: Box::new(typ) }));
+    return Ok((nam, Term::Ann { chk: !ann, val: Box::new(val), typ: Box::new(typ) }));
   }
 
+  // Parses a whole file into a book.
   pub fn parse_book(&mut self, name: &str, fid: u64) -> Result<Book, String> {
     let mut book = Book::new();
+    // Parses all top-level 'use' declarations.
     let mut uses = self.parse_uses(fid)?;
-    // Adds the default 'use Path.to.file'
+    // Each file has an implicit 'use Path.to.file'. We add it here:
     uses.insert(name.split('.').last().unwrap().to_string(), name.to_string());
+    // Parses all definitions.
     while *self.index() < self.input().len() {
       let (name, term) = self.parse_def(fid, &mut uses)?;
       book.defs.insert(name, term);
       self.skip_trivia();
     }
     Ok(book)
+  }
+
+}
+
+impl Term {
+
+  // Wraps a Lam around this term.
+  fn add_lam(&mut self, arg: &str) {
+    *self = Term::Lam {
+      nam: arg.to_string(),
+      bod: Box::new(std::mem::replace(self, Term::Met {})),
+    };
+  }
+
+  // Wraps many lams around this term. Linearizes when possible.
+  fn add_lams(&mut self, args: im::Vector<(String,Term)>) {
+    // Passes through Src
+    if let Term::Src { val, .. } = self {
+      val.add_lams(args);
+      return;
+    }
+    // Passes through Ann
+    if let Term::Ann { val, .. } = self {
+      val.add_lams(args);
+      return;
+    }
+    // Linearizes a numeric pattern match
+    if let Term::Mat { nam, z, s, .. } = self {
+      if args.len() >= 1 && args[0].0 == *nam {
+        let (head, tail) = args.split_at(1);
+        z.add_lams(tail.clone());
+        s.add_lams(tail.clone());
+        self.add_lam(&head[0].0);
+        return;
+      }
+    }
+    // Linearizes a user-defined ADT match
+    if let Term::Mch { mch } = self {
+      let Match { name, cses, .. } = &mut **mch;
+      if args.len() >= 1 && args[0].0 == *name {
+        let (head, tail) = args.split_at(1);
+        for (_, cse) in cses {
+          cse.add_lams(tail.clone());
+        }
+        self.add_lam(&head[0].0);
+        return;
+      }
+    }
+    // Prepend remaining lambdas
+    for (nam, _) in args.iter().rev() {
+      self.add_lam(&nam);
+    }
+  }
+
+  // Wraps an All around this term.
+  fn add_all(&mut self, arg: &str, typ: &Term) {
+    *self = Term::All {
+      nam: arg.to_string(),
+      inp: Box::new(typ.clone()),
+      bod: Box::new(std::mem::replace(self, Term::Met {})),
+    };
+  }
+
+  // Wraps many Lams around this term.
+  fn add_alls(&mut self, args: im::Vector<(String,Term)>) {
+    for (nam, typ) in args.iter().rev() {
+      self.add_all(&nam, typ);
+    }
   }
 
 }

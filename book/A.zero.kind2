@@ -1,0 +1,2 @@
+A.zero : A =
+  ~λP λs λz (z λTλt(t))

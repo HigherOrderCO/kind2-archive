@@ -2,14 +2,149 @@
 //| cons (len: Nat) (head: A) (tail: (Vector A len)) : (Vector A (Nat.succ len))
 //| nil : (Vector A Nat.zero)
 
-_main
-: use list = 
-    (List.cons _ Nat.zero
-    (List.cons _ 1
-    (List.cons _ (Nat.succ (Nat.succ Nat.zero))
-    (List.nil _))))
-  (The (List Nat) list)
-= ?A
+use Nat.{succ,zero}
+
+_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
+  match a {
+    succ: match b {
+      succ: ?A
+      zero: ?B
+    }
+    zero: match b {
+      succ: ?C
+      zero: ?D
+    }
+  }
+
+  //λa λb λe
+  //use a.P    = _
+  //use a.succ = λa.pred λb λe ?A
+  //use a.zero = λb λe ?B
+  //({ (~a a.P a.succ a.zero)
+   //: ∀(b: Nat) ∀(e: (Equal A a b)) _}
+   //b e)
+
+  //({(~a
+    //_
+    //λa.pred λe2 ?A
+    //λe2 ?B
+  //): ∀(e2: (Equal A a b)) _} e)
+
+//_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
+  //match a {
+    //succ: match b {
+      //succ: ?A
+      //zero: ?B
+    //}
+    //zero: match b {
+      //succ: ?C
+      //zero: ?D
+    //}
+  //}
+
+
+  //λa (~a _
+    //λap λb (~b _
+      //λbp λe ?SS
+      //λe ?SZ
+    //)
+    //λb (~b _
+      //λbp λe ?ZS
+      //λe ?ZZ
+    //)
+  //)
+
+//match x {
+//}
+
+//_main
+//: ∀(A0: *) ∀(X: *) ∀(R: *)
+  //use F = ∀(x: X) ∀(a0: A0) R
+  //use G = ∀(a0: A0) ∀(x: X) R
+  //∀(f: F) G
+//= λA0 λX λR λf
+  //λa0 λx
+  //(f x a0)
+
+//_main
+//: ∀(A0: *) ∀(A1: *) ∀(X: *) ∀(R: *)
+  //use F = ∀(x: X) ∀(a0: A0) R
+  //use G = ∀(a0: A0) ∀(a1: A1) ∀(x: X) R
+  //∀(f: F) G
+//= λA0 λA1 λX λR λf
+  //λa0 λa1 λx
+  //(f x a0 a1)
+
+//_main : ∀(a: Nat) ∀(b: Nat) ∀(e: (Equal A a b)) (Equal A a b) =
+  //λa (~a _
+    //λap λb (~b _
+      //λbp λe ?A
+      //λe ?B)
+    //λb (~b _
+      //λbp λe ?C
+      //λe ?D)
+  //)
+
+
+//_main : ∀(a: A) ∀(b: A) ∀(e: (Equal A a b)) (Equal A a b) =
+  //λa (~a _
+    //λat λb (~b _
+      //λbt λe ?SS
+      //λbt λe ?SZ
+    //)
+    //λat λb (~b _
+      //λbt λe ?ZS
+      //λbt λe ?ZZ
+    //)
+  //)
+
+//_main : ∀(a: A) ∀(b: A) ∀(e: (Equal A a b)) (Equal A a b) =
+  //λa (~a _
+    //λat λb (at (~b
+      //λbt λap (bt λbp (REC ap bp))
+      //_
+    //))
+    //λat λb ?b
+  //)
+
+//_main : ∀(a: (List Nat)) ∀(b: (List Nat)) ∀(e: (Equal (List Nat) a b)) (Equal (List Nat) a b) =
+  //λa
+  //(~a _
+    //λa.head λa.tail λb (~b _
+      //λb.head λb.tail λe ?A
+      //λe ?B)
+    //λb λe ?C
+  //)
+
+//_main : ∀(a: (List Nat)) ∀(b: (List Nat)) ∀(e: (Equal (List Nat) a b)) (Equal (List Nat) a b) =
+  //λa
+  //(~a _
+    //λa.fields λb (a.fields (~b _
+      //λb.head λb.tail λa.head λa.tail λe ?A
+      //λe ?B))
+    //λb λe ?C
+  //)
+
+
+//match a {
+  //cons: match b {
+    //cons: ... a.tail ...
+    //nil: ... a.tail ...
+  //}
+  //nil: match b {
+    //cons:
+    //nil: 
+  //}
+//}
+
+//_main
+//: use list = 
+    //(List.cons _ Nat.zero
+    //(List.cons _ 1
+    //(List.cons _ (Nat.succ (Nat.succ Nat.zero))
+    //(List.nil _))))
+  //(The (List Nat) list)
+//= ?A
 
 
 //C0

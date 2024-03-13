@@ -1,13 +1,15 @@
 use crate::{*};
 
+//./../term/mod.rs//
+
 // A List.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct List {
   pub vals: Vec<Box<Term>>,
 }
 
 // An Algebraic Data Type (ADT).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ADT {
   pub name: String,
   pub pars: Vec<String>, // parameters
@@ -22,11 +24,14 @@ pub struct Constructor {
   pub idxs: Vec<Term>, // constructor type indices
 }
 
-#[derive(Debug)]
+// NOTE: we've just added the 'with' field to the 'match' sugar.
+// We must now refactor some functions to enable it.
+#[derive(Debug, Clone)]
 pub struct Match {
   pub adt: String, // datatype
   pub name: String, // scrutinee name
   pub expr: Term, // structinee expression
+  pub with: Vec<(String,Term)>, // terms to move in
   pub cses: Vec<(String,Term)>, // matched cases
   pub moti: Option<Term>, // motive
 }
@@ -91,7 +96,7 @@ pub struct Match {
 //
 // A pattern-match is represented as: 
 //
-//   match name = expr {
+//   match name = expr with (a: A) (b: B) ... {
 //     ADT.foo: ...
 //     ADT.bar: ...
 //   }: motive
@@ -101,6 +106,32 @@ pub struct Match {
 // 2. The `: motive` can be omitted. Will default to `Met {}`.
 // 3. The ADT is obtained from the 'ADT.ctr' cases.
 // 4. If there are no cases, ADT is defaulted to 'Empty'.
+// 5. The 'with' clause is optional.
+//
+// The 'with' clause moves outer vars inwards, linearizing them. For example:
+//   let a = (f y)
+//   match x {
+//     tic: a
+//     tac: a
+//   }
+// Would, normally, cause 'a' to be *cloned*. This has two problems:
+// 1. Cloning can have large efficiency costs in some runtimes, such as the HVM.
+// 2. If 'x' occurs in the type of 'a', it won't get specialized, blocking proofs.
+// The 'with' clause allows us to solve both issues. For example:
+//   let a = (f y)
+//   match x with a {
+//     tic: a
+//     tac: a
+//   }
+// This expression is desugared as:
+//   let a = (f y)
+//   let b = (g y)
+//   ({(match x with (a: A) (b: B) ... {
+//     tic: λa a
+//     tac: λa a
+//   }): ∀(a: A) ∀(b: B) _} a b)
+// Or, in raw terms, the 'match_expr' is changed to:
+//   (APP (APP (ANN match_expr (ALL "a" A (ALL "b" B ... MET))) a) b)
 
 // Nat
 // ---
@@ -467,18 +498,16 @@ impl Term {
     return term;
   }
 
-  // TODO: implement the new_match function.
-  // 
   // Builds a λ-encoded pattern-match. For example, the expression:
-  //   match x = (f arg) {
-  //     cons: (U60.add x.head (sum x.tail))
-  //     nil: #0
+  //   match x = (f arg) with (a: A) (b: B) {
+  //     Vector.cons: (U60.add x.head (sum x.tail))
+  //     Vector.nil: #0
   //   }: #U60
   // Is converted to:
-  //   use x.P = λx.len λx #U60
-  //   use x.cons = λx.head λx.tail ((U60.add x.head) (sum x.tail))
-  //   use x.nil = λx.len λx #U60
-  //   (((~(f arg) x.P) x.cons) x.nil)
+  //   use x.P = λx.len λx ∀(a: A) ∀(b: B) #U60
+  //   use x.cons = λx.head λx.tail λa λb ((U60.add x.head) (sum x.tail))
+  //   use x.nil = λx.len λa λb #0
+  //   (({(((~(f arg) x.P) x.cons) x.nil): ∀(a: A) ∀(b: B) _} a) b)
   pub fn new_match(mat: &Match) -> Term {
     let adt = ADT::load(&mat.adt).expect(&format!("Cannot load datatype '{}'", &mat.adt));
 
@@ -499,6 +528,14 @@ impl Term {
           bod: Box::new(motive),
         };
       }
+      // Creates a forall for each moved value: 'λindices ... λx ∀(a: A) ... <motive>'
+      for (nam, typ) in mat.with.iter().rev() {
+        motive = Term::All {
+          nam: nam.clone(),
+          inp: Box::new(typ.clone()),
+          bod: Box::new(motive),
+        };
+      }
     } else {
       // If there is no explicit motive, default to a metavar
       motive = Term::Met {};
@@ -512,8 +549,16 @@ impl Term {
         return case_name == &format!("{}.{}", adt.name, ctr.name);
       });
       if let Some((_, case_term)) = found {
-        // If it is present, build its term
+        // If it is present...
         let mut ctr_term = case_term.clone();
+        // Adds moved value lambdas
+        for (nam, _) in mat.with.iter().rev() {
+          ctr_term = Term::Lam {
+            nam: nam.clone(),
+            bod: Box::new(ctr_term),
+          };
+        }
+        // Adds field lambdas
         for (fld_name, _) in ctr.flds.iter().rev() {
           ctr_term = Term::Lam {
             nam: format!("{}.{}", mat.name, fld_name.clone()),
@@ -547,7 +592,32 @@ impl Term {
       };
     }
 
-    // 6. Create the local 'use' definition for each term
+    // 6. Annotates with the moved var foralls
+    if mat.with.len() > 0 {
+      let mut ann_type = Term::Met {};
+      for (nam, typ) in mat.with.iter().rev() {
+        ann_type = Term::All {
+          nam: nam.clone(),
+          inp: Box::new(typ.clone()),
+          bod: Box::new(ann_type),
+        };
+      }
+      term = Term::Ann {
+        val: Box::new(term),
+        typ: Box::new(ann_type),
+        chk: true,
+      };
+    }
+
+    // 7. Applies each moved var
+    for (nam, _) in mat.with.iter() {
+      term = Term::App {
+        fun: Box::new(term),
+        arg: Box::new(Term::Var { nam: nam.clone() }),
+      };  
+    }
+
+    // 8. Create the local 'use' definition for each term
     for (i,ctr) in adt.ctrs.iter().enumerate().rev() {
       term = Term::Use {
         nam: format!("{}.{}", mat.name, ctr.name),
@@ -556,7 +626,7 @@ impl Term {
       };
     }
 
-    // 7. Create the local 'use' definition for the motive
+    // 9. Create the local 'use' definition for the motive
     term = Term::Use {
       nam: format!("{}.P", mat.name),
       val: Box::new(motive),
@@ -565,7 +635,7 @@ impl Term {
 
     //println!("PARSED:\n{}", term.show());
 
-    // 8. Return 'term'
+    // 10. Return 'term'
     return term;
   }
 
@@ -577,14 +647,15 @@ impl ADT {
   pub fn load(name: &str) -> Result<ADT, String> {
     let book = Book::boot(name)?;
     if let Some(term) = book.defs.get(name) {
-      let mut term = &term.clean();
-      // Skips all Anns
-      while let Term::Ann { val, .. } = term {
-        term = val;
-      }
-      // Skips all Lams
-      while let Term::Lam { bod, .. } = term {
-        term = bod;
+      let mut term = term.clone();
+      // Skips Anns, Lams, Srcs
+      loop {
+        match term {
+          Term::Ann { val, .. } => { term = *val; }
+          Term::Lam { bod, .. } => { term = *bod; }
+          Term::Src { val, .. } => { term = *val; }
+          _ => { break; }
+        }
       }
       //println!("{}", term.format().flatten(Some(800)));
       return term.as_adt().ok_or_else(|| format!("Failed to interpret '{}' as an ADT.", name))
@@ -842,6 +913,23 @@ impl<'i> KindParser<'i> {
     } else {
       Term::Var { nam: name.clone() }  
     };
+    // Parses the with clause: 'with (a: A) (b: B) ...'
+    let mut with = Vec::new();
+    self.skip_trivia();
+    if self.peek_many(5) == Some("with ") {
+      self.consume("with")?;
+      self.skip_trivia();  
+      while self.peek_one() == Some('(') {
+        self.consume("(")?;
+        let mov_name = self.parse_name()?;  
+        self.consume(":")?;
+        let mov_type = self.parse_term(fid, uses)?;
+        self.consume(")")?;
+        with.push((mov_name, mov_type));
+        self.skip_trivia();
+      }
+    }
+    self.skip_trivia();
     // Parses the cases: '{ Type.constructor: value ... }'
     self.consume("{")?;
     let mut adt = "Empty".to_string();
@@ -853,7 +941,7 @@ impl<'i> KindParser<'i> {
       let adt_name = {
         let pts = cse_name.split('.').collect::<Vec<&str>>();
         if pts.len() < 2 {
-          return self.expected("Type.constructor");
+          return self.expected(&format!("valid constructor (did you forget 'TypeName.' before '{}'?)", cse_name));
         } else {
           pts[..pts.len() - 1].join(".")
         }
@@ -889,7 +977,7 @@ impl<'i> KindParser<'i> {
     } else {
       None
     };
-    return Ok(Match { adt, name, expr, cses, moti });
+    return Ok(Match { adt, name, expr, with, cses, moti });
   }
 
 }

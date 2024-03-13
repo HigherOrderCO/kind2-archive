@@ -36,22 +36,22 @@ impl Term {
   }
 
   pub fn format(&self) -> Box<Show> {
-    return self.clean().format_go();
+    return self.format_go();
   }
 
   pub fn format_go(&self) -> Box<Show> {
 
-    // Showats a Nat
+    // Shows a Nat
     if let Some(nat) = self.as_nat() {
       return Show::text(&format!("{}", nat));
     }
 
-    // Showats a List
+    // Shows a List
     if let Some(list) = self.as_list() {
       return list.format();
     }
 
-    // Showats an ADT
+    // Shows an ADT
     if let Some(adt) = self.as_adt() {
       return adt.format();
     }
@@ -228,6 +228,34 @@ impl Term {
       },
       Term::Nat { nat } => {
         Show::text(&format!("{}", nat))
+      },
+      Term::Mch { mch } => {
+        Show::call(" ", vec![
+          Show::glue(" ", vec![
+            Show::text("match"),
+            Show::text(&mch.name),
+            Show::text("= "),
+            mch.expr.format_go(),
+            Show::text("{"),
+          ]),
+          Show::pile("; ", mch.cses.iter().map(|(nam, bod)| {
+            Show::glue("", vec![
+              Show::text(nam),
+              Show::text(": "),
+              bod.format_go(),
+            ])
+          }).collect()),
+          Show::glue("", vec![
+            Show::text("}"),
+          ]),
+          mch.moti.as_ref().map_or(
+            Show::text(""),
+            |bod| Show::glue("", vec![
+              Show::text(": "),
+              bod.format_go(),
+            ])  
+          ),
+        ])
       },
     }
   }

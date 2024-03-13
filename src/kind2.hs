@@ -558,7 +558,7 @@ termInferGo (App fun arg) dep = do
       envSusp (Check 0 arg ftyp_inp dep)
       return $ ftyp_bod arg
     otherwise -> do
-      envLog (Error 0 ftyp (Hol "function" []) (App fun arg) dep)
+      envLog (Error 0 (Hol "function" []) ftyp (App fun arg) dep)
       envFail
 termInferGo (Ann chk val typ) dep = do
   if chk then do
@@ -576,7 +576,7 @@ termInferGo (Ins val) dep = do
     (Slf vtyp_nam vtyp_typ vtyp_bod) -> do
       return $ vtyp_bod (Ins val)
     otherwise -> do
-      envLog (Error 0 vtyp (Hol "self-type" []) (Ins val) dep)
+      envLog (Error 0 (Hol "self-type" []) vtyp (Ins val) dep)
       envFail
 termInferGo (Ref nam val) dep = do
   termInfer val dep
@@ -606,16 +606,16 @@ termInferGo (Let nam val bod) dep = do
 termInferGo (Use nam val bod) dep = do
   termInfer (bod val) dep
 termInferGo (Lam nam bod) dep = do
-  envLog (Error 0 (Hol "untyped_lambda" []) (Hol "type_annotation" []) (Lam nam bod) dep)
+  envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_lambda" []) (Lam nam bod) dep)
   envFail
 termInferGo (Hol nam ctx) dep = do
-  envLog (Error 0 (Hol "untyped_hole" []) (Hol "type_annotation" []) (Hol nam ctx) dep)
+  envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_hole" []) (Hol nam ctx) dep)
   envFail
 termInferGo (Met uid spn) dep = do
-  envLog (Error 0 (Hol "untyped_meta" []) (Hol "type_annotation" []) (Met uid spn) dep)
+  envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_meta" []) (Met uid spn) dep)
   envFail
 termInferGo (Var nam idx) dep = do
-  envLog (Error 0 (Hol "untyped_variable" []) (Hol "type_annotation" []) (Var nam idx) dep)
+  envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_variable" []) (Var nam idx) dep)
   envFail
 termInferGo (Src src val) dep = do
   termInfer val dep
@@ -655,6 +655,12 @@ termCheckGo src (Hol termNam termCtx) typx dep = do
   return ()
 termCheckGo src (Met uid spn) typx dep = do
   return ()
+termCheckGo src (Ann chk val typ) typx dep = do
+  if chk then do
+    termCheckCompare src val typ typx dep
+    termCheck src val typ dep
+  else do
+    return ()
 -- termCheckGo src (Ref termNam (Ann termVal termTyp)) typx dep = do
   -- equal <- termEqual typx termTyp dep
   -- termCheckReport src equal termTyp typx termVal dep
@@ -662,14 +668,17 @@ termCheckGo src (Src termSrc termVal) typx dep = do
   termCheck termSrc termVal typx dep
 termCheckGo src term typx dep = do
   infer <- termInfer term dep
-  equal <- termEqual typx infer dep
+  termCheckCompare src term typx infer dep
+
+termCheckCompare src term expected detected dep = do
+  equal <- termEqual expected detected dep
   if equal then do
     susp <- envTakeSusp
     forM_ susp $ \(Check src val typ dep) -> do
       termCheckGo src val typ dep
     return ()
   else do
-    envLog (Error src infer typx term dep)
+    envLog (Error src expected detected term dep)
     envFail
     
 -- termCheckReport :: Int -> Bool -> Term -> Term -> Term -> Int -> Env ()
@@ -783,8 +792,8 @@ infoShow fill (Found name typ ctx dep) =
       ctx' = stringTail (contextShow fill ctx dep)
   in stringJoin ["#found{", name, " ", typ', " [", ctx', "]}"]
 infoShow fill (Error src expected detected value dep) =
-  let det = termShow (termNormal fill 1 detected dep) dep
-      exp = termShow (termNormal fill 1 expected dep) dep
+  let exp = termShow (termNormal fill 1 expected dep) dep
+      det = termShow (termNormal fill 1 detected dep) dep
       val = termShow (termNormal fill 0 value dep) dep
   in stringJoin ["#error{", exp, " ", det, " ", val, " ", u60Show src, "}"]
 infoShow fill (Solve name term dep) =
