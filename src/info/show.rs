@@ -1,7 +1,5 @@
 use crate::{*};
 
-//./mod.rs//
-
 impl Info {
 
   pub fn show(&self) -> String {

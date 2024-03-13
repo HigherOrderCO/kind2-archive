@@ -7,11 +7,11 @@ use Nat.{succ,zero}
 _main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
   match a {
     succ: match b {
-      succ: ?A
-      zero: ?B
+      succ: e
+      zero: e
     }
     zero: match b {
-      succ: ?C
+      succ: e
       zero: ?D
     }
   }

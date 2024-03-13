@@ -1,7 +1,5 @@
 use crate::{*};
 
-//./../term/mod.rs//
-
 // A List.
 #[derive(Debug, Clone)]
 pub struct List {

@@ -1,5 +1,4 @@
 -- This is a Haskell implementation of Kind2's type checker. Since Kind2 isn't
---
 -- bootstrapped, we can't use Kind2 itself to type-check it, and developing a
 -- complex checker in an untyped language (like HVM) is hard. As such, this
 -- Haskell view helps me develop and debug the checker, and it is done in a way
