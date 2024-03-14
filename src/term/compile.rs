@@ -23,6 +23,27 @@ impl Oper {
     }
   }
 
+  pub fn to_sym(&self) -> &'static str {
+    match self {
+      Oper::Add => "+",
+      Oper::Sub => "-",
+      Oper::Mul => "*",
+      Oper::Div => "/",
+      Oper::Mod => "%",
+      Oper::Eq  => "==",
+      Oper::Ne  => "!=",
+      Oper::Lt  => "<",
+      Oper::Gt  => ">",
+      Oper::Lte => "<=",
+      Oper::Gte => ">=",
+      Oper::And => "&&",
+      Oper::Or  => "||",
+      Oper::Xor => "^",
+      Oper::Lsh => "<<",
+      Oper::Rsh => ">>",
+    }
+  }
+
   pub fn to_hvm1_checker(&self) -> &'static str {
     self.to_ctr()
   }
@@ -133,6 +154,83 @@ impl Term {
     }
   }
 
-
+  pub fn to_hvm2(&self) -> String {
+    match self {
+      Term::All { nam: _, inp: _, bod: _ } => {
+        format!("0")
+      },
+      Term::Lam { nam, bod } => {
+        let bod = bod.to_hvm2();
+        format!("λ{} {}", nam, bod)
+      },
+      Term::App { fun, arg } => {
+        let fun = fun.to_hvm2();
+        let arg = arg.to_hvm2();
+        format!("(App {} {})", fun, arg)
+      },
+      Term::Ann { chk: _, val, typ: _ } => {
+        val.to_hvm2()
+      },
+      Term::Slf { nam: _, typ: _, bod: _ } => {
+        format!("0")
+      },
+      Term::Ins { val } => {
+        val.to_hvm2()
+      },
+      Term::Set => {
+        format!("0")
+      },
+      Term::U60 => {
+        format!("0")
+      },
+      Term::Num { val } => {
+        format!("{}", val)
+      },
+      Term::Op2 { opr, fst, snd } => {
+        let fst = fst.to_hvm2();
+        let snd = snd.to_hvm2();
+        format!("({} {} {})", opr.to_sym(), fst, snd)
+      },
+      Term::Swi { nam, x, z, s, p: _ } => {
+        let x = x.to_hvm2();
+        let z = z.to_hvm2();
+        let s = s.to_hvm2();
+        format!("switch {} = {} {{ 0: {} _: {} }}", nam, x, z, s)
+      },
+      Term::Let { nam, val, bod } => {
+        let val = val.to_hvm2();
+        let bod = bod.to_hvm2();
+        format!("let {} = {} {}", nam, val, bod)
+      },
+      // FIXME: change to "use" once hvm-lang supports it
+      Term::Use { nam, val, bod } => {
+        let val = val.to_hvm2();
+        let bod = bod.to_hvm2();
+        format!("use {} = {} {}", nam, val, bod)
+      },
+      Term::Hol { nam: _ } => {
+        format!("0")
+      },
+      Term::Met {} => { 
+        println!("WARNING: unsolved metas.");
+        format!("0")
+      },
+      Term::Var { nam } => {
+        format!("{}", nam) 
+      },
+      Term::Src { src: _, val } => {
+        val.to_hvm2()
+      },
+      Term::Nat { nat } => {
+        format!("#{}", nat)
+      },
+      Term::Txt { txt } => {
+        format!("\"{}\"", txt.replace("\n", "\\n"))
+      },
+      Term::Mch { .. } => {
+        unreachable!()
+      },
+    }
+  }
 
 }

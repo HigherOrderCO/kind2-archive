@@ -24,7 +24,7 @@ TSPL::new_parser!(KindParser);
 
 fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
   let kind_hvm1 = include_str!("./kind2.hvm1");
-  let book_hvm1 = book.to_hvm1();
+  let book_hvm1 = book.to_hvm1_checker();
   let main_hvm1 = match command {
     "check" => format!("Main = (API.check Book.{})\n", arg),
     "run"   => format!("Main = (API.normal Book.{})\n", arg),
@@ -45,6 +45,13 @@ fn generate_check_hs(book: &Book, command: &str, arg: &str) -> String {
   };
   let hs_code = format!("{}\n{}\n{}", kind_hs, book_hs, main_hs);
   return hs_code;
+}
+
+fn generate_hvm2(book: &Book, _command: &str, arg: &str) -> String {
+  let book_hvm2 = book.to_hvm2();
+  let main_hvm2 = format!("main = {}\n", arg);
+  let code_hvm2 = format!("{}\n{}", book_hvm2, main_hvm2);
+  return code_hvm2;
 }
 
 fn main() {

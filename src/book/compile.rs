@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 
 impl Book {
 
-  pub fn to_hvm1(&self) -> String {
+  pub fn to_hvm1_checker(&self) -> String {
     todo!()
     //let mut used = BTreeSet::new();
     //let mut code = String::new();
@@ -27,6 +27,14 @@ impl Book {
     for (name, term) in &self.defs {
       let expr = term.to_hs_checker(im::Vector::new(), &mut 0);
       code.push_str(&format!("{} = (Ref \"{}\" {})\n", Term::to_hs_name(name), name, expr));
+    }
+    code
+  }
+
+  pub fn to_hvm2(&self) -> String {
+    let mut code = String::new();
+    for (name, term) in &self.defs {
+      code.push_str(&format!("{} = {}\n", name, term.to_hvm2()));
     }
     code
   }
