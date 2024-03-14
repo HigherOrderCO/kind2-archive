@@ -5,7 +5,7 @@
 //use Nat.{succ,zero}
 
 _main : Nat =
-  (Nat.add 1 2)
+  (Nat.half (Nat.double 3))
   
 
 //_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =

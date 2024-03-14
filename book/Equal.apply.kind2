@@ -1,5 +1,17 @@
-Equal.apply A B (f: ∀(x:A) B) (a: A) (b: A) (e: (Equal A a b))
-: (Equal B (f a) (f b))
-= match e {
-    Equal.refl: (Equal.refl _ _)
+use Equal.{refl}
+
+apply A B (f: ∀(x:A) B) (a: A) (b: A) (e: (Equal A a b)) : (Equal B (f a) (f b)) =
+  match e {
+    refl: {=}
   }
+
+//Equal.apply
+//: ∀(A: *)
+  //∀(B: *)
+  //∀(f: ∀(x: A) B)
+  //∀(a: A)
+  //∀(b: A)
+  //∀(e: (Equal A a b))
+  //(Equal B (f a) (f b))
+//= λA λB λf λa λb λe
+  //(e λx (Equal B (f a) (f x)) λP λx x)

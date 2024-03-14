@@ -333,12 +333,12 @@ impl Term {
   // - (EQUAL a b) ::= (App (App (App (Var "Equal") _) a) b)
   pub fn as_equal(&self) -> Option<Equal> {
     match self {
-      Term::App { fun, arg } => {
-        if let Term::App { fun: eq_fun, arg: rhs } = &**fun {
+      Term::App { fun, arg: rhs } => {
+        if let Term::App { fun: eq_fun, arg: lhs } = &**fun {
           if let Term::App { fun: eq_fun, arg: _ } = &**eq_fun {
             if let Term::Var { nam } = &**eq_fun {
               if nam == "Equal" {
-                return Some(Equal { a: (**arg).clone(), b: (**rhs).clone() });
+                return Some(Equal { a: (**lhs).clone(), b: (**rhs).clone() });
               }
             }
           }
@@ -403,7 +403,6 @@ impl Term {
 
   // Interprets a λ-encoded Algebraic Data Type definition as an ADT struct.
   pub fn as_adt(&self) -> Option<ADT> {
-
     let name: String;
     let pvar: String;
 
@@ -538,12 +537,12 @@ impl Term {
     let mut self_type = Term::Var { nam: adt.name.clone() };
 
     // Then appends each type parameter
-    for par in adt.pars.iter().rev() {
+    for par in adt.pars.iter() {
       self_type = Term::App { fun: Box::new(self_type), arg: Box::new(Term::Var { nam: par.clone() }) };
     }
 
     // And finally appends each index
-    for (idx_name, _) in adt.idxs.iter().rev() {
+    for (idx_name, _) in adt.idxs.iter() {
       self_type = Term::App { fun: Box::new(self_type), arg: Box::new(Term::Var { nam: idx_name.clone() }) };
     }
 

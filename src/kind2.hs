@@ -362,7 +362,7 @@ termSimilar (All aNam aInp aBod) (All bNam bInp bBod) dep = do
 termSimilar (Lam aNam aBod) (Lam bNam bBod) dep =
   termEqual (aBod (Var aNam dep)) (bBod (Var bNam dep)) (dep + 1)
 termSimilar (App aFun aArg) (App bFun bArg) dep = do
-  eFun <- termEqual aFun bFun dep
+  eFun <- termSimilar aFun bFun dep
   eArg <- termEqual aArg bArg dep
   envPure (eFun && eArg)
 termSimilar (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
@@ -381,7 +381,7 @@ termSimilar (Mat aNam aX aZ aS aP) (Mat bNam bX bZ bS bP) dep = do
   eS <- termEqual (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep
   eP <- termEqual (aP (Var aNam dep)) (bP (Var bNam dep)) dep
   envPure (eX && eZ && eS && eP)
-termSimilar a b dep = envPure False
+termSimilar a b dep = termIdentical a b dep
 
 termIdentical :: Term -> Term -> Int -> Env Bool
 termIdentical a b dep = termIdenticalGo a b dep

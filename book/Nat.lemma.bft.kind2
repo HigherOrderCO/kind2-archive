@@ -1,16 +1,33 @@
-Nat.lemma.bft
-: ∀(n: Nat) (Equal Nat (Nat.half (Nat.double n)) n)
-= λn
-  (~n
-    λx (Equal Nat (Nat.half (Nat.double x)) x)
-    λn
-    (Equal.apply
-      Nat
-      Nat
-      Nat.succ
-      (Nat.half (Nat.double n))
-      n
-      (Nat.lemma.bft n)
-    )
-    λP λa a
-  )
+use Nat.{succ,zero,half,double}
+
+bft (n: Nat) : (Equal Nat (half (double n)) n) =
+  match n {
+    succ:
+      let ind = (bft n.pred)
+      let prf = (Equal.apply Nat Nat succ (half (double n.pred)) n.pred ind)
+      prf
+    zero: {=}
+  }
+
+//#found{a
+  //(((Equal (_)) (Nat.succ {n.pred: Nat})) (Nat.half (Nat.double {(Nat.succ {n.pred: Nat}): Nat})))
+  //[
+    //{n: Nat}
+    //λn (((Equal (_)) n) (Nat.half (Nat.double {n: Nat})))
+    //{n.pred: Nat}
+    //{ind: (((Equal (_)) (Nat.half (Nat.double n.pred))) n.pred)}
+  //]}
+
+  //(~n
+    //λx (Equal Nat (Nat.half (Nat.double x)) x)
+    //λn
+    //(Equal.apply
+      //Nat
+      //Nat
+      //Nat.succ
+      //(Nat.half (Nat.double n))
+      //n
+      //(Nat.lemma.bft n)
+    //)
+    //λP λa a
+  //)

@@ -1,0 +1,22 @@
+use Vector.{cons,nil}
+use Nat.{succ,zero,add}
+
+concat T (xs_len: Nat) (ys_len: Nat)
+  (xs: (Vector T xs_len))
+  (ys: (Vector T ys_len))
+: (Vector T (add xs_len ys_len))
+= match xs {
+    cons : (cons T (add xs.len ys_len) xs.head (concat T xs.len ys_len xs.tail ys))
+    nil  : ys
+  }
+
+//concat
+//: ∀(T: *)
+  //∀(xs_len: Nat) ∀(xs: (Vector T xs_len))
+  //∀(ys_len: Nat) ∀(ys: (Vector T ys_len))
+  //(Vector T (add xs_len ys_len))
+//= λT λxs_len λxs λys_len λys
+  //(~xs _
+  //λxs.len λxs.head λxs.tail
+    //(Vector.cons T (Nat.add xs.len ys_len) xs.head (concat T xs.len xs.tail ys_len ys))
+  //ys)
