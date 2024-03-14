@@ -663,7 +663,7 @@ impl ADT {
   
   // Loads an ADT from its λ-encoded file.
   pub fn load(name: &str) -> Result<ADT, String> {
-    let book = Book::boot(name)?;
+    let book = Book::boot(".", name)?;
     if let Some(term) = book.defs.get(name) {
       let mut term = term.clone();
       // Skips Anns, Lams, Srcs

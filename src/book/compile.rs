@@ -22,6 +22,15 @@ impl Book {
     //code
   }
 
+  pub fn to_hvm2(&self) -> String {
+    let mut code = String::new();
+    for (name, term) in &self.defs {
+      let expr = term.to_hvm2(im::Vector::new(), &mut 0);
+      code.push_str(&format!("Book.{} = (Ref \"{}\" {})\n", name, name, expr));
+    }
+    code
+  }
+
   pub fn to_hs(&self) -> String {
     let mut code = String::new();
     for (name, term) in &self.defs {
