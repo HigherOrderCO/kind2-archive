@@ -1,21 +1,107 @@
-Kind2 WIP
-=========
+# Kind2: a parallel proof & programming language
 
-Kind1 has been developed in JavaScript, which wasn't meant to be a long-term
-solution, but allowed us to explore self-types. Recently, we started developing
-Kind2 for [HVM1](https://github.com/HigherOrderCO/HVM1), but it has been
-discontinued when we started working on HVM2. In this repository, we'll remake
-and continue Kind2's development, now targetting HVM2. Kind2 will be fully
-implemented in itself. Temporarily, we're using `TypeScript+HVM1` to aid on the
-bootstrapping process.
+Kind2 is a general-purpose programming language made from scratch to harness
+[HVM](https://github.com/HigherOrderCO/HVM)'s **massive parallelism** and
+computational advantages (no garbage collection, optimal β-reduction). Its type
+system is a minimal core based on the Calculus of Constructions, making it
+inherently secure. In short, Kind2 aims to be:
 
-Usage
-=====
+- As *friendly* as **Python**
 
-1. Install [NPM](https://www.npmjs.com/).
+- As *efficient* as **Rust**
 
-2. Install [HVM1](https://github.com/HigherOrderCO/HVM1).
+- As *high-level* as **Haskell**
 
-3. Install Kind2: `npm i -g` (from this directory)
+- As *parallel* as **CUDA**
 
-4. Enter `book/` and run with `kind2 [check|run] term_name`.
+- As *formal* as **Lean**
+
+And it seeks to accomplish that goal by relying on the solid foundations of [Interaction Combinators](https://www.semanticscholar.org/paper/Interaction-Combinators-Lafont/6cfe09aa6e5da6ce98077b7a048cb1badd78cc76).
+
+## Usage
+
+1. Install [Rust](https://www.rust-lang.org/) and (optionally) [Haskell](https://www.haskell.org/) in your system.
+
+2. Clone this repository and install it:
+
+    ```
+    git clone https://github.com/HigherOrderCO/Kind2
+    cargo install --path .
+    ```
+
+3. Type-check a Kind2 definition:
+
+    ```
+    kind2 check name_here
+    ```
+
+4. Test it with the interpreter:
+
+    ```
+    kind2 run name
+    ```
+
+5. Compile and run in parallel, powered by HVM!
+
+    ```
+    kind2 compile name
+    ./name
+    ```
+
+## Syntax
+
+Kind2's syntax aims to be as friendly as Python's, while still exposing the
+high-level functional idioms that result in fast, parallel HVM binaries.
+Function application (`(f x y z ...)`) follows a Lisp-like style and
+pattern-matching `(match x { ctr: .. })` feels like Haskell; but control-flow is
+more Python-like. In short, it can be seen as *"Haskell inside, Python
+outside"*: a friendly syntax on top of a powerful functional core.
+
+### Functions:
+
+```javascript
+// The Fibonacci function
+fib (n: U60) : U60 =
+  switch n {
+    0: 0
+    1: 1
+    _: (+ (fib (- n 1)) (fib (- n 2)))
+  }
+```
+
+### Datatypes (ADTs):
+
+```javascript
+// Polymorphic Lists
+data List T
+| cons (head: T) (tail: (List T))
+| nil
+
+// Applies a function to all elements of a list
+map A B (f: ∀(x: A) B) (xs: (List A)) : (List B) =
+  match xs {
+    cons:
+      let head = (f xs.head)
+      let tail = (map _ _ f xs.tail)
+      (cons _ head tail)
+    nil:
+      []
+  }
+```
+
+### Theorems and Proofs:
+
+```javascript
+use Nat.{succ,zero,half,double}
+
+// Proof that `∀n. n*2/2 = n`
+bft (n: Nat) : {(half (double n)) = n} =
+  match n {
+    succ: (Equal.apply _ _ succ _ _ (bft n.pred))
+    zero: {=}
+  }
+```
+
+### More Examples:
+
+There are countless examples on the [`Book/`](book) directory. Check it!
