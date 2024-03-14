@@ -48,6 +48,10 @@ impl Oper {
     self.to_ctr()
   }
 
+  pub fn to_hvm2_checker(&self) -> &'static str {
+    self.to_ctr()
+  }
+
   pub fn to_hs_checker(&self) -> &'static str {
     self.to_ctr()
   }
@@ -59,7 +63,99 @@ impl Term {
   pub fn to_hvm1_checker(&self, _env: im::Vector<String>, _met: &mut usize) -> String {
     todo!()
   }
-  
+
+  pub fn to_hvm2_checker(&self, env: im::Vector<String>, met: &mut usize) -> String {
+    fn binder(name: &str) -> String {
+      format!("x{}", name.replace("-", "._."))
+    }
+    match self {
+      Term::All { nam, inp, bod } => {
+        let inp = inp.to_hvm2_checker(env.clone(), met);
+        let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
+        format!("(All \"{}\" {} λ{} {})", nam, inp, binder(nam), bod)
+      }
+      Term::Lam { nam, bod } => {
+        let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
+        format!("(Lam \"{}\" λ{} {})", nam, binder(nam), bod)
+      }
+      Term::App { fun, arg } => {
+        let fun = fun.to_hvm2_checker(env.clone(), met);
+        let arg = arg.to_hvm2_checker(env.clone(), met);
+        format!("(App {} {})", fun, arg)
+      }
+      Term::Ann { chk, val, typ } => {
+        let val = val.to_hvm2_checker(env.clone(), met);
+        let typ = typ.to_hvm2_checker(env.clone(), met);
+        format!("(Ann {} {} {})", if *chk { "True" } else { "False" }, val, typ)
+      }
+      Term::Slf { nam, typ, bod } => {
+        let typ = typ.to_hvm2_checker(env.clone(), met);
+        let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
+        format!("(Slf \"{}\" {} λ{} {})", nam, typ, binder(nam), bod)
+      }
+      Term::Ins { val } => {
+        let val = val.to_hvm2_checker(env.clone(), met);
+        format!("(Ins {})", val)
+      }
+      Term::Set => "(Set)".to_string(),
+      Term::U60 => "(U60)".to_string(),
+      Term::Num { val } => {
+        format!("(Num {})", val)
+      }
+      Term::Op2 { opr, fst, snd } => {
+        let fst = fst.to_hvm2_checker(env.clone(), met);
+        let snd = snd.to_hvm2_checker(env.clone(), met);
+        format!("(Op2 {} {} {})", opr.to_hvm2_checker(), fst, snd)
+      }
+      Term::Swi { nam, x, z, s, p } => {
+        let x = x.to_hvm2_checker(env.clone(), met);
+        let z = z.to_hvm2_checker(env.clone(), met);
+        let s = s.to_hvm2_checker(cons(&env, format!("{}-1", nam)), met);
+        let p = p.to_hvm2_checker(cons(&env, nam.clone()), met);
+        format!("(Swi \"{}\" {} {} λ{} {} λ{} {})", nam, x, z, binder(&format!("{}-1", nam)), s, binder(nam), p)
+      }
+      Term::Let { nam, val, bod } => {
+        let val = val.to_hvm2_checker(env.clone(), met);
+        let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
+        format!("(Let \"{}\" {} λ{} {})", nam, val, binder(nam), bod)
+      }
+      Term::Use { nam, val, bod } => {
+        let val = val.to_hvm2_checker(env.clone(), met);
+        let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
+        format!("(Use \"{}\" {} λ{} {})", nam, val, binder(nam), bod)
+      }
+      Term::Hol { nam } => {
+        let env_str = env.iter().map(|n| binder(n)).collect::<Vec<_>>().join(",");
+        format!("(Hol \"{}\" [{}])", nam, env_str)
+      }
+      Term::Met {} => {
+        let uid = *met;
+        *met += 1;
+        format!("(Met {} [])", uid)
+      }
+      Term::Var { nam } => {
+        if env.contains(nam) {
+          format!("{}", binder(nam))
+        } else {
+          format!("(Book.{})", nam)
+        }
+      }
+      Term::Src { src, val } => {
+        let val = val.to_hvm2_checker(env, met);
+        format!("(Src {} {})", src.to_u64(), val)
+      }
+      Term::Nat { nat } => {
+        format!("(Nat {})", nat)
+      }
+      Term::Txt { txt } => {
+        format!("(Txt \"{}\")", txt.replace("\n", "\\n"))
+      }
+      Term::Mch { .. } => {
+        unreachable!()
+      }
+    }
+  }
+
   pub fn to_hs_name(name: &str) -> String {
     format!("x{}", name.replace("-", "_").replace(".","_"))
   }

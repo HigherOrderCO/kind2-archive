@@ -76,7 +76,8 @@ impl Info {
       let mut parser = KindParser::new(line);
       match parser.parse_info() {
         Ok(info) => infos.push(info),
-        Err(_)   => println!(">> {}", line),
+        Err(_) if line == "*" => {}
+        Err(_)   => println!("{}", line),
       }
     }
     infos

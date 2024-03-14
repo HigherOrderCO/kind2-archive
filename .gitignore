@@ -3,6 +3,7 @@
 .kind21/
 plans.txt
 .check.hvm1
+.check.hvm2
 demo/
 .fill.tmp
 .check.hs

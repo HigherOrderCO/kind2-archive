@@ -40,15 +40,15 @@ impl Book {
   }
 
   // Creates a book, loading a term, its dependencies, and stdlib
-  pub fn boot(name: &str) -> Result<Self, String> {
+  pub fn boot(base: &str, name: &str) -> Result<Self, String> {
     let mut book = Book::new();
-    book.load(name)?;
-    book.load("String")?;
-    book.load("String.cons")?;
-    book.load("String.nil")?;
-    book.load("Nat")?;
-    book.load("Nat.succ")?;
-    book.load("Nat.zero")?;
+    book.load(base, name)?;
+    book.load(base, "String")?;
+    book.load(base, "String.cons")?;
+    book.load(base, "String.nil")?;
+    book.load(base, "Nat")?;
+    book.load(base, "Nat.succ")?;
+    book.load(base, "Nat.zero")?;
     return Ok(book);
   }
 
@@ -58,10 +58,10 @@ impl Book {
   }
 
   // Same as load, mutably adding to a 'book'
-  pub fn load(&mut self, name: &str) -> Result<(), String> {
+  pub fn load(&mut self, base: &str, name: &str) -> Result<(), String> {
     if !self.defs.contains_key(name) {
       // Parses a file into a new book
-      let file = format!("./{}.kind2", name);
+      let file = format!("{}/{}.kind2", base, name);
       let text = std::fs::read_to_string(&file).map_err(|_| format!("Could not read file: {}", file))?;
       let fid  = self.get_file_id(&file);
       let defs = KindParser::new(&text).parse_book(name, fid)?;
@@ -74,7 +74,7 @@ impl Book {
         let mut dependencies = BTreeSet::new();
         def_term.get_free_vars(im::Vector::new(), &mut dependencies);
         for ref_name in dependencies {
-          if let Err(_) = self.load(&ref_name) {
+          if let Err(_) = self.load(&base, &ref_name) {
             self.handle_unbound(&file, &ref_name)?;
           }
         }
