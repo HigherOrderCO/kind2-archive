@@ -10,15 +10,15 @@ QBool.match
     λtag
     switch tag = tag {
       0: λx (x t)
-      +: λx
+      _: λx
       (switch tag_1 = tag-1 {
         0: λx (x f)
-        +: λx (x λe (Empty.absurd e *)) 
+        _: λx (x λe (Empty.absurd e *)) 
       }: ∀(x: 
         ∀(x: 
           switch tag_1 = tag_1 {
             0: (P QBool.false)
-            +: ∀(x: Empty) * 
+            _: ∀(x: Empty) * 
           }: *
         )
         (P a)
@@ -30,9 +30,9 @@ QBool.match
       ∀(x: 
         switch tag = tag {
           0: (P QBool.true)
-          +: switch tag_1 = tag-1 {
+          _: switch tag_1 = tag-1 {
             0: (P QBool.false)
-            +: ∀(x: Empty) * 
+            _: ∀(x: Empty) * 
           }: * 
         }: *
       )

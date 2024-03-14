@@ -7,6 +7,6 @@ QUnit
     λtag
     switch tag = tag {
       0: ∀(one: (P QUnit.one)) (P self)
-      +: Empty 
+      _: Empty 
     }: *
   )

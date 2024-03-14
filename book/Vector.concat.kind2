@@ -5,7 +5,7 @@ concat T (xs_len: Nat) (ys_len: Nat)
   (xs: (Vector T xs_len))
   (ys: (Vector T ys_len))
 : (Vector T (add xs_len ys_len))
-= switch xs {
+= match xs {
     cons : (cons T (add xs.len ys_len) xs.head (concat T xs.len ys_len xs.tail ys))
     nil  : ys
   }

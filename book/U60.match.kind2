@@ -5,4 +5,4 @@ U60.switch
   ∀(z: (P 0))
   (P x)
 = λx λP λs λz
-  switch self = x { 0: z +: (s self-1) }: (P self)
+  switch self = x { 0: z _: (s self-1) }: (P self)
