@@ -750,7 +750,7 @@ termShow (Use nam val bod) dep =
       bod' = termShow (bod (Var nam dep)) (dep + 1)
   in stringJoin ["use " , nam' , " = " , val' , "; " , bod']
 termShow Set dep = "*"
-termShow U60 dep = "#U60"
+termShow U60 dep = "U60"
 termShow (Num val) dep =
   let val' = u60Show val
   in stringJoin [val']
@@ -765,7 +765,7 @@ termShow (Swi nam x z s p) dep =
       z'   = termShow z dep
       s'   = termShow (s (Var (stringConcat nam "-1") dep)) (dep + 1)
       p'   = termShow (p (Var nam dep)) dep
-  in stringJoin ["switch " , nam' , " = " , x' , " { #0: " , z' , " #+: " , s' , " }: " , p']
+  in stringJoin ["switch " , nam' , " = " , x' , " { 0: " , z' , " _: " , s' , " }: " , p']
 termShow (Txt txt) dep = stringJoin [quote , txt , quote]
 termShow (Nat val) dep = show val
 termShow (Hol nam ctx) dep = stringJoin ["?" , nam]

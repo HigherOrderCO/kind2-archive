@@ -4,9 +4,8 @@
 
 //use Nat.{succ,zero}
 
-_main : Nat =
-  #50
-  
+_main : U60 =
+  (U60.fib 6)
 
 //_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
   //switch a {

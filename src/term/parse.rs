@@ -94,6 +94,25 @@ impl<'i> KindParser<'i> {
     if self.starts_with("λ") {
       let ini = *self.index() as u64;
       self.consume("λ")?;
+      // Annotated
+      if self.peek_one() == Some('(') {
+        self.consume("(")?;
+        let nam = self.parse_name()?;
+        self.consume(":")?;
+        let typ = Box::new(self.parse_term(fid, uses)?);
+        self.consume(")")?;
+        let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
+        let end = *self.index() as u64;
+        let src = Src::new(fid, ini, end);
+        let typ = Box::new(Term::All { nam: nam.clone(), inp: typ, bod: Box::new(Term::Met {}) });
+        let val = Box::new(Term::Lam { nam: nam.clone(), bod });
+        let val = Box::new(Term::Ann { chk: true, typ, val });
+        return Ok(Term::Src { src, val });
+      }
+      //λ(x: A) B
+      //-----------------
+      //{λx B: ∀(x: A) _}
+      // Untyped
       let nam = self.parse_name()?;
       let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
@@ -218,6 +237,24 @@ impl<'i> KindParser<'i> {
     // SWI ::= switch <name> = <term> { 0: <term>; +: <term> }: <term>
     // - The matched term is optional. Defaults to `Var { nam: <name> }`.
     // - The return type is optional. Defaults to `Met {}`.
+    // - Consecutive numbers can be chained, as a syntax sugar. Example:
+    //   switch x = expr {
+    //     0: ... zero case ...
+    //     1: ... one case ...
+    //     2: ... two case ...
+    //     _: ... >=3 case, with access to x-3 ...
+    //   }: return_type
+    // Is desugared to:
+    //   switch x = expr {
+    //     0: ... zero case ...
+    //     _: switch x = x-1 {
+    //       0: ... one case ...
+    //       _: switch x = x-2 {
+    //         0: ... two case ...
+    //         _: ... >=3 case, with access to x-3 ...
+    //       }: _
+    //     }:_
+    //   }: return_type
     if self.starts_with("switch ") {
       let ini = *self.index() as u64;
       self.consume("switch ")?;
@@ -230,10 +267,20 @@ impl<'i> KindParser<'i> {
         Box::new(Term::Var { nam: nam.clone() })
       };
       self.consume("{")?;
-      self.consume("0:")?;
-      let z = Box::new(self.parse_term(fid, uses)?);
-      self.consume("+:")?;
-      let s = Box::new(self.parse_term(fid, &shadow(&format!("{}-1",nam), uses))?);
+      let mut cases = Vec::new();
+      while self.peek_one() != Some('}') {
+        if self.peek_one() == Some('_') {
+          self.consume("_:")?;
+          let body = Box::new(self.parse_term(fid, &shadow(&format!("{}-{}",nam,cases.len()), uses))?);
+          cases.push(body);
+          break;
+        } else {
+          self.consume(&format!("{}:", cases.len()))?;
+          let body = Box::new(self.parse_term(fid, uses)?);
+          cases.push(body);
+          self.skip_trivia();
+        }
+      }
       self.consume("}")?;
       let p = if self.peek_one() == Some(':') {
         self.consume(":")?;
@@ -243,7 +290,23 @@ impl<'i> KindParser<'i> {
       };
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
-      return Ok(Term::Src { src, val: Box::new(Term::Swi { nam, x, z, s, p }) });
+      // Desugars a long switch into a nested chain of switches
+      let mut val = cases.pop().unwrap();
+      val = Box::new(Term::Use {
+        nam: format!("{}-{}", nam, cases.len()),
+        val: Box::new(Term::Var { nam: format!("{}-1", nam) }),
+        bod: val,
+      });
+      for i in (1..(cases.len())).rev() {
+        let x = Box::new(Term::Var { nam: format!("{}-1", nam.clone()) });
+        let z = cases[i].clone();
+        let s = val;
+        let p = Box::new(Term::Met {});
+        val = Box::new(Term::Swi { nam: nam.clone(), x, z, s, p });
+      }
+      val = Box::new(Term::Swi { nam, x, z: cases[0].clone(), s: val, p });
+      //println!("SWITCH:\n{}", val.show());
+      return Ok(Term::Src { src, val });
     }
 
     // NAT ::= #<uint>
