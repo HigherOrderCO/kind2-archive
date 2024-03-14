@@ -2,7 +2,7 @@ BBT.balance.lft_heavier
 : ∀(K: *)
   ∀(V: *)
   ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(new_size: #U60)
+  ∀(new_size: U60)
   ∀(node_key: K)
   ∀(set_key: K)
   ∀(val: V)
@@ -13,7 +13,7 @@ BBT.balance.lft_heavier
   use P = λx (BBT K V)
   use bin = λlft.size λlft.key λlft.val λlft.lft λlft.rgt
     use P = λx
-      ∀(new_size: #U60)
+      ∀(new_size: U60)
       ∀(key: K)
       ∀(val: V)
       ∀(lft.key: K)

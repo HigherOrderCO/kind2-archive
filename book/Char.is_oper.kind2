@@ -2,30 +2,30 @@ Char.is_oper
 : ∀(a: Char) Bool
 = λa
   (Bool.or
-    (Char.equal #43 a)
+    (Char.equal 43 a)
     (Bool.or
-      (Char.equal #45 a)
+      (Char.equal 45 a)
       (Bool.or
-        (Char.equal #42 a)
+        (Char.equal 42 a)
         (Bool.or
-          (Char.equal #47 a)
+          (Char.equal 47 a)
           (Bool.or
-            (Char.equal #37 a)
+            (Char.equal 37 a)
             (Bool.or
-              (Char.equal #60 a)
+              (Char.equal 60 a)
               (Bool.or
-                (Char.equal #62 a)
+                (Char.equal 62 a)
                 (Bool.or
-                  (Char.equal #61 a)
+                  (Char.equal 61 a)
                   (Bool.or
-                    (Char.equal #38 a)
+                    (Char.equal 38 a)
                     (Bool.or
-                      (Char.equal #124 a)
+                      (Char.equal 124 a)
                       (Bool.or
-                        (Char.equal #94 a)
+                        (Char.equal 94 a)
                         (Bool.or
-                          (Char.equal #33 a)
-                          (Bool.or (Char.equal #126 a) Bool.false)
+                          (Char.equal 33 a)
+                          (Bool.or (Char.equal 126 a) Bool.false)
                         )
                       )
                     )

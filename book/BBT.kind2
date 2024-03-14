@@ -4,7 +4,7 @@ BBT
   $(self: (BBT K V))
   ∀(P: ∀(bbt: (BBT K V)) *)
   ∀(bin: 
-    ∀(size: #U60)
+    ∀(size: U60)
     ∀(key: K)
     ∀(val: V)
     ∀(lft: (BBT K V))

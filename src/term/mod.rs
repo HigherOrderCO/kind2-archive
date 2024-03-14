@@ -28,10 +28,10 @@ pub struct Src {
 //   SLF | $(<name>: <term>) <term>
 //   INS | ~<term>
 //   SET | *
-//   U60 | #U60
-//   NUM | #<uint>
-//   OP2 | #(<oper> <term> <term>)
-//   MAT | #match <name> = <term> { #0: <term>; #+: <term> }: <term>
+//   U60 | U60
+//   NUM | <uint>
+//   OP2 | (<oper> <term> <term>)
+//   SWI | switch <name> = <term> { 0: <term>; +: <term> }: <term>
 //   HOL | ?<name>
 //   MET | _
 //   CHR | '<char>'
@@ -50,7 +50,7 @@ pub enum Term {
   U60,
   Num { val: u64 },
   Op2 { opr: Oper, fst: Box<Term>, snd: Box<Term> },
-  Mat { nam: String, x: Box<Term>, z: Box<Term>, s: Box<Term>, p: Box<Term> },
+  Swi { nam: String, x: Box<Term>, z: Box<Term>, s: Box<Term>, p: Box<Term> },
   Let { nam: String, val: Box<Term>, bod: Box<Term> },
   Use { nam: String, val: Box<Term>, bod: Box<Term> },
   Var { nam: String },
@@ -131,7 +131,7 @@ impl Term {
         fst.get_free_vars(env.clone(), free_vars);
         snd.get_free_vars(env.clone(), free_vars);
       },
-      Term::Mat { nam, x, z, s, p } => {
+      Term::Swi { nam, x, z, s, p } => {
         x.get_free_vars(env.clone(), free_vars);
         z.get_free_vars(env.clone(), free_vars);
         s.get_free_vars(cons(&env, format!("{}-1",nam)), free_vars);
@@ -198,7 +198,7 @@ impl Term {
         fst.desugar();
         snd.desugar();
       },
-      Term::Mat { nam: _, x, z, s, p } => {
+      Term::Swi { nam: _, x, z, s, p } => {
         x.desugar();
         z.desugar();
         s.desugar(); 
@@ -284,8 +284,8 @@ impl Term {
           snd: Box::new(snd.clean()),
         }
       },
-      Term::Mat { nam, x, z, s, p } => {
-        Term::Mat {
+      Term::Swi { nam, x, z, s, p } => {
+        Term::Swi {
           nam: nam.clone(),
           x: Box::new(x.clean()),
           z: Box::new(z.clean()),

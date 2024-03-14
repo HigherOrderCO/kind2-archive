@@ -104,11 +104,11 @@ Kind.Term.show.go
       )
     )
   use set = λnil (Kind.Text.show.go "*" nil)
-  use u60 = λnil (Kind.Text.show.go "#U60" nil)
-  use num = λval λnil (Kind.Text.show.go "#" (U60.show.go val nil))
+  use u60 = λnil (Kind.Text.show.go "U60" nil)
+  use num = λval λnil (Kind.Text.show.go "" (U60.show.go val nil))
   use op2 = λopr λfst λsnd λnil
     (Kind.Text.show.go
-      "#("
+      "("
       (Kind.Oper.show.go
         opr
         (Kind.Text.show.go
@@ -126,7 +126,7 @@ Kind.Term.show.go
     )
   use mat = λnam λx λz λs λp λnil
     (Kind.Text.show.go
-      "#match "
+      "switch "
       (Kind.Text.show.go
         nam
         (Kind.Text.show.go
@@ -135,12 +135,12 @@ Kind.Term.show.go
             x
             dep
             (Kind.Text.show.go
-              " { #0: "
+              " { 0: "
               (Kind.Term.show.go
                 z
                 dep
                 (Kind.Text.show.go
-                  "; #+: "
+                  "; +: "
                   (Kind.Term.show.go
                     (s (Kind.var (String.concat nam "-1") dep))
                     (Nat.succ dep)

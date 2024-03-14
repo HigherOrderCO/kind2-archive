@@ -1,3 +1,3 @@
 U60.show
-: ∀(n: #U60) String
+: ∀(n: U60) String
 = λn (String.Concatenator.build (U60.show.go n))

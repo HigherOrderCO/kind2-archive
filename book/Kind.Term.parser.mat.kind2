@@ -2,10 +2,10 @@ Kind.Term.parser.mat
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text
     Kind.PreTerm
-    "#match "
+    "switch "
     (Kind.Term.parser.bind
       Unit
-      (Parser.text "#match ")
+      (Parser.text "switch ")
       λ_
       (Kind.Term.parser.bind
         String
@@ -25,7 +25,7 @@ Kind.Term.parser.mat
               λ_
               (Kind.Term.parser.bind
                 Unit
-                (Parser.text "#0")
+                (Parser.text "0")
                 λ_
                 (Kind.Term.parser.bind
                   Unit
@@ -37,7 +37,7 @@ Kind.Term.parser.mat
                     λz
                     (Kind.Term.parser.bind
                       Unit
-                      (Parser.text "#+")
+                      (Parser.text "+")
                       λ_
                       (Kind.Term.parser.bind
                         Unit

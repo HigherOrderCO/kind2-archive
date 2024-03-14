@@ -1,13 +1,13 @@
 test2
-: (List #U60)
+: (List U60)
 = use xs = (List.cons
-      #U60
-      #0
-      (List.cons #U60 #1 (List.cons #U60 #2 (List.nil #U60)))
+      U60
+      0
+      (List.cons U60 1 (List.cons U60 2 (List.nil U60)))
     )
   use ys = (List.cons
-      #U60
-      #3
-      (List.cons #U60 #4 (List.cons #U60 #5 (List.nil #U60)))
+      U60
+      3
+      (List.cons U60 4 (List.cons U60 5 (List.nil U60)))
     )
-  (List.concat #U60 xs ys)
+  (List.concat U60 xs ys)

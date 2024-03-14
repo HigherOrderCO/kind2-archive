@@ -3,12 +3,12 @@ QBool2
 = $(self: QBool2)
   ∀(P: ∀(x: QBool2) *)
   ∀(new: 
-    ∀(tag: #U60)
-    #match tag = tag {
-      #0: (P QBool2.true)
-      #+: #match tag_1 = tag-1 {
-        #0: (P QBool2.false)
-        #+: ∀(e: Empty) * 
+    ∀(tag: U60)
+    switch tag = tag {
+      0: (P QBool2.true)
+      +: switch tag_1 = tag-1 {
+        0: (P QBool2.false)
+        +: ∀(e: Empty) * 
       }: * 
     }: *
   )

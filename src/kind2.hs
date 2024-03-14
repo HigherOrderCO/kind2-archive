@@ -34,7 +34,7 @@ data Term
   | U60
   | Num Int
   | Op2 Oper Term Term
-  | Mat String Term Term (Term -> Term) (Term -> Term)
+  | Swi String Term Term (Term -> Term) (Term -> Term)
   | Hol String [Term]
   | Met Int [Term]
   | Var String Int
@@ -239,7 +239,7 @@ termReduce fill lv (Ref nam val)     = termReduceRef fill lv nam (termReduce fil
 termReduce fill lv (Let nam val bod) = termReduce fill lv (bod val)
 termReduce fill lv (Use nam val bod) = termReduce fill lv (bod val)
 termReduce fill lv (Op2 opr fst snd) = termReduceOp2 fill lv opr (termReduce fill lv fst) (termReduce fill lv snd)
-termReduce fill lv (Mat nam x z s p) = termReduceMat fill lv nam (termReduce fill lv x) z s p
+termReduce fill lv (Swi nam x z s p) = termReduceSwi fill lv nam (termReduce fill lv x) z s p
 termReduce fill lv (Txt txt)         = termReduceTxt fill lv txt
 termReduce fill lv (Nat val)         = termReduceNat fill lv val
 termReduce fill lv (Src src val)     = termReduce fill lv val
@@ -280,13 +280,13 @@ termReduceOp2 fill lv LTE (Num fst) (Num snd) = if fst <= snd then Num 1 else Nu
 termReduceOp2 fill lv GTE (Num fst) (Num snd) = if fst >= snd then Num 1 else Num 0
 termReduceOp2 fill lv opr fst snd             = Op2 opr fst snd
 
-termReduceMat :: Map Term -> Int -> String -> Term -> Term -> (Term -> Term) -> (Term -> Term) -> Term
-termReduceMat fill 2  nam (Ref _ x)           z s p = termReduceMat fill 2 nam x z s p
-termReduceMat fill 1  nam (Ref _ x)           z s p = termReduceMat fill 1 nam x z s p
-termReduceMat fill lv nam (Num 0)             z s p = termReduce fill lv z
-termReduceMat fill lv nam (Num n)             z s p = termReduce fill lv (s (Num (n - 1)))
-termReduceMat fill lv nam (Op2 ADD (Num 1) k) z s p = termReduce fill lv (s k)
-termReduceMat fill lv nam val                 z s p = Mat nam val z s p
+termReduceSwi :: Map Term -> Int -> String -> Term -> Term -> (Term -> Term) -> (Term -> Term) -> Term
+termReduceSwi fill 2  nam (Ref _ x)           z s p = termReduceSwi fill 2 nam x z s p
+termReduceSwi fill 1  nam (Ref _ x)           z s p = termReduceSwi fill 1 nam x z s p
+termReduceSwi fill lv nam (Num 0)             z s p = termReduce fill lv z
+termReduceSwi fill lv nam (Num n)             z s p = termReduce fill lv (s (Num (n - 1)))
+termReduceSwi fill lv nam (Op2 ADD (Num 1) k) z s p = termReduce fill lv (s k)
+termReduceSwi fill lv nam val                 z s p = Swi nam val z s p
 
 termReduceRef :: Map Term -> Int -> String -> Term -> Term
 termReduceRef fill 2  nam val = termReduce fill 2 val
@@ -327,7 +327,7 @@ termNormal fill lv term dep = termNormalGo fill lv (termReduce fill lv term) dep
   termNormalGo fill lv U60               dep = U60
   termNormalGo fill lv (Num val)         dep = Num val
   termNormalGo fill lv (Op2 opr fst snd) dep = Op2 opr (termNormal fill lv fst dep) (termNormal fill lv snd dep)
-  termNormalGo fill lv (Mat nam x z s p) dep = Mat nam (termNormal fill lv x dep) (termNormal fill lv z dep) (\k -> termNormal fill lv (s (Var (stringConcat nam "-1") dep)) dep) (\k -> termNormal fill lv (p (Var nam dep)) dep)
+  termNormalGo fill lv (Swi nam x z s p) dep = Swi nam (termNormal fill lv x dep) (termNormal fill lv z dep) (\k -> termNormal fill lv (s (Var (stringConcat nam "-1") dep)) dep) (\k -> termNormal fill lv (p (Var nam dep)) dep)
   termNormalGo fill lv (Txt val)         dep = Txt val
   termNormalGo fill lv (Nat val)         dep = Nat val
   termNormalGo fill lv (Var nam idx)     dep = Var nam idx
@@ -375,7 +375,7 @@ termSimilar (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep = do
   eFst <- termEqual aFst bFst dep
   eSnd <- termEqual aSnd bSnd dep
   envPure (eFst && eSnd)
-termSimilar (Mat aNam aX aZ aS aP) (Mat bNam bX bZ bS bP) dep = do
+termSimilar (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep = do
   eX <- termEqual aX bX dep
   eZ <- termEqual aZ bZ dep
   eS <- termEqual (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep
@@ -437,7 +437,7 @@ termIdenticalGo (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep =
   envBind (termIdentical aFst bFst dep) $ \iFst ->
   envBind (termIdentical aSnd bSnd dep) $ \iSnd ->
   envPure (iFst && iSnd)
-termIdenticalGo (Mat aNam aX aZ aS aP) (Mat bNam bX bZ bS bP) dep =
+termIdenticalGo (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep =
   envBind (termIdentical aX bX dep) $ \iX ->
   envBind (termIdentical aZ bZ dep) $ \iZ ->
   envBind (termIdentical (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep) $ \iS ->
@@ -517,7 +517,7 @@ termUnifyIsRec fill uid (Let nam val bod) dep = termUnifyIsRec fill uid val dep 
 termUnifyIsRec fill uid (Use nam val bod) dep = termUnifyIsRec fill uid val dep || termUnifyIsRec fill uid (bod (Var nam dep)) (dep + 1)
 termUnifyIsRec fill uid (Hol nam ctx)     dep = False
 termUnifyIsRec fill uid (Op2 opr fst snd) dep = termUnifyIsRec fill uid fst dep || termUnifyIsRec fill uid snd dep
-termUnifyIsRec fill uid (Mat nam x z s p) dep = termUnifyIsRec fill uid x dep || termUnifyIsRec fill uid z dep || termUnifyIsRec fill uid (s (Var (stringConcat nam "-1") dep)) (dep + 1) || termUnifyIsRec fill uid (p (Var nam dep)) dep
+termUnifyIsRec fill uid (Swi nam x z s p) dep = termUnifyIsRec fill uid x dep || termUnifyIsRec fill uid z dep || termUnifyIsRec fill uid (s (Var (stringConcat nam "-1") dep)) (dep + 1) || termUnifyIsRec fill uid (p (Var nam dep)) dep
 termUnifyIsRec fill uid (Src src val)     dep = termUnifyIsRec fill uid val dep
 termUnifyIsRec fill uid (Met bUid bSpn)   dep = case termReduceMet fill 2 bUid bSpn of
   (Met bUid bSpn) -> uid == bUid
@@ -542,7 +542,7 @@ termUnifySubst lvl neo Set               = Set
 termUnifySubst lvl neo U60               = U60
 termUnifySubst lvl neo (Num n)           = Num n
 termUnifySubst lvl neo (Op2 opr fst snd) = Op2 opr (termUnifySubst lvl neo fst) (termUnifySubst lvl neo snd)
-termUnifySubst lvl neo (Mat nam x z s p) = Mat nam (termUnifySubst lvl neo x) (termUnifySubst lvl neo z) (\k -> termUnifySubst lvl neo (s k)) (\k -> termUnifySubst lvl neo (p k))
+termUnifySubst lvl neo (Swi nam x z s p) = Swi nam (termUnifySubst lvl neo x) (termUnifySubst lvl neo z) (\k -> termUnifySubst lvl neo (s k)) (\k -> termUnifySubst lvl neo (p k))
 termUnifySubst lvl neo (Txt txt)         = Txt txt
 termUnifySubst lvl neo (Nat val)         = Nat val
 termUnifySubst lvl neo (Var nam idx)     = if lvl == idx then neo else Var nam idx
@@ -613,7 +613,7 @@ termInferGo (Op2 opr fst snd) dep = do
   envSusp (Check 0 fst U60 dep)
   envSusp (Check 0 snd U60 dep)
   return U60
-termInferGo (Mat nam x z s p) dep = do
+termInferGo (Swi nam x z s p) dep = do
   envSusp (Check 0 x U60 dep)
   envSusp (Check 0 (p (Ann False (Var nam dep) U60)) Set dep)
   envSusp (Check 0 z (p (Num 0)) dep)
@@ -753,19 +753,19 @@ termShow Set dep = "*"
 termShow U60 dep = "#U60"
 termShow (Num val) dep =
   let val' = u60Show val
-  in stringJoin ["#" , val']
+  in stringJoin [val']
 termShow (Op2 opr fst snd) dep =
   let opr' = operShow opr
       fst' = termShow fst dep
       snd' = termShow snd dep
-  in stringJoin ["#(" , opr' , " " , fst' , " " , snd' , ")"]
-termShow (Mat nam x z s p) dep =
+  in stringJoin ["(" , opr' , " " , fst' , " " , snd' , ")"]
+termShow (Swi nam x z s p) dep =
   let nam' = nam
       x'   = termShow x dep
       z'   = termShow z dep
       s'   = termShow (s (Var (stringConcat nam "-1") dep)) (dep + 1)
       p'   = termShow (p (Var nam dep)) dep
-  in stringJoin ["#match " , nam' , " = " , x' , " { #0: " , z' , " #+: " , s' , " }: " , p']
+  in stringJoin ["switch " , nam' , " = " , x' , " { #0: " , z' , " #+: " , s' , " }: " , p']
 termShow (Txt txt) dep = stringJoin [quote , txt , quote]
 termShow (Nat val) dep = show val
 termShow (Hol nam ctx) dep = stringJoin ["?" , nam]

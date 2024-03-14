@@ -2,10 +2,10 @@ Kind.Term.parser.op2
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text
     Kind.PreTerm
-    "#("
+    "("
     (Kind.Term.parser.bind
       _
-      (Parser.text "#(")
+      (Parser.text "(")
       λ_
       (Kind.Term.parser.bind
         _

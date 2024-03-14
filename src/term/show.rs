@@ -169,21 +169,21 @@ impl Term {
           Show::text(")"),
         ])
       },
-      Term::Mat { nam, x, z, s, p } => {
+      Term::Swi { nam, x, z, s, p } => {
         Show::call(" ", vec![
           Show::glue(" ", vec![
-            Show::text("#match"),
+            Show::text("switch"),
             Show::text(nam),
             Show::text("="),
             x.format_go(),
             Show::text("{"),
           ]),
           Show::glue("", vec![
-            Show::text("#0: "),
+            Show::text("0: "),
             z.format_go(),
           ]),
           Show::glue("", vec![
-            Show::text("#+: "),
+            Show::text("+: "),
             s.format_go(),
             Show::text(" "),
           ]),

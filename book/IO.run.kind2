@@ -6,7 +6,7 @@ IO.run
     (HVM.print (IO A) text (IO.run A (then Unit.one)))
   use load = λfile λthen
     (HVM.load (IO A) file λs (IO.run A (then s)))
-  use save = λfile λdata λthen
-    (HVM.save (IO A) file data (IO.run A (then Unit.one)))
+  use save = λfile λtext λthen
+    (HVM.save (IO A) file text (IO.run A (then Unit.one)))
   use done = λterm (IO.done A term)
   (~x P print load save done)
