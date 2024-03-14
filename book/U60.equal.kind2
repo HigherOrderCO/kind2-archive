@@ -3,5 +3,5 @@ U60.equal
 = λa λb
   switch x = (== a b) {
     0: Bool.false
-    +: Bool.true 
+    _: Bool.true 
   }: Bool

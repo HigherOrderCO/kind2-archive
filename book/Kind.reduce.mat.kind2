@@ -12,7 +12,7 @@ Kind.reduce.mat
   use Y = λx.val
     switch x = x.val {
       0: λz λs (Kind.reduce maj z)
-      +: λz λs (Kind.reduce maj (s (Kind.num x-1))) 
+      _: λz λs (Kind.reduce maj (s (Kind.num x-1))) 
     }: ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
     Kind.Term
   use N = λx λz λs (Kind.mat nam x z s p)

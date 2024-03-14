@@ -8,9 +8,9 @@ QBool
     ∀(x: 
       switch t = t {
         0: (P QBool.true)
-        +: switch t = t-1 {
+        _: switch t = t-1 {
           0: (P QBool.false)
-          +: ∀(x: Empty) * 
+          _: ∀(x: Empty) * 
         }: * 
       }: *
     )

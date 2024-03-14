@@ -10,18 +10,18 @@ QBool2.match
     λtag
     switch tag = tag {
       0: t
-      +: switch tag_1 = tag-1 {
+      _: switch tag_1 = tag-1 {
         0: f
-        +: λe (~e λx *) 
+        _: λe (~e λx *) 
       }: switch tag_1 = tag_1 {
         0: (P QBool2.false)
-        +: ∀(e: Empty) * 
+        _: ∀(e: Empty) * 
       }: * 
     }: switch tag = tag {
       0: (P QBool2.true)
-      +: switch tag_1 = tag-1 {
+      _: switch tag_1 = tag-1 {
         0: (P QBool2.false)
-        +: ∀(e: Empty) * 
+        _: ∀(e: Empty) * 
       }: * 
     }: *
   )

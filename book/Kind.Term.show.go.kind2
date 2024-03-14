@@ -140,7 +140,7 @@ Kind.Term.show.go
                 z
                 dep
                 (Kind.Text.show.go
-                  "; +: "
+                  "; _: "
                   (Kind.Term.show.go
                     (s (Kind.var (String.concat nam "-1") dep))
                     (Nat.succ dep)

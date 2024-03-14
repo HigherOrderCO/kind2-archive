@@ -3,7 +3,7 @@ U60.name.go
 = λn
   switch n = n {
     0: λnil nil
-    +: λnil
+    _: λnil
     (String.cons
       (+ 97 (% n-1 26))
       (U60.name.go (/ n-1 26) nil)
