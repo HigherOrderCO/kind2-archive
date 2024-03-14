@@ -1,8 +1,5 @@
 use crate::{*};
 
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
-
 impl Book {
 
   pub fn to_hvm1_checker(&self) -> String {

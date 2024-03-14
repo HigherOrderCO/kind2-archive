@@ -81,7 +81,7 @@ impl Src {
   }
 }
 
-fn name(numb: usize) -> String {
+fn _name(numb: usize) -> String {
   let mut name = String::new();
   let mut numb = numb as i64;
   loop {

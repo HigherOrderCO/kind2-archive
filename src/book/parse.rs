@@ -1,8 +1,5 @@
 use crate::{*};
 
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
-
 impl<'i> KindParser<'i> {
 
   // Parses a top-level use-declaration

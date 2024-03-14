@@ -1,5 +1,3 @@
-use crate::Term;
-
 // Example:
 //   ["(" "foo" "arg0" "arg1" "arg2" ")"]
 // Call:
