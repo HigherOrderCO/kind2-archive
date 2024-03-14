@@ -149,15 +149,15 @@ impl Term {
         Show::text("*")
       },
       Term::U60 => {
-        Show::text("#U60")
+        Show::text("U60")
       },
       Term::Num { val } => {
-        Show::text(&format!("#{}", val))
+        Show::text(&format!("{}", val))
       },
       Term::Op2 { opr, fst, snd } => {
         Show::call(" ", vec![
           Show::glue("", vec![
-            Show::text("#("),
+            Show::text("("),
             opr.format(),
           ]),
           Show::glue("", vec![

@@ -297,7 +297,7 @@ impl<'i> KindParser<'i> {
         val: Box::new(Term::Var { nam: format!("{}-1", nam) }),
         bod: val,
       });
-      for i in (0..(cases.len())).rev() {
+      for i in (1..(cases.len())).rev() {
         let x = Box::new(Term::Var { nam: format!("{}-1", nam.clone()) });
         let z = cases[i].clone();
         let s = val;
@@ -305,6 +305,7 @@ impl<'i> KindParser<'i> {
         val = Box::new(Term::Swi { nam: nam.clone(), x, z, s, p });
       }
       val = Box::new(Term::Swi { nam, x, z: cases[0].clone(), s: val, p });
+      //println!("SWITCH:\n{}", val.show());
       return Ok(Term::Src { src, val });
     }
 
