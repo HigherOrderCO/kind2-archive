@@ -1,3 +1,2 @@
-Char.is_decimal
-: ∀(a: Char) Bool
-= λa (Char.is_between #48 #57 a)
+Char.is_decimal (a: Char) : Bool =
+  (Char.is_between #48 #57 a)

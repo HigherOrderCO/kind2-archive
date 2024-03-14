@@ -1,43 +1,14 @@
 Char.escapes
 : (List (Pair Char Char))
-= (List.cons
-    (Pair Char Char)
-    (Pair.new Char Char #98 #8)
-    (List.cons
-      (Pair Char Char)
-      (Pair.new Char Char #102 #12)
-      (List.cons
-        (Pair Char Char)
-        (Pair.new Char Char #110 #10)
-        (List.cons
-          (Pair Char Char)
-          (Pair.new Char Char #114 #13)
-          (List.cons
-            (Pair Char Char)
-            (Pair.new Char Char #116 #9)
-            (List.cons
-              (Pair Char Char)
-              (Pair.new Char Char #118 #11)
-              (List.cons
-                (Pair Char Char)
-                (Pair.new Char Char #92 #92)
-                (List.cons
-                  (Pair Char Char)
-                  (Pair.new Char Char #34 #34)
-                  (List.cons
-                    (Pair Char Char)
-                    (Pair.new Char Char #48 #0)
-                    (List.cons
-                      (Pair Char Char)
-                      (Pair.new Char Char #39 #39)
-                      (List.nil (Pair Char Char))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
+= [
+  (Pair.new _ _ #98 #8)
+  (Pair.new _ _ #102 #12)
+  (Pair.new _ _ #110 #10)
+  (Pair.new _ _ #114 #13)
+  (Pair.new _ _ #116 #9)
+  (Pair.new _ _ #118 #11)
+  (Pair.new _ _ #92 #92)
+  (Pair.new _ _ #34 #34)
+  (Pair.new _ _ #48 #0)
+  (Pair.new _ _ #39 #39)
+]

@@ -1,6 +1,5 @@
 use crate::{*};
 
-
 impl<'i> KindParser<'i> {
 
   pub fn parse_oper(&mut self) -> Result<Oper, String> {
@@ -76,9 +75,9 @@ impl<'i> KindParser<'i> {
         val: Box::new(Term::App {
           fun: Box::new(Term::App {
             fun: Box::new(Term::Var { nam: "Equal.refl".to_string() }),
-            arg: Box::new(Term::Met {})
+            arg: Box::new(Term::Met {}),
           }),
-          arg: Box::new(Term::Met {})
+          arg: Box::new(Term::Met {}),
         })
       });
     }

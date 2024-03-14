@@ -2,19 +2,23 @@
 //| cons (len: Nat) (head: A) (tail: (Vector A len)) : (Vector A (Nat.succ len))
 //| nil : (Vector A Nat.zero)
 
-use Nat.{succ,zero}
+//use Nat.{succ,zero}
 
-_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
-  match a {
-    succ: match b {
-      succ: e
-      zero: e
-    }
-    zero: match b {
-      succ: e
-      zero: ?D
-    }
-  }
+_main : Nat =
+  (Nat.add 1 2)
+  
+
+//_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
+  //match a {
+    //succ: match b {
+      //succ: e
+      //zero: e
+    //}
+    //zero: match b {
+      //succ: e
+      //zero: ?D
+    //}
+  //}
 
   //λa λb λe
   //use a.P    = _

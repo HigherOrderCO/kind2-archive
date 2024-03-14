@@ -655,8 +655,8 @@ termCheckGo src (Hol termNam termCtx) typx dep = do
 termCheckGo src (Met uid spn) typx dep = do
   return ()
 termCheckGo src (Ann chk val typ) typx dep = do
+  termCheckCompare src val typ typx dep
   if chk then do
-    termCheckCompare src val typ typx dep
     termCheck src val typ dep
   else do
     return ()
