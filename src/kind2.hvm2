@@ -1,5 +1,4 @@
 // This is a Haskell implementation of Kind2's type checker. Since Kind2 isn't
-//
 // bootstrapped, we can't use Kind2 itself to type-check it, and developing a
 // complex checker in an untyped language (like HVM) is hard. As such, this
 // Haskell view helps me develop and debug the checker, and it is done in a way
@@ -601,7 +600,7 @@ termInferGo (App fun arg) dep =
       (envBind (envSusp (Check 0 arg ftyp_inp dep)) λ_
       (envPure (ftyp_bod arg)))
     otherwise:
-      (envBind (envLog (Error 0 ftyp (Hol "function" []) (App fun arg) dep)) λ_
+      (envBind (envLog (Error 0 (Hol "function" []) ftyp (App fun arg) dep)) λ_
       envFail)
   }))
 termInferGo (Ann chk val typ) dep =
@@ -619,7 +618,7 @@ termInferGo (Ins val) dep =
     (Slf vtyp_nam vtyp_typ vtyp_bod):
       (envPure (vtyp_bod (Ins val)))
     otherwise:
-      (envBind (envLog (Error 0 vtyp (Hol "self-type" []) (Ins val) dep)) λ_
+      (envBind (envLog (Error 0 (Hol "self-type" []) vtyp (Ins val) dep)) λ_
       envFail)
   }))
 termInferGo (Ref nam val) dep =
@@ -650,16 +649,16 @@ termInferGo (Let nam val bod) dep =
 termInferGo (Use nam val bod) dep =
   (termInfer (bod val) dep)
 termInferGo (Lam nam bod) dep =
-  (envBind (envLog (Error 0 (Hol "untyped_lambda" []) (Hol "type_annotation" []) (Lam nam bod) dep)) λ_
+  (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_lambda" []) (Lam nam bod) dep)) λ_
   envFail)
 termInferGo (Hol nam ctx) dep =
-  (envBind (envLog (Error 0 (Hol "untyped_hole" []) (Hol "type_annotation" []) (Hol nam ctx) dep)) λ_
+  (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_hole" []) (Hol nam ctx) dep)) λ_
   envFail)
 termInferGo (Met uid spn) dep =
-  (envBind (envLog (Error 0 (Hol "untyped_meta" []) (Hol "type_annotation" []) (Met uid spn) dep)) λ_
+  (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_meta" []) (Met uid spn) dep)) λ_
   envFail)
 termInferGo (Var nam idx) dep =
-  (envBind (envLog (Error 0 (Hol "untyped_variable" []) (Hol "type_annotation" []) (Var nam idx) dep)) λ_
+  (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_variable" []) (Var nam idx) dep)) λ_
   envFail)
 termInferGo (Src src val) dep =
   (termInfer val dep)
@@ -684,13 +683,13 @@ termCheckGo src (Lam termNam termBod) typx dep =
     })
 termCheckGo src (Ins termVal) typx dep =
   (envBind envGetFill λfill
-    match (termReduce fill 2 typx) {
-      (Slf typeNam typeTyp typeBod):
-        (termCheck 0 termVal (typeBod (Ins termVal)) dep)
-      _:
-        (envBind (termInfer (Ins termVal) dep) λ_
-        (envPure *))
-    })
+  match (termReduce fill 2 typx) {
+    (Slf typeNam typeTyp typeBod):
+      (termCheck 0 termVal (typeBod (Ins termVal)) dep)
+    _:
+      (envBind (termInfer (Ins termVal) dep) λ_
+      (envPure *))
+  })
 termCheckGo src (Let termNam termVal termBod) typx dep =
   (envBind (termInfer termVal dep) λtermTyp
   (termCheck 0 (termBod (Ann False (Var termNam dep) termTyp)) typx dep))
@@ -701,6 +700,11 @@ termCheckGo src (Hol termNam termCtx) typx dep =
   (envPure *))
 termCheckGo src (Met uid spn) typx dep =
   (envPure *)
+termCheckGo src (Ann chk val typ) typx dep =
+  (envBind (termCheckCompare src val typ typx dep) λ_
+  (If chk
+    (termCheck src val typ dep)
+    (envPure *)))
 // termCheckGo src (Ref termNam (Ann termVal termTyp)) typx dep =
   // (envBind (termEqual typx termTyp dep) λequal
   // (termCheckReport src equal termTyp typx termVal dep)
@@ -708,13 +712,16 @@ termCheckGo src (Src termSrc termVal) typx dep =
   (termCheck termSrc termVal typx dep)
 termCheckGo src term typx dep =
   (envBind (termInfer term dep) λinfer
-  (envBind (termEqual typx infer dep) λequal
+  (termCheckCompare src term typx infer dep))
+
+termCheckCompare src term expected detected dep =
+  (envBind (termEqual expected detected dep) λequal
   (If equal
-    (envBind envTakeSusp λsusp (envBind 
-      (listCheck susp) λ_
+    (envBind envTakeSusp λsusp
+      (envBind (listCheck susp) λ_
       (envPure *)))
-    (envBind (envLog (Error src infer typx term dep)) λ_
-    envFail))))
+    (envBind (envLog (Error src expected detected term dep)) λ_
+    envFail)))
 
 // listCheck :: [a] -> Env *
 listCheck []               = (envPure *)
@@ -833,8 +840,8 @@ infoShow fill (Found name typ ctx dep) =
   let ctx_ = (stringTail (contextShow fill ctx dep))
   (stringJoin ["#found{", name, " ", typ_, " [", ctx_, "]}"])
 infoShow fill (Error src expected detected value dep) =
-  let det = (termShow (termNormal fill 1 detected dep) dep)
   let exp = (termShow (termNormal fill 1 expected dep) dep)
+  let det = (termShow (termNormal fill 1 detected dep) dep)
   let val = (termShow (termNormal fill 0 value dep) dep)
   (stringJoin ["#error{", exp, " ", det, " ", val, " ", (u60Show src), "}"])
 infoShow fill (Solve name term dep) =

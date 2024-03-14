@@ -211,6 +211,9 @@ impl Term {
       Term::Txt { txt } => {
         format!("(Txt \"{}\")", txt.replace("\n", "\\n"))
       }
+      Term::Mch { .. } => {
+        unreachable!()
+      }
     }
   }
 
