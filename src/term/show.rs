@@ -183,7 +183,7 @@ impl Term {
             z.format_go(),
           ]),
           Show::glue("", vec![
-            Show::text("+: "),
+            Show::text("_: "),
             s.format_go(),
             Show::text(" "),
           ]),

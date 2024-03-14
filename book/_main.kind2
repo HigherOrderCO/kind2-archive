@@ -4,9 +4,11 @@
 
 //use Nat.{succ,zero}
 
-_main : Nat =
-  #50
-  
+_main (n: U60) : U60 =
+  switch n {
+    0: 0
+    _: n-1
+  }
 
 //_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
   //switch a {
