@@ -7,5 +7,5 @@ U60.show.go
       (/ n 10)
       (String.cons (+ 48 (% n 10)) nil)
     )
-    +: λnil (String.cons (+ 48 n) nil) 
+    _: λnil (String.cons (+ 48 n) nil) 
   }: String.Concatenator

@@ -10,7 +10,7 @@ BBT.has.linear
   use bin = λsize λnode_key λval λlft λrgt
     use P = λx
       ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-      ∀(size: #U60)
+      ∀(size: U60)
       ∀(node_key: K)
       ∀(val: V)
       ∀(lft: (BBT K V))

@@ -1,3 +1,3 @@
 U60.if
 : ∀(x: U60) ∀(P: *) ∀(t: P) ∀(f: P) P
-= λx λP λt λf switch x = x { 0: t +: f }: P
+= λx λP λt λf switch x = x { 0: t _: f }: P

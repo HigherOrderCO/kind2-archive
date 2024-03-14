@@ -6,9 +6,9 @@ QBool2
     ∀(tag: U60)
     switch tag = tag {
       0: (P QBool2.true)
-      +: switch tag_1 = tag-1 {
+      _: switch tag_1 = tag-1 {
         0: (P QBool2.false)
-        +: ∀(e: Empty) * 
+        _: ∀(e: Empty) * 
       }: * 
     }: *
   )
