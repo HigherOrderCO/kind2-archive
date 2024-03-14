@@ -1,3 +1,6 @@
-Equal
-: ∀(A: *) ∀(a: A) ∀(b: A) *
-= λA λa λb ∀(P: ∀(x: A) *) ∀(p: (P a)) (P b)
+data Equal T (a: T) (b: T)
+| refl (a: T) : (Equal T a a)
+
+//Equal
+//: ∀(A: *) ∀(a: A) ∀(b: A) *
+//= λA λa λb ∀(P: ∀(x: A) *) ∀(p: (P a)) (P b)

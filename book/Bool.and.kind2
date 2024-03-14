@@ -3,7 +3,3 @@ Bool.and (a: Bool) (b: Bool) : Bool =
     Bool.true: b
     Bool.false: Bool.false
   }
-  //use P = λa ∀(b: Bool) Bool
-  //use true = λb b
-  //use false = λb Bool.false
-  //((~a P true false) b)

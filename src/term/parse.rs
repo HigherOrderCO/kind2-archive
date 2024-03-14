@@ -64,6 +64,25 @@ impl<'i> KindParser<'i> {
       return Ok(Term::Src { src, val: Box::new(Term::Lam { nam, bod }) });
     }
 
+    // RFL ::= (=)
+    if self.starts_with("{=}") {
+      // returns the same as if we parsed the "(Equal.refl _ _)" application
+      let ini = *self.index() as u64;
+      self.consume("{=}")?;
+      let end = *self.index() as u64;
+      let src = Src::new(fid, ini, end);
+      return Ok(Term::Src {
+        src,
+        val: Box::new(Term::App {
+          fun: Box::new(Term::App {
+            fun: Box::new(Term::Var { nam: "Equal.refl".to_string() }),
+            arg: Box::new(Term::Met {})
+          }),
+          arg: Box::new(Term::Met {})
+        })
+      });
+    }
+
     // APP ::= (<term> <term>)
     if self.starts_with("(") {
       let ini = *self.index() as u64;
@@ -84,17 +103,32 @@ impl<'i> KindParser<'i> {
       return Ok(Term::Src { src, val: app });
     }
 
-    // ANN ::= {<term>: <term>}
+    // ANN ::= {<term> : <term>}
+    // EQL ::= {<term> = <term>}
     if self.starts_with("{") {
       let ini = *self.index() as u64;
       self.consume("{")?;
       let val = Box::new(self.parse_term(fid, uses)?);
-      self.consume(":")?;
-      let typ = Box::new(self.parse_term(fid, uses)?);
-      self.consume("}")?;
-      let end = *self.index() as u64;
-      let src = Src::new(fid, ini, end);
-      return Ok(Term::Src { src, val: Box::new(Term::Ann { chk: true, val, typ }) });
+      self.skip_trivia();
+      if self.peek_one() == Some(':') {
+        self.consume(":")?;
+        let chk = true;
+        let typ = Box::new(self.parse_term(fid, uses)?);
+        self.consume("}")?;
+        let end = *self.index() as u64;
+        let src = Src::new(fid, ini, end);
+        return Ok(Term::Src { src, val: Box::new(Term::Ann { chk, val, typ }) });
+      } else if self.peek_one() == Some('=') {
+        self.consume("=")?;
+        let cmp = Box::new(self.parse_term(fid, uses)?);
+        self.consume("}")?;
+        let end = *self.index() as u64;
+        let src = Src::new(fid, ini, end);
+        let eql = Equal { a: *val, b: *cmp };
+        return Ok(Term::Src { src, val: Box::new(Term::new_equal(&eql)) });
+      } else {
+        return self.expected("':' or '=' after '{'");
+      }
     }
 
     // SLF ::= $(<name>: <term>) <term>

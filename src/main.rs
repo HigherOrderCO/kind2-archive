@@ -23,12 +23,10 @@ use std::process::Command;
 TSPL::new_parser!(KindParser);
 
 fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
-  //let used_defs = book.defs.keys().collect::<Vec<_>>().iter().map(|name| format!("(Pair \"{}\" Book.{})", name, name)).collect::<Vec<_>>().join(" ");
   let kind_hvm1 = include_str!("./kind2.hvm1");
   let book_hvm1 = book.to_hvm1();
   let main_hvm1 = match command {
     "check" => format!("Main = (API.check Book.{})\n", arg),
-    //"check" => format!("Main = (API.check.many [{}])\n", used_defs),
     "run"   => format!("Main = (API.normal Book.{})\n", arg),
     _       => panic!("invalid command"),
   };

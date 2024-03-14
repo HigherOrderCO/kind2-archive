@@ -1,7 +1,7 @@
-Bool.or
-: ∀(a: Bool) ∀(b: Bool) Bool
-= λa
-  use P = λa ∀(b: Bool) Bool
-  use true = λb Bool.true
-  use false = λb b
-  (~a P true false)
+use Bool.{true,false}
+
+Bool.or (a: Bool) (b: Bool) : Bool =
+  match a {
+    true: true
+    false: b
+  }

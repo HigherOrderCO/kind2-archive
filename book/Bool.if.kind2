@@ -1,3 +1,5 @@
-Bool.if
-: ∀(b: Bool) ∀(P: *) ∀(t: P) ∀(f: P) P
-= λb λP λt λf (~b λx P t f)
+Bool.if (b: Bool) (P: *) (t: P) (f: P) : P =
+  match b {
+    Bool.true: t
+    Bool.false: f
+  }

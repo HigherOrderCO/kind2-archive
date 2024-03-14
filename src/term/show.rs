@@ -36,7 +36,7 @@ impl Term {
   }
 
   pub fn format(&self) -> Box<Show> {
-    return self.format_go();
+    return self.clean().format_go();
   }
 
   pub fn format_go(&self) -> Box<Show> {
@@ -49,6 +49,11 @@ impl Term {
     // Shows a List
     if let Some(list) = self.as_list() {
       return list.format();
+    }
+
+    // Shows an Equal
+    if let Some(equal) = self.as_equal() {
+      return equal.format();
     }
 
     // Shows an ADT
@@ -108,18 +113,19 @@ impl Term {
         vec.push(Show::text(")"));
         Show::call(" ", vec)
       }
-      Term::Ann { chk: _, val, typ } => {
-        Show::call("", vec![
-          Show::glue("", vec![
-            Show::text("{"),
-            val.format_go(),
-          ]),
-          Show::glue("", vec![
-            Show::text(":"),
-            typ.format_go(),
-            Show::text("}"),
-          ])
-        ])
+      Term::Ann { chk: _, val, typ: _ } => {
+        val.format_go()
+        //Show::call("", vec![
+          //Show::glue("", vec![
+            //Show::text("{"),
+            //val.format_go(),
+          //]),
+          //Show::glue("", vec![
+            //Show::text(":"),
+            //typ.format_go(),
+            //Show::text("}"),
+          //])
+        //])
       },
       Term::Slf { nam, typ, bod } => {
         Show::pile(" ", vec![

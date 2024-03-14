@@ -1,7 +1,5 @@
-Bool.show
-: ∀(x: Bool) String
-= λx
-  use P = λx String
-  use true = "true"
-  use false = "false"
-  (~x P true false)
+Bool.show (x: Bool) : String =
+  match x {
+    Bool.true: "true"
+    Bool.false: "false"
+  }

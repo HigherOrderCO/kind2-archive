@@ -6,6 +6,13 @@ pub struct List {
   pub vals: Vec<Box<Term>>,
 }
 
+// A Propositional Equality.
+#[derive(Debug, Clone)]
+pub struct Equal {
+  pub a: Term,
+  pub b: Term,
+}
+
 // An Algebraic Data Type (ADT).
 #[derive(Debug, Clone)]
 pub struct ADT {
@@ -36,6 +43,30 @@ pub struct Match {
 
 // Examples:
 // 
+// The Nat sugar is merely a shortcut. For example:
+//
+//   (Nat.succ (Nat.succ (Nat.succ Nat.zero)))
+//
+// Is converted to and from:
+//
+//   3
+//
+// The List sugar is merely a shortcut. For example:
+//
+//   (List.cons _ a (List.cons _ b (List.cons _ c (List.nil _))))
+//
+// Is converted to and from:
+//    
+//   [a, b, c]
+//
+// The Equal sugar is also a shortcut. For example:
+//
+//   (Equal _ a b)
+//
+// Is converted to and from:
+//
+//   {a = b}
+//
 // The Vector type:
 //
 //   data Vector A (len: Nat)
@@ -107,20 +138,26 @@ pub struct Match {
 // 5. The 'with' clause is optional.
 //
 // The 'with' clause moves outer vars inwards, linearizing them. For example:
+//
 //   let a = (f y)
 //   match x {
 //     tic: a
 //     tac: a
 //   }
+//
 // Would, normally, cause 'a' to be *cloned*. This has two problems:
+//
 // 1. Cloning can have large efficiency costs in some runtimes, such as the HVM.
 // 2. If 'x' occurs in the type of 'a', it won't get specialized, blocking proofs.
+//
 // The 'with' clause allows us to solve both issues. For example:
+//
 //   let a = (f y)
 //   match x with a {
 //     tic: a
 //     tac: a
 //   }
+//
 // This expression is desugared as:
 //   let a = (f y)
 //   let b = (g y)
@@ -128,8 +165,24 @@ pub struct Match {
 //     tic: λa a
 //     tac: λa a
 //   }): ∀(a: A) ∀(b: B) _} a b)
+//
 // Or, in raw terms, the 'match_expr' is changed to:
+//
 //   (APP (APP (ANN match_expr (ALL "a" A (ALL "b" B ... MET))) a) b)
+//
+// For a full example, the expression:
+//
+//   match x = (f arg) with (a: A) (b: B) {
+//     Vector.cons: (U60.add x.head (sum x.tail))
+//     Vector.nil: #0
+//   }: #U60
+//
+// Is converted to:
+//
+//   use x.P = λx.len λx ∀(a: A) ∀(b: B) #U60
+//   use x.cons = λx.head λx.tail λa λb ((U60.add x.head) (sum x.tail))
+//   use x.nil = λx.len λa λb #0
+//   (({(((~(f arg) x.P) x.cons) x.nil): ∀(a: A) ∀(b: B) _} a) b)
 
 // Nat
 // ---
@@ -231,6 +284,114 @@ impl Term {
       };
     }
     term
+  }
+
+}
+
+impl List {
+  
+  pub fn format(&self) -> Box<Show> {
+    if self.vals.len() == 0 {
+      return Show::text("[]");
+    } else {
+      return Show::call("", vec![
+        Show::text("["),
+        Show::pile(", ", self.vals.iter().map(|x| x.format_go()).collect()),
+        Show::text("]"),
+      ]);
+    }
+  }
+
+}
+
+impl<'i> KindParser<'i> {
+
+  pub fn parse_list(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::List, String> {
+    self.consume("[")?;
+    let mut vals = Vec::new();
+    while self.peek_one() != Some(']') {
+      vals.push(Box::new(self.parse_term(fid, uses)?));
+      self.skip_trivia();
+      if self.peek_one() == Some(',') {
+        self.consume(",")?;
+      }
+    }
+    self.consume("]")?;
+    return Ok(crate::sugar::List { vals });
+  }
+
+}
+
+// Equal
+// -----
+
+impl Term {
+
+  // Interprets as an Equality:
+  // - (((Equal _) a) b)
+  // Patterns:
+  // - (EQUAL a b) ::= (App (App (App (Var "Equal") _) a) b)
+  pub fn as_equal(&self) -> Option<Equal> {
+    match self {
+      Term::App { fun, arg } => {
+        if let Term::App { fun: eq_fun, arg: rhs } = &**fun {
+          if let Term::App { fun: eq_fun, arg: _ } = &**eq_fun {
+            if let Term::Var { nam } = &**eq_fun {
+              if nam == "Equal" {
+                return Some(Equal { a: (**arg).clone(), b: (**rhs).clone() });
+              }
+            }
+          }
+        }
+        return None;
+      },
+      _ => return None,
+    }
+  }
+
+  // Builds an equal chain
+  pub fn new_equal(eq: &Equal) -> Term {
+    Term::App {
+      fun: Box::new(Term::App {
+        fun: Box::new(Term::App {
+          fun: Box::new(Term::Var { nam: "Equal".to_string() }),
+          arg: Box::new(Term::Met {}),
+        }),
+        arg: Box::new(eq.a.clone()),  
+      }),
+      arg: Box::new(eq.b.clone()),    
+    }
+  }
+
+}
+
+impl Equal {
+  
+  pub fn format(&self) -> Box<Show> {
+    Show::glue(" ", vec![
+      Show::glue("", vec![
+        Show::text("{"),
+        self.a.format_go(),
+      ]),
+      Show::text("="),
+      Show::glue("", vec![
+        self.b.format_go(),
+        Show::text("}"),
+      ]),
+    ])
+  }
+
+}
+
+impl<'i> KindParser<'i> {
+
+  pub fn parse_equal(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::Equal, String> {
+    self.consume("{")?;
+    let a = self.parse_term(fid, uses)?;
+    self.consume("=")?;
+    let b = self.parse_term(fid, uses)?;
+    self.consume("}")?;
+    return Ok(crate::sugar::Equal { a, b });
   }
 
 }
@@ -496,16 +657,196 @@ impl Term {
     return term;
   }
 
-  // Builds a λ-encoded pattern-match. For example, the expression:
-  //   match x = (f arg) with (a: A) (b: B) {
-  //     Vector.cons: (U60.add x.head (sum x.tail))
-  //     Vector.nil: #0
-  //   }: #U60
-  // Is converted to:
-  //   use x.P = λx.len λx ∀(a: A) ∀(b: B) #U60
-  //   use x.cons = λx.head λx.tail λa λb ((U60.add x.head) (sum x.tail))
-  //   use x.nil = λx.len λa λb #0
-  //   (({(((~(f arg) x.P) x.cons) x.nil): ∀(a: A) ∀(b: B) _} a) b)
+}
+
+impl ADT {
+  
+  // Loads an ADT from its λ-encoded file.
+  pub fn load(name: &str) -> Result<ADT, String> {
+    let book = Book::boot(name)?;
+    if let Some(term) = book.defs.get(name) {
+      let mut term = term.clone();
+      // Skips Anns, Lams, Srcs
+      loop {
+        match term {
+          Term::Ann { val, .. } => { term = *val; }
+          Term::Lam { bod, .. } => { term = *bod; }
+          Term::Src { val, .. } => { term = *val; }
+          _ => { break; }
+        }
+      }
+      //println!("{}", term.format().flatten(Some(800)));
+      return term.as_adt().ok_or_else(|| format!("Failed to interpret '{}' as an ADT.", name))
+    } else {
+      Err(format!("Cannot find definition for type '{}'.", name))
+    }
+  }
+
+}
+
+impl ADT {
+  
+  pub fn format(&self) -> Box<Show> {
+
+    // ADT head: `data Name <params> <indices>`
+    let mut adt_head = vec![];
+    adt_head.push(Show::text("data"));
+    adt_head.push(Show::text(&self.name));
+    for par in self.pars.iter() {
+      adt_head.push(Show::text(par));
+    }
+    for (nam,typ) in self.idxs.iter() {
+      adt_head.push(Show::call("", vec![
+        Show::glue("", vec![Show::text("("), Show::text(nam), Show::text(": ")]),
+        typ.format_go(),
+        Show::text(")"),
+      ]));
+    }
+
+    // ADT tail: constructors
+    let mut adt_tail = vec![];
+    for ctr in &self.ctrs {
+      let mut adt_ctr = vec![];
+      // Constructor head: name
+      adt_ctr.push(Show::glue("", vec![
+        Show::line(),
+        Show::text("| "),
+        Show::text(&ctr.name),
+      ]));
+      // Constructor body: fields
+      for (nam,typ) in ctr.flds.iter() {
+        adt_ctr.push(Show::call("", vec![
+          Show::glue("", vec![
+            Show::text("("),
+            Show::text(nam),
+            Show::text(": "),
+          ]),
+          typ.format_go(),
+          Show::text(")"),  
+        ]));
+      }
+      // Constructor tail: return
+      adt_ctr.push(Show::glue(" ", vec![
+        Show::text(":"),
+        Show::call(" ", {
+          let mut ret_typ = vec![];
+          ret_typ.push(Show::text(&format!("({}", &self.name)));
+          for par in &self.pars {
+            ret_typ.push(Show::text(par));
+          }
+          for idx in &ctr.idxs {
+            ret_typ.push(idx.format_go());
+          }
+          ret_typ.push(Show::text(")"));
+          ret_typ
+        })
+      ]));
+      adt_tail.push(Show::call(" ", adt_ctr));
+    }
+
+    return Show::glue(" ", vec![
+      Show::glue(" ", adt_head),
+      Show::glue(" ", adt_tail),
+    ]);
+  }
+
+}
+
+impl<'i> KindParser<'i> {
+
+  pub fn parse_adt(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::ADT, String> {
+    self.consume("data ")?;
+    let name = self.parse_name()?;
+    let mut pars = Vec::new();
+    let mut idxs = Vec::new();
+    let mut uses = uses.clone();
+    // Parses ADT parameters (if any)
+    self.skip_trivia();
+    while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
+      let par = self.parse_name()?;
+      self.skip_trivia();
+      uses = shadow(&par, &uses);
+      pars.push(par);
+    }
+    // Parses ADT fields
+    while self.peek_one() == Some('(') {
+      self.consume("(")?;
+      let idx_name = self.parse_name()?;
+      self.consume(":")?;
+      let idx_type = self.parse_term(fid, &uses)?;
+      self.consume(")")?;
+      uses = shadow(&idx_name, &uses);
+      idxs.push((idx_name, idx_type));
+      self.skip_trivia();
+    }
+    // Parses ADT constructors
+    let mut ctrs = Vec::new();
+    self.skip_trivia();
+    while self.peek_one() == Some('|') {
+      self.consume("|")?;
+      let ctr_name = self.parse_name()?;
+      let mut uses = uses.clone();
+      let mut flds = Vec::new();
+      // Parses constructor fields
+      self.skip_trivia();
+      while self.peek_one() == Some('(') {
+        self.consume("(")?;
+        let fld_name = self.parse_name()?;
+        self.consume(":")?;
+        let fld_type = self.parse_term(fid, &uses)?;
+        self.consume(")")?;
+        uses = shadow(&fld_name, &uses);
+        flds.push((fld_name, fld_type));
+        self.skip_trivia();
+      }
+      // Parses constructor return
+      self.skip_trivia();
+      let mut ctr_indices = Vec::new();
+      // Annotated
+      if self.peek_one() == Some(':') {
+        self.consume(":")?;
+        self.skip_trivia();
+        // Call
+        if self.peek_one() == Some('(') {
+          self.consume("(")?;
+          // Parses the type (must be fixed, equal to 'name')
+          self.consume(&name)?;
+          // Parses each parameter (must be fixed, equal to 'pars')
+          for par in &pars {
+            self.consume(par)?;
+          }
+          // Parses the indices
+          while self.peek_one() != Some(')') {
+            let ctr_index = self.parse_term(fid, &uses)?;
+            ctr_indices.push(ctr_index);
+            self.skip_trivia();
+          }
+          self.consume(")")?;
+        // Non-call
+        } else {
+          // Parses the type (must be fixed, equal to 'name')
+          self.consume(&name)?;
+        }
+      // Non-annotated
+      } else {
+        if idxs.len() > 0 {
+          return self.expected("annotation for indexed type");
+        }
+      }
+      ctrs.push(sugar::Constructor { name: ctr_name, flds, idxs: ctr_indices });
+      self.skip_trivia();
+    }
+    return Ok(sugar::ADT { name, pars, idxs, ctrs });
+  }
+
+}
+
+// Match
+// -----
+
+impl Term {
+
+  // Builds a λ-encoded pattern-match.
   pub fn new_match(mat: &Match) -> Term {
     let adt = ADT::load(&mat.adt).expect(&format!("Cannot load datatype '{}'", &mat.adt));
 
@@ -639,119 +980,6 @@ impl Term {
 
 }
 
-impl ADT {
-  
-  // Loads an ADT from its λ-encoded file.
-  pub fn load(name: &str) -> Result<ADT, String> {
-    let book = Book::boot(name)?;
-    if let Some(term) = book.defs.get(name) {
-      let mut term = term.clone();
-      // Skips Anns, Lams, Srcs
-      loop {
-        match term {
-          Term::Ann { val, .. } => { term = *val; }
-          Term::Lam { bod, .. } => { term = *bod; }
-          Term::Src { val, .. } => { term = *val; }
-          _ => { break; }
-        }
-      }
-      //println!("{}", term.format().flatten(Some(800)));
-      return term.as_adt().ok_or_else(|| format!("Failed to interpret '{}' as an ADT.", name))
-    } else {
-      Err(format!("Cannot find definition for type '{}'.", name))
-    }
-  }
-
-}
-
-
-impl List {
-  
-  pub fn format(&self) -> Box<Show> {
-    if self.vals.len() == 0 {
-      return Show::text("[]");
-    } else {
-      return Show::call("", vec![
-        Show::text("["),
-        Show::pile(", ", self.vals.iter().map(|x| x.format_go()).collect()),
-        Show::text("]"),
-      ]);
-    }
-  }
-
-}
-
-impl ADT {
-  
-  pub fn format(&self) -> Box<Show> {
-
-    // ADT head: `data Name <params> <indices>`
-    let mut adt_head = vec![];
-    adt_head.push(Show::text("data"));
-    adt_head.push(Show::text(&self.name));
-    for par in self.pars.iter() {
-      adt_head.push(Show::text(par));
-    }
-    for (nam,typ) in self.idxs.iter() {
-      adt_head.push(Show::call("", vec![
-        Show::glue("", vec![Show::text("("), Show::text(nam), Show::text(": ")]),
-        typ.format_go(),
-        Show::text(")"),
-      ]));
-    }
-
-    // ADT tail: constructors
-    let mut adt_tail = vec![];
-    for ctr in &self.ctrs {
-      let mut adt_ctr = vec![];
-      // Constructor head: name
-      adt_ctr.push(Show::glue("", vec![
-        Show::line(),
-        Show::text("| "),
-        Show::text(&ctr.name),
-      ]));
-      // Constructor body: fields
-      for (nam,typ) in ctr.flds.iter() {
-        adt_ctr.push(Show::call("", vec![
-          Show::glue("", vec![
-            Show::text("("),
-            Show::text(nam),
-            Show::text(": "),
-          ]),
-          typ.format_go(),
-          Show::text(")"),  
-        ]));
-      }
-      // Constructor tail: return
-      adt_ctr.push(Show::glue(" ", vec![
-        Show::text(":"),
-        Show::call(" ", {
-          let mut ret_typ = vec![];
-          ret_typ.push(Show::text(&format!("({}", &self.name)));
-          for par in &self.pars {
-            ret_typ.push(Show::text(par));
-          }
-          for idx in &ctr.idxs {
-            ret_typ.push(idx.format_go());
-          }
-          ret_typ.push(Show::text(")"));
-          ret_typ
-        })
-      ]));
-      adt_tail.push(Show::call(" ", adt_ctr));
-    }
-
-    return Show::glue(" ", vec![
-      Show::glue(" ", adt_head),
-      Show::glue(" ", adt_tail),
-    ]);
-  }
-
-}
-
-// Parser
-// ------
-
 impl Match {
 
   pub fn format(&self) -> Box<Show> {
@@ -787,119 +1015,7 @@ impl Match {
 
 impl<'i> KindParser<'i> {
 
-  pub fn parse_list(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::List, String> {
-    self.consume("[")?;
-    let mut vals = Vec::new();
-    while self.peek_one() != Some(']') {
-      vals.push(Box::new(self.parse_term(fid, uses)?));
-      self.skip_trivia();
-      if self.peek_one() == Some(',') {
-        self.consume(",")?;
-      }
-    }
-    self.consume("]")?;
-    return Ok(crate::sugar::List { vals });
-  }
-
-  // FIXME: handle shadowing
-  pub fn parse_adt(&mut self, fid: u64, uses: &Uses) -> Result<crate::sugar::ADT, String> {
-    self.consume("data ")?;
-    let name = self.parse_name()?;
-    let mut pars = Vec::new();
-    let mut idxs = Vec::new();
-    let mut uses = uses.clone();
-    // Parses ADT parameters (if any)
-    self.skip_trivia();
-    while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
-      let par = self.parse_name()?;
-      self.skip_trivia();
-      uses = shadow(&par, &uses);
-      pars.push(par);
-    }
-    // Parses ADT fields
-    while self.peek_one() == Some('(') {
-      self.consume("(")?;
-      let idx_name = self.parse_name()?;
-      self.consume(":")?;
-      let idx_type = self.parse_term(fid, &uses)?;
-      self.consume(")")?;
-      uses = shadow(&idx_name, &uses);
-      idxs.push((idx_name, idx_type));
-      self.skip_trivia();
-    }
-    // Parses ADT constructors
-    let mut ctrs = Vec::new();
-    self.skip_trivia();
-    while self.peek_one() == Some('|') {
-      self.consume("|")?;
-      let ctr_name = self.parse_name()?;
-      let mut uses = uses.clone();
-      let mut flds = Vec::new();
-      // Parses constructor fields
-      self.skip_trivia();
-      while self.peek_one() == Some('(') {
-        self.consume("(")?;
-        let fld_name = self.parse_name()?;
-        self.consume(":")?;
-        let fld_type = self.parse_term(fid, &uses)?;
-        self.consume(")")?;
-        uses = shadow(&fld_name, &uses);
-        flds.push((fld_name, fld_type));
-        self.skip_trivia();
-      }
-      // Parses constructor return
-      self.skip_trivia();
-      let mut ctr_indices = Vec::new();
-      // Annotated
-      if self.peek_one() == Some(':') {
-        self.consume(":")?;
-        self.skip_trivia();
-        // Call
-        if self.peek_one() == Some('(') {
-          self.consume("(")?;
-          // Parses the type (must be fixed, equal to 'name')
-          self.consume(&name)?;
-          // Parses each parameter (must be fixed, equal to 'pars')
-          for par in &pars {
-            self.consume(par)?;
-          }
-          // Parses the indices
-          while self.peek_one() != Some(')') {
-            let ctr_index = self.parse_term(fid, &uses)?;
-            ctr_indices.push(ctr_index);
-            self.skip_trivia();
-          }
-          self.consume(")")?;
-        // Non-call
-        } else {
-          // Parses the type (must be fixed, equal to 'name')
-          self.consume(&name)?;
-        }
-      // Non-annotated
-      } else {
-        if idxs.len() > 0 {
-          return self.expected("annotation for indexed type");
-        }
-      }
-      ctrs.push(sugar::Constructor { name: ctr_name, flds, idxs: ctr_indices });
-      self.skip_trivia();
-    }
-    return Ok(sugar::ADT { name, pars, idxs, ctrs });
-  }
-
   // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>
-  // The ADT match syntax is similar to the numeric match syntax, including the same optionals,
-  // but it allows any number of <name>:<term> cases. Also, similarly to the List syntax, there
-  // is no built-in "Mat" syntax on the Term type, so we must convert it to an applicative form:
-  //   match x:
-  //     List.cons: x.head
-  //     List.nil: #0
-  //   : #U60
-  // Would be converted to:
-  //   (~val _ (λx.head λx.tail x.tail) 0)
-  // Which is the same as:
-  //   (APP (APP (APP (INS (VAR "val")) MET) (LAM "x.head" (LAM "x.tail" (VAR "x.head")))) (NUM 0))
-  // FIXME: handle shadowing
   pub fn parse_match(&mut self, fid: u64, uses: &Uses) -> Result<Match, String> {
     // Parses the header: 'match <name> = <expr>'
     self.consume("match ")?;

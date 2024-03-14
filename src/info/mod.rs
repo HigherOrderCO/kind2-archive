@@ -40,8 +40,13 @@ impl Info {
     match self {
       Info::Found { nam, typ, ctx } => {
         let msg = format!("?{} :: {}", nam, typ.show());
-        let ctx = ctx.iter().map(|x| format!("\n- {}", x.show())).collect::<Vec<_>>().join("");
-        format!("\x1b[1mFOUND:\x1b[0m {}{}", msg, ctx)
+        let mut ctx_str = String::new();
+        for x in ctx.iter() {
+          if let Term::Ann { chk: _, val, typ } = x.clean() {
+            ctx_str.push_str(&format!("\n- {}: {}", val.show(), typ.show()));
+          }
+        }
+        format!("\x1b[1mFOUND:\x1b[0m {}{}", msg, ctx_str)
       },
       Info::Error { exp, det, bad, src } => {
         let exp  = format!("- expected: \x1b[32m{}\x1b[0m", exp.show());

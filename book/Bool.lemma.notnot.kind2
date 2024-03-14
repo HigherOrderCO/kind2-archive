@@ -1,3 +1,7 @@
-Bool.lemma.notnot
-: ∀(b: Bool) (Equal Bool (Bool.not (Bool.not b)) b)
-= λb (~b _ (Equal.refl Bool Bool.true) (Equal.refl Bool Bool.false))
+use Bool.{true,false,not}
+
+notnot (x: Bool) : {(not (not x)) = x} =
+  match x {
+    true  : {=}
+    false : {=}
+  }

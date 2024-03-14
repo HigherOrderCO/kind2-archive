@@ -1,7 +1,7 @@
-Bool.not
-: ∀(x: Bool) Bool
-= λx
-  use P = λx Bool
-  use true = {Bool.false:_}
-  use false = {Bool.true:_}
-  (~x P true false)
+use Bool.{true,false}
+
+Bool.not (x: Bool) : Bool =
+  match x {
+    true: false
+    false: true
+  }
