@@ -2,13 +2,13 @@ Kind.Term.parser.num
 : (Parser.Guard Kind.PreTerm)
 = (Parser.Guard.text
     Kind.PreTerm
-    "#"
+    ""
     (Kind.Term.parser.bind
       Unit
-      (Parser.text "#")
+      (Parser.text "")
       λ_
       (Kind.Term.parser.bind
-        #U60
+        U60
         U60.parser.decimal
         λnum (Kind.Term.parser.pure λscp (Kind.num num))
       )

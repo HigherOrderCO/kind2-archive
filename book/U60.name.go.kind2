@@ -1,11 +1,11 @@
 U60.name.go
-: ∀(n: #U60) String.Concatenator
+: ∀(n: U60) String.Concatenator
 = λn
-  #match n = n {
-    #0: λnil nil
-    #+: λnil
+  switch n = n {
+    0: λnil nil
+    +: λnil
     (String.cons
-      #(+ #97 #(% n-1 #26))
-      (U60.name.go #(/ n-1 #26) nil)
+      (+ 97 (% n-1 26))
+      (U60.name.go (/ n-1 26) nil)
     ) 
   }: String.Concatenator

@@ -163,7 +163,7 @@ impl Term {
       return;
     }
     // Linearizes a numeric pattern match
-    if let Term::Mat { nam, z, s, .. } = self {
+    if let Term::Swi { nam, z, s, .. } = self {
       if args.len() >= 1 && args[0].0 == *nam {
         let (head, tail) = args.split_at(1);
         z.add_lams(tail.clone());

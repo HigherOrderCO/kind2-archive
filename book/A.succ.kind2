@@ -1,3 +1,0 @@
-A.succ : ∀(p: A) A =
-  λp
-  ~λP λs λz (s λTλt(t p))

@@ -37,7 +37,7 @@ Kind.Term
   )
   ∀(set: (P Kind.set))
   ∀(u60: (P Kind.u60))
-  ∀(num: ∀(val: #U60) (P (Kind.num val)))
+  ∀(num: ∀(val: U60) (P (Kind.num val)))
   ∀(op2: 
     ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term)
     (P (Kind.op2 opr fst snd))

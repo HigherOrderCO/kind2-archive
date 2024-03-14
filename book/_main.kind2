@@ -5,16 +5,16 @@
 //use Nat.{succ,zero}
 
 _main : Nat =
-  (Nat.half (Nat.double 3))
+  #50
   
 
 //_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
-  //match a {
-    //succ: match b {
+  //switch a {
+    //succ: switch b {
       //succ: e
       //zero: e
     //}
-    //zero: match b {
+    //zero: switch b {
       //succ: e
       //zero: ?D
     //}
@@ -35,12 +35,12 @@ _main : Nat =
   //): ∀(e2: (Equal A a b)) _} e)
 
 //_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
-  //match a {
-    //succ: match b {
+  //switch a {
+    //succ: switch b {
       //succ: ?A
       //zero: ?B
     //}
-    //zero: match b {
+    //zero: switch b {
       //succ: ?C
       //zero: ?D
     //}
@@ -58,7 +58,7 @@ _main : Nat =
     //)
   //)
 
-//match x {
+//switch x {
 //}
 
 //_main
@@ -130,12 +130,12 @@ _main : Nat =
   //)
 
 
-//match a {
-  //cons: match b {
+//switch a {
+  //cons: switch b {
     //cons: ... a.tail ...
     //nil: ... a.tail ...
   //}
-  //nil: match b {
+  //nil: switch b {
     //cons:
     //nil: 
   //}

@@ -2,16 +2,16 @@ Char.is_name
 : ∀(a: Char) Bool
 = λa
   (Bool.or
-    (Char.is_between #97 #122 a)
+    (Char.is_between 97 122 a)
     (Bool.or
-      (Char.is_between #65 #90 a)
+      (Char.is_between 65 90 a)
       (Bool.or
-        (Char.is_between #48 #57 a)
+        (Char.is_between 48 57 a)
         (Bool.or
-          (Char.equal #95 a)
+          (Char.equal 95 a)
           (Bool.or
-            (Char.equal #46 a)
-            (Bool.or (Char.equal #45 a) Bool.false)
+            (Char.equal 46 a)
+            (Bool.or (Char.equal 45 a) Bool.false)
           )
         )
       )

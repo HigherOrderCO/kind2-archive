@@ -3,10 +3,10 @@ QUnit
 = $(self: QUnit)
   ∀(P: ∀(x: QUnit) *)
   (Sigma
-    #U60
+    U60
     λtag
-    #match tag = tag {
-      #0: ∀(one: (P QUnit.one)) (P self)
-      #+: Empty 
+    switch tag = tag {
+      0: ∀(one: (P QUnit.one)) (P self)
+      +: Empty 
     }: *
   )

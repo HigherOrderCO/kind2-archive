@@ -1,7 +1,7 @@
 U60.from_nat
-: ∀(n: Nat) #U60
+: ∀(n: Nat) U60
 = λn
-  use P = λx #U60
-  use succ = λn.pred #(+ #1 (U60.from_nat n.pred))
-  use zero = #0
+  use P = λx U60
+  use succ = λn.pred (+ 1 (U60.from_nat n.pred))
+  use zero = 0
   (~n P succ zero)

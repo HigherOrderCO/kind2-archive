@@ -10,9 +10,9 @@ Kind.reduce.mat
   use P = ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
     Kind.Term
   use Y = λx.val
-    #match x = x.val {
-      #0: λz λs (Kind.reduce maj z)
-      #+: λz λs (Kind.reduce maj (s (Kind.num x-1))) 
+    switch x = x.val {
+      0: λz λs (Kind.reduce maj z)
+      +: λz λs (Kind.reduce maj (s (Kind.num x-1))) 
     }: ∀(z: Kind.Term) ∀(s: ∀(x: Kind.Term) Kind.Term)
     Kind.Term
   use N = λx λz λs (Kind.mat nam x z s p)

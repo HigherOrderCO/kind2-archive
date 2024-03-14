@@ -83,7 +83,7 @@ Kind.infer
         )
         λp_typ
         (bind
-          (Kind.check z (p (Kind.num #0)) dep)
+          (Kind.check z (p (Kind.num 0)) dep)
           λz_typ
           (bind
             (Kind.check
@@ -96,7 +96,7 @@ Kind.infer
               (p
                 (Kind.op2
                   Kind.Oper.add
-                  (Kind.num #1)
+                  (Kind.num 1)
                   (Kind.var (String.concat nam "-1") dep)
                 )
               )

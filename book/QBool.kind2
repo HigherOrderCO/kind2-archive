@@ -3,14 +3,14 @@ QBool
 = $(self: QBool)
   ∀(P: ∀(x: QBool) *)
   (Sigma
-    #U60
+    U60
     λt
     ∀(x: 
-      #match t = t {
-        #0: (P QBool.true)
-        #+: #match t = t-1 {
-          #0: (P QBool.false)
-          #+: ∀(x: Empty) * 
+      switch t = t {
+        0: (P QBool.true)
+        +: switch t = t-1 {
+          0: (P QBool.false)
+          +: ∀(x: Empty) * 
         }: * 
       }: *
     )

@@ -8,7 +8,7 @@ Kind.Term.parser.chr
       (Parser.text "'")
       λ_
       (Kind.Term.parser.bind
-        #U60
+        U60
         Parser.char
         λchr
         (Kind.Term.parser.bind

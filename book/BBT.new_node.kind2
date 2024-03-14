@@ -11,7 +11,7 @@ BBT.new_node
   use new = λlft.size λlft
     use P = λx (BBT K V)
     use new = λrgt.size λrgt
-      use new_size = #(+ #1 (U60.max rgt.size lft.size))
+      use new_size = (+ 1 (U60.max rgt.size lft.size))
       (BBT.bin K V new_size key val lft rgt)
     (~(BBT.got_size K V rgt) P new)
   (~(BBT.got_size K V lft) P new)

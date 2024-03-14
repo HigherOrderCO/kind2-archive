@@ -1,12 +1,12 @@
 Kind.if.num
 : ∀(term: Kind.Term)
   ∀(P: *)
-  ∀(Y: ∀(val: #U60) P)
+  ∀(Y: ∀(val: U60) P)
   ∀(N: ∀(val: Kind.Term) P)
   P
 = λterm λP λY λN
   use P = λx
-    ∀(Y: ∀(val: #U60) P) ∀(N: ∀(val: Kind.Term) P) P
+    ∀(Y: ∀(val: U60) P) ∀(N: ∀(val: Kind.Term) P) P
   use all = λnam λinp λbod λY λN (N (Kind.all nam inp bod))
   use lam = λnam λbod λY λN (N (Kind.lam nam bod))
   use app = λfun λarg λY λN (N (Kind.app fun arg))

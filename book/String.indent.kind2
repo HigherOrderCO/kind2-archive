@@ -4,8 +4,8 @@ String.indent
   use P = λx String
   use succ = λtab.pred
     (String.cons
-      #32
-      (String.cons #32 (String.indent tab.pred))
+      32
+      (String.cons 32 (String.indent tab.pred))
     )
   use zero = String.nil
   (~tab P succ zero)
