@@ -473,8 +473,7 @@ termIdenticalGo a b dep =
 --   ?X = λx λy λz ... K
 -- In this implementation, checking condition `2` is not necessary, because we
 -- subst holes directly where they occur (rather than on top-level definitions),
--- so, it is impossible for unbound variables to appear. We also don't check for
--- condition 3, and just allow recursive solutions.
+-- so, it is impossible for unbound variables to appear.
 
 -- If possible, solves a `(?X x y z ...) = K` problem, generating a subst.
 termUnify :: Int -> [Term] -> Term -> Int -> Env Bool
@@ -482,13 +481,15 @@ termUnify uid spn b dep = do
   fill <- envGetFill
   let unsolved = not (mapHas (key uid) fill)
   let solvable = termUnifyValid fill spn []
-  if unsolved && solvable then do
+  let no_loops = not $ termUnifyIsRec fill uid b dep
+  if unsolved && solvable && no_loops then do
     let solution = termUnifySolve fill uid spn b
     -- trace ("solve: " ++ show uid ++ " " ++ termShow solution dep) $ do
     envFill uid solution
     return True
-  else
-    return False
+  else case b of
+    (Met bUid bSpn) -> return $ uid == bUid
+    other           -> return $ False
 
 -- Checks if an problem is solveable by pattern unification.
 termUnifyValid :: Map Term -> [Term] -> [Int] -> Bool
@@ -503,6 +504,25 @@ termUnifySolve fill uid []        b = b
 termUnifySolve fill uid (x : spn) b = case termReduce fill 0 x of
   (Var nam idx) -> Lam nam $ \x -> termUnifySubst idx x (termUnifySolve fill uid spn b)
   otherwise     -> error "unreachable"         
+
+-- Checks if a hole uid occurs recursively inside a term
+termUnifyIsRec :: Map Term -> Int -> Term -> Int -> Bool
+termUnifyIsRec fill uid (All nam inp bod) dep = termUnifyIsRec fill uid inp dep || termUnifyIsRec fill uid (bod (Var nam dep)) (dep + 1)
+termUnifyIsRec fill uid (Lam nam bod)     dep = termUnifyIsRec fill uid (bod (Var nam dep)) (dep + 1)
+termUnifyIsRec fill uid (App fun arg)     dep = termUnifyIsRec fill uid fun dep || termUnifyIsRec fill uid arg dep
+termUnifyIsRec fill uid (Ann chk val typ) dep = termUnifyIsRec fill uid val dep || termUnifyIsRec fill uid typ dep
+termUnifyIsRec fill uid (Slf nam typ bod) dep = termUnifyIsRec fill uid typ dep || termUnifyIsRec fill uid (bod (Var nam dep)) (dep + 1)
+termUnifyIsRec fill uid (Ins val)         dep = termUnifyIsRec fill uid val dep
+termUnifyIsRec fill uid (Let nam val bod) dep = termUnifyIsRec fill uid val dep || termUnifyIsRec fill uid (bod (Var nam dep)) (dep + 1)
+termUnifyIsRec fill uid (Use nam val bod) dep = termUnifyIsRec fill uid val dep || termUnifyIsRec fill uid (bod (Var nam dep)) (dep + 1)
+termUnifyIsRec fill uid (Hol nam ctx)     dep = False
+termUnifyIsRec fill uid (Op2 opr fst snd) dep = termUnifyIsRec fill uid fst dep || termUnifyIsRec fill uid snd dep
+termUnifyIsRec fill uid (Mat nam x z s p) dep = termUnifyIsRec fill uid x dep || termUnifyIsRec fill uid z dep || termUnifyIsRec fill uid (s (Var (stringConcat nam "-1") dep)) (dep + 1) || termUnifyIsRec fill uid (p (Var nam dep)) dep
+termUnifyIsRec fill uid (Src src val)     dep = termUnifyIsRec fill uid val dep
+termUnifyIsRec fill uid (Met bUid bSpn)   dep = case termReduceMet fill 2 bUid bSpn of
+  (Met bUid bSpn) -> uid == bUid
+  term            -> termUnifyIsRec fill uid term dep
+termUnifyIsRec fill uid _                 dep = False
 
 -- Substitutes a Bruijn level variable by a `neo` value in `term`.
 termUnifySubst :: Int -> Term -> Term -> Term

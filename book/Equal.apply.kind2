@@ -1,6 +1,6 @@
 use Equal.{refl}
 
-apply A B (f: ∀(x:A) B) (a: A) (b: A) (e: (Equal A a b)) : (Equal B (f a) (f b)) =
+apply A B (f: ∀(x:A) B) (a: A) (b: A) (e: {a = b}) : {(f a) = (f b)} =
   match e {
     refl: {=}
   }

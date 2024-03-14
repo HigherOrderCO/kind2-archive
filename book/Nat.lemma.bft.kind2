@@ -1,10 +1,10 @@
 use Nat.{succ,zero,half,double}
 
-bft (n: Nat) : (Equal Nat (half (double n)) n) =
+bft (n: Nat) : {(half (double n)) = n} =
   match n {
     succ:
       let ind = (bft n.pred)
-      let prf = (Equal.apply Nat Nat succ (half (double n.pred)) n.pred ind)
+      let prf = (Equal.apply _ _ succ _ _ ind)
       prf
     zero: {=}
   }
