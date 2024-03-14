@@ -37,7 +37,7 @@ fn generate_check_hvm1(book: &Book, command: &str, arg: &str) -> String {
 fn generate_check_hs(book: &Book, command: &str, arg: &str) -> String {
   let kind_hs = include_str!("./kind2.hs");
   let kind_hs = kind_hs.lines().filter(|line| !line.starts_with("xString")).collect::<Vec<_>>().join("\n");
-  let book_hs = book.to_hs();
+  let book_hs = book.to_hs_checker();
   let main_hs = match command {
     "check" => format!("main = (apiCheck {})\n", Term::to_hs_name(arg)),
     "run"   => format!("main = (apiNormal {})\n", Term::to_hs_name(arg)),

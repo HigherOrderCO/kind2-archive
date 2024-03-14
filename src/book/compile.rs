@@ -22,10 +22,10 @@ impl Book {
     //code
   }
 
-  pub fn to_hs(&self) -> String {
+  pub fn to_hs_checker(&self) -> String {
     let mut code = String::new();
     for (name, term) in &self.defs {
-      let expr = term.to_hs(im::Vector::new(), &mut 0);
+      let expr = term.to_hs_checker(im::Vector::new(), &mut 0);
       code.push_str(&format!("{} = (Ref \"{}\" {})\n", Term::to_hs_name(name), name, expr));
     }
     code
