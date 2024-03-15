@@ -1,7 +1,7 @@
-List.fold
-: ∀(T: *) ∀(list: (List T)) (List.Folder T)
-= λT λlist λP λcons λnil
-  use fold_P = λxs P
-  use fold_cons = λhead λtail (cons head (List.fold T tail P cons nil))
-  use fold_nil = nil
-  (~list fold_P fold_cons fold_nil)
+use List.{cons,nil}
+
+List.fold <A> <B> (xs: (List A)) (c: A -> B -> B) (n: B) : B =
+  match xs {
+    cons: (c xs.head (List.fold xs.tail c n))
+    nil: n
+  }

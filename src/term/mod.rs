@@ -1,5 +1,10 @@
+//./../sugar/mod.rs//
+//./parse.rs//
+//./../book/parse.rs//
+
 use crate::{*};
 use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
 pub mod compile;
 pub mod parse;
@@ -40,9 +45,9 @@ pub struct Src {
 //   VAR | <name>
 #[derive(Clone, Debug)]
 pub enum Term {
-  All { nam: String, inp: Box<Term>, bod: Box<Term> },
-  Lam { nam: String, bod: Box<Term> },
-  App { fun: Box<Term>, arg: Box<Term> },
+  All { era: bool, nam: String, inp: Box<Term>, bod: Box<Term> },
+  Lam { era: bool, nam: String, bod: Box<Term> },
+  App { era: bool, fun: Box<Term>, arg: Box<Term> },
   Ann { chk: bool, val: Box<Term>, typ: Box<Term> },
   Slf { nam: String, typ: Box<Term>, bod: Box<Term> },
   Ins { val: Box<Term> },
@@ -102,14 +107,14 @@ impl Term {
 
   pub fn get_free_vars(&self, env: im::Vector<String>, free_vars: &mut BTreeSet<String>) {
     match self {
-      Term::All { nam, inp, bod } => {
+      Term::All { era: _, nam, inp, bod } => {
         inp.get_free_vars(env.clone(), free_vars);
         bod.get_free_vars(cons(&env, nam.clone()), free_vars);
       },
-      Term::Lam { nam, bod } => {
+      Term::Lam { era: _, nam, bod } => {
         bod.get_free_vars(cons(&env, nam.clone()), free_vars);
       },
-      Term::App { fun, arg } => {
+      Term::App { era: _, fun, arg } => {
         fun.get_free_vars(env.clone(), free_vars);
         arg.get_free_vars(env.clone(), free_vars);
       },
@@ -163,88 +168,27 @@ impl Term {
     }
   }
 
-  // Recurses through the term, desugaring Mch constructors
-  pub fn desugar(&mut self) {
-    match self {
-      // Desugars the Mch constructor using sugar::new_match
-      Term::Mch { mch } => {
-        *self = Term::new_match(&mch);
-        self.desugar();
-      },
-      // Recurses on subterms for all other constructors
-      Term::All { nam: _, inp, bod } => {
-        inp.desugar();
-        bod.desugar();
-      },
-      Term::Lam { nam: _, bod } => {
-        bod.desugar();
-      },
-      Term::App { fun, arg } => {
-        fun.desugar();
-        arg.desugar();
-      },
-      Term::Ann { chk: _, val, typ } => {
-        val.desugar();
-        typ.desugar();
-      },
-      Term::Slf { nam: _, typ, bod } => {
-        typ.desugar();
-        bod.desugar();
-      },
-      Term::Ins { val } => {
-        val.desugar();
-      },
-      Term::Op2 { opr: _, fst, snd } => {
-        fst.desugar();
-        snd.desugar();
-      },
-      Term::Swi { nam: _, x, z, s, p } => {
-        x.desugar();
-        z.desugar();
-        s.desugar(); 
-        p.desugar();
-      },
-      Term::Let { nam: _, val, bod } => {
-        val.desugar();
-        bod.desugar();
-      },
-      Term::Use { nam: _, val, bod } => {
-        val.desugar();
-        bod.desugar();
-      },
-      Term::Src { src: _, val } => {
-        val.desugar();
-      },
-      // Base cases, do nothing
-      Term::Set => {},
-      Term::U60 => {},
-      Term::Num { val: _ } => {},
-      Term::Nat { nat: _ } => {},
-      Term::Txt { txt: _ } => {},
-      Term::Var { nam: _ } => {},
-      Term::Hol { nam: _ } => {},
-      Term::Met {} => {},
-    }
-  }
-
   // Removes Src's
   pub fn clean(&self) -> Term {
     match self {
-      Term::All { nam, inp, bod } => {
+      Term::All { era, nam, inp, bod } => {
         Term::All {
+          era: *era,
           nam: nam.clone(),
           inp: Box::new(inp.clean()),
           bod: Box::new(bod.clean()),
         }
       },
-      Term::Lam { nam, bod } => {
+      Term::Lam { era, nam, bod } => {
         Term::Lam {
+          era: *era,
           nam: nam.clone(),
           bod: Box::new(bod.clean()),
         }
       },
-      Term::App { fun, arg } => {
+      Term::App { era, fun, arg } => {
         Term::App {
+          era: *era,
           fun: Box::new(fun.clean()),
           arg: Box::new(arg.clean()),
         }
@@ -330,5 +274,158 @@ impl Term {
       },
     }
   }
-}
 
+  // Expands syntax sugars like Mch to proper λ-encodings.
+  pub fn desugar(&mut self) {
+    match self {
+      // Desugars the Mch constructor using sugar::new_match
+      Term::Mch { mch } => {
+        *self = Term::new_match(&mch);
+        self.desugar();
+      },
+      // Recurses on subterms for all other constructors
+      Term::All { era: _, nam: _, inp, bod } => {
+        inp.desugar();
+        bod.desugar();
+      },
+      Term::Lam { era: _, nam: _, bod } => {
+        bod.desugar();
+      },
+      Term::App { era: _, fun, arg } => {
+        fun.desugar();
+        arg.desugar();
+      },
+      Term::Ann { chk: _, val, typ } => {
+        val.desugar();
+        typ.desugar();
+      },
+      Term::Slf { nam: _, typ, bod } => {
+        typ.desugar();
+        bod.desugar();
+      },
+      Term::Ins { val } => {
+        val.desugar();
+      },
+      Term::Op2 { opr: _, fst, snd } => {
+        fst.desugar();
+        snd.desugar();
+      },
+      Term::Swi { nam: _, x, z, s, p } => {
+        x.desugar();
+        z.desugar();
+        s.desugar(); 
+        p.desugar();
+      },
+      Term::Let { nam: _, val, bod } => {
+        val.desugar();
+        bod.desugar();
+      },
+      Term::Use { nam: _, val, bod } => {
+        val.desugar();
+        bod.desugar();
+      },
+      Term::Src { src: _, val } => {
+        val.desugar();
+      },
+      Term::Set => {},
+      Term::U60 => {},
+      Term::Num { .. } => {},
+      Term::Nat { .. } => {},
+      Term::Txt { .. } => {},
+      Term::Var { .. } => {},
+      Term::Hol { .. } => {},
+      Term::Met {} => {},
+    }
+  }
+
+  // Expands implicit calls, applying them to the right number of metavars.
+  pub fn expand_implicits(&mut self, env: im::Vector<String>, implicit_count: &BTreeMap<String, u64>) {
+    match self {
+      Term::All { era: _, nam, inp, bod } => {
+        inp.expand_implicits(env.clone(), implicit_count);
+        bod.expand_implicits(cons(&env, nam.clone()), implicit_count);
+      },
+      Term::Lam { era: _, nam, bod } => {
+        bod.expand_implicits(cons(&env, nam.clone()), implicit_count);
+      },
+      Term::App { era: _, fun, arg } => {
+        fun.expand_implicits(env.clone(), implicit_count);
+        arg.expand_implicits(env.clone(), implicit_count);
+      },
+      Term::Ann { chk: _, val, typ } => {
+        val.expand_implicits(env.clone(), implicit_count);
+        typ.expand_implicits(env.clone(), implicit_count);
+      },
+      Term::Slf { nam, typ, bod } => {
+        typ.expand_implicits(env.clone(), implicit_count);
+        bod.expand_implicits(cons(&env, nam.clone()), implicit_count);
+      },
+      Term::Ins { val } => {
+        val.expand_implicits(env.clone(), implicit_count);
+      },
+      Term::Set => {},
+      Term::U60 => {},
+      Term::Num { val: _ } => {},
+      Term::Op2 { opr: _, fst, snd } => {
+        fst.expand_implicits(env.clone(), implicit_count);
+        snd.expand_implicits(env.clone(), implicit_count);
+      },
+      Term::Swi { nam, x, z, s, p } => {
+        x.expand_implicits(env.clone(), implicit_count);
+        z.expand_implicits(env.clone(), implicit_count);
+        s.expand_implicits(cons(&env, format!("{}-1",nam)), implicit_count);
+        p.expand_implicits(cons(&env, nam.clone()), implicit_count);
+      },
+      Term::Nat { nat: _ } => {},
+      Term::Txt { txt: _ } => {},
+      Term::Let { nam, val, bod } => {
+        val.expand_implicits(env.clone(), implicit_count);
+        bod.expand_implicits(cons(&env, nam.clone()), implicit_count);
+      },
+      Term::Use { nam, val, bod } => {
+        val.expand_implicits(env.clone(), implicit_count);
+        bod.expand_implicits(cons(&env, nam.clone()), implicit_count);
+      },
+      Term::Hol { nam: _ } => {},
+      Term::Met {} => {},
+      Term::Src { src: _, val } => {
+        val.expand_implicits(env, implicit_count);
+      },
+      Term::Var { nam } => {
+        if !env.contains(nam) {
+          if let Some(implicits) = implicit_count.get(nam) {
+            for _ in 0..*implicits {
+              *self = Term::App {
+                era: true,
+                fun: Box::new(std::mem::replace(self, Term::Met {})),
+                arg: Box::new(Term::Met {}),
+              };
+            }
+          }
+        }
+      },
+      Term::Mch { .. } => {
+        unreachable!()
+      },
+    }
+  }
+
+  // Counts the number of implicit arguments of a term.
+  pub fn count_implicits(&self) -> u64 {
+    match self {
+      Term::All { era: true, nam: _, inp: _, bod } => {
+        return 1 + bod.count_implicits();
+      }
+      Term::Src { src: _, val } => {
+        return val.count_implicits();
+      }
+      Term::Ann { chk: _, val: _, typ } => {
+        return typ.count_implicits();
+      }
+      _ => {
+        return 0;
+      }
+    }
+  }
+
+}

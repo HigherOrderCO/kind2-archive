@@ -34,6 +34,7 @@ pub struct Constructor {
 #[derive(Debug, Clone)]
 pub struct Match {
   pub adt: String, // datatype
+  pub fold: bool, // is this a fold?
   pub name: String, // scrutinee name
   pub expr: Term, // structinee expression
   pub with: Vec<(String,Term)>, // terms to move in
@@ -199,7 +200,7 @@ impl Term {
     let mut term = self;
     loop {
       match term {
-        Term::App { fun, arg } => {
+        Term::App { era: _, fun, arg } => {
           if let Term::Var { nam } = &**fun {
             if nam == "Nat.succ" {
               nat += 1;
@@ -241,9 +242,9 @@ impl Term {
     let mut term = self;
     loop {
       match term {
-        Term::App { fun, arg } => {
-          if let Term::App { fun: cons, arg: head } = &**fun {
-            if let Term::App { fun: cons_fun, arg: _ } = &**cons {
+        Term::App { era: _, fun, arg } => {
+          if let Term::App { era: _, fun: cons, arg: head } = &**fun {
+            if let Term::App { era: _, fun: cons_fun, arg: _ } = &**cons {
               if let Term::Var { nam } = &**cons_fun {
                 if nam == "List.cons" {
                   vals.push(head.clone());
@@ -268,13 +269,17 @@ impl Term {
   // Builds a chain of applications of List.cons and List.nil from a Vec<Box<Term>>
   pub fn new_list(list: &List) -> Term {
     let mut term = Term::App {
+      era: true,
       fun: Box::new(Term::Var { nam: "List.nil".to_string() }),
       arg: Box::new(Term::Met {}),
     };
     for item in (&list.vals).into_iter().rev() {
       term = Term::App {
+        era: false,
         fun: Box::new(Term::App {
+          era: false,
           fun: Box::new(Term::App {
+            era: true,
             fun: Box::new(Term::Var { nam: "List.cons".to_string() }),
             arg: Box::new(Term::Met {}),
           }),
@@ -333,9 +338,9 @@ impl Term {
   // - (EQUAL a b) ::= (App (App (App (Var "Equal") _) a) b)
   pub fn as_equal(&self) -> Option<Equal> {
     match self {
-      Term::App { fun, arg: rhs } => {
-        if let Term::App { fun: eq_fun, arg: lhs } = &**fun {
-          if let Term::App { fun: eq_fun, arg: _ } = &**eq_fun {
+      Term::App { era: _, fun, arg: rhs } => {
+        if let Term::App { era: _, fun: eq_fun, arg: lhs } = &**fun {
+          if let Term::App { era: _, fun: eq_fun, arg: _ } = &**eq_fun {
             if let Term::Var { nam } = &**eq_fun {
               if nam == "Equal" {
                 return Some(Equal { a: (**lhs).clone(), b: (**rhs).clone() });
@@ -352,8 +357,11 @@ impl Term {
   // Builds an equal chain
   pub fn new_equal(eq: &Equal) -> Term {
     Term::App {
+      era: false,
       fun: Box::new(Term::App {
+        era: false,
         fun: Box::new(Term::App {
+          era: true,
           fun: Box::new(Term::Var { nam: "Equal".to_string() }),
           arg: Box::new(Term::Met {}),
         }),
@@ -419,7 +427,7 @@ impl Term {
     }
 
     // Reads the motive: `∀(P: ∀(I0: I0.TY) ∀(I1: I1.TY) ... ∀(x: (TY P0 P1 ... I0 I1 ...)) *).`
-    if let Term::All { nam, inp, bod } = term {
+    if let Term::All { era: _, nam, inp, bod } = term {
       // Gets the motive name
       pvar = nam.clone();
 
@@ -427,7 +435,7 @@ impl Term {
       let mut moti = &**inp;
 
       // Reads each motive index
-      while let Term::All { nam, inp: idx_inp, bod: idx_bod } = moti {
+      while let Term::All { era: _, nam, inp: idx_inp, bod: idx_bod } = moti {
         if let Term::All { .. } = &**idx_bod {
           idxs.push((nam.clone(), *idx_inp.clone()));
           moti = idx_bod;
@@ -437,14 +445,14 @@ impl Term {
       }
 
       // Skips the witness
-      if let Term::All { nam: _, inp: wit_inp, bod: wit_bod } = moti {
+      if let Term::All { era: _, nam: _, inp: wit_inp, bod: wit_bod } = moti {
 
         // Here, the witness has form '(TY P0 P1 ... I0 I1 ...)'
         let mut wit_inp = wit_inp;
 
         // Skips the wit's indices (outermost Apps)
         for _ in 0 .. idxs.len() {
-          if let Term::App { fun: wit_inp_fun, arg: _ } = &**wit_inp {
+          if let Term::App { era: _, fun: wit_inp_fun, arg: _ } = &**wit_inp {
             wit_inp = wit_inp_fun;
           } else {
             return None;
@@ -452,7 +460,7 @@ impl Term {
         }
 
         // Collects the wit's parameters (remaining Apps)
-        while let Term::App { fun: wit_inp_fun, arg: wit_inp_arg } = &**wit_inp {
+        while let Term::App { era: _, fun: wit_inp_fun, arg: wit_inp_arg } = &**wit_inp {
           if let Term::Var { nam: parameter } = &**wit_inp_arg {
             pars.push(parameter.to_string());
             wit_inp = wit_inp_fun;
@@ -485,12 +493,12 @@ impl Term {
     }
 
     // Reads each constructor: `∀(C0: ∀(C0_F0: C0_F0.TY) ∀(C0_F1: C0_F1.TY) ... (P I0 I1 ... (TY.C0 P0 P1 ... C0_F0 C0_F1 ...)))`
-    while let Term::All { nam, inp, bod } = term {
+    while let Term::All { era: _, nam, inp, bod } = term {
       let mut flds: Vec<(String,Term)> = Vec::new();
       let mut ctyp: &Term = &**inp;
 
       // Reads each field
-      while let Term::All { nam, inp, bod } = ctyp {
+      while let Term::All { era: _, nam, inp, bod } = ctyp {
         flds.push((nam.clone(), *inp.clone()));
         ctyp = bod;
       }
@@ -498,7 +506,7 @@ impl Term {
       // Now, the ctyp will be in the form (P I0 I1 ... (Ctr P0 P1 ... F0 F1 ...))
       
       // Skips the outermost application
-      if let Term::App { fun: ctyp_fun, arg: _ } = ctyp {
+      if let Term::App { era: _, fun: ctyp_fun, arg: _ } = ctyp {
         ctyp = ctyp_fun;
       } else {
         return None;
@@ -506,7 +514,7 @@ impl Term {
 
       // Collects constructor indices until we reach the pattern head P
       let mut ctr_idxs: Vec<Term> = Vec::new();
-      while let Term::App { fun: fun_app, arg: arg_app } = ctyp {
+      while let Term::App { era: _, fun: fun_app, arg: arg_app } = ctyp {
         ctr_idxs.push(*arg_app.clone());
         ctyp = fun_app;
       }
@@ -538,18 +546,19 @@ impl Term {
 
     // Then appends each type parameter
     for par in adt.pars.iter() {
-      self_type = Term::App { fun: Box::new(self_type), arg: Box::new(Term::Var { nam: par.clone() }) };
+      self_type = Term::App { era: false, fun: Box::new(self_type), arg: Box::new(Term::Var { nam: par.clone() }) };
     }
 
     // And finally appends each index
     for (idx_name, _) in adt.idxs.iter() {
-      self_type = Term::App { fun: Box::new(self_type), arg: Box::new(Term::Var { nam: idx_name.clone() }) };
+      self_type = Term::App { era: false, fun: Box::new(self_type), arg: Box::new(Term::Var { nam: idx_name.clone() }) };
     }
 
     // 2. Builds the motive type: ∀(I0: I0.TY) ∀(I1: I1.TY) ... ∀(x: (Type P0 P1 ... I0 I1 ...)) *
     
     // Starts with the witness type: ∀(x: (Type P0 P1 ... I0 I1 ...)) *
     let mut motive_type = Term::All {
+      era: false,
       nam: "x".to_string(),
       inp: Box::new(self_type.clone()),
       bod: Box::new(Term::Set),
@@ -558,6 +567,7 @@ impl Term {
     // Then prepends each index type
     for (idx_name, idx_type) in adt.idxs.iter().rev() {
       motive_type = Term::All {
+        era: false,
         nam: idx_name.clone(),
         inp: Box::new(idx_type.clone()),
         bod: Box::new(motive_type),
@@ -570,6 +580,7 @@ impl Term {
     // Applies the motive to each index
     for (idx_name, _) in adt.idxs.iter() {
       term = Term::App {
+        era: false,
         fun: Box::new(term),
         arg: Box::new(Term::Var { nam: idx_name.clone() }),
       };
@@ -577,6 +588,7 @@ impl Term {
 
     // And applies it to the witness (self)
     term = Term::App {
+      era: false,
       fun: Box::new(term),
       arg: Box::new(Term::Var { nam: "self".to_string() }),
     };
@@ -589,6 +601,7 @@ impl Term {
       // Applies the motive to each constructor index
       for idx in ctr.idxs.iter().rev() {
         ctr_term = Term::App {
+          era: false,
           fun: Box::new(ctr_term),
           arg: Box::new(idx.clone()),
         };
@@ -598,16 +611,19 @@ impl Term {
       let mut ctr_type = Term::Var { nam: format!("{}.{}", adt.name, ctr.name) };
 
       // For each type parameter
-      for par in adt.pars.iter() {
-        ctr_type = Term::App {
-          fun: Box::new(ctr_type),
-          arg: Box::new(Term::Var { nam: par.clone() }),
-        };
-      }
+      // NOTE: Not necessary anymore due to auto implicit arguments
+      //for par in adt.pars.iter() {
+        //ctr_type = Term::App {
+          //era: true,
+          //fun: Box::new(ctr_type),
+          //arg: Box::new(Term::Var { nam: par.clone() }),
+        //};
+      //}
 
       // And for each field
       for (fld_name, _fld_type) in ctr.flds.iter() {
         ctr_type = Term::App {
+          era: false,
           fun: Box::new(ctr_type),
           arg: Box::new(Term::Var { nam: fld_name.clone() }),
         };
@@ -615,6 +631,7 @@ impl Term {
 
       // Wraps the constructor type with the application
       ctr_term = Term::App {
+        era: false,
         fun: Box::new(ctr_term),
         arg: Box::new(ctr_type),
       };
@@ -622,6 +639,7 @@ impl Term {
       // Finally, quantifies each field
       for (fld_name, fld_type) in ctr.flds.iter().rev() {
         ctr_term = Term::All {
+          era: false,
           nam: fld_name.clone(),
           inp: Box::new(fld_type.clone()),
           bod: Box::new(ctr_term),
@@ -630,6 +648,7 @@ impl Term {
 
       // And quantifies the constructor
       term = Term::All {
+        era: false,
         nam: ctr.name.clone(), 
         inp: Box::new(ctr_term),
         bod: Box::new(term),
@@ -638,6 +657,7 @@ impl Term {
 
     // 5 Quantifies the motive
     term = Term::All {
+      era: false,
       nam: "P".to_string(),
       inp: Box::new(motive_type),
       bod: Box::new(term),
@@ -680,11 +700,8 @@ impl ADT {
       Err(format!("Cannot find definition for type '{}'.", name))
     }
   }
-
-}
-
-impl ADT {
   
+  // Formats an ADT
   pub fn format(&self) -> Box<Show> {
 
     // ADT head: `data Name <params> <indices>`
@@ -856,12 +873,14 @@ impl Term {
     if let Some(moti) = &mat.moti {
       // Creates the first lambda: 'λx <motive>'
       motive = Term::Lam {
+        era: false,
         nam: mat.name.clone(),
         bod: Box::new(moti.clone()),
       };
       // Creates a lambda for each index: 'λindices ... λx <motive>'
       for (idx_name, _) in adt.idxs.iter().rev() {
         motive = Term::Lam {
+          era: false,
           nam: idx_name.clone(),
           bod: Box::new(motive),
         };
@@ -869,6 +888,7 @@ impl Term {
       // Creates a forall for each moved value: 'λindices ... λx ∀(a: A) ... <motive>'
       for (nam, typ) in mat.with.iter().rev() {
         motive = Term::All {
+          era: false,
           nam: nam.clone(),
           inp: Box::new(typ.clone()),
           bod: Box::new(motive),
@@ -892,6 +912,7 @@ impl Term {
         // Adds moved value lambdas
         for (nam, _) in mat.with.iter().rev() {
           ctr_term = Term::Lam {
+            era: false,
             nam: nam.clone(),
             bod: Box::new(ctr_term),
           };
@@ -899,6 +920,7 @@ impl Term {
         // Adds field lambdas
         for (fld_name, _) in ctr.flds.iter().rev() {
           ctr_term = Term::Lam {
+            era: false,
             nam: format!("{}.{}", mat.name, fld_name.clone()),
             bod: Box::new(ctr_term),
           };
@@ -911,13 +933,26 @@ impl Term {
       }
     }
 
-    // 3. Wrap Ins around term
-    term = Term::Ins {
-      val: Box::new(mat.expr.clone())
-    };
+    // 3. Wrap Ins or Type.fold around term
+    if mat.fold {
+      term = Term::App {
+        era: false,
+        fun: Box::new(Term::App {
+          era: true,
+          fun: Box::new(Term::Var { nam: format!("{}.fold", adt.name) }),
+          arg: Box::new(Term::Met {}),
+        }),
+        arg: Box::new(mat.expr.clone()),
+      };
+    } else {
+      term = Term::Ins {
+        val: Box::new(mat.expr.clone())
+      };
+    }
 
     // 4. Apply the motive, making a Var for it
     term = Term::App {
+      era: true,
       fun: Box::new(term),
       arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
     };
@@ -925,6 +960,7 @@ impl Term {
     // 5. Apply each constructor (by name)
     for ctr in &adt.ctrs {
       term = Term::App {
+        era: false,
         fun: Box::new(term),
         arg: Box::new(Term::Var { nam: format!("{}.{}", mat.name, ctr.name) }),
       };
@@ -935,6 +971,7 @@ impl Term {
       let mut ann_type = Term::Met {};
       for (nam, typ) in mat.with.iter().rev() {
         ann_type = Term::All {
+          era: false,
           nam: nam.clone(),
           inp: Box::new(typ.clone()),
           bod: Box::new(ann_type),
@@ -950,6 +987,7 @@ impl Term {
     // 7. Applies each moved var
     for (nam, _) in mat.with.iter() {
       term = Term::App {
+        era: false,
         fun: Box::new(term),
         arg: Box::new(Term::Var { nam: nam.clone() }),
       };  
@@ -971,8 +1009,6 @@ impl Term {
       bod: Box::new(term)
     };
 
-    //println!("PARSED:\n{}", term.show());
-
     // 10. Return 'term'
     return term;
   }
@@ -984,7 +1020,7 @@ impl Match {
   pub fn format(&self) -> Box<Show> {
     Show::pile(" ", vec![
       Show::glue(" ", vec![
-        Show::text("match"),
+        Show::text(if self.fold { "fold" } else { "match" }),
         Show::text(&self.name),
         Show::text("="),
         self.expr.format_go(),  
@@ -1015,9 +1051,9 @@ impl Match {
 impl<'i> KindParser<'i> {
 
   // MAT ::= match <name> = <term> { <name> : <term> <...> }: <term>
-  pub fn parse_match(&mut self, fid: u64, uses: &Uses) -> Result<Match, String> {
+  pub fn parse_match(&mut self, fid: u64, uses: &Uses, fold: bool) -> Result<Match, String> {
     // Parses the header: 'match <name> = <expr>'
-    self.consume("match ")?;
+    self.consume(if fold { "fold " } else { "match " })?;
     let name = self.parse_name()?;
     self.skip_trivia();
     let expr = if self.peek_one() == Some('=') { 
@@ -1090,7 +1126,7 @@ impl<'i> KindParser<'i> {
     } else {
       None
     };
-    return Ok(Match { adt, name, expr, with, cses, moti });
+    return Ok(Match { adt, fold, name, expr, with, cses, moti });
   }
 
 }

@@ -8,3 +8,4 @@ demo/
 .fill.tmp
 .check.hs
 guide.txt
+.hvm

@@ -4,8 +4,42 @@
 
 //use Nat.{succ,zero}
 
-_main : U60 =
-  (U60.fib 6)
+_main: (List U60) =
+  (List.map _ _ (List.cons _ 1 (List.cons _ 2 (List.cons _ 3 (List.nil _)))) λx(+ x 1))
+
+//_main : (Maybe U60) =
+  //(Maybe.bind _ _ (Maybe.some _ 1) λx
+  //(Maybe.bind _ _ (Maybe.some _ 2) λy
+  //(Maybe.some _ (+ x y))))
+
+
+//main : (Maybe U60) = {
+  //x = !bar
+  //y = 80
+  //for i in [1,2,!(foo y)]:
+    //for j in [10,20,30]:
+      //x += i
+      //if x > j:
+        //return x
+  //return x + y
+//}
+
+
+//fold xs:
+  //cons:
+    //xs.head + xs.tail
+  //nil:
+    //0
+
+//for x in xs:
+  
+  
+    
+  
+
+
+
+
 
 //_main (a: Nat) (b: Nat) (e: (Equal A a b)) : (Equal A a b) =
   //switch a {

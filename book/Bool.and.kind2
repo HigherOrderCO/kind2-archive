@@ -1,5 +1,7 @@
-Bool.and (a: Bool) (b: Bool) : Bool =
+use Bool.{true,false,and}
+
+and (a: Bool) (b: Bool) : Bool =
   match b {
-    Bool.true: b
-    Bool.false: Bool.false
+    true: b
+    false: false
   }

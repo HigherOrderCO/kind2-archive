@@ -1,9 +1,10 @@
 use Equal.{refl}
 
-apply A B (f: ∀(x:A) B) (a: A) (b: A) (e: {a = b}) : {(f a) = (f b)} =
+apply <A> <B> <a> <b> (f: A -> B) (e: a == b) : (f a) == (f b) =
   match e {
     refl: {=}
   }
+
 
 //Equal.apply
 //: ∀(A: *)

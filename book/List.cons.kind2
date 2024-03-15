@@ -1,3 +1,2 @@
-List.cons
-: ∀(T: *) ∀(head: T) ∀(tail: (List T)) (List T)
-= λT λhead λtail ~λP λcons λnil (cons head tail)
+List.cons <T> (head: T) (tail: (List T)) : (List T) =
+  ~λP λcons λnil (cons head tail)

@@ -1,0 +1,17 @@
+@cons = (a (b ((a (b c)) (* c))))
+
+@foo = ({3 (a b) c} (a (d e)))
+  & @cons ~ (b (f e))
+  & @map ~ (c (d f))
+
+@main = a
+  & @map ~ ((<+ #1 b> b) (c a))
+  & @cons ~ (#1 (d c))
+  & @cons ~ (#2 (e d))
+  & @cons ~ (#3 (@nil e))
+
+@map = (a ((b (@nil c)) c))
+  & @foo ~ (a b)
+
+@nil = (* (a a))
+

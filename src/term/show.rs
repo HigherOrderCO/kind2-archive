@@ -65,7 +65,7 @@ impl Term {
       Term::All { .. } => {
         let mut bnd = vec![];
         let mut bod = self;
-        while let Term::All { nam, inp, bod: in_bod } = bod {
+        while let Term::All { era: _, nam, inp, bod: in_bod } = bod {
           bnd.push(Show::call("", vec![
             Show::glue("", vec![
               Show::text("∀("),
@@ -85,7 +85,7 @@ impl Term {
       Term::Lam { .. } => {
         let mut bnd = vec![];
         let mut bod = self;
-        while let Term::Lam { nam, bod: in_bod } = bod {
+        while let Term::Lam { era: _, nam, bod: in_bod } = bod {
           bnd.push(Show::text(&format!("λ{}",nam)));
           bod = in_bod;
         }
@@ -97,7 +97,7 @@ impl Term {
       Term::App { .. } => {
         let mut fun = self;
         let mut spn = vec![];
-        while let Term::App { fun: in_fun, arg } = fun {
+        while let Term::App { era: _, fun: in_fun, arg } = fun {
           spn.push(arg);
           fun = in_fun;
         }

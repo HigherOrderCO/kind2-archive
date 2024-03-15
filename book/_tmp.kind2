@@ -1,0 +1,19 @@
+WARNING: unsolved metas.
+WARNING: unsolved metas.
+WARNING: unsolved metas.
+WARNING: unsolved metas.
+WARNING: unsolved metas.
+_Char = 0
+_List = λ_T 0
+_List.cons = λ_T λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
+_List.map = λ_A λ_B λ_xs let _xs.P = 0 let _xs.cons = λ_xs.head λ_xs.tail λ_f (((_List.cons 0) (_f _xs.head)) ((((_List.map 0) 0) _xs.tail) _f)) let _xs.nil = λ_f (_List.nil 0) (((_xs _xs.P) _xs.cons) _xs.nil)
+_List.nil = λ_T λ_P λ_cons λ_nil _nil
+_Nat = 0
+_Nat.succ = λ_n λ_P λ_succ λ_zero (_succ _n)
+_Nat.zero = λ_P λ_succ λ_zero _zero
+_String = (_List _Char)
+_String.cons = λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
+_String.nil = λ_P λ_cons λ_nil _nil
+
+main = _List.map
+

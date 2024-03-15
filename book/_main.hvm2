@@ -1,0 +1,21 @@
+_Char = 0
+_List = λ_T 0
+_List.Folder = λ_T 0
+_List.cons = λ_T λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
+_List.fold = λ_list
+  let _list.P = 0
+  let _list.cons = λ_list.head λ_list.tail λ_P λ_c λ_n ((_c _list.head) (((((_List.fold) _list.tail) _P) _c) _n))
+  let _list.nil = λ_P λ_c λ_n _n
+  (((_list _list.P) _list.cons) _list.nil)
+_List.map = λ_A λ_B λ_xs λ_f (((((_List.fold) _xs) 0) λ_h λ_t (((_List.cons 0) (_f _h)) _t)) (_List.nil 0))
+_List.nil = λ_T λ_P λ_cons λ_nil _nil
+_Nat = 0
+_Nat.succ = λ_n λ_P λ_succ λ_zero (_succ _n)
+_Nat.zero = λ_P λ_succ λ_zero _zero
+_String = (_List _Char)
+_String.cons = λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
+_String.nil = λ_P λ_cons λ_nil _nil
+__main = ((((_List.map 0) 0) (((_List.cons 0) 1) (((_List.cons 0) 2) (((_List.cons 0) 3) (_List.nil 0))))) λ_x (+ _x 1))
+
+main = __main
+

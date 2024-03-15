@@ -1,3 +1,2 @@
-List.nil
-: ∀(T: *) (List T)
-= λT ~λP λcons λnil nil
+List.nil <T> : (List T) =
+  ~λP λcons λnil nil

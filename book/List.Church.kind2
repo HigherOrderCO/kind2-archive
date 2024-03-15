@@ -1,0 +1,5 @@
+List.Church (T) : * =
+  ∀(P: *)
+  ∀(cons: T -> P -> P)
+  ∀(nil: P)
+  P

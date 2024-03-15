@@ -49,12 +49,12 @@ impl<'i> KindParser<'i> {
       let mut typ = Term::Set;
       let mut val = Term::new_adt(&adt);
       for (idx_nam, idx_typ) in adt.idxs.iter().rev() {
-        typ = Term::All { nam: idx_nam.clone(), inp: Box::new(idx_typ.clone()), bod: Box::new(typ) };
-        val = Term::Lam { nam: idx_nam.clone(), bod: Box::new(val) };
+        typ = Term::All { era: false, nam: idx_nam.clone(), inp: Box::new(idx_typ.clone()), bod: Box::new(typ) };
+        val = Term::Lam { era: false, nam: idx_nam.clone(), bod: Box::new(val) };
       }
       for par_nam in adt.pars.iter().rev() {
-        typ = Term::All { nam: par_nam.clone(), inp: Box::new(Term::Set), bod: Box::new(typ) };
-        val = Term::Lam { nam: par_nam.clone(), bod: Box::new(val) };
+        typ = Term::All { era: false, nam: par_nam.clone(), inp: Box::new(Term::Set), bod: Box::new(typ) };
+        val = Term::Lam { era: false, nam: par_nam.clone(), bod: Box::new(val) };
       }
       //println!("NAM: {}", adt.name);
       //println!("TYP: {}", typ.show());
@@ -68,22 +68,23 @@ impl<'i> KindParser<'i> {
     let nam = uses.get(&nam).unwrap_or(&nam).to_string();
     self.skip_trivia();
 
-    // Untyped Arguments (optional)
+    // Arguments (optional)
     let mut args = im::Vector::new();
-    while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
-      let par = self.parse_name()?;
-      self.skip_trivia();
-      args.push_back((par, Term::Met{}));
-    }
-
-    // Typed Arguments (optional)
-    while self.peek_one() == Some('(') {
-      self.consume("(")?;
+    let mut uses = uses.clone();
+    while self.peek_one() == Some('<') || self.peek_one() == Some('(') {
+      let implicit = self.peek_one() == Some('<');
+      self.consume(if implicit { "<" } else { "(" })?;
       let arg_name = self.parse_name()?;
-      self.consume(":")?;
-      let arg_type = self.parse_term(fid, uses)?;
-      self.consume(")")?;
-      args.push_back((arg_name, arg_type));
+      self.skip_trivia();
+      let arg_type = if self.peek_one() == Some(':') {
+        self.consume(":")?;
+        self.parse_term(fid, &uses)?
+      } else {
+        Term::Met {}
+      };
+      self.consume(if implicit { ">" } else { ")" })?;
+      uses = shadow(&arg_name, &uses);
+      args.push_back((implicit, arg_name, arg_type));
       self.skip_trivia();
     }
 
@@ -92,7 +93,7 @@ impl<'i> KindParser<'i> {
     let ann;
     if self.peek_one() == Some(':') {
       self.consume(":")?;
-      typ = self.parse_term(fid, uses)?;
+      typ = self.parse_term(fid, &uses)?;
       ann = true;
     } else {
       typ = Term::Met {};
@@ -101,7 +102,9 @@ impl<'i> KindParser<'i> {
 
     // Value (mandatory)
     self.consume("=")?;
-    let mut val = self.parse_term(fid, uses)?;
+    let mut val = self.parse_term(fid, &uses)?;
+
+    //println!("PARSING {}", nam);
 
     // Adds lambdas/foralls for each argument
     typ.add_alls(args.clone());
@@ -140,15 +143,16 @@ impl<'i> KindParser<'i> {
 impl Term {
 
   // Wraps a Lam around this term.
-  fn add_lam(&mut self, arg: &str) {
+  fn add_lam(&mut self, era: bool, arg: &str) {
     *self = Term::Lam {
+      era: era,
       nam: arg.to_string(),
       bod: Box::new(std::mem::replace(self, Term::Met {})),
     };
   }
 
   // Wraps many lams around this term. Linearizes when possible.
-  fn add_lams(&mut self, args: im::Vector<(String,Term)>) {
+  fn add_lams(&mut self, args: im::Vector<(bool,String,Term)>) {
     // Passes through Src
     if let Term::Src { val, .. } = self {
       val.add_lams(args);
@@ -161,35 +165,44 @@ impl Term {
     }
     // Linearizes a numeric pattern match
     if let Term::Swi { nam, z, s, .. } = self {
-      if args.len() >= 1 && args[0].0 == *nam {
+      if args.len() >= 1 && args[0].1 == *nam {
         let (head, tail) = args.split_at(1);
         z.add_lams(tail.clone());
         s.add_lams(tail.clone());
-        self.add_lam(&head[0].0);
+        self.add_lam(head[0].0, &head[0].1);
         return;
       }
     }
     // Linearizes a user-defined ADT match
     if let Term::Mch { mch } = self {
-      let Match { name, cses, .. } = &mut **mch;
-      if args.len() >= 1 && args[0].0 == *name {
-        let (head, tail) = args.split_at(1);
-        for (_, cse) in cses {
-          cse.add_lams(tail.clone());
+      if !mch.fold {
+        let Match { name, cses, .. } = &mut **mch;
+        if args.len() >= 1 && args[0].1 == *name {
+          let (head, tail) = args.split_at(1);
+          for (_, cse) in cses {
+            cse.add_lams(tail.clone());
+          }
+          self.add_lam(head[0].0, &head[0].1);
+          return;
         }
-        self.add_lam(&head[0].0);
-        return;
       }
     }
     // Prepend remaining lambdas
-    for (nam, _) in args.iter().rev() {
-      self.add_lam(&nam);
+    if args.len() > 0 {
+      let (head, tail) = args.split_at(1);
+      self.add_lam(head[0].0, &head[0].1);
+      if let Term::Lam { era: _, nam: _, bod } = self {
+        bod.add_lams(tail.clone());
+      } else {
+        unreachable!();
+      }
     }
   }
 
   // Wraps an All around this term.
-  fn add_all(&mut self, arg: &str, typ: &Term) {
+  fn add_all(&mut self, era: bool, arg: &str, typ: &Term) {
     *self = Term::All {
+      era: era,
       nam: arg.to_string(),
       inp: Box::new(typ.clone()),
       bod: Box::new(std::mem::replace(self, Term::Met {})),
@@ -197,9 +210,9 @@ impl Term {
   }
 
   // Wraps many Lams around this term.
-  fn add_alls(&mut self, args: im::Vector<(String,Term)>) {
-    for (nam, typ) in args.iter().rev() {
-      self.add_all(&nam, typ);
+  fn add_alls(&mut self, args: im::Vector<(bool,String,Term)>) {
+    for (era, nam, typ) in args.iter().rev() {
+      self.add_all(*era, &nam, typ);
     }
   }
 

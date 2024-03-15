@@ -69,16 +69,16 @@ impl Term {
       format!("x{}", name.replace("-", "._."))
     }
     match self {
-      Term::All { nam, inp, bod } => {
+      Term::All { era: _, nam, inp, bod } => {
         let inp = inp.to_hvm2_checker(env.clone(), met);
         let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
         format!("(All \"{}\" {} λ{} {})", nam, inp, binder(nam), bod)
       }
-      Term::Lam { nam, bod } => {
+      Term::Lam { era: _, nam, bod } => {
         let bod = bod.to_hvm2_checker(cons(&env, nam.clone()), met);
         format!("(Lam \"{}\" λ{} {})", nam, binder(nam), bod)
       }
-      Term::App { fun, arg } => {
+      Term::App { era: _, fun, arg } => {
         let fun = fun.to_hvm2_checker(env.clone(), met);
         let arg = arg.to_hvm2_checker(env.clone(), met);
         format!("(App {} {})", fun, arg)
@@ -162,16 +162,16 @@ impl Term {
 
   pub fn to_hs_checker(&self, env: im::Vector<String>, met: &mut usize) -> String {
     match self {
-      Term::All { nam, inp, bod } => {
+      Term::All { era: _, nam, inp, bod } => {
         let inp = inp.to_hs_checker(env.clone(), met);
         let bod = bod.to_hs_checker(cons(&env, nam.clone()), met);
         format!("(All \"{}\" {} $ \\{} -> {})", nam, inp, Term::to_hs_name(nam), bod)
       },
-      Term::Lam { nam, bod } => {
+      Term::Lam { era: _, nam, bod } => {
         let bod = bod.to_hs_checker(cons(&env, nam.clone()), met);
         format!("(Lam \"{}\" $ \\{} -> {})", nam, Term::to_hs_name(nam), bod)
       },
-      Term::App { fun, arg } => {
+      Term::App { era: _, fun, arg } => {
         let fun = fun.to_hs_checker(env.clone(), met);
         let arg = arg.to_hs_checker(env.clone(), met);
         format!("(App {} {})", fun, arg)
@@ -252,17 +252,26 @@ impl Term {
 
   pub fn to_hvm2(&self) -> String {
     match self {
-      Term::All { nam: _, inp: _, bod: _ } => {
+      Term::All { era: _, nam: _, inp: _, bod: _ } => {
         format!("0")
       },
-      Term::Lam { nam, bod } => {
+      Term::Lam { era, nam, bod } => {
         let bod = bod.to_hvm2();
-        format!("λ{} {}", nam, bod)
+        if *era {
+          format!("{}", bod)
+        } else {
+          format!("λ{} {}", Term::to_hvm2_name(nam), bod)
+        }
       },
-      Term::App { fun, arg } => {
-        let fun = fun.to_hvm2();
-        let arg = arg.to_hvm2();
-        format!("(App {} {})", fun, arg)
+      Term::App { era, fun, arg } => {
+        if *era {
+          let fun = fun.to_hvm2();
+          format!("{}", fun)
+        } else {
+          let fun = fun.to_hvm2();
+          let arg = arg.to_hvm2();
+          format!("({} {})", fun, arg)
+        }
       },
       Term::Ann { chk: _, val, typ: _ } => {
         val.to_hvm2()
@@ -291,18 +300,18 @@ impl Term {
         let x = x.to_hvm2();
         let z = z.to_hvm2();
         let s = s.to_hvm2();
-        format!("switch {} = {} {{ 0: {} _: {} }}", nam, x, z, s)
+        format!("match {} = {} {{ 0: {} +: {} }}", Term::to_hvm2_name(nam), x, z, s)
       },
       Term::Let { nam, val, bod } => {
         let val = val.to_hvm2();
         let bod = bod.to_hvm2();
-        format!("let {} = {} {}", nam, val, bod)
+        format!("let {} = {} {}", Term::to_hvm2_name(nam), val, bod)
       },
       // FIXME: change to "use" once hvm-lang supports it
       Term::Use { nam, val, bod } => {
         let val = val.to_hvm2();
         let bod = bod.to_hvm2();
-        format!("use {} = {} {}", nam, val, bod)
+        format!("let {} = {} {}", Term::to_hvm2_name(nam), val, bod)
       },
       Term::Hol { nam: _ } => {
         format!("0")
@@ -312,7 +321,7 @@ impl Term {
         format!("0")
       },
       Term::Var { nam } => {
-        format!("{}", nam) 
+        format!("{}", Term::to_hvm2_name(nam)) 
       },
       Term::Src { src: _, val } => {
         val.to_hvm2()
@@ -328,5 +337,10 @@ impl Term {
       },
     }
   }
+
+  pub fn to_hvm2_name(name: &str) -> String {
+    format!("_{}", name)
+  }
+
 
 }

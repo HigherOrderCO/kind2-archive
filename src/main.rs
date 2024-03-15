@@ -1,3 +1,20 @@
+// PROJECT FILES:
+//./term/mod.rs//
+//./term/show.rs//
+//./term/parse.rs//
+//./term/compile.rs//
+//./sugar/mod.rs//
+//./show/mod.rs//
+//./info/mod.rs//
+//./info/parse.rs//
+//./info/show.rs//
+//./book/mod.rs//
+//./book/compile.rs//
+//./book/parse.rs//
+//./book/show.rs//
+
+// PROJECT CLI (main.rs):
+
 use clap::{Arg, ArgAction, Command};
 use std::fs;
 use std::io::Write;
@@ -49,7 +66,7 @@ fn generate_check_hs(book: &Book, command: &str, arg: &str) -> String {
 
 fn generate_hvm2(book: &Book, arg: &str) -> String {
   let book_hvm2 = book.to_hvm2();
-  let main_hvm2 = format!("main = {}\n", arg);
+  let main_hvm2 = format!("main = {}\n", Term::to_hvm2_name(arg));
   format!("{}\n{}", book_hvm2, main_hvm2)
 }
 
@@ -102,13 +119,15 @@ fn normal(name: &str, _level: u32, runtime: &str) {
   eprintln!("{stderr}");
 }
 
-fn format_def(name: &str) {
-  let book = load_book(name);
-  let defn = book.defs.get(name).expect("definition exists");
-  let form = book.format_def(name, defn).flatten(Some(40));
-
-  let path = PathBuf::from(format!("./{name}.kind2"));
-  fs::write(&path, form).expect(&format!("failed to write to '{:?}'", path));
+fn auto_format(file_name: &str) {
+  let base = std::env::current_dir().expect("failed to get current directory");
+  let file = base.join(format!("{file_name}.kind2"));
+  let text = std::fs::read_to_string(&file).expect("failed to read file");
+  let fid  = Book::new().get_file_id(&file.to_str().unwrap().to_string());
+  let book = KindParser::new(&text).parse_book(file_name, fid).expect("failed to parse book");
+  let form = book.defs.iter().map(|(name, term)| book.format_def(name, term)).collect();
+  let form = Show::pile("\n\n", form).flatten(Some(60));
+  std::fs::write(&file, form).expect(&format!("failed to write to file '{}'", file_name));
 }
 
 fn compile(name: &str) {
@@ -185,7 +204,7 @@ fn main() {
         .value_parser(["hs", "hvm2"])
         .default_value("hs")))
     .subcommand(Command::new("format")
-      .about("Pretty-formats a definition")
+      .about("Auto-formats a file")
       .arg(Arg::new("name").required(true)))
     .subcommand(Command::new("compile")
       .about("Compiles to HVM2")  
@@ -207,7 +226,7 @@ fn main() {
     }
     Some(("format", sub_matches)) => {
       let name = sub_matches.get_one::<String>("name").expect("required");
-      format_def(name);
+      auto_format(name);
     }
     Some(("compile", sub_matches)) => {
       let name = sub_matches.get_one::<String>("name").expect("required");

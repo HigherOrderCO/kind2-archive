@@ -49,6 +49,7 @@ impl Book {
     book.load(base, "Nat")?;
     book.load(base, "Nat.succ")?;
     book.load(base, "Nat.zero")?;
+    book.expand_implicits();
     return Ok(book);
   }
 
@@ -81,6 +82,19 @@ impl Book {
       }
     }
     return Ok(());
+  }
+
+  // Desugars all definitions
+  pub fn expand_implicits(&mut self) {
+    // Creates a map with the implicit count of each top-level definition
+    let mut implicit_count = BTreeMap::new();
+    for (name, term) in self.defs.iter() {
+      implicit_count.insert(name.clone(), term.count_implicits());
+    }
+    // Expands implicit calls of each top-level definition in the book
+    for def in self.defs.iter_mut() {
+      def.1.expand_implicits(im::Vector::new(), &implicit_count);
+    }
   }
 
   // Gets a file id from its name
