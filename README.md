@@ -4,7 +4,7 @@ Kind2 is a general-purpose programming language made from scratch to harness
 [HVM](https://github.com/HigherOrderCO/HVM)'s **massive parallelism** and
 computational advantages (no garbage collection, optimal β-reduction). Its type
 system is a minimal core based on the Calculus of Constructions, making it
-inherently secure. In short, Kind2 aims to be:
+inherently secure. Essentially, Kind2 aims to be:
 
 - As *friendly* as **Python**
 
