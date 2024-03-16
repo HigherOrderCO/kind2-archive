@@ -1,0 +1,6 @@
+use Pair/{new}
+
+get <A> <B> <P> (p: (Pair A B)) (f: A -> B -> P) : P =
+  match p {
+    new: (f p.fst p.snd)
+  }

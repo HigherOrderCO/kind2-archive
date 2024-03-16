@@ -1,0 +1,10 @@
+use List/{cons,nil}
+
+begin <A> (xs: (List A)) : (List A) =
+  match xs {
+    ++: match xs.tail {
+      ++: (cons xs.head (begin (cons xs.tail.head xs.tail)))
+      []: []
+    }
+    []: []
+  }

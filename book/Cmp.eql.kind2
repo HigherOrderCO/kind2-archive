@@ -1,3 +1,0 @@
-Cmp.eql
-: Cmp
-= ~λP λltn λeql λgtn eql

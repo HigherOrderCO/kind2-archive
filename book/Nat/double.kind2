@@ -1,0 +1,7 @@
+use Nat/{succ,zero}
+
+double (n: Nat) : Nat =
+  match n {
+    succ: (succ (succ (double n.pred)))
+    zero: #0
+  }

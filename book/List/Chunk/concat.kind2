@@ -1,0 +1,5 @@
+concat <T>
+  (xs: (List/Chunk T))
+  (ys: (List/Chunk T))
+: (List/Chunk T) =
+  λnil (xs (ys nil))

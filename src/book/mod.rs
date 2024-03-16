@@ -26,7 +26,7 @@ pub fn shadow(key: &str, uses: &Uses) -> Uses {
   return uses;
 }
 
-// Maps short names ("cons") to full names ("Data.List.cons")
+// Maps short names ("cons") to full names ("List/cons")
 pub type Uses = im::HashMap<String, String>;
 
 impl Book {
@@ -44,11 +44,11 @@ impl Book {
     let mut book = Book::new();
     book.load(base, name)?;
     book.load(base, "String")?;
-    book.load(base, "String.cons")?;
-    book.load(base, "String.nil")?;
+    book.load(base, "String/cons")?;
+    book.load(base, "String/nil")?;
     book.load(base, "Nat")?;
-    book.load(base, "Nat.succ")?;
-    book.load(base, "Nat.zero")?;
+    book.load(base, "Nat/succ")?;
+    book.load(base, "Nat/zero")?;
     book.expand_implicits();
     return Ok(book);
   }
@@ -60,6 +60,7 @@ impl Book {
 
   // Same as load, mutably adding to a 'book'
   pub fn load(&mut self, base: &str, name: &str) -> Result<(), String> {
+    let name = name.trim_end_matches('/'); // last "/" is not part of name
     if !self.defs.contains_key(name) {
       // Parses a file into a new book
       let file = format!("{}/{}.kind2", base, name);

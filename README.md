@@ -78,26 +78,22 @@ data List T
 | nil
 
 // Applies a function to all elements of a list
-map A B (f: ∀(x: A) B) (xs: (List A)) : (List B) =
-  match xs {
-    cons:
-      let head = (f xs.head)
-      let tail = (map _ _ f xs.tail)
-      (cons _ head tail)
-    nil:
-      []
+map <A> <B> (xs: (List A)) (f: A -> B) : (List B) =
+  fold xs {
+    ++: (f xs.head) ++ xs.tail
+    []: []
   }
 ```
 
 ### Theorems and Proofs:
 
 ```javascript
-use Nat.{succ,zero,half,double}
+use Nat/{succ,zero,half,double}
 
 // Proof that `∀n. n*2/2 = n`
-bft (n: Nat) : {(half (double n)) = n} =
+bft (n: Nat) : (half (double n)) == n =
   match n {
-    succ: (Equal.apply _ _ succ _ _ (bft n.pred))
+    succ: (Equal/apply succ (bft n.pred))
     zero: {=}
   }
 ```

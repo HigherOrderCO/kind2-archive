@@ -115,16 +115,10 @@ impl Term {
       }
       Term::Ann { chk: _, val, typ: _ } => {
         val.format_go()
-        //Show::call("", vec![
-          //Show::glue("", vec![
-            //Show::text("{"),
-            //val.format_go(),
-          //]),
-          //Show::glue("", vec![
-            //Show::text(":"),
-            //typ.format_go(),
-            //Show::text("}"),
-          //])
+        //Show::call(" ", vec![
+          //val.format_go(),
+          //Show::text("::"),
+          //typ.format_go(),
         //])
       },
       Term::Slf { nam, typ, bod } => {

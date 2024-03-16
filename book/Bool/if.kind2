@@ -1,0 +1,7 @@
+use Bool/{true,false}
+
+if (b: Bool) (P: *) (t: P) (f: P) : P =
+  match b {
+    true: t
+    false: f
+  }

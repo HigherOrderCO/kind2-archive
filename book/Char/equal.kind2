@@ -1,0 +1,2 @@
+equal (a: Char) (b: Char) : Bool =
+  (U60/equal a b)

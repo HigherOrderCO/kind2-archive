@@ -1,8 +1,0 @@
-List.app
-: ∀(A: *) ∀(B: *) ∀(f: ∀(x: A) B) ∀(x: (List A))
-  (List B)
-= λA λB λf λx
-  use P = λx (List B)
-  use cons = λh λt (List.cons B (f h) (List.app A B f t))
-  use nil = (List.nil B)
-  (~x P cons nil)

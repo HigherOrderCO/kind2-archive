@@ -1,0 +1,3 @@
+String.Chunk.join
+: ∀(xs: (List String.Chunk)) String.Chunk
+= (List.Chunk.join Char)

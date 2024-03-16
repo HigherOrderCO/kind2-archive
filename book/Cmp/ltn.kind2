@@ -1,0 +1,2 @@
+Cmp.ltn : Cmp =
+  ~λP λltn λeql λgtn ltn

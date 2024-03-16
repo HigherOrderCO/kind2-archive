@@ -1,0 +1,8 @@
+use List/{cons,nil}
+use Nat/{succ,zero}
+
+length <A> (xs: (List A)) : Nat =
+  match xs {
+    ++: (succ (length xs.tail))
+    []: zero
+  }

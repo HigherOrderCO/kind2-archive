@@ -1,3 +1,0 @@
-List.Concatenator
-: ∀(T: *) *
-= λT ∀(nil: (List T)) (List T)

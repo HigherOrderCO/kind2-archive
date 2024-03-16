@@ -1,0 +1,7 @@
+use Bool/{true,false,not}
+
+double_negation (x: Bool) : (not (not x)) == x =
+  match x {
+    true: {=}
+    false: {=}
+  }

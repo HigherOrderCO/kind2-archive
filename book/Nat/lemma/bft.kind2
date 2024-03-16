@@ -1,0 +1,7 @@
+use Nat/{succ,zero,half,double}
+
+bft (n: Nat) : (half (double n)) == n =
+  match n {
+    succ: (Equal/apply succ (bft n.pred))
+    zero: {=}
+  }

@@ -1,0 +1,7 @@
+use Bool/{true,false}
+
+to_bool (x: U60) : Bool =
+  switch x {
+    0: false
+    _: true
+  }: Bool

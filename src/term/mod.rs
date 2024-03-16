@@ -392,7 +392,11 @@ impl Term {
         val.expand_implicits(env, implicit_count);
       },
       Term::Var { nam } => {
-        if !env.contains(nam) {
+        // When a name ends with "/", it must apply its implicits manually
+        if nam.ends_with("/") {
+          *self = Term::Var { nam: nam.trim_end_matches('/').to_string() };
+        // Otherwise, we apply its implicits, turning 'F' into '(F _ _ ...)'
+        } else if !env.contains(nam) {
           if let Some(implicits) = implicit_count.get(nam) {
             for _ in 0..*implicits {
               *self = Term::App {

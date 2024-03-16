@@ -1,3 +1,0 @@
-Char.is_newline
-: ∀(a: Char) Bool
-= λa (Char.equal a 10)

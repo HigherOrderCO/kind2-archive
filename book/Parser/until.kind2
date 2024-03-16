@@ -1,0 +1,12 @@
+Parser.until
+: ∀(A: *)
+  ∀(until: (Parser Bool))
+  ∀(parse: (Parser A))
+  (Parser (List A))
+= λA λuntil λparse
+  (Parser.map
+    (List.Chunk A)
+    (List A)
+    (List.Chunk.build A)
+    (Parser.until.go A until parse λx x)
+  )

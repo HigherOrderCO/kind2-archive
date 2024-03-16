@@ -1,7 +1,0 @@
-The.value
-: ∀(A: *)
-  ∀(x: A)
-  (The A x)
-= λA λx
-  ~λP λvalue (value x) 
-

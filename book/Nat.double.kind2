@@ -1,8 +1,0 @@
-Nat.double
-: ∀(n: Nat) Nat
-= λn
-  (~n
-    λx Nat
-    λpred (Nat.succ (Nat.succ (Nat.double pred)))
-    Nat.zero
-  )

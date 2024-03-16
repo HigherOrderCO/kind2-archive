@@ -1,9 +1,2 @@
-Pair
-: ∀(A: *) ∀(B: *) *
-= λA λB
-  $(self: (Pair A B))
-  ∀(P: ∀(pair: (Pair A B)) *)
-  ∀(new: 
-    ∀(fst: A) ∀(snd: B) (P (Pair.new A B fst snd))
-  )
-  (P self)
+data Pair A B
+| new (fst: A) (snd: B) : (Pair A B)

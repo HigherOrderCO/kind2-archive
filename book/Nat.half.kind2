@@ -1,8 +1,0 @@
-Nat.half
-: ∀(n: Nat) Nat
-= λn
-  (~n
-    λx Nat
-    λn (~n λx Nat λn (Nat.succ (Nat.half n)) Nat.zero)
-    Nat.zero
-  )

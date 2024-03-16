@@ -1,6 +1,0 @@
-Kind.Book.show
-: ∀(book: Kind.Book) String
-= λbook
-  (String.Concatenator.build
-    (Kind.Book.show.go (String.Map.to_list Kind.Term book))
-  )

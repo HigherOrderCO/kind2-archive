@@ -54,7 +54,7 @@ pub struct Match {
 //
 // The List sugar is merely a shortcut. For example:
 //
-//   (List.cons _ a (List.cons _ b (List.cons _ c (List.nil _))))
+//   (List/cons _ a (List/cons _ b (List/cons _ c (List/nil _))))
 //
 // Is converted to and from:
 //    
@@ -233,10 +233,10 @@ impl Term {
 impl Term {
 
   // Interprets as a list:
-  // - (((List.cons _) x) (((List.cons _) y) ... (List.nil _)))
+  // - (((List/cons _) x) (((List/cons _) y) ... (List/nil _)))
   // Patterns:
-  // - (CONS head tail) ::= (App (App (App (Var "List.cons") Met) head) tail)
-  // - NIL              ::= (App (Var "List.nil") Met)
+  // - (CONS head tail) ::= (App (App (App (Var "List/cons") Met) head) tail)
+  // - NIL              ::= (App (Var "List/nil") Met)
   pub fn as_list(&self) -> Option<List> {
     let mut vals = Vec::new();
     let mut term = self;
@@ -246,7 +246,7 @@ impl Term {
           if let Term::App { era: _, fun: cons, arg: head } = &**fun {
             if let Term::App { era: _, fun: cons_fun, arg: _ } = &**cons {
               if let Term::Var { nam } = &**cons_fun {
-                if nam == "List.cons" {
+                if nam == "List/cons" {
                   vals.push(head.clone());
                   term = arg;
                   continue;
@@ -255,7 +255,7 @@ impl Term {
             }
           }
           if let Term::Var { nam } = &**fun {
-            if nam == "List.nil" {
+            if nam == "List/nil" {
               return Some(List { vals });
             }
           }
@@ -266,23 +266,15 @@ impl Term {
     }
   }
 
-  // Builds a chain of applications of List.cons and List.nil from a Vec<Box<Term>>
+  // Builds a chain of applications of List/cons and List/nil from a Vec<Box<Term>>
   pub fn new_list(list: &List) -> Term {
-    let mut term = Term::App {
-      era: true,
-      fun: Box::new(Term::Var { nam: "List.nil".to_string() }),
-      arg: Box::new(Term::Met {}),
-    };
+    let mut term = Term::Var { nam: "List/nil".to_string() };
     for item in (&list.vals).into_iter().rev() {
       term = Term::App {
         era: false,
         fun: Box::new(Term::App {
           era: false,
-          fun: Box::new(Term::App {
-            era: true,
-            fun: Box::new(Term::Var { nam: "List.cons".to_string() }),
-            arg: Box::new(Term::Met {}),
-          }),
+          fun: Box::new(Term::Var { nam: "List/cons".to_string() }),
           arg: item.clone(),
         }),
         arg: Box::new(term),
@@ -377,15 +369,9 @@ impl Equal {
   
   pub fn format(&self) -> Box<Show> {
     Show::glue(" ", vec![
-      Show::glue("", vec![
-        Show::text("{"),
-        self.a.format_go(),
-      ]),
-      Show::text("="),
-      Show::glue("", vec![
-        self.b.format_go(),
-        Show::text("}"),
-      ]),
+      self.a.format_go(),
+      Show::text("=="),
+      self.b.format_go(),
     ])
   }
 
@@ -608,17 +594,17 @@ impl Term {
       }
 
       // Builds the constructor type: (Type.C0 P0 P1 ... C0_F0 C0_F1 ...)
-      let mut ctr_type = Term::Var { nam: format!("{}.{}", adt.name, ctr.name) };
+      let mut ctr_type = Term::Var { nam: format!("{}/{}/", adt.name, ctr.name) };
 
       // For each type parameter
       // NOTE: Not necessary anymore due to auto implicit arguments
-      //for par in adt.pars.iter() {
-        //ctr_type = Term::App {
-          //era: true,
-          //fun: Box::new(ctr_type),
-          //arg: Box::new(Term::Var { nam: par.clone() }),
-        //};
-      //}
+      for par in adt.pars.iter() {
+        ctr_type = Term::App {
+          era: true,
+          fun: Box::new(ctr_type),
+          arg: Box::new(Term::Var { nam: par.clone() }),
+        };
+      }
 
       // And for each field
       for (fld_name, _fld_type) in ctr.flds.iter() {
@@ -904,7 +890,7 @@ impl Term {
     for ctr in &adt.ctrs {
       // Find this constructor's case
       let found = mat.cses.iter().find(|(case_name, _)| {
-        return case_name == &format!("{}.{}", adt.name, ctr.name);
+        return case_name == &format!("{}/{}", adt.name, ctr.name);
       });
       if let Some((_, case_term)) = found {
         // If it is present...
@@ -933,31 +919,32 @@ impl Term {
       }
     }
 
-    // 3. Wrap Ins or Type.fold around term
+    // 3. Make `(~x <motive>)` or `(Type/fold/ _ <motive> x)`
     if mat.fold {
       term = Term::App {
-        era: false,
+        era: true,
         fun: Box::new(Term::App {
-          era: true,
-          fun: Box::new(Term::Var { nam: format!("{}.fold", adt.name) }),
-          arg: Box::new(Term::Met {}),
+          era: false,
+          fun: Box::new(Term::App {
+            era: true,
+            fun: Box::new(Term::Var { nam: format!("{}/fold/", adt.name) }),
+            arg: Box::new(Term::Met {}),
+          }),
+          arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
         }),
-        arg: Box::new(mat.expr.clone()),
+        arg: Box::new(mat.expr.clone())
       };
     } else {
-      term = Term::Ins {
-        val: Box::new(mat.expr.clone())
+      term = Term::App {
+        era: true,
+        fun: Box::new(Term::Ins {
+          val: Box::new(mat.expr.clone())
+        }),
+        arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
       };
     }
 
-    // 4. Apply the motive, making a Var for it
-    term = Term::App {
-      era: true,
-      fun: Box::new(term),
-      arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
-    };
-
-    // 5. Apply each constructor (by name)
+    // 4. Apply each constructor (by name)
     for ctr in &adt.ctrs {
       term = Term::App {
         era: false,
@@ -966,7 +953,7 @@ impl Term {
       };
     }
 
-    // 6. Annotates with the moved var foralls
+    // 5. Annotates with the moved var foralls
     if mat.with.len() > 0 {
       let mut ann_type = Term::Met {};
       for (nam, typ) in mat.with.iter().rev() {
@@ -984,7 +971,7 @@ impl Term {
       };
     }
 
-    // 7. Applies each moved var
+    // 6. Applies each moved var
     for (nam, _) in mat.with.iter() {
       term = Term::App {
         era: false,
@@ -993,7 +980,7 @@ impl Term {
       };  
     }
 
-    // 8. Create the local 'use' definition for each term
+    // 7. Create the local 'use' definition for each term
     for (i,ctr) in adt.ctrs.iter().enumerate().rev() {
       term = Term::Use {
         nam: format!("{}.{}", mat.name, ctr.name),
@@ -1002,14 +989,14 @@ impl Term {
       };
     }
 
-    // 9. Create the local 'use' definition for the motive
+    // 8. Create the local 'use' definition for the motive
     term = Term::Use {
       nam: format!("{}.P", mat.name),
       val: Box::new(motive),
       bod: Box::new(term)
     };
 
-    // 10. Return 'term'
+    // 9. Return 'term'
     return term;
   }
 
@@ -1084,28 +1071,37 @@ impl<'i> KindParser<'i> {
     let mut adt = "Empty".to_string();
     let mut cses = Vec::new();
     while self.peek_one() != Some('}') {
-      let cse_name = self.parse_name()?;
+      self.skip_trivia();
+      let cse_name = if self.peek_many(2) == Some("++") {
+        self.consume("++")?;
+        "List/cons".to_string()
+      } else if self.peek_many(2) == Some("[]") {
+        self.consume("[]")?;
+        "List/nil".to_string()
+      } else {
+        self.parse_name()?
+      };
       let cse_name = uses.get(&cse_name).unwrap_or(&cse_name).to_string();
       // Infers the local ADT name
       let adt_name = {
-        let pts = cse_name.split('.').collect::<Vec<&str>>();
+        let pts = cse_name.split('/').collect::<Vec<&str>>();
         if pts.len() < 2 {
-          return self.expected(&format!("valid constructor (did you forget 'TypeName.' before '{}'?)", cse_name));
+          return self.expected(&format!("valid constructor (did you forget 'TypeName/' before '{}'?)", cse_name));
         } else {
-          pts[..pts.len() - 1].join(".")
+          pts[..pts.len() - 1].join("/")
         }
       };
       // Sets the global ADT name
       if adt == "Empty" {
         adt = adt_name.clone();
       } else if adt != adt_name {
-        return self.expected(&format!("{}.constructor", adt));
+        return self.expected(&format!("{}/constructor", adt));
       }
       // Finds this case's constructor
-      let cnm = cse_name.split('.').last().unwrap().to_string();
+      let cnm = cse_name.split('/').last().unwrap().to_string();
       let ctr = ADT::load(&adt).ok().and_then(|adt| adt.ctrs.iter().find(|ctr| ctr.name == cnm).cloned());
       if ctr.is_none() {
-        return self.expected(&format!("a valid constructor ({}.{} doesn't exit)", adt_name, cnm));
+        return self.expected(&format!("a valid constructor ({}/{} doesn't exit)", adt_name, cnm));
       }
       // Shadows this constructor's field variables
       let mut uses = uses.clone();

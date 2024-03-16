@@ -1,0 +1,13 @@
+use Bool/{true,false,or}
+use Char/{is_between,equal}
+
+is_name (a: Char) : Bool =
+  (or (is_between 97 122 a)
+  (or (is_between 65 90 a)
+  (or (is_between 48 57 a)
+  (or (equal 95 a)
+  (or (equal 46 a)
+  (or (equal 45 a)
+  false))))))
+
+

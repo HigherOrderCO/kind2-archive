@@ -1,9 +1,0 @@
-U60.cmp
-: ∀(a: U60) ∀(b: U60) Cmp
-= λa λb
-  (U60.if
-    (== a b)
-    Cmp
-    (U60.if (< a b) Cmp Cmp.gtn Cmp.ltn)
-    Cmp.eql
-  )

@@ -1,3 +1,0 @@
-Pair.new
-: ∀(A: *) ∀(B: *) ∀(a: A) ∀(b: B) (Pair A B)
-= λA λB λa λb ~λP λnew (new a b)

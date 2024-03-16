@@ -1,3 +1,0 @@
-List.Concatenator.build
-: ∀(T: *) ∀(x: (List.Concatenator T)) (List T)
-= λT λx (x (List.nil T))

@@ -1,0 +1,12 @@
+use Bool/{true,false}
+use List/{cons,nil}
+use Maybe/{some,none}
+
+find <A> (cond: A -> Bool) (xs: (List A)) : (Maybe A) =
+  match xs {
+    ++: match found = (cond xs.head) {
+      true: (some xs.head)
+      false: (find cond xs.tail)
+    }: (Maybe A) // FIXME: unifier can't solve this hole
+    []: none
+  }

@@ -1,0 +1,7 @@
+indent
+: ∀(tab: Nat) String
+= λtab
+  use P    = λx String
+  use succ = λtab.pred (String/cons 32 (String/cons 32 (indent tab.pred)))
+  use zero = String/nil
+  (~tab P succ zero)

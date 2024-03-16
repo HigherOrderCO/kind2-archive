@@ -1,5 +1,0 @@
-Bool.show (x: Bool) : String =
-  match x {
-    Bool.true: "true"
-    Bool.false: "false"
-  }

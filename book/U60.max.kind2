@@ -1,3 +1,0 @@
-U60.max
-: ∀(a: U60) ∀(b: U60) U60
-= λa λb (~(U60.to_bool (> a b)) λx U60 a b)

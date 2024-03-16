@@ -1,0 +1,15 @@
+use Pair/{new}
+
+escapes : (List (Pair Char Char)) =
+  [
+    (new 98 8)
+    (new 102 12)
+    (new 110 10)
+    (new 114 13)
+    (new 116 9)
+    (new 118 11)
+    (new 92 92)
+    (new 34 34)
+    (new 48 0)
+    (new 39 39)
+  ]

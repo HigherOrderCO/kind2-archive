@@ -1,8 +1,0 @@
-Cmp.is_gtn
-: ∀(cmp: Cmp) Bool
-= λcmp
-  use P = λx Bool
-  use ltn = Bool.false
-  use eql = Bool.false
-  use gtn = Bool.true
-  (~cmp P ltn eql gtn)

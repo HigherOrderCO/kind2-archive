@@ -1,4 +1,0 @@
-String.Concatenator.concat
-: ∀(xs: String.Concatenator) ∀(ys: String.Concatenator)
-  String.Concatenator
-= (List.Concatenator.concat Char)

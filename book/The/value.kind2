@@ -1,0 +1,2 @@
+value <A> (x: A) : (The A x) =
+  ~λP λvalue (value x)

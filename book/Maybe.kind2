@@ -1,8 +1,3 @@
-Maybe
-: ∀(T: *) *
-= λT
-  $(self: (Maybe T))
-  ∀(P: ∀(x: (Maybe T)) *)
-  ∀(some: ∀(value: T) (P (Maybe.some T value)))
-  ∀(none: (P (Maybe.none T)))
-  (P self)
+data Maybe T
+| some (value: T)
+| none

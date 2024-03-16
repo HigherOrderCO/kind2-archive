@@ -1,0 +1,3 @@
+newline
+: String
+= (String/cons 10 String/nil)

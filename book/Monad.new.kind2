@@ -1,8 +1,0 @@
-Monad.new
-: ∀(M: ∀(T: *) *)
-  ∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
-  ∀(pure: ∀(A: *) ∀(a: A) (M A))
-  (Monad M)
-= λM λbind λpure
-  ~λP λnew
-  (new bind pure)

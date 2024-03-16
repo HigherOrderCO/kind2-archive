@@ -1,5 +1,0 @@
-U60.to_bool (x: U60) : Bool =
-  switch x {
-    0: Bool.false
-    _: Bool.true
-  }: Bool

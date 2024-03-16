@@ -1,3 +1,2 @@
-String
-: *
-= (List Char)
+String : * =
+  (List Char)

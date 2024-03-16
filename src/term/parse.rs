@@ -124,7 +124,7 @@ impl<'i> KindParser<'i> {
       return Ok(Term::Src { src, val: Box::new(Term::Lam { era, nam, bod }) });
     }
 
-    // RFL ::= (=)
+    // RFL ::= {=}
     if self.starts_with("{=}") {
       let ini = *self.index() as u64;
       self.consume("{=}")?;
@@ -134,11 +134,7 @@ impl<'i> KindParser<'i> {
         src,
         val: Box::new(Term::App {
           era: false,
-          fun: Box::new(Term::App {
-            era: false,
-            fun: Box::new(Term::Var { nam: "Equal.refl".to_string() }),
-            arg: Box::new(Term::Met {}),
-          }),
+          fun: Box::new(Term::Var { nam: "Equal/refl".to_string() }),
           arg: Box::new(Term::Met {}),
         })
       });
@@ -492,8 +488,8 @@ impl<'i> KindParser<'i> {
     }
 
     // List.cons
-    if self.starts_with(",") {
-      self.consume(",")?;
+    if self.starts_with("++") {
+      self.consume("++")?;
       let ini = *self.index() as u64;
       let hd  = Box::new(term);
       let tl  = Box::new(self.parse_term(fid, uses)?);
@@ -505,11 +501,7 @@ impl<'i> KindParser<'i> {
           era: false,
           fun: Box::new(Term::App {
             era: false,
-            fun: Box::new(Term::App {
-              era: true,
-              fun: Box::new(Term::Var { nam: "cons".to_string() }),
-              arg: Box::new(Term::Met {}),
-            }),
+            fun: Box::new(Term::Var { nam: "List/cons".to_string() }),
             arg: hd,
           }),
           arg: tl,

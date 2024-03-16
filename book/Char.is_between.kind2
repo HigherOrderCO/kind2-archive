@@ -1,5 +1,0 @@
-Char.is_between (min: Char) (max: Char) (chr: Char) : Bool
-= (Bool.and
-    (U60.to_bool (>= chr min))
-    (U60.to_bool (<= chr max))
-  )

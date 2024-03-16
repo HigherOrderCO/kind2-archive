@@ -1,7 +1,0 @@
-use Bool.{true,false}
-
-Bool.or (a: Bool) (b: Bool) : Bool =
-  match a {
-    true: true
-    false: b
-  }

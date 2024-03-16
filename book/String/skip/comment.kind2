@@ -1,0 +1,11 @@
+comment
+: ∀(str: String) String
+= λstr
+  use P = λx String
+  use cons = λc0 λcs
+    use P = λx ∀(c0: Char) ∀(cs: String) String
+    use true = λc0 λcs (String/skip cs)
+    use false = λc0 λcs (String/skip/comment cs)
+    (~(Char/is_newline c0) P true false c0 cs)
+  use nil = String/nil
+  (~str P cons nil)

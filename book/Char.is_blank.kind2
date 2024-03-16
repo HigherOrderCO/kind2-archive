@@ -1,2 +1,0 @@
-Char.is_blank (a: Char) : Bool =
-  (Bool.or (Char.equal a 10) (Char.equal a 32))

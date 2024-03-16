@@ -1,7 +1,0 @@
-Kind.Term.get_refs
-: ∀(term: Kind.Term) (List String)
-= λterm
-  (List.Concatenator.build
-    String
-    (Kind.Term.get_refs.go term)
-  )

@@ -1,6 +1,13 @@
 data Equal T (a: T) (b: T)
 | refl (a: T) : (Equal T a a)
 
+//Equal : ∀(T: *) ∀(a: T) ∀(b: T) * =
+  //λT λa λb
+  //$(self: (Equal T a b))
+  //∀(P: ∀(a: T) ∀(b: T) ∀(x: (Equal T a b)) *)
+  //∀(refl: ∀(x: T) (P x x (Equal/refl T x)))
+  //(P a b self)
+
 //Equal
 //: ∀(A: *) ∀(a: A) ∀(b: A) *
 //= λA λa λb ∀(P: ∀(x: A) *) ∀(p: (P a)) (P b)

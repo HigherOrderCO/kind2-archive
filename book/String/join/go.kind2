@@ -1,0 +1,11 @@
+go
+: ∀(sep: String) ∀(strs: (List String)) String
+= λsep λstrs
+  use P = λx String
+  use cons = λh λt
+    (String/concat
+      sep
+      (String/concat h (go sep t))
+    )
+  use nil = String/nil
+  (~strs P cons nil)

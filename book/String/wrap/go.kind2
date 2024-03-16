@@ -1,0 +1,7 @@
+go
+: ∀(str: String) ∀(end: String) String
+= λstr λend
+  use P = λx ∀(end: String) String
+  use cons = λh λt λend (String/cons h (String/wrap/go t end))
+  use nil = λend (String/concat end String/nil)
+  (~str P cons nil end)

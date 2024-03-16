@@ -1,0 +1,28 @@
+Parser.until.go
+: ∀(A: *)
+  ∀(until: (Parser Bool))
+  ∀(parse: (Parser A))
+  ∀(terms: (List.Chunk A))
+  (Parser (List.Chunk A))
+= λA λuntil λparse λterms λcode
+  use P = λx (Parser.Result (List.Chunk A))
+  use done = λcode λstop
+    use P = λx
+      ∀(code: String) (Parser.Result (List.Chunk A))
+    use true = λcode
+      (Parser.Result.done (List.Chunk A) code terms)
+    use false = λcode
+      use P = λx (Parser.Result (List.Chunk A))
+      use done = λcode λvalue
+        (Parser.until.go
+          A
+          until
+          parse
+          λx (terms (List.cons A value x))
+          code
+        )
+      use fail = λerror (Parser.Result.fail (List.Chunk A) error)
+      (~(parse code) P done fail)
+    (~stop P true false code)
+  use fail = λerror (Parser.Result.fail (List.Chunk A) error)
+  (~(until code) P done fail)

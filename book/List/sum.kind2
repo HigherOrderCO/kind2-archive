@@ -1,0 +1,5 @@
+sum (xs: (List U60)): U60 =
+  match xs {
+    ++: (+ xs.head (sum xs.tail))
+    []: 0
+  }

@@ -1,3 +1,1 @@
-Empty
-: *
-= $(self: Empty) ∀(P: ∀(x: Empty) *) (P self)
+data Empty

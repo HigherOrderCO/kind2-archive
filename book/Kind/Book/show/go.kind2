@@ -1,0 +1,25 @@
+Kind.Book.show.go
+: ∀(book: (List (Pair String Kind.Term)))
+  String.Chunk
+= λbook
+  use P = λx String.Chunk
+  use cons = λhead λtail
+    use P = λx String.Chunk
+    use new = λhead.fst λhead.snd λnil
+      (Kind.Text.show.go
+        head.fst
+        (Kind.Text.show.go
+          " = "
+          (Kind.Term.show.go
+            head.snd
+            Nat.zero
+            (Kind.Text.show.go
+              String.newline
+              (Kind.Book.show.go tail nil)
+            )
+          )
+        )
+      )
+    (~head P new)
+  use nil = λnil nil
+  (~book P cons nil)

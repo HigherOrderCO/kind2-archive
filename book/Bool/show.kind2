@@ -1,0 +1,7 @@
+use Bool/{true,false}
+
+show (x: Bool) : String =
+  match x {
+    true: "true"
+    false: "false"
+  }

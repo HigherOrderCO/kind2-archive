@@ -1,4 +1,2 @@
-Unit
-: *
-= $(self: Unit)
-  ∀(P: ∀(x: Unit) *) ∀(one: (P Unit.one)) (P self)
+data Unit
+| new

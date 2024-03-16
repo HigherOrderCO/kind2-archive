@@ -1,2 +1,0 @@
-List.cons <T> (head: T) (tail: (List T)) : (List T) =
-  ~λP λcons λnil (cons head tail)

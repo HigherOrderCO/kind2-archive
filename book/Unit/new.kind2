@@ -1,0 +1,2 @@
+Unit.new : Unit =
+  ~λP λone one

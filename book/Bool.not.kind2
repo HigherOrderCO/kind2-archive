@@ -1,7 +1,0 @@
-use Bool.{true,false}
-
-Bool.not (x: Bool) : Bool =
-  match x {
-    true: false
-    false: true
-  }

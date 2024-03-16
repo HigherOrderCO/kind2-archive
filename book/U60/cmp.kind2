@@ -1,0 +1,4 @@
+cmp (a: U60) (b: U60) : Cmp =
+  (U60/if (== a b)
+    (U60/if (< a b) Cmp/gtn Cmp/ltn)
+    Cmp/eql)

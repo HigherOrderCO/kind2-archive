@@ -1,0 +1,2 @@
+none <T> : (Maybe T) =
+  ~λP λsome λnone none

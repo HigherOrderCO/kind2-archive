@@ -1,3 +1,0 @@
-Empty.absurd
-: ∀(e: Empty) ∀(P: *) P
-= λe λP (~e λx P)

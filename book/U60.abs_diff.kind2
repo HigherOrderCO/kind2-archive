@@ -1,7 +1,0 @@
-U60.abs_diff
-: ∀(a: U60) ∀(b: U60) U60
-= λa λb
-  use P = λx U60
-  use true = (- b a)
-  use false = (- a b)
-  (~(U60.to_bool (< a b)) P true false)

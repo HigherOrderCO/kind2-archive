@@ -1,0 +1,18 @@
+use Bool/{true,false,or}
+use Char/{equal}
+
+is_oper (a: Char) : Bool =
+  (or (equal 43 a)
+  (or (equal 45 a)
+  (or (equal 42 a)
+  (or (equal 47 a)
+  (or (equal 37 a)
+  (or (equal 60 a)
+  (or (equal 62 a)
+  (or (equal 61 a)
+  (or (equal 38 a)
+  (or (equal 124 a)
+  (or (equal 94 a)
+  (or (equal 33 a)
+  (or (equal 126 a)
+  false)))))))))))))

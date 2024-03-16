@@ -1,0 +1,2 @@
+cons <T> (len: Nat) (head: T) (tail: (Vector T len)) : (Vector T (Nat/succ len)) =
+  ~ λP λcons λnil (cons len head tail)

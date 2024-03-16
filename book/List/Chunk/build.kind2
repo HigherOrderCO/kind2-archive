@@ -1,0 +1,2 @@
+build <T> (x: (List/Chunk T)) : (List T) =
+  (x [])

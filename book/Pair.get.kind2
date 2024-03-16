@@ -1,8 +1,0 @@
-Pair.get
-: ∀(A: *)
-  ∀(B: *)
-  ∀(p: (Pair A B))
-  ∀(P: *)
-  ∀(f: ∀(a: A) ∀(b: B) P)
-  P
-= λA λB λp λP λf (~p λx P f)

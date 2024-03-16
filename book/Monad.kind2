@@ -9,6 +9,6 @@ Monad
       (M B)
     )
     ∀(pure: ∀(A: *) ∀(a: A) (M A))
-    (P (Monad.new M bind pure))
+    (P (Monad/new M bind pure))
   )
   (P self)

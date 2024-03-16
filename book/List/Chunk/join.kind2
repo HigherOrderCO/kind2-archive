@@ -1,0 +1,17 @@
+use List/{cons,nil}
+
+join <T> (xs: (List (List/Chunk T))) : (List/Chunk T) =
+  match xs {
+    ++: (List/Chunk/concat xs.head (join xs.tail))
+    []: List/Chunk/nil
+  }
+  
+  //use P = λxs (List.Chunk T)
+  //use cons = λhead λtail
+    //(List.Chunk.concat
+      //T
+      //head
+      //(List.Chunk.join T tail)
+    //)
+  //use nil = (List.Chunk.nil T)
+  //(~xs P cons nil)

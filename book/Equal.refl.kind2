@@ -1,4 +1,0 @@
-Equal.refl
-: ∀(A: *) ∀(x: A) (Equal A x x)
-= λA λx
-  ~ λP λrefl (refl x)

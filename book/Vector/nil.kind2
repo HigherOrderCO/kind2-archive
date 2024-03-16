@@ -1,0 +1,2 @@
+nil <T> : (Vector T Nat/zero) =
+  ~λP λcons λnil nil

@@ -1,0 +1,71 @@
+Kind.Term.get_refs.go
+: ∀(term: Kind.Term) (List.Chunk String)
+= λterm
+  use P = λx (List.Chunk String)
+  use all = λnam λinp λbod λnil
+    (Kind.Term.get_refs.go
+      inp
+      (Kind.Term.get_refs.go (bod Kind.set) nil)
+    )
+  use lam = λnam λbod λnil
+    (Kind.Term.get_refs.go (bod Kind.set) nil)
+  use app = λfun λarg λnil
+    (Kind.Term.get_refs.go
+      fun
+      (Kind.Term.get_refs.go arg nil)
+    )
+  use ann = λval λtyp λnil
+    (Kind.Term.get_refs.go
+      val
+      (Kind.Term.get_refs.go typ nil)
+    )
+  use slf = λnam λbod λnil
+    (Kind.Term.get_refs.go (bod Kind.set) nil)
+  use ins = λval λnil (Kind.Term.get_refs.go val nil)
+  use ref = λnam λval λnil (List.cons String nam nil)
+  use def = λnam λval λbod λnil
+    (Kind.Term.get_refs.go
+      val
+      (Kind.Term.get_refs.go (bod Kind.set) nil)
+    )
+  use set = λnil nil
+  use u60 = λnil nil
+  use num = λval λnil nil
+  use op2 = λopr λfst λsnd λnil
+    (Kind.Term.get_refs.go
+      fst
+      (Kind.Term.get_refs.go snd nil)
+    )
+  use mat = λnam λx λz λs λp λnil
+    (Kind.Term.get_refs.go
+      x
+      (Kind.Term.get_refs.go
+        z
+        (Kind.Term.get_refs.go
+          (s Kind.set)
+          (Kind.Term.get_refs.go (p Kind.set) nil)
+        )
+      )
+    )
+  use txt = λtext λnil nil
+  use hol = λnam λctx λnil nil
+  use var = λnam λidx λnil nil
+  (~term
+    P
+    all
+    lam
+    app
+    ann
+    slf
+    ins
+    ref
+    def
+    set
+    u60
+    num
+    op2
+    mat
+    txt
+    hol
+    var
+  )

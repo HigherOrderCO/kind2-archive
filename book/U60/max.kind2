@@ -1,0 +1,5 @@
+max (a: U60) (b: U60) : U60 =
+  switch x = (< a b) {
+    0: a
+    _: b
+  }

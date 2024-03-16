@@ -1,0 +1,7 @@
+use Bool/{true,false}
+
+not (x: Bool) : Bool =
+  match x {
+    true: false
+    false: true
+  }

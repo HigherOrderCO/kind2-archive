@@ -1,3 +1,0 @@
-String.Concatenator.from_string
-: ∀(xs: String) String.Concatenator
-= (List.Concatenator.from_list Char)

@@ -1,0 +1,2 @@
+concat (xs: String) (ys: String) : String =
+  (List/concat xs ys)

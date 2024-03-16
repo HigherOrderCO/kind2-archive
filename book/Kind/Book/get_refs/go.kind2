@@ -1,0 +1,15 @@
+Kind.Book.get_refs.go
+: ∀(book: (List (Pair String Kind.Term)))
+  (List.Chunk String)
+= λbook
+  use P = λx (List.Chunk String)
+  use cons = λhead λtail
+    use P = λx (List.Chunk String)
+    use new = λhead.fst λhead.snd λnil
+      (Kind.Term.get_refs.go
+        head.snd
+        (Kind.Book.get_refs.go tail nil)
+      )
+    (~head P new)
+  use nil = λnil nil
+  (~book P cons nil)

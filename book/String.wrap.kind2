@@ -1,4 +1,0 @@
-String.wrap
-: ∀(ini: String) ∀(str: String) ∀(end: String) String
-= λini λstr λend
-  (String.concat ini (String.wrap.go str end))

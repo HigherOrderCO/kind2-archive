@@ -1,0 +1,2 @@
+begin (str: String) : String =
+  (List/begin str)

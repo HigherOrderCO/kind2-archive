@@ -1,0 +1,7 @@
+use Maybe/{some,none}
+
+bind <A> <B> (a: (Maybe A)) (b: A -> (Maybe B)) : (Maybe B) =
+  match a with (b: A -> (Maybe B)) {
+    some: (b a.value)
+    none: none
+  }

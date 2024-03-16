@@ -1,3 +1,0 @@
-Maybe.none
-: ∀(T: *) (Maybe T)
-= λT ~λP λsome λnone none

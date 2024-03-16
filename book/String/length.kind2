@@ -1,0 +1,3 @@
+String/length
+: ∀(a: String) Nat
+= λa (List/length a)

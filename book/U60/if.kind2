@@ -1,0 +1,5 @@
+if <P> (x: U60) (t: P) (f: P) : P =
+  switch x {
+    0: t
+    _: f
+  }

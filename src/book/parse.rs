@@ -21,7 +21,7 @@ impl<'i> KindParser<'i> {
         }
       }
     } else {
-      let pts = nam.split('.').collect::<Vec<&str>>();
+      let pts = nam.split('/').collect::<Vec<&str>>();
       let key = pts.last().unwrap().to_string();
       //println!("use {} ~> {}", key, nam);
       uses.insert(key, nam);
@@ -128,7 +128,7 @@ impl<'i> KindParser<'i> {
     // Parses all top-level 'use' declarations.
     let mut uses = self.parse_uses(fid)?;
     // Each file has an implicit 'use Path.to.file'. We add it here:
-    uses.insert(name.split('.').last().unwrap().to_string(), name.to_string());
+    uses.insert(name.split('/').last().unwrap().to_string(), name.to_string());
     // Parses all definitions.
     while *self.index() < self.input().len() {
       let (name, term) = self.parse_def(fid, &mut uses)?;
@@ -153,50 +153,62 @@ impl Term {
 
   // Wraps many lams around this term. Linearizes when possible.
   fn add_lams(&mut self, args: im::Vector<(bool,String,Term)>) {
-    // Passes through Src
-    if let Term::Src { val, .. } = self {
-      val.add_lams(args);
-      return;
+    for (era, nam, _) in args.iter().rev() {
+      self.add_lam(*era, &nam);
     }
-    // Passes through Ann
-    if let Term::Ann { val, .. } = self {
-      val.add_lams(args);
-      return;
-    }
-    // Linearizes a numeric pattern match
-    if let Term::Swi { nam, z, s, .. } = self {
-      if args.len() >= 1 && args[0].1 == *nam {
-        let (head, tail) = args.split_at(1);
-        z.add_lams(tail.clone());
-        s.add_lams(tail.clone());
-        self.add_lam(head[0].0, &head[0].1);
-        return;
-      }
-    }
-    // Linearizes a user-defined ADT match
-    if let Term::Mch { mch } = self {
-      if !mch.fold {
-        let Match { name, cses, .. } = &mut **mch;
-        if args.len() >= 1 && args[0].1 == *name {
-          let (head, tail) = args.split_at(1);
-          for (_, cse) in cses {
-            cse.add_lams(tail.clone());
-          }
-          self.add_lam(head[0].0, &head[0].1);
-          return;
-        }
-      }
-    }
-    // Prepend remaining lambdas
-    if args.len() > 0 {
-      let (head, tail) = args.split_at(1);
-      self.add_lam(head[0].0, &head[0].1);
-      if let Term::Lam { era: _, nam: _, bod } = self {
-        bod.add_lams(tail.clone());
-      } else {
-        unreachable!();
-      }
-    }
+
+    // NOTE: match-passthrough removed due to problems. For example:
+    // U60.if (x: U60) (P: *) (t: P) (f: P) : P = switch x { 0: t _: f }
+    // This wouldn't check, because 'P' is moved inside, becoming a different 'P'.
+    // I think automatic behaviors like this are dangerous and should be avoided.
+
+    //// Passes through Src
+    //if let Term::Src { val, .. } = self {
+      //val.add_lams(args);
+      //return;
+    //}
+    //// Passes through Ann
+    //if let Term::Ann { val, .. } = self {
+      //val.add_lams(args);
+      //return;
+    //}
+    //// Linearizes a numeric pattern match
+    //if let Term::Swi { nam, z, s, p, .. } = self {
+      //if args.len() >= 1 && args[0].1 == *nam {
+        //let (head, tail) = args.split_at(1);
+        //z.add_lams(tail.clone());
+        //s.add_lams(tail.clone());
+        //p.add_alls(tail.clone());
+        //self.add_lam(head[0].0, &head[0].1);
+        //return;
+      //}
+    //}
+    //// Linearizes a user-defined ADT match
+    //if let Term::Mch { mch } = self {
+      //if !mch.fold {
+        //let Match { name, cses, moti, .. } = &mut **mch;
+        //if args.len() >= 1 && args[0].1 == *name {
+          //let (head, tail) = args.split_at(1);
+          //for (_, cse) in cses {
+            //cse.add_lams(tail.clone());
+          //}
+          //moti.as_mut().map(|x| x.add_alls(tail.clone()));
+          //self.add_lam(head[0].0, &head[0].1);
+          //return;
+        //}
+      //}
+    //}
+    //// Prepend remaining lambdas
+    //if args.len() > 0 {
+      //let (head, tail) = args.split_at(1);
+      //self.add_lam(head[0].0, &head[0].1);
+      //if let Term::Lam { era: _, nam: _, bod } = self {
+        //bod.add_lams(tail.clone());
+      //} else {
+        //unreachable!();
+      //}
+    //}
+  
   }
 
   // Wraps an All around this term.

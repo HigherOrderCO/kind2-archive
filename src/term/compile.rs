@@ -157,7 +157,7 @@ impl Term {
   }
 
   pub fn to_hs_name(name: &str) -> String {
-    format!("x{}", name.replace("-", "_").replace(".","_"))
+    format!("x{}", name.replace("-", "_").replace(".","_").replace("/","_"))
   }
 
   pub fn to_hs_checker(&self, env: im::Vector<String>, met: &mut usize) -> String {

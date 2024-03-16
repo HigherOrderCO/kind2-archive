@@ -1,0 +1,2 @@
+wrap (ini: String) (str: String) (end: String) : String =
+  (String/concat ini (String/wrap/go str end))

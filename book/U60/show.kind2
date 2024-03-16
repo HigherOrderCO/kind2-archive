@@ -1,0 +1,2 @@
+U60.show (n: U60) : String =
+  (String/Chunk/build (U60/show/go n))

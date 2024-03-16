@@ -1,0 +1,4 @@
+Kind.Term.show
+: ∀(term: Kind.Term) ∀(dep: Nat) String
+= λterm λdep
+  (String.Chunk.build (Kind.Term.show.go term dep))

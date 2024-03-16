@@ -1,0 +1,9 @@
+Kind.Book.get_refs
+: ∀(book: Kind.Book) (List String)
+= λbook
+  (List.Chunk.build
+    String
+    (Kind.Book.get_refs.go
+      (String.Map.to_list Kind.Term book)
+    )
+  )
