@@ -18,6 +18,8 @@ inherently secure. In short, Kind2 aims to be:
 
 And it seeks to accomplish that goal by relying on the solid foundations of [Interaction Combinators](https://www.semanticscholar.org/paper/Interaction-Combinators-Lafont/6cfe09aa6e5da6ce98077b7a048cb1badd78cc76).
 
+> NOTE: THIS REPOSITORY IS A WIP. OFFICIAL RELEASE COMING SOON!
+
 ## Usage
 
 1. Install [Rust](https://www.rust-lang.org/) and (optionally) [Haskell](https://www.haskell.org/) in your system.
