@@ -922,9 +922,9 @@ impl Term {
     // 3. Make `(~x <motive>)` or `(Type/fold/ _ <motive> x)`
     if mat.fold {
       term = Term::App {
-        era: true,
+        era: false,
         fun: Box::new(Term::App {
-          era: false,
+          era: true,
           fun: Box::new(Term::App {
             era: true,
             fun: Box::new(Term::Var { nam: format!("{}/fold/", adt.name) }),
@@ -936,7 +936,7 @@ impl Term {
       };
     } else {
       term = Term::App {
-        era: true,
+        era: false,
         fun: Box::new(Term::Ins {
           val: Box::new(mat.expr.clone())
         }),

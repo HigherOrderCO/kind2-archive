@@ -1,0 +1,18 @@
+use Tree/{node,leaf}
+
+// Sums a binary tree in parallel, using fold
+//     __(1)__             
+//    /       \           __(1)__
+//   (1)     (2)    =>   /       \   =>  (14)
+//  /   \   /   \       (4)     (9)
+// (1) (2) (3) (4)       
+
+sum (x: (Tree U60)) : U60 =
+  fold x {
+    node: (+ x.val (+ x.lft x.rgt))
+    leaf: 0
+  }
+
+
+
+

@@ -1,11 +1,40 @@
-//data Vector A (len: Nat)
-//| cons (len: Nat) (head: A) (tail: (Vector A len)) : (Vector A (Nat.succ len))
-//| nil : (Vector A Nat.zero)
+
+//// Sums a binary tree in parallel, using fold
+////     __(1)__             
+////    /       \           __(1)__
+////   (1)     (2)    =>   /       \   =>  (14)
+////  /   \   /   \       (4)     (9)
+//// (1) (2) (3) (4)       
+
+//use Tree/{node,leaf}
+
+//data Tree A
+//| node (val: A) (lft: (Tree A)) (rgt: (Tree A))
+//| leaf
+
+//sum (x: (Tree U60)) : U60 =
+  //fold x {
+    //node: (+ x.val (+ x.lft x.rgt))
+    //leaf: 0
+  //}
+
+//gen (n: U60) (x: U60) : (Tree U60) =
+  //switch n {
+    //0: leaf
+    //_: (node x (gen n-1 (+ (* x 2) 1)) (gen n-1 (+ (* x 2) 2)))
+  //}
+
+//main = (sum (gen 16 0))
+
+use Tree/{node,leaf,gen,sum}
+
+_main: U60 =
+  (sum (gen 16 0))
 
 //use Nat.{succ,zero}
 
-_main: (List U60) =
-  (List.map _ _ (List.cons _ 1 (List.cons _ 2 (List.cons _ 3 (List.nil _)))) λx(+ x 1))
+//_main: (List U60) =
+  //(List.map _ _ (List.cons _ 1 (List.cons _ 2 (List.cons _ 3 (List.nil _)))) λx(+ x 1))
 
 //_main : (Maybe U60) =
   //(Maybe.bind _ _ (Maybe.some _ 1) λx

@@ -1,21 +1,33 @@
+//WARNING: unsolved metas_
+//WARNING: unsolved metas_
 _Char = 0
 _List = λ_T 0
-_List.Folder = λ_T 0
-_List.cons = λ_T λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
-_List.fold = λ_list
-  let _list.P = 0
-  let _list.cons = λ_list.head λ_list.tail λ_P λ_c λ_n ((_c _list.head) (((((_List.fold) _list.tail) _P) _c) _n))
-  let _list.nil = λ_P λ_c λ_n _n
-  (((_list _list.P) _list.cons) _list.nil)
-_List.map = λ_A λ_B λ_xs λ_f (((((_List.fold) _xs) 0) λ_h λ_t (((_List.cons 0) (_f _h)) _t)) (_List.nil 0))
-_List.nil = λ_T λ_P λ_cons λ_nil _nil
+_List_cons = λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
+_List_nil = λ_P λ_cons λ_nil _nil
 _Nat = 0
-_Nat.succ = λ_n λ_P λ_succ λ_zero (_succ _n)
-_Nat.zero = λ_P λ_succ λ_zero _zero
+_Nat_succ = λ_n λ_P λ_succ λ_zero (_succ _n)
+_Nat_zero = λ_P λ_succ λ_zero _zero
 _String = (_List _Char)
-_String.cons = λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
-_String.nil = λ_P λ_cons λ_nil _nil
-__main = ((((_List.map 0) 0) (((_List.cons 0) 1) (((_List.cons 0) 2) (((_List.cons 0) 3) (_List.nil 0))))) λ_x (+ _x 1))
+_String_cons = λ_head λ_tail λ_P λ_cons λ_nil ((_cons _head) _tail)
+_String_nil = λ_P λ_cons λ_nil _nil
+_Tree = λ_A 0
+_Tree_fold = λ_bm λ_nd λ_lf
+  let _bm_P = 0
+  let _bm_node = λ_bm_val λ_bm_lft λ_bm_rgt λ_nd λ_lf (((_nd _bm_val) (((_Tree_fold _bm_lft) _nd) _lf)) (((_Tree_fold _bm_rgt) _nd) _lf))
+  let _bm_leaf = λ_nd λ_lf _lf
+  (((((_bm _bm_P) _bm_node) _bm_leaf) _nd) _lf)
+_Tree_gen = λ_n λ_x match _n = _n {
+  0: _Tree_leaf
+  1+: let _n-1 = _n-1
+  (((_Tree_node _x) ((_Tree_gen _n-1) (+ (* _x 2) 1))) ((_Tree_gen _n-1) (+ (* _x 2) 2)))
+}
+_Tree_leaf = λ_P λ_node λ_leaf _leaf
+_Tree_node = λ_val λ_lft λ_rgt λ_P λ_node λ_leaf (((_node _val) _lft) _rgt)
+_Tree_sum = λ_x
+  let _x_P = 0
+  let _x_node = λ_x_val λ_x_lft λ_x_rgt (+ _x_val (+ _x_lft _x_rgt))
+  let _x_leaf = 0
+  (((_Tree_fold _x) _x_node) _x_leaf)
+__main = (_Tree_sum ((_Tree_gen 22) 0))
 
 main = __main
-

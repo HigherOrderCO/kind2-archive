@@ -1,0 +1,7 @@
+use Tree/{node,leaf}
+
+Tree/fold <A> <B> (bm: (Tree A)) (nd: A -> B -> B -> B) (lf: B) : B =
+  match bm with (nd: A -> B -> B -> B) (lf: B) {
+    node: (nd bm.val (Tree/fold bm.lft nd lf) (Tree/fold bm.rgt nd lf))
+    leaf: lf
+  }

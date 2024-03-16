@@ -300,7 +300,7 @@ impl Term {
         let x = x.to_hvm2();
         let z = z.to_hvm2();
         let s = s.to_hvm2();
-        format!("match {} = {} {{ 0: {} +: {} }}", Term::to_hvm2_name(nam), x, z, s)
+        format!("match {} = {} {{ 0: {} 1+: {} }}", Term::to_hvm2_name(nam), x, z, s)
       },
       Term::Let { nam, val, bod } => {
         let val = val.to_hvm2();
@@ -339,7 +339,7 @@ impl Term {
   }
 
   pub fn to_hvm2_name(name: &str) -> String {
-    format!("_{}", name)
+    format!("_{}", name.replace("/","."))
   }
 
 

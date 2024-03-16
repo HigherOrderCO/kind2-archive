@@ -1,0 +1,3 @@
+node <A> (val: A) (lft: (Tree A)) (rgt: (Tree A)) : (Tree A) =
+  ~λP λnode λleaf
+  (node val lft rgt)

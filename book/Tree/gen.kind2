@@ -1,0 +1,7 @@
+use Tree/{node,leaf}
+
+gen (n: U60) (x: U60) : (Tree U60) =
+  switch n {
+    0: leaf
+    _: (node x (gen n-1 (+ (* x 2) 1)) (gen n-1 (+ (* x 2) 2)))
+  }

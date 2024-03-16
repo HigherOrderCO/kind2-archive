@@ -1,0 +1,3 @@
+leaf <A> : (Tree A) =
+  ~λP λnode λleaf
+  leaf
