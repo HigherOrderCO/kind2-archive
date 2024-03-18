@@ -141,6 +141,7 @@ fn compare_runtimes() {
   let mut paths: Vec<_> = fs::read_dir(&book_dir)
     .expect("failed to read book directory")
     .map(|r| r.expect("failed to read entry").path())
+    .filter_map(|r| r.extension().is_some_and(|e| e == "kind2").then_some(r))
     .collect();
   paths.sort();
 
