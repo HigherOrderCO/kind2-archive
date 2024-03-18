@@ -7,6 +7,6 @@ find <A> (cond: A -> Bool) (xs: (List A)) : (Maybe A) =
     ++: match found = (cond xs.head) {
       true: (some xs.head)
       false: (find cond xs.tail)
-    }: (Maybe A) // FIXME: unifier can't solve this hole
+    }
     []: none
   }

@@ -919,28 +919,36 @@ impl Term {
       }
     }
 
-    // 3. Make `(~x <motive>)` or `(Type/fold/ _ <motive> x)`
+    // 3. Create either `(~x <motive>)` or `(Type/fold/ _ <motive> x)`
     if mat.fold {
-      term = Term::App {
-        era: false,
-        fun: Box::new(Term::App {
-          era: true,
+      term = Term::Let {
+        nam: mat.name.clone(), 
+        val: Box::new(mat.expr.clone()),
+        bod: Box::new(Term::App {
+          era: false,
           fun: Box::new(Term::App {
             era: true,
-            fun: Box::new(Term::Var { nam: format!("{}/fold/", adt.name) }),
-            arg: Box::new(Term::Met {}),
+            fun: Box::new(Term::App {
+              era: true,
+              fun: Box::new(Term::Var { nam: format!("{}/fold/", adt.name) }),
+              arg: Box::new(Term::Met {}),
+            }),
+            arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
           }),
-          arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
-        }),
-        arg: Box::new(mat.expr.clone())
+          arg: Box::new(Term::Var { nam: mat.name.clone() }),
+        })
       };
     } else {
-      term = Term::App {
-        era: false,
-        fun: Box::new(Term::Ins {
-          val: Box::new(mat.expr.clone())
-        }),
-        arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
+      term = Term::Let {
+        nam: mat.name.clone(), 
+        val: Box::new(mat.expr.clone()),
+        bod: Box::new(Term::App {
+          era: false,
+          fun: Box::new(Term::Ins {
+            val: Box::new(Term::Var { nam: mat.name.clone() })
+          }),
+          arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
+        })
       };
     }
 

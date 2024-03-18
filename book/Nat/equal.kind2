@@ -6,27 +6,9 @@ equal (a: Nat) (b: Nat) : Bool =
     succ: match b {
       succ: (equal a.pred b.pred)
       zero: false
-    }: Bool
+    }
     zero: match b {
       succ: false
       zero: true
-    }: Bool
+    }
   }
-
-// FIXME: the unification algorithm fails here. why?
-
-//Nat/equal
-//: ∀(a: Nat) ∀(b: Nat) Bool
-//= λa λb
-  //use a.P = _
-  //use a.succ = λa.pred λb
-    //use b.P = _
-    //use b.succ = λb.pred ?a
-    //use b.zero = Bool/false
-    //(~b b.P b.succ b.zero)
-  //use a.zero = λb
-    //use b.P = _
-    //use b.succ = λb.pred Bool/false
-    //use b.zero = Bool/true
-    //(~b b.P b.succ b.zero)
-  //({(~a a.P a.succ a.zero):∀(b: Nat) _} b)

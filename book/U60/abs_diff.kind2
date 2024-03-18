@@ -4,4 +4,4 @@ abs_diff (a: U60) (b: U60) : U60 =
   match x = (U60/to_bool (< a b)) {
     true: (- b a)
     false: (- a b)
-  }: U60 // FIXME: unifier can't fill this type
+  }

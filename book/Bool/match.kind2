@@ -6,4 +6,19 @@ match
   (t: (P true))
   (f: (P false))
 : (P b)
-= (~b P t f)
+= (~b λx(_) t f)
+
+
+//(x λk(_) t f) : (P b)
+
+//x : (P: Bool -> *) (t: (P T)) (f: (P F)) (P x)
+
+//_ : Bool -> *
+//t : (λk(_) T) == P true
+//f : (λk(_) F) == P false
+//(λk(_) x) == (P x)
+
+
+
+
+//_ x == P x

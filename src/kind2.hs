@@ -419,12 +419,12 @@ termIdenticalGo a (Ann chk bVal bTyp) dep =
   termIdentical a bVal dep
 -- termIdenticalGo (Met aUid aSpn) (Met bUid bSpn) dep =
   -- envPure (aUid == bUid)
-termIdenticalGo (Met aUid aSpn) b dep =
-  -- traceShow ("unify: " ++ show aUid ++ " x=" ++ termShow (Met aUid aSpn) dep ++ " t=" ++ termShow b dep) $
-  termUnify aUid aSpn b dep
 termIdenticalGo a (Met bUid bSpn) dep =
   -- traceShow ("unify: " ++ show bUid ++ " x=" ++ termShow (Met bUid bSpn) dep ++ " t=" ++ termShow a dep) $
   termUnify bUid bSpn a dep
+termIdenticalGo (Met aUid aSpn) b dep =
+  -- traceShow ("unify: " ++ show aUid ++ " x=" ++ termShow (Met aUid aSpn) dep ++ " t=" ++ termShow b dep) $
+  termUnify aUid aSpn b dep
 termIdenticalGo (Hol aNam aCtx) b dep =
   envPure True
 termIdenticalGo a (Hol bNam bCtx) dep =
