@@ -136,28 +136,6 @@ fn compile(name: &str) {
   println!("{code}");
 }
 
-// fn read_dir_rec(path: &PathBuf) -> Vec<PathBuf> {
-//   fn visit_dirs(dir: &PathBuf, cb: &mut impl FnMut(PathBuf)) {
-//     if dir.is_dir() {
-//       for entry in fs::read_dir(dir).expect("failed to read book directory") {
-//         let entry = entry.expect("failed to read entry");
-//         let path = entry.path();
-//         if path.is_dir() {
-//           visit_dirs(&path, cb);
-//         } else {
-//           cb(path);
-//         }
-//       }
-//     }
-//   }
-
-//   let mut paths = Vec::new();
-
-//   visit_dirs(&path, &mut |a| paths.push(a));
-//   paths.sort();
-//   paths
-// }
-
 fn compare_runtimes() {
   let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
   let mut paths: Vec<_> = fs::read_dir(&book_dir)
