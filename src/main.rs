@@ -42,8 +42,8 @@ fn generate_check_hvm2(book: &Book, command: &str, arg: &str) -> String {
   let kind_hvm2 = include_str!("./kind2.hvm2");
   let book_hvm2 = book.to_hvm2_checker();
   let main_hvm2 = match command {
-    "check" => format!("main = (apiCheck Book.{})\n", arg),
-    "run"   => format!("main = (apiNormal Book.{})\n", arg),
+    "check" => format!("main = (apiCheck Book.{})\n", arg.replace("/", ".")),
+    "run"   => format!("main = (apiNormal Book.{})\n", arg.replace("/", ".")),
     _       => panic!("invalid command"),
   };
   format!("{}\n{}\n{}", kind_hvm2, book_hvm2, main_hvm2)
@@ -135,6 +135,28 @@ fn compile(name: &str) {
   let code = generate_hvm2(&book, name);
   println!("{code}");
 }
+
+// fn read_dir_rec(path: &PathBuf) -> Vec<PathBuf> {
+//   fn visit_dirs(dir: &PathBuf, cb: &mut impl FnMut(PathBuf)) {
+//     if dir.is_dir() {
+//       for entry in fs::read_dir(dir).expect("failed to read book directory") {
+//         let entry = entry.expect("failed to read entry");
+//         let path = entry.path();
+//         if path.is_dir() {
+//           visit_dirs(&path, cb);
+//         } else {
+//           cb(path);
+//         }
+//       }
+//     }
+//   }
+
+//   let mut paths = Vec::new();
+
+//   visit_dirs(&path, &mut |a| paths.push(a));
+//   paths.sort();
+//   paths
+// }
 
 fn compare_runtimes() {
   let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
