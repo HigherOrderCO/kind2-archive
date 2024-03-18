@@ -21,8 +21,9 @@ impl Book {
 
   pub fn to_hvm2_checker(&self) -> String {
     let mut code = String::new();
+    let mut meta = 0;
     for (name, term) in &self.defs {
-      let expr = term.to_hvm2_checker(im::Vector::new(), &mut 0);
+      let expr = term.to_hvm2_checker(im::Vector::new(), &mut meta);
       code.push_str(&format!("Book.{} = (Ref \"{}\" {})\n", name, name, expr));
     }
     code
@@ -30,8 +31,9 @@ impl Book {
 
   pub fn to_hs_checker(&self) -> String {
     let mut code = String::new();
+    let mut meta = 0;
     for (name, term) in &self.defs {
-      let expr = term.to_hs_checker(im::Vector::new(), &mut 0);
+      let expr = term.to_hs_checker(im::Vector::new(), &mut meta);
       code.push_str(&format!("{} = (Ref \"{}\" {})\n", Term::to_hs_name(name), name, expr));
     }
     code
