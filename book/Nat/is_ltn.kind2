@@ -9,6 +9,6 @@ is_ltn (a: Nat) (b: Nat) : Bool =
     }
     succ: match b {
       zero: false
-      succ: (ltn a.pred b.pred)
+      succ: (is_ltn a.pred b.pred)
     }
   }

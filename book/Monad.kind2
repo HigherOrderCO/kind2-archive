@@ -12,3 +12,8 @@ Monad
     (P (Monad/new M bind pure))
   )
   (P self)
+
+//data Monad (M: * -> *)
+//| new
+    //(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))
+    //(pure: ∀(A: *) ∀(a: A) (M A))

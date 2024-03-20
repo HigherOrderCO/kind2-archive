@@ -6,6 +6,6 @@ is_gtn (a: Nat) (b: Nat) : Bool =
     zero: false
     succ: match b {
       zero: true
-      succ: (gtn a.pred b.pred)
+      succ: (is_gtn a.pred b.pred)
     }
   }
