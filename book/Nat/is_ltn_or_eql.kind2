@@ -1,0 +1,8 @@
+use Nat/{succ,zero}
+use Bool/{true,false}
+
+is_ltn_or_eql (a: Nat) (b: Nat) : Bool =
+  match _ = (Nat/ltn a b) {
+    true: true
+    false: (Nat/equal a b)
+  }

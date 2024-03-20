@@ -3,8 +3,8 @@ Monad
 = λM
   $(self: (Monad M))
   ∀(P: ∀(x: (Monad M)) *)
-  ∀(new: 
-    ∀(bind: 
+  ∀(new:
+    ∀(bind:
       ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B))
       (M B)
     )
