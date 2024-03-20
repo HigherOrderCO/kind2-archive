@@ -1,18 +1,31 @@
-BBT.rgt_rotate
-: ∀(K: *)
-  ∀(V: *)
-  ∀(size: U60)
-  ∀(key: K)
-  ∀(val: V)
-  ∀(lft: (BBT K V))
-  ∀(rgt: (BBT K V))
-  (BBT K V)
-= λK λV λsize λkey λval λlft λrgt
-  use P = λx ∀(key: K) ∀(val: V) ∀(rgt: (BBT K V)) (BBT K V)
-  use bin = λ_size λlft.key λlft.val λlft.lft λlft.rgt λkey λval λrgt
-    use b = (BBT.new_node K V key val lft.rgt rgt)
-    use a = (BBT.new_node K V lft.key lft.val lft.lft b)
-    a
-  use tip = λkey λval λrgt
-    (BBT.bin K V size key val (BBT.tip K V) rgt)
-  (~lft P bin tip key val rgt)
+use BBT/{bin,tip}
+
+rgt_rotate <K> <V> (size: U60) (key: K) (val: V) (lft: (BBT K V)) (rgt: (BBT K V)) : (BBT K V) =
+  match lft {
+    bin:
+      use b = (BBT/new_node key val lft.rgt rgt)
+      use a = (BBT/new_node lft.key lft.val lft.lft b)
+      a
+    tip: (bin K V size key val (tip K V) rgt)
+  }
+
+
+
+//BBT.rgt_rotate
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(size: U60)
+  //∀(key: K)
+  //∀(val: V)
+  //∀(lft: (BBT K V))
+  //∀(rgt: (BBT K V))
+  //(BBT K V)
+//= λK λV λsize λkey λval λlft λrgt
+  //use P = λx ∀(key: K) ∀(val: V) ∀(rgt: (BBT K V)) (BBT K V)
+  //use bin = λ_size λlft.key λlft.val λlft.lft λlft.rgt λkey λval λrgt
+    //use b = (BBT.new_node K V key val lft.rgt rgt)
+    //use a = (BBT.new_node K V lft.key lft.val lft.lft b)
+    //a
+  //use tip = λkey λval λrgt
+    //(BBT.bin K V size key val (BBT.tip K V) rgt)
+  //(~lft P bin tip key val rgt)

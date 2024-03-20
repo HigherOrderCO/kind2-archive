@@ -1,17 +1,33 @@
-BBT.has
-: ∀(K: *)
-  ∀(V: *)
-  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(key: K)
-  ∀(map: (BBT K V))
-  Bool
-= λK λV λcmp λkey λmap
-  use P = λx Bool
-  use bin = λnext.size λnext.key λnext.val λnext.lft λnext.rgt
-    use P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) Bool
-    use ltn = λcmp λkey (BBT.has K V cmp key next.lft)
-    use eql = λcmp λkey Bool.true
-    use gtn = λcmp λkey (BBT.has K V cmp key next.rgt)
-    (~(cmp key next.key) P ltn eql gtn cmp key)
-  use tip = Bool.false
-  (~map P bin tip)
+use BBT/{bin,tip}
+use Cmp/{ltn,eql,gtn}
+
+has <K> <V> (cmp: ∀(a: K) ∀(b: K) Cmp) (key: K) (map: (BBT K V)) : Bool =
+  match map {
+    bin:
+      match _ = (cmp key map.key) {
+        ltn: (has cmp key map.lft)
+        eql: Bool/true
+        gtn: (has cmp key map.rgt)
+      }
+    tip: Bool/false
+  }
+
+
+
+//BBT.has
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  //∀(key: K)
+  //∀(map: (BBT K V))
+  //Bool
+//= λK λV λcmp λkey λmap
+  //use P = λx Bool
+  //use bin = λnext.size λnext.key λnext.val λnext.lft λnext.rgt
+    //use P = λx ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) Bool
+    //use ltn = λcmp λkey (BBT.has K V cmp key next.lft)
+    //use eql = λcmp λkey Bool.true
+    //use gtn = λcmp λkey (BBT.has K V cmp key next.rgt)
+    //(~(cmp key next.key) P ltn eql gtn cmp key)
+  //use tip = Bool.false
+  //(~map P bin tip)
