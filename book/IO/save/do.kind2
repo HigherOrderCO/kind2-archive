@@ -1,4 +1,9 @@
-IO.save.do
-: ∀(file: String) ∀(text: String) (IO Unit)
-= λfile λtext
-  (IO.save Unit file text λx (IO.done Unit x))
+do (file: String) (text: String) : (IO Unit) =
+  (IO/save Unit file text λx (IO/done Unit x))
+
+
+
+//IO.save.do
+//: ∀(file: String) ∀(text: String) (IO Unit)
+//= λfile λtext
+  //(IO.save Unit file text λx (IO.done Unit x))

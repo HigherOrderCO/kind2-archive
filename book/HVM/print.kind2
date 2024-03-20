@@ -1,3 +1,8 @@
-HVM.print
-: ∀(A: *) ∀(msg: String) ∀(ret: A) A
-= λA λmsg λret ret
+print <A> (msg: String) (ret: A) : A =
+  ret
+
+
+
+//HVM.print
+//: ∀(A: *) ∀(msg: String) ∀(ret: A) A
+//= λA λmsg λret ret
