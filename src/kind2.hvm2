@@ -78,6 +78,10 @@ if n then else = then
 and True b  = b
 and False _ = False
 
+or True b    = True
+or a    True = True
+or _    _    = False
+
 not True  = False
 not False = True
 
@@ -404,7 +408,7 @@ termSimilar (All aNam aInp aBod) (All bNam bInp bBod) dep =
 termSimilar (Lam aNam aBod) (Lam bNam bBod) dep =
   (termEqual (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1))
 termSimilar (App aFun aArg) (App bFun bArg) dep =
-  (envBind (termEqual aFun bFun dep) λeFun
+  (envBind (termSimilar aFun bFun dep) λeFun
   (envBind (termEqual aArg bArg dep) λeArg
   (envPure (and eFun eArg))))
 termSimilar (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
@@ -423,7 +427,7 @@ termSimilar (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep =
   (envBind (termEqual (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep) λeS
   (envBind (termEqual (aP (Var aNam dep)) (bP (Var bNam dep)) dep) λeP
   (envPure (and (and (and eX eZ) eS) eP))))))
-termSimilar a b dep = (envPure False)
+termSimilar a b dep = (termIdentical a b dep)
 
 // termIdentical :: Term -> Term -> U60 -> Env Bool
 termIdentical a b dep = (termIdenticalGo a b dep)
@@ -461,12 +465,12 @@ termIdenticalGo a (Ann chk bVal bTyp) dep =
   (termIdentical a bVal dep)
 // termIdenticalGo (Met aUid aSpn) (Met bUid bSpn) dep =
   // envPure (eq aUid bUid)
-termIdenticalGo (Met aUid aSpn) b dep =
-  // traceShow (stringJoin ["unify: ", (u60Show aUid), " x=", (termShow (Met aUid aSpn) dep), " t=", (termShow b dep)])
-  (termUnify aUid aSpn b dep)
 termIdenticalGo a (Met bUid bSpn) dep =
   // traceShow (stringJoin ["unify: ", (u60Show bUid), " x=", (termShow (Met bUid bSpn) dep), " t=", (termShow a dep)])
   (termUnify bUid bSpn a dep)
+termIdenticalGo (Met aUid aSpn) b dep =
+  // traceShow (stringJoin ["unify: ", (u60Show aUid), " x=", (termShow (Met aUid aSpn) dep), " t=", (termShow b dep)])
+  (termUnify aUid aSpn b dep)
 termIdenticalGo (Hol aNam aCtx) b dep =
   (envPure True)
 termIdenticalGo a (Hol bNam bCtx) dep =
@@ -515,8 +519,7 @@ termIdenticalGo a b dep =
 //   ?X = λx λy λz ... K
 // In this implementation, checking condition `2` is not necessary, because we
 // subst holes directly where they occur (rather than on top-level definitions),
-// so, it is impossible for unbound variables to appear. We also don't check for
-// condition 3, and just allow recursive solutions.
+// so, it is impossible for unbound variables to appear.
 
 // If possible, solves a `(?X x y z ...) = K` problem, generating a subst.
 // termUnify :: U60 -> [Term] -> Term -> U60 -> Env Bool
@@ -524,12 +527,16 @@ termUnify uid spn b dep =
   (envBind envGetFill λfill
   let unsolved = (not (mapHas (key uid) fill))
   let solvable = (termUnifyValid fill spn [])
-  (If (and unsolved solvable)
+  let no_loops = (not (termUnifyIsRec fill uid b dep))
+  (If (and (and unsolved solvable) no_loops)
     let solution = (termUnifySolve fill uid spn b)
     // (trace (stringJoin ["solve: ", (u60Show uid), " ", (termShow solution dep)])
     (envBind (envFill uid solution) λ_ 
       (envPure True))
-    (envPure False)))
+    (envPure match b {
+      (Met bUid bSpn): (envPure (eq uid  bUid))
+      other          : (envPure False)
+    })))
 
 // Checks if an problem is solveable by pattern unification.
 // termUnifyValid :: Map Term -> [Term] -> [U60] -> Bool
@@ -546,6 +553,26 @@ termUnifySolve fill uid (List.cons x spn) b = match (termReduce fill 0 x) {
   (Var nam idx): (Lam nam λx (termUnifySubst idx x (termUnifySolve fill uid spn b)))
   otherwise    : (trace "unreachable" Unreachable)
 }
+
+// Checks if a hole uid occurs recursively inside a term
+// termUnifyIsRec :: Map Term -> Int -> Term -> Int -> Bool
+termUnifyIsRec fill uid (All nam inp bod) dep = (or (termUnifyIsRec fill uid inp dep) (termUnifyIsRec fill uid (bod (Var nam dep)) (+ dep 1)))
+termUnifyIsRec fill uid (Lam nam bod)     dep = (or (termUnifyIsRec fill uid (bod (Var nam dep)) (+ dep 1)))
+termUnifyIsRec fill uid (App fun arg)     dep = (or (termUnifyIsRec fill uid fun dep) (termUnifyIsRec fill uid arg dep))
+termUnifyIsRec fill uid (Ann chk val typ) dep = (or (termUnifyIsRec fill uid val dep) (termUnifyIsRec fill uid typ dep))
+termUnifyIsRec fill uid (Slf nam typ bod) dep = (or (termUnifyIsRec fill uid typ dep) (termUnifyIsRec fill uid (bod (Var nam dep)) (+ dep 1)))
+termUnifyIsRec fill uid (Ins val)         dep = (or (termUnifyIsRec fill uid val dep))
+termUnifyIsRec fill uid (Let nam val bod) dep = (or (termUnifyIsRec fill uid val dep) (termUnifyIsRec fill uid (bod (Var nam dep)) (+ dep 1)))
+termUnifyIsRec fill uid (Use nam val bod) dep = (or (termUnifyIsRec fill uid val dep) (termUnifyIsRec fill uid (bod (Var nam dep)) (+ dep 1)))
+termUnifyIsRec fill uid (Hol nam ctx)     dep = False
+termUnifyIsRec fill uid (Op2 opr fst snd) dep = (or (termUnifyIsRec fill uid fst dep) (termUnifyIsRec fill uid snd dep))
+termUnifyIsRec fill uid (Swi nam x z s p) dep = (or (termUnifyIsRec fill uid x dep) (or (termUnifyIsRec fill uid z dep) (or (termUnifyIsRec fill uid (s (Var (stringConcat nam "-1") dep)) (+ dep 1)) (termUnifyIsRec fill uid (p (Var nam dep)) dep))))
+termUnifyIsRec fill uid (Src src val)     dep = (termUnifyIsRec fill uid val dep)
+termUnifyIsRec fill uid (Met bUid bSpn)   dep = match (termReduceMet fill 2 bUid bSpn) {
+  (Met bUid bSpn): (eq uid bUid)
+  term           : (termUnifyIsRec fill uid term dep)
+}
+termUnifyIsRec fill uid _                 dep = False
 
 // Substitutes a Bruijn level variable by a `neo` value in `term`.
 // termUnifySubst :: U60 -> Term -> Term -> Term
@@ -779,22 +806,22 @@ termShow (Use nam val bod) dep =
   let bod_ = (termShow (bod (Var nam dep)) (+ dep 1))
   (stringJoin ["use ", nam_, " = ", val_, "; ", bod_])
 termShow Set dep = "*"
-termShow U60 dep = "#U60"
+termShow U60 dep = "U60"
 termShow (Num val) dep =
   let val_ = (u60Show val)
-  (stringJoin ["#", val_])
+  (stringJoin [val_])
 termShow (Op2 opr fst snd) dep =
   let opr_ = (operShow opr)
   let fst_ = (termShow fst dep)
   let snd_ = (termShow snd dep)
-  (stringJoin ["#(", opr_, " ", fst_, " ", snd_, ")"])
+  (stringJoin ["(", opr_, " ", fst_, " ", snd_, ")"])
 termShow (Swi nam x z s p) dep =
   let nam_ = nam
   let x_   = (termShow x dep)
   let z_   = (termShow z dep)
   let s_   = (termShow (s (Var (stringConcat nam "-1") dep)) (+ dep 1))
   let p_   = (termShow (p (Var nam dep)) dep)
-  (stringJoin ["#match ", nam_, " = ", x_, " { #0: ", z_, " #+: ", s_, " }: ", p_])
+  (stringJoin ["switch ", nam_, " = ", x_, " { 0: ", z_, " _: ", s_, " }: ", p_])
 termShow (Txt txt) dep = (stringJoin [quote, txt, quote])
 termShow (Nat val) dep = (u60Show val)
 termShow (Hol nam ctx) dep = (stringJoin ["?", nam])

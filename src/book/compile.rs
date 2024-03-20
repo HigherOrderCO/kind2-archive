@@ -24,7 +24,7 @@ impl Book {
     let mut meta = 0;
     for (name, term) in &self.defs {
       let expr = term.to_hvm2_checker(im::Vector::new(), &mut meta);
-      code.push_str(&format!("Book.{} = (Ref \"{}\" {})\n", name, name, expr));
+      code.push_str(&format!("Book.{} = (Ref \"{}\" {})\n", name.replace("/", "."), name, expr));
     }
     code
   }

@@ -42,8 +42,8 @@ fn generate_check_hvm2(book: &Book, command: &str, arg: &str) -> String {
   let kind_hvm2 = include_str!("./kind2.hvm2");
   let book_hvm2 = book.to_hvm2_checker();
   let main_hvm2 = match command {
-    "check" => format!("main = (apiCheck Book.{})\n", arg),
-    "run"   => format!("main = (apiNormal Book.{})\n", arg),
+    "check" => format!("main = (apiCheck Book.{})\n", arg.replace("/", ".")),
+    "run"   => format!("main = (apiNormal Book.{})\n", arg.replace("/", ".")),
     _       => panic!("invalid command"),
   };
   format!("{}\n{}\n{}", kind_hvm2, book_hvm2, main_hvm2)
@@ -141,6 +141,7 @@ fn compare_runtimes() {
   let mut paths: Vec<_> = fs::read_dir(&book_dir)
     .expect("failed to read book directory")
     .map(|r| r.expect("failed to read entry").path())
+    .filter_map(|r| r.extension().is_some_and(|e| e == "kind2").then_some(r))
     .collect();
   paths.sort();
 
