@@ -66,7 +66,7 @@ impl Term {
 
   pub fn to_hvm2_checker(&self, env: im::Vector<String>, met: &mut usize) -> String {
     fn binder(name: &str) -> String {
-      format!("x{}", name.replace("-", "._."))
+      format!("x{}", name.replace("-", "._.").replace("/", "."))
     }
     match self {
       Term::All { era: _, nam, inp, bod } => {
@@ -137,7 +137,7 @@ impl Term {
         if env.contains(nam) {
           format!("{}", binder(nam))
         } else {
-          format!("(Book.{})", nam)
+          format!("(Book.{})", nam.replace("/", "."))
         }
       }
       Term::Src { src, val } => {
