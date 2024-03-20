@@ -1,90 +1,144 @@
-// This is a Haskell implementation of Kind2's type checker. Since Kind2 isn't
-// bootstrapped, we can't use Kind2 itself to type-check it, and developing a
-// complex checker in an untyped language (like HVM) is hard. As such, this
-// Haskell view helps me develop and debug the checker, and it is done in a way
-// that makes it easy to manually compile it to HVM, keeping an HVM view. It can
-// also be useful to let us benchmark all versions (GHC/HVM1/HVM2), giving us a
-// good idea on how these compare in performance.
+// Kind2-Core
+// ==========
+//
+// This is a hvm2 implementation of Kind2's proof kernel. It is based on the
+// Calculus of Constructions, extended with Self-Types and U60 operations. This
+// allows us to express arbitrary inductive types and proofs with a simple core.
 
 // Kind2 Types
 // -----------
 
-data Maybe
-  = (Some val)
-  | None
+// Kind Core's AST
+data Term
 
-data Bool
-  = False
-  | True
+  // Product: `∀(x: A) B`
+  = (All nam inp bod) // All String Term (Term -> Term) 
 
+  // Lambda: `λx f`
+  | (Lam nam bod)     // Lam String (Term -> Term)
+
+  // Application: 
+  | (App fun arg)     // App Term Term
+
+  // Annotation: `{x: T}`
+  | (Ann chk val typ) // Ann Bool Term Term
+
+  // Self-Type: `$(x: A) B`
+  | (Slf nam typ bod) // Slf String Term (Term -> Term)
+
+  // Self-Inst: `~x`
+  | (Ins val)         // Ins Term
+
+  // Top-Level Reference
+  | (Ref nam val)     // Ref String Term
+
+  // Local let-definition
+  | (Let nam val bod) // Let String Term (Term -> Term)
+
+  // Local use-definition
+  | (Use nam val bod) // Use String Term (Term -> Term)
+
+  // Type : Type
+  | Set               // Set
+
+  // U60 Type
+  | U60               // U60
+
+  // U60 Value
+  | (Num val)         // Num U60
+
+  // U60 Binary Operation
+  | (Op2 opr fst snd) // Op2 Oper Term Term
+
+  // U60 Elimination
+  | (Swi nam x z s p) // Swi String Term Term (Term -> Term) (Term -> Term)
+
+  // Inspection Hole
+  | (Hol nam ctx)     // Hol String [Term]
+
+  // Unification Metavar
+  | (Met uid spn)     // Met U60 [Term]
+
+  // Variable
+  | (Var nam idx)     // Var String U60
+
+  // Source Location
+  | (Src src val)     // Src U60 Term
+
+  // Text Literal (sugar)
+  | (Txt val)         // Txt String
+
+  // Nat Literal (sugar)
+  | (Nat val)         // Nat Integer
+
+// Numeric Operators
 data Oper
   = ADD | SUB | MUL | DIV
   | MOD | EQ  | NE  | LT
   | GT  | LTE | GTE | AND
   | OR  | XOR | LSH | RSH
 
-data Term
-  = (All nam inp bod) // All String Term (Term -> Term)
-  | (Lam nam bod)     // Lam String (Term -> Term)
-  | (App fun arg)     // App Term Term
-  | (Ann chk val typ) // Ann Bool Term Term
-  | (Slf nam typ bod) // Slf String Term (Term -> Term)
-  | (Ins val)         // Ins Term
-  | (Ref nam val)     // Ref String Term
-  | (Let nam val bod) // Let String Term (Term -> Term)
-  | (Use nam val bod) // Use String Term (Term -> Term)
-  | Set               // Set
-  | U60               // U60
-  | (Num val)         // Num U60
-  | (Op2 opr fst snd) // Op2 Oper Term Term
-  | (Swi nam x z s p) // Swi String Term Term (Term -> Term) (Term -> Term)
-  | (Hol nam ctx)     // Hol String [Term]
-  | (Met uid spn)     // Met U60 [Term]
-  | (Var nam idx)     // Var String U60
-  | (Src src val)     // Src U60 Term
-  | (Txt val)         // Txt String
-  | (Nat val)         // Nat Integer
-
+// Type-Checker Outputs
 data Info
-  = (Found name type ctx dep)               // Found String Term [Term] Int
+  = (Found name type ctx dep)               // Found String Term [Term] U60
   | (Solve name term dep)                   // Solve U60 Term U60
-  | (Error src detected expected value dep) // Error U60 Term Term Term Int
+  | (Error src detected expected value dep) // Error U60 Term Term Term U60
   | (Vague name)                            // Vague String
-  | (Print value dep)                       // Print Term Int
+  | (Print value dep)                       // Print Term U60
 
-data Check = (Check a t1 t2 b)             // Check U60 Term Term U60
+// Checker State
+data Check = (Check a t1 t2 b)             // Check U60 Term Term U60 -- postponed check
 data State = (State map check info)        // State (Map Term) [Check] [Info] -- state type
 data Res   = (Done state a) | (Fail state) // Done State a | Fail State -- result type
-data Env   = (Env env)                     // Env (State -> Res a) -- environment computation
+data Env   = (Env env)                     // Env (State -> Res a) -- monadic checker
 
+// Maps
 data Bits = (O bits) | (I bits) | E
 data Map  = (Leaf) | (Node v lft rgt) // Leaf | Node (Maybe a) (Map a) (Map a)
 
 // Prelude
 // -------
-// Note: many of these functions are present in Haskell, but we re-implement
-// them here in order to have identical equivalents on HVM's view.
+
+data Bool
+  = False
+  | True
+
+data Maybe
+  = (Some val)
+  | None
 
 data Error
   = Unreachable
   | InvalidTopLevelDefinition
 
+// putStrLn :: String -> a -> IO a
+putStrLn = HVM.print
+
+// trace :: String -> a -> IO a
+trace = HVM.print
+
+// If :: Bool -> a -> a -> a
 If True  then else = then
 If False then else = else
 
+// if :: U60 -> a -> a -> a
 if 0 then else = else
 if n then else = then
 
+// and :: Bool -> Bool -> Bool
 and True b  = b
 and False _ = False
 
+// or :: Bool -> Bool -> Bool
 or True b    = True
 or a    True = True
 or _    _    = False
 
+// not :: Bool -> Bool
 not True  = False
 not False = True
 
+// eq :: U60 -> U60 -> Bool
 eq lft rgt = (if (== lft rgt) True False)
 
 // map :: (a -> b) -> [a] -> [b]
@@ -206,12 +260,6 @@ mapSet (I bits) val (Node v lft rgt) = (Node v lft (mapSet bits val rgt))
 infoIsSolve (Solve _ _ _) = True
 infoIsSolve _             = False
 
-// Pattern matches on a computation result
-// resMatch :: Res a -> (State -> a -> b) -> (State -> Info -> b) -> b
-// resMatch (Done state value) done _    = (Done state value)
-// resMatch (Fail state)       _    fail = (Fail state)
-
-// Monadic bind function
 // envBind :: Env a -> (a -> Env b) -> Env b
 envBind (Env a) b = (Env (λstate (match (a state) {
   (Done state_ value): let (Env b_) = (b value); (b_ state_)
@@ -354,12 +402,6 @@ termReduceNat fill lv n = (App Book.Nat.succ (termReduceNat fill lv (- n 1)))
 // termNormal :: Map Term -> U60 -> Term -> U60 -> Term
 // termNormal fill lv term dep = termNormalGo fill lv (termNormalPrefer fill (termReduce fill 0 term) (termReduce fill lv term)) dep where
 termNormal fill lv term dep = (termNormalGo fill lv (termReduce fill lv term) dep)
-
-  // termNormalPrefer fill soft (Lam _ _)   = soft
-  // termNormalPrefer fill soft (Slf _ _ _) = soft
-  // termNormalPrefer fill soft (All _ _ _) = soft
-  // termNormalPrefer fill soft hard        = hard
-
   termNormalGo fill lv (All nam inp bod) dep = (All nam (termNormal fill lv inp dep) (λx (termNormal fill lv (bod (Var nam dep)) (+ dep 1))))
   termNormalGo fill lv (Lam nam bod)     dep = (Lam nam (λx (termNormal fill lv (bod (Var nam dep)) (+ dep 1))))
   termNormalGo fill lv (App fun arg)     dep = (App (termNormal fill lv fun dep) (termNormal fill lv arg dep))
@@ -384,125 +426,127 @@ termNormal fill lv term dep = (termNormalGo fill lv (termReduce fill lv term) de
 // Equality
 // --------
 
+// Conversion checking works as follows:
+// 1. Two terms are equal if their wnf's are structurally identical
+// 2. Otherwise, they're equal if they're similar (component-wise equal)
+// This allows us to always identify two terms that have the same normal form,
+// while also allowing us to return earlier, if they become identical at any
+// point in the reduction. Note that, for Self types, the similarity checker
+// will "un-reduce" from `$(x: (T a b)) body` to `(T a b)`, avoiding loops.
+
 // termEqual :: Term -> Term -> U60 -> Env Bool
 termEqual a b dep =
 //   (trace (stringJoin ["equal:\n- ", (termShow a dep), "\n- ", (termShow b dep)])
   (envBind envGetFill λfill
   let a_ = (termReduce fill 2 a)
   let b_ = (termReduce fill 2 b)
-  (termTryIdentical a_ b_ dep (termSimilar a_ b_ dep)))
+  (envBind (termTryIdentical a_ b_ dep ) λsame
+  (If same
+    (envPure True)
+    (termSimilar a_ b_ dep))))
 
-// termTryIdentical :: Term -> Term -> U60 -> Env Bool -> Env Bool
-termTryIdentical a b dep cont =
+// termTryIdentical :: Term -> Term -> U60 -> Env Bool
+termTryIdentical a b dep =
   (envBind envSnapshot λstate
   (envBind (termIdentical a b dep) λequal
   (If equal
     (envPure True)
-    (envBind (envRewind state) λ_ cont))))
+    (envBind (envRewind state) λ_ (envPure False)))))
 
 // termSimilar :: Term -> Term -> U60 -> Env Bool
-termSimilar (All aNam aInp aBod) (All bNam bInp bBod) dep =
-  (envBind (termEqual aInp bInp dep) λeInp
-  (envBind (termEqual (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1)) λeBod
-  (envPure (and eInp eBod))))
-termSimilar (Lam aNam aBod) (Lam bNam bBod) dep =
-  (termEqual (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1))
-termSimilar (App aFun aArg) (App bFun bArg) dep =
-  (envBind (termSimilar aFun bFun dep) λeFun
-  (envBind (termEqual aArg bArg dep) λeArg
-  (envPure (and eFun eArg))))
-termSimilar (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
-  (termSimilar (termReduce mapNew 0 aTyp) (termReduce mapNew 0 bTyp) dep)
-// termSimilar (Hol aNam aCtx) (Hol bNam bCtx) dep =
-  // (envPure (eq aNam bNam))
-// termSimilar (Met aUid aSpn) (Met bUid bSpn) dep =
-  // (envPure (eq aUid bUid))
-termSimilar (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep =
-  (envBind (termEqual aFst bFst dep) λeFst
-  (envBind (termEqual aSnd bSnd dep) λeSnd
-  (envPure (and eFst eSnd))))
-termSimilar (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep =
-  (envBind (termEqual aX bX dep) λeX
-  (envBind (termEqual aZ bZ dep) λeZ
-  (envBind (termEqual (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep) λeS
-  (envBind (termEqual (aP (Var aNam dep)) (bP (Var bNam dep)) dep) λeP
-  (envPure (and (and (and eX eZ) eS) eP))))))
-termSimilar a b dep = (termIdentical a b dep)
+termSimilar a b dep = (termSimilarGo a b dep)
+  termSimilarGo (All aNam aInp aBod) (All bNam bInp bBod) dep =
+    (envBind (termEqual aInp bInp dep) λeInp
+    (envBind (termEqual (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1)) λeBod
+    (envPure (and eInp eBod))))
+  termSimilarGo (Lam aNam aBod) (Lam bNam bBod) dep =
+    (termEqual (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1))
+  termSimilarGo (App aFun aArg) (App bFun bArg) dep =
+    (envBind (termSimilar aFun bFun dep) λeFun
+    (envBind (termEqual aArg bArg dep) λeArg
+    (envPure (and eFun eArg))))
+  termSimilarGo (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
+    (termSimilar (termReduce mapNew 0 aTyp) (termReduce mapNew 0 bTyp) dep)
+  termSimilarGo (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep =
+    (envBind (termEqual aFst bFst dep) λeFst
+    (envBind (termEqual aSnd bSnd dep) λeSnd
+    (envPure (and eFst eSnd))))
+  termSimilarGo (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep =
+    (envBind (termEqual aX bX dep) λeX
+    (envBind (termEqual aZ bZ dep) λeZ
+    (envBind (termEqual (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep) λeS
+    (envBind (termEqual (aP (Var aNam dep)) (bP (Var bNam dep)) dep) λeP
+    (envPure (and (and (and eX eZ) eS) eP))))))
+  termSimilarGo a b dep = (termIdentical a b dep)
 
 // termIdentical :: Term -> Term -> U60 -> Env Bool
 termIdentical a b dep = (termIdenticalGo a b dep)
-
-// termIdenticalGo :: Term -> Term -> U60 -> Env Bool
-termIdenticalGo (All aNam aInp aBod) (All bNam bInp bBod) dep =
-  (envBind (termIdentical aInp bInp dep) (λiInp
-  (envBind (termIdentical (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1)) λiBod
-  (envPure (and iInp iBod)))))
-termIdenticalGo (Lam aNam aBod) (Lam bNam bBod) dep =
-  (termIdentical (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1))
-termIdenticalGo (App aFun aArg) (App bFun bArg) dep =
-  (envBind (termIdentical aFun bFun dep) λiFun
-  (envBind (termIdentical aArg bArg dep) λiArg
-  (envPure (and iFun iArg))))
-termIdenticalGo (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
-  (termIdentical aTyp bTyp dep)
-termIdenticalGo (Ins aVal) b dep =
-  (termIdentical aVal b dep)
-termIdenticalGo a (Ins bVal) dep =
-  (termIdentical a bVal dep)
-termIdenticalGo (Let aNam aVal aBod) b dep =
-  (termIdentical (aBod aVal) b dep)
-termIdenticalGo a (Let bNam bVal bBod) dep =
-  (termIdentical a (bBod bVal) dep)
-termIdenticalGo (Use aNam aVal aBod) b dep =
-  (termIdentical (aBod aVal) b dep)
-termIdenticalGo a (Use bNam bVal bBod) dep =
-  (termIdentical a (bBod bVal) dep)
-termIdenticalGo Set Set dep =
-  (envPure True)
-termIdenticalGo (Ann chk aVal aTyp) b dep =
-  (termIdentical aVal b dep)
-termIdenticalGo a (Ann chk bVal bTyp) dep =
-  (termIdentical a bVal dep)
-// termIdenticalGo (Met aUid aSpn) (Met bUid bSpn) dep =
-  // envPure (eq aUid bUid)
-termIdenticalGo a (Met bUid bSpn) dep =
-  // traceShow (stringJoin ["unify: ", (u60Show bUid), " x=", (termShow (Met bUid bSpn) dep), " t=", (termShow a dep)])
-  (termUnify bUid bSpn a dep)
-termIdenticalGo (Met aUid aSpn) b dep =
-  // traceShow (stringJoin ["unify: ", (u60Show aUid), " x=", (termShow (Met aUid aSpn) dep), " t=", (termShow b dep)])
-  (termUnify aUid aSpn b dep)
-termIdenticalGo (Hol aNam aCtx) b dep =
-  (envPure True)
-termIdenticalGo a (Hol bNam bCtx) dep =
-  (envPure True)
-termIdenticalGo U60 U60 dep =
-  (envPure True)
-termIdenticalGo (Num aVal) (Num bVal) dep =
-  (envPure (eq aVal bVal))
-termIdenticalGo (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep =
-  (envBind (termIdentical aFst bFst dep) λiFst
-  (envBind (termIdentical aSnd bSnd dep) λiSnd
-  (envPure (and iFst iSnd))))
-termIdenticalGo (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep =
-  (envBind (termIdentical aX bX dep) λiX
-  (envBind (termIdentical aZ bZ dep) λiZ
-  (envBind (termIdentical (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep) λiS
-  (envBind (termIdentical (aP (Var aNam dep)) (bP (Var bNam dep)) dep) λiP
-  (envPure (and (and (and iX iZ) iS) iP))))))
-termIdenticalGo (Txt aTxt) (Txt bTxt) dep =
-  (envPure (stringEqual aTxt bTxt))
-termIdenticalGo (Nat aVal) (Nat bVal) dep =
-  (envPure (eq aVal bVal))
-termIdenticalGo (Src aSrc aVal) b dep =
-  (termIdentical aVal b dep)
-termIdenticalGo a (Src bSrc bVal) dep =
-  (termIdentical a bVal dep)
-termIdenticalGo (Ref aNam aVal) (Ref bNam bVal) dep =
-  (envPure (stringEqual aNam bNam))
-termIdenticalGo (Var aNam aIdx) (Var bNam bIdx) dep =
-  (envPure (eq aIdx bIdx))
-termIdenticalGo a b dep =
-  (envPure False)
+  termIdenticalGo (All aNam aInp aBod) (All bNam bInp bBod) dep =
+    (envBind (termIdentical aInp bInp dep) (λiInp
+    (envBind (termIdentical (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1)) λiBod
+    (envPure (and iInp iBod)))))
+  termIdenticalGo (Lam aNam aBod) (Lam bNam bBod) dep =
+    (termIdentical (aBod (Var aNam dep)) (bBod (Var bNam dep)) (+ dep 1))
+  termIdenticalGo (App aFun aArg) (App bFun bArg) dep =
+    (envBind (termIdentical aFun bFun dep) λiFun
+    (envBind (termIdentical aArg bArg dep) λiArg
+    (envPure (and iFun iArg))))
+  termIdenticalGo (Slf aNam aTyp aBod) (Slf bNam bTyp bBod) dep =
+    (termIdentical aTyp bTyp dep)
+  termIdenticalGo (Ins aVal) b dep =
+    (termIdentical aVal b dep)
+  termIdenticalGo a (Ins bVal) dep =
+    (termIdentical a bVal dep)
+  termIdenticalGo (Let aNam aVal aBod) b dep =
+    (termIdentical (aBod aVal) b dep)
+  termIdenticalGo a (Let bNam bVal bBod) dep =
+    (termIdentical a (bBod bVal) dep)
+  termIdenticalGo (Use aNam aVal aBod) b dep =
+    (termIdentical (aBod aVal) b dep)
+  termIdenticalGo a (Use bNam bVal bBod) dep =
+    (termIdentical a (bBod bVal) dep)
+  termIdenticalGo Set Set dep =
+    (envPure True)
+  termIdenticalGo (Ann chk aVal aTyp) b dep =
+    (termIdentical aVal b dep)
+  termIdenticalGo a (Ann chk bVal bTyp) dep =
+    (termIdentical a bVal dep)
+  termIdenticalGo a (Met bUid bSpn) dep =
+    (termUnify bUid bSpn a dep)
+  termIdenticalGo (Met aUid aSpn) b dep =
+    (termUnify aUid aSpn b dep)
+  termIdenticalGo (Hol aNam aCtx) b dep =
+    (envPure True)
+  termIdenticalGo a (Hol bNam bCtx) dep =
+    (envPure True)
+  termIdenticalGo U60 U60 dep =
+    (envPure True)
+  termIdenticalGo (Num aVal) (Num bVal) dep =
+    (envPure (eq aVal bVal))
+  termIdenticalGo (Op2 aOpr aFst aSnd) (Op2 bOpr bFst bSnd) dep =
+    (envBind (termIdentical aFst bFst dep) λiFst
+    (envBind (termIdentical aSnd bSnd dep) λiSnd
+    (envPure (and iFst iSnd))))
+  termIdenticalGo (Swi aNam aX aZ aS aP) (Swi bNam bX bZ bS bP) dep =
+    (envBind (termIdentical aX bX dep) λiX
+    (envBind (termIdentical aZ bZ dep) λiZ
+    (envBind (termIdentical (aS (Var (stringConcat aNam "-1") dep)) (bS (Var (stringConcat bNam "-1") dep)) dep) λiS
+    (envBind (termIdentical (aP (Var aNam dep)) (bP (Var bNam dep)) dep) λiP
+    (envPure (and (and (and iX iZ) iS) iP))))))
+  termIdenticalGo (Txt aTxt) (Txt bTxt) dep =
+    (envPure (stringEqual aTxt bTxt))
+  termIdenticalGo (Nat aVal) (Nat bVal) dep =
+    (envPure (eq aVal bVal))
+  termIdenticalGo (Src aSrc aVal) b dep =
+    (termIdentical aVal b dep)
+  termIdenticalGo a (Src bSrc bVal) dep =
+    (termIdentical a bVal dep)
+  termIdenticalGo (Ref aNam aVal) (Ref bNam bVal) dep =
+    (envPure (stringEqual aNam bNam))
+  termIdenticalGo (Var aNam aIdx) (Var bNam bIdx) dep =
+    (envPure (eq aIdx bIdx))
+  termIdenticalGo a b dep =
+    (envPure False)
 
 // Unification
 // -----------
@@ -525,14 +569,16 @@ termIdenticalGo a b dep =
 // termUnify :: U60 -> [Term] -> Term -> U60 -> Env Bool
 termUnify uid spn b dep =
   (envBind envGetFill λfill
-  let unsolved = (not (mapHas (key uid) fill))
-  let solvable = (termUnifyValid fill spn [])
-  let no_loops = (not (termUnifyIsRec fill uid b dep))
+  let unsolved = (not (mapHas (key uid) fill)) // is this hole not already solved?
+  let solvable = (termUnifyValid fill spn []) // does the spine satisfies conditions?
+  let no_loops = (not (termUnifyIsRec fill uid b dep)) // is the solution not recursive?
+  // If all is ok, generate the solution and return true
   (If (and (and unsolved solvable) no_loops)
     let solution = (termUnifySolve fill uid spn b)
     // (trace (stringJoin ["solve: ", (u60Show uid), " ", (termShow solution dep)])
     (envBind (envFill uid solution) λ_ 
       (envPure True))
+    // Otherwise, return true iff both are identical metavars
     (envPure match b {
       (Met bUid bSpn): (envPure (eq uid  bUid))
       other          : (envPure False)
@@ -576,7 +622,6 @@ termUnifyIsRec fill uid _                 dep = False
 
 // Substitutes a Bruijn level variable by a `neo` value in `term`.
 // termUnifySubst :: U60 -> Term -> Term -> Term
-// termUnifySubst lvl neo term = term
 termUnifySubst lvl neo (All nam inp bod) = (All nam (termUnifySubst lvl neo inp) (λx (termUnifySubst lvl neo (bod x))))
 termUnifySubst lvl neo (Lam nam bod)     = (Lam nam (λx (termUnifySubst lvl neo (bod x))))
 termUnifySubst lvl neo (App fun arg)     = (App (termUnifySubst lvl neo fun) (termUnifySubst lvl neo arg))
@@ -601,13 +646,12 @@ termUnifySubst lvl neo (Src src val)     = (Src src (termUnifySubst lvl neo val)
 // Type-Checking
 // -------------
 
-// termIfAll :: Term -> (String -> Term -> (Term -> Term) -> a) -> a -> a
-termIfAll (All nam inp bod) yep _   = (yep nam inp bod)
-termIfAll _                 _   nop = nop
+// Note that, for type-checking, instead of passing down contexts (as usual), we
+// just annotate variables (with a `{x: T}` type hint) and check. This has the
+// same effect, while being slightly more efficient. Type derivations comments
+// are written in this style too.
 
-// termIfSlf :: Term -> (String -> Term -> (Term -> Term) -> a) -> a -> a
-termIfSlf (Slf nam typ bod) yep _   = (yep nam typ bod)
-termIfSlf _                 _   nop = nop
+// ### Inference
 
 // termInfer :: Term -> U60 -> Env Term
 termInfer term dep =
@@ -615,10 +659,20 @@ termInfer term dep =
   (termInferGo term dep)
 
 // termInferGo :: Term -> U60 -> Env Term
+
+// inp : Set
+// (bod {nam: inp}) : Set
+// ----------------------- function
+// (∀(nam: inp) bod) : Set
 termInferGo (All nam inp bod) dep =
   (envBind (envSusp (Check 0 inp Set dep)) λ_
   (envBind (envSusp (Check 0 (bod (Ann False (Var nam dep) inp)) Set (+ dep 1))) λ_
   (envPure Set)))
+
+// fun : ∀(ftyp_nam: ftyp_inp) ftyp_bod
+// arg : ftyp_inp
+// ------------------------------------ application
+// (fun arg) : (ftyp_bod arg)
 termInferGo (App fun arg) dep =
   (envBind (termInfer fun dep) λftyp
   (envBind envGetFill λfill
@@ -630,14 +684,26 @@ termInferGo (App fun arg) dep =
       (envBind (envLog (Error 0 (Hol "function" []) ftyp (App fun arg) dep)) λ_
       envFail)
   }))
+
+// 
+// ---------------- annotation (infer)
+// {val: typ} : typ
 termInferGo (Ann chk val typ) dep =
   (envBind (If chk
     (termCheck 0 val typ dep)
     (envPure *))  λ_
   (envPure typ))
+
+// (bod {nam: typ}) : Set
+// ----------------------- self-type
+// ($(nam: typ) bod) : Set
 termInferGo (Slf nam typ bod) dep =
   (envBind (envSusp (Check 0 (bod (Ann False (Var nam dep) typ)) Set (+ dep 1))) λ_
   (envPure Set))
+
+// val : $(vtyp_nam: vtyp_typ) vtyp_bod
+// ------------------------------------ self-inst (infer)
+// ~val : (vtyp_bod (~val))
 termInferGo (Ins val) dep =
   (envBind (termInfer val dep) λvtyp
   (envBind envGetFill λfill
@@ -648,45 +714,95 @@ termInferGo (Ins val) dep =
       (envBind (envLog (Error 0 (Hol "self-type" []) vtyp (Ins val) dep)) λ_
       envFail)
   }))
+
+// val : T
+// ----------------- reference
+// (Ref nam val) : T
 termInferGo (Ref nam val) dep =
   (termInfer val dep)
+
+// ...
+// --------- type-in-type
+// Set : Set
 termInferGo Set dep =
   (envPure Set)
+
+// ...
+// --------- U60-type
+// U60 : Set
 termInferGo U60 dep =
   (envPure Set)
+
+// ...
+// ----------- U60-value
+// <num> : U60
 termInferGo (Num num) dep =
   (envPure U60)
+
+// ...
+// -------------- String-literal
+// "txt" : String
 termInferGo (Txt txt) dep =
   (envPure Book.String)
+
+// ...
+// --------- Nat-literal
+// 123 : Nat
 termInferGo (Nat val) dep =
   (envPure Book.Nat)
 termInferGo (Op2 opr fst snd) dep =
   (envBind (envSusp (Check 0 fst U60 dep)) λ_
   (envBind (envSusp (Check 0 snd U60 dep)) λ_
   (envPure U60)))
+
+// x : U60
+// p : U60 -> Set
+// z : (p 0)
+// s : (n: U60) -> (p (+ 1 n))
+// ------------------------------------- U60-elim
+// (switch x { 0: z ; _: s }: p) : (p x)
 termInferGo (Swi nam x z s p) dep =
   (envBind (envSusp (Check 0 x U60 dep)) λ_
   (envBind (envSusp (Check 0 (p (Ann False (Var nam dep) U60)) Set dep)) λ_
   (envBind (envSusp (Check 0 z (p (Num 0)) dep)) λ_
   (envBind (envSusp (Check 0 (s (Ann False (Var (stringConcat nam "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (stringConcat nam "-1") dep))) (+ dep 1))) λ_
   (envPure (p x))))))
+
+// val : typ
+// (bod {nam: typ}) : T
+// ------------------------ let-binder (infer)
+// (let nam = val; bod) : T
 termInferGo (Let nam val bod) dep =
   (envBind (termInfer val dep) λtyp
   (termInfer (bod (Ann False (Var nam dep) typ)) dep))
+
+// (bod val) : T
+// ------------------------ use-binder (infer)
+// (use nam = val; bod) : T
 termInferGo (Use nam val bod) dep =
   (termInfer (bod val) dep)
+
+// Can't Infer λ
 termInferGo (Lam nam bod) dep =
   (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_lambda" []) (Lam nam bod) dep)) λ_
   envFail)
+
+// Can't Infer ?A
 termInferGo (Hol nam ctx) dep =
   (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_hole" []) (Hol nam ctx) dep)) λ_
   envFail)
+
+// Can't Infer _
 termInferGo (Met uid spn) dep =
   (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_meta" []) (Met uid spn) dep)) λ_
   envFail)
+
+// Can't Infer Var
 termInferGo (Var nam idx) dep =
   (envBind (envLog (Error 0  (Hol "type_annotation" []) (Hol "untyped_variable" []) (Var nam idx) dep)) λ_
   envFail)
+
+// Src-passthrough
 termInferGo (Src src val) dep =
   (termInfer val dep)
 
@@ -695,52 +811,90 @@ termCheck src val typ dep =
   // (trace (stringJoin ["check: ", (termShow val dep), "\n    :: ", (termShow typ dep)])
   (termCheckGo src val typ dep)
 
+// ### Checking
+
 // termCheckGo :: U60 -> Term -> Term -> U60 -> Env *
-termCheckGo src (Lam termNam termBod) typx dep =
+
+// (bod {typ_nam: typ_inp}) : (typ_bod {nam: typ_inp})
+// --------------------------------------------------- lambda
+// (λnam bod) : (∀(typ_nam: typ_inp) typ_bod)
+termCheckGo src (Lam nam bod) typx dep =
   (envBind envGetFill λfill
     match (termReduce fill 2 typx) {
-      (All typeNam typeInp typeBod):
-        let ann  = (Ann False (Var termNam dep) typeInp)
-        let term = (termBod ann)
-        let typx = (typeBod ann)
+      (All typ_nam typ_inp typ_bod):
+        let ann  = (Ann False (Var nam dep) typ_inp)
+        let term = (bod ann)
+        let typx = (typ_bod ann)
         (termCheck 0 term typx (+ dep 1))
       otherwise:
-        (envBind (termInfer (Lam termNam termBod) dep) λ_
+        (envBind (termInfer (Lam nam bod) dep) λ_
         (envPure *))
     })
-termCheckGo src (Ins termVal) typx dep =
+
+// val : (typ_bod ~val)
+// ---------------------------------- self-inst (check)
+// ~val : $(typ_nam: typ_typ) typ_bod
+termCheckGo src (Ins val) typx dep =
   (envBind envGetFill λfill
   match (termReduce fill 2 typx) {
-    (Slf typeNam typeTyp typeBod):
-      (termCheck 0 termVal (typeBod (Ins termVal)) dep)
+    (Slf typ_nam typ_typ typ_bod):
+      (termCheck 0 val (typ_bod (Ins val)) dep)
     _:
-      (envBind (termInfer (Ins termVal) dep) λ_
+      (envBind (termInfer (Ins val) dep) λ_
       (envPure *))
   })
-termCheckGo src (Let termNam termVal termBod) typx dep =
-  (envBind (termInfer termVal dep) λtermTyp
-  (termCheck 0 (termBod (Ann False (Var termNam dep) termTyp)) typx dep))
-termCheckGo src (Use termNam termVal termBod) typx dep =
-  (termCheck 0 (termBod termVal) typx dep)
-termCheckGo src (Hol termNam termCtx) typx dep =
-  (envBind (envLog (Found termNam typx termCtx dep)) λ_
+
+// val : typ
+// (bod {nam: typ}) : T
+// ------------------------ let-binder (check)
+// (let nam = val; bod) : T
+termCheckGo src (Let nam val bod) typx dep =
+  (envBind (termInfer val dep) λtermTyp
+  (termCheck 0 (bod (Ann False (Var nam dep) termTyp)) typx dep))
+
+// (bod val) : T
+// ------------------------ use-binder (check)
+// (use nam = val; bod) : T
+termCheckGo src (Use nam val bod) typx dep =
+  (termCheck 0 (bod val) typx dep)
+
+// ...
+// ------ inspection
+// ?A : T
+termCheckGo src (Hol nam ctx) typx dep =
+  (envBind (envLog (Found nam typx ctx dep)) λ_
   (envPure *))
+
+// ...
+// ----- metavar
+// _ : T
 termCheckGo src (Met uid spn) typx dep =
   (envPure *)
+
+// ...
+// ---------------- annotation (check)
+// {val: typ} : typ
 termCheckGo src (Ann chk val typ) typx dep =
   (envBind (termCheckCompare src val typ typx dep) λ_
   (If chk
     (termCheck src val typ dep)
     (envPure *)))
-// termCheckGo src (Ref termNam (Ann termVal termTyp)) typx dep =
-  // (envBind (termEqual typx termTyp dep) λequal
-  // (termCheckReport src equal termTyp typx termVal dep)
+
+// val : T
+// ------- source (just skipped)
+// val : T
 termCheckGo src (Src termSrc termVal) typx dep =
   (termCheck termSrc termVal typx dep)
+
+// A == B
+// val : A
+// -------
+// val : B
 termCheckGo src term typx dep =
   (envBind (termInfer term dep) λinfer
   (termCheckCompare src term typx infer dep))
 
+// Checks types equality and reports
 termCheckCompare src term expected detected dep =
   (envBind (termEqual expected detected dep) λequal
   (If equal
@@ -756,13 +910,6 @@ listCheck (List.cons x xs) =
   let (Check src val typ dep) = x; 
   (envBind (termCheck src val typ dep) λ_ (listCheck xs))
     
-// termCheckReport :: U60 -> Bool -> Term -> Term -> Term -> U60 -> Env *
-// termCheckReport src False detected expected value dep =
-  // (envLog (Error src detected expected value dep)
-  // envFail)
-// termCheckReport src True detected expected value dep =
-  // (envPure *)
-
 // termCheckDef :: Term -> Env *
 termCheckDef (Ref nam (Ann chk val typ)) = (envBind (termCheck 0 val typ 0) λ_ (envPure *))
 termCheckDef (Ref nam val)               = (envBind (termInfer val 0)       λ_ (envPure *))
@@ -899,6 +1046,3 @@ apiPrintLogs (State fill susp (List.cons log logs)) =
   (apiPrintLogs (State fill susp logs)))
 apiPrintLogs (State fill susp []) =
   *
-
-putStrLn = HVM.print
-trace = HVM.print
