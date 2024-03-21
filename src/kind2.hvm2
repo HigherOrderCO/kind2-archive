@@ -104,8 +104,8 @@ data Bool
   | True
 
 data Maybe
-  = (Some val)
-  | None
+  = (Just val)
+  | Nothing
 
 data Error
   = Unreachable
@@ -141,10 +141,6 @@ not False = True
 // eq :: U60 -> U60 -> Bool
 eq lft rgt = (if (== lft rgt) True False)
 
-// map :: (a -> b) -> [a] -> [b]
-map f []               = []
-map f (List.cons x xs) = (List.cons (f x) (map f xs))
-
 // even :: U60 -> Bool
 even n = (eq (% n 2) 0)
 
@@ -168,9 +164,9 @@ u60Name n = (u60NameGo (+ n 1))
   u60NameGo 0 = ""
   u60NameGo n = (String.cons (+ 'a' (% (- n 1) 26)) (u60NameGo (/ (- n 1) 26)))
 
-// listFind :: Eq a => a -> [(a, b)] -> Maybe b
-listFind _    []                          = None
-listFind name (List.cons (nam, val) tail) = (If (stringEqual name nam) (Some val) (listFind name tail))
+// listFind :: String -> [(String, b)] -> Maybe b
+listFind _    []                          = Nothing
+listFind name (List.cons (nam, val) tail) = (If (stringEqual name nam) (Just val) (listFind name tail))
 
 // listMap :: (a -> b) -> [a] -> [b]
 listMap f []     = []
@@ -214,14 +210,14 @@ pairSnd (_, snd) = snd
 pairGet (fst, snd) fun = (fun fst snd)
 
 // maybeMatch :: Maybe a -> (a -> b) -> b -> b
-maybeMatch (Some value) some _ = (some value)
-maybeMatch None      _    none = none
+maybeMatch (Just value) just _       = (just value)
+maybeMatch Nothing      _    nothing = nothing
 
 // maybePure :: a -> Maybe a
-maybePure x = (Some x)
+maybePure x = (Just x)
 
 // maybeBind :: Maybe a -> (a -> Maybe b) -> Maybe b
-maybeBind a b = (maybeMatch a b None)
+maybeBind a b = (maybeMatch a b Nothing)
 
 // key :: U60 -> Bits
 key 0 = E
@@ -234,7 +230,7 @@ key n = (If (even n)
 mapNew = Leaf
 
 // mapHas :: Bits -> Map a -> Bool
-mapHas E        (Node (Some _) _ _) = True
+mapHas E        (Node (Just _) _ _) = True
 mapHas (O bits) (Node _ lft _)      = (mapHas bits lft)
 mapHas (I bits) (Node _ _ rgt)      = (mapHas bits rgt)
 mapHas _        _                   = False
@@ -243,14 +239,14 @@ mapHas _        _                   = False
 mapGet E        (Node val _ _) = val
 mapGet (O bits) (Node _ lft _) = (mapGet bits lft)
 mapGet (I bits) (Node _ _ rgt) = (mapGet bits rgt)
-mapGet _        Leaf           = None
+mapGet _        Leaf           = Nothing
 
 // mapSet :: Bits -> a -> Map a -> Map a
-mapSet E        val Leaf             = (Node (Some val) Leaf Leaf)
-mapSet E        val (Node _ lft rgt) = (Node (Some val) lft rgt)
-mapSet (O bits) val Leaf             = (Node None (mapSet bits val Leaf) Leaf)
+mapSet E        val Leaf             = (Node (Just val) Leaf Leaf)
+mapSet E        val (Node _ lft rgt) = (Node (Just val) lft rgt)
+mapSet (O bits) val Leaf             = (Node Nothing (mapSet bits val Leaf) Leaf)
 mapSet (O bits) val (Node v lft rgt) = (Node v (mapSet bits val lft) rgt)
-mapSet (I bits) val Leaf             = (Node None Leaf (mapSet bits val Leaf))
+mapSet (I bits) val Leaf             = (Node Nothing Leaf (mapSet bits val Leaf))
 mapSet (I bits) val (Node v lft rgt) = (Node v lft (mapSet bits val rgt))
 
 // Environment
@@ -344,8 +340,8 @@ termReduceApp fill lv fun arg           = (App fun arg)
 
 // termReduceMet :: Map Term -> U60 -> U60 -> [Term] -> Term
 termReduceMet fill lv uid spn = match (mapGet (key uid) fill) {
-  (Some val): (termReduce fill lv (termReduceMetSpine val spn))
-  (None)    : (Met uid spn)
+  (Just val): (termReduce fill lv (termReduceMetSpine val spn))
+  (Nothing) : (Met uid spn)
 }
 
 // termReduceMetSpine :: Term -> [Term] -> Term
@@ -631,8 +627,8 @@ termUnifySubst lvl neo (Ins val)         = (Ins (termUnifySubst lvl neo val))
 termUnifySubst lvl neo (Ref nam val)     = (Ref nam (termUnifySubst lvl neo val))
 termUnifySubst lvl neo (Let nam val bod) = (Let nam (termUnifySubst lvl neo val) (λx (termUnifySubst lvl neo (bod x))))
 termUnifySubst lvl neo (Use nam val bod) = (Use nam (termUnifySubst lvl neo val) (λx (termUnifySubst lvl neo (bod x))))
-termUnifySubst lvl neo (Met uid spn)     = (Met uid (map (termUnifySubst lvl neo) spn))
-termUnifySubst lvl neo (Hol nam ctx)     = (Hol nam (map (termUnifySubst lvl neo) ctx))
+termUnifySubst lvl neo (Met uid spn)     = (Met uid (listMap (termUnifySubst lvl neo) spn))
+termUnifySubst lvl neo (Hol nam ctx)     = (Hol nam (listMap (termUnifySubst lvl neo) ctx))
 termUnifySubst lvl neo Set               = Set
 termUnifySubst lvl neo U60               = U60
 termUnifySubst lvl neo (Num n)           = (Num n)
@@ -904,11 +900,13 @@ termCheckCompare src term expected detected dep =
     (envBind (envLog (Error src expected detected term dep)) λ_
     envFail)))
 
-// listCheck :: [a] -> Env *
-listCheck []               = (envPure *)
+// listCheck :: [Check] -> Env *
+listCheck []               =
+  (envPure *)
 listCheck (List.cons x xs) = 
   let (Check src val typ dep) = x; 
-  (envBind (termCheck src val typ dep) λ_ (listCheck xs))
+  (envBind (termCheck src val typ dep) λ_
+  (listCheck xs))
     
 // termCheckDef :: Term -> Env *
 termCheckDef (Ref nam (Ann chk val typ)) = (envBind (termCheck 0 val typ 0) λ_ (envPure *))
