@@ -1,18 +1,34 @@
-BBT.get
-: ∀(K: *)
-  ∀(V: *)
-  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(key: K)
-  ∀(map: (BBT K V))
-  (Maybe V)
-= λK λV λcmp λkey λmap
-  use P = λx (Maybe V)
-  use bin = λ_size λnext.key λnext.val λnext.lft λnext.rgt
-    use P = λx
-      ∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) (Maybe V)
-    use ltn = λcmp λkey (BBT.get K V cmp key next.lft)
-    use eql = λcmp λkey (Maybe.some V next.val)
-    use gtn = λcmp λkey (BBT.get K V cmp key next.rgt)
-    (~(cmp key next.key) P ltn eql gtn cmp key)
-  use tip = (Maybe.none V)
-  (~map P bin tip)
+use BBT/{bin,tip}
+use Cmp/{ltn,eql,gtn}
+
+get <K> <V> (cmp: ∀(a: K) ∀(b: K) Cmp) (key: K) (map: (BBT K V)) : (Maybe V) =
+  match map {
+    bin:
+      match _ = (cmp key map.key) {
+        ltn: (get cmp key map.lft)
+        eql: (Maybe/some map.val)
+        gtn: (get cmp key map.rgt)
+      }
+    tip: Maybe/none
+  }
+
+
+
+//BBT.get
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  //∀(key: K)
+  //∀(map: (BBT K V))
+  //(Maybe V)
+//= λK λV λcmp λkey λmap
+  //use P = λx (Maybe V)
+  //use bin = λ_size λnext.key λnext.val λnext.lft λnext.rgt
+    //use P = λx
+      //∀(cmp: ∀(a: K) ∀(b: K) Cmp) ∀(key: K) (Maybe V)
+    //use ltn = λcmp λkey (BBT.get K V cmp key next.lft)
+    //use eql = λcmp λkey (Maybe.some V next.val)
+    //use gtn = λcmp λkey (BBT.get K V cmp key next.rgt)
+    //(~(cmp key next.key) P ltn eql gtn cmp key)
+  //use tip = (Maybe.none V)
+  //(~map P bin tip)

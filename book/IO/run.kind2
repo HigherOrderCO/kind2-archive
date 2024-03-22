@@ -1,12 +1,22 @@
-IO.run
-: ∀(A: *) ∀(x: (IO A)) (IO A)
-= λA λx
-  use P = λx (IO A)
-  use print = λtext λthen
-    (HVM.print (IO A) text (IO.run A (then Unit.one)))
-  use load = λfile λthen
-    (HVM.load (IO A) file λs (IO.run A (then s)))
-  use save = λfile λtext λthen
-    (HVM.save (IO A) file text (IO.run A (then Unit.one)))
-  use done = λterm (IO.done A term)
-  (~x P print load save done)
+run <A> (x: (IO A)) : (IO A) =
+  match x {
+    IO/print: (HVM/print x.text (run (x.then Unit/new)))
+    IO/load: (HVM/load x.file λs (IO/run (x.then s)))
+    IO/save: (HVM/save x.file x.text (IO/run (x.then Unit/new)))
+    IO/done: (IO/done A x.term)
+  }
+
+
+
+//IO.run
+//: ∀(A: *) ∀(x: (IO A)) (IO A)
+//= λA λx
+  //use P = λx (IO A)
+  //use print = λtext λthen
+    //(HVM.print (IO A) text (IO.run A (then Unit.one)))
+  //use load = λfile λthen
+    //(HVM.load (IO A) file λs (IO.run A (then s)))
+  //use save = λfile λtext λthen
+    //(HVM.save (IO A) file text (IO.run A (then Unit.one)))
+  //use done = λterm (IO.done A term)
+  //(~x P print load save done)

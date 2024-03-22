@@ -1,4 +1,10 @@
-BBT.singleton
-: ∀(K: *) ∀(V: *) ∀(key: K) ∀(val: V) (BBT K V)
-= λK λV λkey λval
-  (BBT.bin K V 1 key val (BBT.tip K V) (BBT.tip K V))
+singleton <K> <V> (key: K) (val: V) : (BBT K V) =
+  use tip = (BBT/tip K V)
+  (BBT/bin K V 1 key val tip tip)
+
+
+
+//BBT.singleton
+//: ∀(K: *) ∀(V: *) ∀(key: K) ∀(val: V) (BBT K V)
+//= λK λV λkey λval
+  //(BBT.bin K V 1 key val (BBT.tip K V) (BBT.tip K V))

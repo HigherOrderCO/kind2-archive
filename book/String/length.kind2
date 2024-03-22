@@ -1,3 +1,5 @@
-String/length
-: ∀(a: String) Nat
-= λa (List/length a)
+length (s: String) : Nat = (List/length s)
+
+//String/length
+//: ∀(a: String) Nat
+//= λa (List/length a)

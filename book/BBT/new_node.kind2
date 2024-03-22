@@ -1,17 +1,30 @@
-BBT.new_node
-: ∀(K: *)
-  ∀(V: *)
-  ∀(key: K)
-  ∀(val: V)
-  ∀(lft: (BBT K V))
-  ∀(rgt: (BBT K V))
-  (BBT K V)
-= λK λV λkey λval λlft λrgt
-  use P = λx (BBT K V)
-  use new = λlft.size λlft
-    use P = λx (BBT K V)
-    use new = λrgt.size λrgt
-      use new_size = (+ 1 (U60.max rgt.size lft.size))
-      (BBT.bin K V new_size key val lft rgt)
-    (~(BBT.got_size K V rgt) P new)
-  (~(BBT.got_size K V lft) P new)
+use BBT/{bin}
+
+new_node <K> <V> (key: K) (val: V) (lft: (BBT K V)) (rgt: (BBT K V)) : (BBT K V) =
+  match lft_size = (BBT/got_size lft) {
+    Pair/new: match rgt_size = (BBT/got_size rgt) {
+      Pair/new:
+        use new_size = (+ 1 (U60/max lft_size.fst rgt_size.fst))
+        (bin K V new_size key val lft rgt)
+    }
+  }
+
+
+
+//BBT.new_node
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(key: K)
+  //∀(val: V)
+  //∀(lft: (BBT K V))
+  //∀(rgt: (BBT K V))
+  //(BBT K V)
+//= λK λV λkey λval λlft λrgt
+  //use P = λx (BBT K V)
+  //use new = λlft.size λlft
+    //use P = λx (BBT K V)
+    //use new = λrgt.size λrgt
+      //use new_size = (+ 1 (U60.max rgt.size lft.size))
+      //(BBT.bin K V new_size key val lft rgt)
+    //(~(BBT.got_size K V rgt) P new)
+  //(~(BBT.got_size K V lft) P new)

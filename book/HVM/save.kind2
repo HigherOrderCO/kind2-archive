@@ -1,4 +1,9 @@
-HVM.save
-: ∀(A: *) ∀(file: String) ∀(data: String) ∀(cont: A)
-  A
-= λA λfile λdata λcont cont
+save <A> (file: String) (data: String) (cont: A) : A =
+  cont
+
+
+
+//HVM.save
+//: ∀(A: *) ∀(file: String) ∀(data: String) ∀(cont: A)
+  //A
+//= λA λfile λdata λcont cont

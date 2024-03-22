@@ -1,61 +1,81 @@
-BBT.set
-: ∀(K: *)
-  ∀(V: *)
-  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(key: K)
-  ∀(val: V)
-  ∀(map: (BBT K V))
-  (BBT K V)
-= λK λV λcmp λkey λval λmap
-  use P = λx ∀(key: K) ∀(val: V) (BBT K V)
-  use bin = λsize λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-    use P = λx
-      ∀(key: K)
-      ∀(next.key: K)
-      ∀(next.val: V)
-      ∀(next.lft: (BBT K V))
-      ∀(next.rgt: (BBT K V))
-      ∀(key: K)
-      ∀(val: V)
-      (BBT K V)
-    use ltn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-      use new_lft = (BBT.set K V cmp key val next.lft)
-      (BBT.balance
-        K
-        V
-        cmp
-        key
-        next.key
-        next.val
-        new_lft
-        next.rgt
-      )
-    use eql = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-      (BBT.bin K V size next.key val next.lft next.rgt)
-    use gtn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
-      use new_rgt = (BBT.set K V cmp key val next.rgt)
-      (BBT.balance
-        K
-        V
-        cmp
-        key
-        next.key
-        next.val
-        next.lft
-        new_rgt
-      )
-    (~(cmp key next.key)
-      P
-      ltn
-      eql
-      gtn
-      key
-      next.key
-      next.val
-      next.lft
-      next.rgt
-      key
-      val
-    )
-  use tip = λkey λval (BBT.singleton K V key val)
-  (~map P bin tip key val)
+use BBT/{bin,tip}
+use Cmp/{ltn,eql,gtn}
+
+set <K> <V> (cmp: ∀(a: K) ∀(b: K) Cmp) (key: K) (val: V) (map: (BBT K V)) : (BBT K V) =
+  match map {
+    bin:
+      match _ = (cmp key map.key) {
+        ltn:
+          use new_lft = (set cmp key val map.lft)
+          (BBT/balance cmp key map.key map.val new_lft map.rgt)
+        eql: (bin K V map.size map.key val map.lft map.rgt)
+        gtn:
+          use new_rgt = (set cmp key val map.rgt)
+          (BBT/balance cmp key map.key map.val map.lft new_rgt)
+      }
+    tip: (BBT/singleton key val)
+  }
+
+
+
+//BBT.set
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  //∀(key: K)
+  //∀(val: V)
+  //∀(map: (BBT K V))
+  //(BBT K V)
+//= λK λV λcmp λkey λval λmap
+  //use P = λx ∀(key: K) ∀(val: V) (BBT K V)
+  //use bin = λsize λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+    //use P = λx
+      //∀(key: K)
+      //∀(next.key: K)
+      //∀(next.val: V)
+      //∀(next.lft: (BBT K V))
+      //∀(next.rgt: (BBT K V))
+      //∀(key: K)
+      //∀(val: V)
+      //(BBT K V)
+    //use ltn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+      //use new_lft = (BBT.set K V cmp key val next.lft)
+      //(BBT.balance
+        //K
+        //V
+        //cmp
+        //key
+        //next.key
+        //next.val
+        //new_lft
+        //next.rgt
+      //)
+    //use eql = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+      //(BBT.bin K V size next.key val next.lft next.rgt)
+    //use gtn = λkey λnext.key λnext.val λnext.lft λnext.rgt λkey λval
+      //use new_rgt = (BBT.set K V cmp key val next.rgt)
+      //(BBT.balance
+        //K
+        //V
+        //cmp
+        //key
+        //next.key
+        //next.val
+        //next.lft
+        //new_rgt
+      //)
+    //(~(cmp key next.key)
+      //P
+      //ltn
+      //eql
+      //gtn
+      //key
+      //next.key
+      //next.val
+      //next.lft
+      //next.rgt
+      //key
+      //val
+    //)
+  //use tip = λkey λval (BBT.singleton K V key val)
+  //(~map P bin tip key val)

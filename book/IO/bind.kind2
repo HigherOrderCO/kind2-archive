@@ -1,21 +1,31 @@
-IO.bind
-: ∀(A: *)
-  ∀(B: *)
-  ∀(a: (IO A))
-  ∀(b: ∀(x: A) (IO B))
-  (IO B)
-= λA λB λa λb
-  use P = λx ∀(b: ∀(x: A) (IO B)) (IO B)
-  use print = λtext λthen λb
-    (IO.print B text λx (IO.bind A B (then x) b))
-  use load = λfile λthen λb
-    (IO.load B file λs (IO.bind A B (then s) b))
-  use save = λfile λdata λthen λb
-    (IO.save
-      B
-      file
-      data
-      λx (IO.bind A B (then Unit.one) b)
-    )
-  use done = λterm λb (b term)
-  (~a P print load save done b)
+bind <A> <B> (a: (IO A)) (b: A -> (IO B)) : (IO B) =
+  match a {
+    IO/print: (IO/print B a.text λx (IO/bind (a.then x) b))
+    IO/load: (IO/load B a.file λs (IO/bind (a.then s) b))
+    IO/save: (IO/save B a.file a.text λx (IO/bind (a.then Unit/new) b))
+    IO/done: (b a.term)
+  }
+
+
+
+//IO.bind
+//: ∀(A: *)
+  //∀(B: *)
+  //∀(a: (IO A))
+  //∀(b: ∀(x: A) (IO B))
+  //(IO B)
+//= λA λB λa λb
+  //use P = λx ∀(b: ∀(x: A) (IO B)) (IO B)
+  //use print = λtext λthen λb
+    //(IO.print B text λx (IO.bind A B (then x) b))
+  //use load = λfile λthen λb
+    //(IO.load B file λs (IO.bind A B (then s) b))
+  //use save = λfile λdata λthen λb
+    //(IO.save
+      //B
+      //file
+      //data
+      //λx (IO.bind A B (then Unit.one) b)
+    //)
+  //use done = λterm λb (b term)
+  //(~a P print load save done b)

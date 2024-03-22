@@ -1,15 +1,28 @@
-BBT.from_list
-: ∀(K: *)
-  ∀(V: *)
-  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(list: (List (Pair K V)))
-  (BBT K V)
-= λK λV λcmp λlist
-  use P = λx (BBT K V)
-  use cons = λhead λtail
-    use P = λx (BBT K V)
-    use new = λkey λval
-      (BBT.set K V cmp key val (BBT.from_list K V cmp tail))
-    (~head P new)
-  use nil = (BBT.tip K V)
-  (~list P cons nil)
+use BBT/{bin,tip,set}
+
+from_list <K> <V> (cmp: ∀(a: K) ∀(b: K) Cmp) (list: (List (Pair K V))) : (BBT K V) =
+  match list {
+    List/cons:
+      match pair = list.head {
+        Pair/new: (set cmp pair.fst pair.snd (from_list cmp list.tail))
+      }
+    List/nil: (tip K V)
+  }
+
+
+
+//BBT.from_list
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  //∀(list: (List (Pair K V)))
+  //(BBT K V)
+//= λK λV λcmp λlist
+  //use P = λx (BBT K V)
+  //use cons = λhead λtail
+    //use P = λx (BBT K V)
+    //use new = λkey λval
+      //(BBT.set K V cmp key val (BBT.from_list K V cmp tail))
+    //(~head P new)
+  //use nil = (BBT.tip K V)
+  //(~list P cons nil)

@@ -1,3 +1,8 @@
-HVM.load
-: ∀(A: *) ∀(file: String) ∀(cont: ∀(x: String) A) A
-= λA λfile λcont (cont String.nil)
+load <A> (file: String) (cont: String -> A) : A =
+  (cont String/nil)
+
+
+
+//HVM.load
+//: ∀(A: *) ∀(file: String) ∀(cont: ∀(x: String) A) A
+//= λA λfile λcont (cont String.nil)
