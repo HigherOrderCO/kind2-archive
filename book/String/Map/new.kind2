@@ -1,3 +1,1 @@
-String.Map.new
-: ∀(V: *) (String.Map V)
-= λV (BBT.tip String V)
+new <V> : (String/Map V) = (BBT/tip String V)

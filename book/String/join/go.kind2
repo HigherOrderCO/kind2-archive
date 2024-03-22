@@ -1,11 +1,19 @@
-go
-: ∀(sep: String) ∀(strs: (List String)) String
-= λsep λstrs
-  use P = λx String
-  use cons = λh λt
-    (String/concat
-      sep
-      (String/concat h (go sep t))
-    )
-  use nil = String/nil
-  (~strs P cons nil)
+go (sep: String) (strs: (List String)) : String =
+  match strs {
+    List/cons: (String/concat sep (String/concat strs.head (go sep strs.tail)))
+    List/nil: String/nil
+  }
+
+
+
+//go
+//: ∀(sep: String) ∀(strs: (List String)) String
+//= λsep λstrs
+  //use P = λx String
+  //use cons = λh λt
+    //(String/concat
+      //sep
+      //(String/concat h (go sep t))
+    //)
+  //use nil = String/nil
+  //(~strs P cons nil)
