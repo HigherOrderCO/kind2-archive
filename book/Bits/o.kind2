@@ -1,0 +1,2 @@
+o (bits: Bits) : Bits =
+  ~λP λend λo λi (o bits)

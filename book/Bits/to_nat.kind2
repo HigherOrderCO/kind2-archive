@@ -1,0 +1,10 @@
+use Bits/{e,o,i}
+use Nat/{succ,zero,double}
+
+// Converts the bit sequence into a natural number.
+to_nat (bits: Bits) : Nat =
+  match bits {
+    e: zero
+    o: (double (to_nat bits.pred))
+    i: (succ (double (to_nat bits.pred)))
+  }

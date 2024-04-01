@@ -1,0 +1,8 @@
+use Bits/{e,o,i}
+use Nat/{succ,zero}
+
+from_nat (n: Nat) : Bits =
+  match n {
+    zero: e
+    succ: (Bits/incr (from_nat n.pred))
+  }

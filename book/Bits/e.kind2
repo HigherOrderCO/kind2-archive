@@ -1,0 +1,2 @@
+e : Bits =
+  ~λP λe λo λi e

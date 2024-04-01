@@ -1,0 +1,8 @@
+use Bits/{e,o,i}
+
+incr (bits: Bits) : Bits =
+  match bits {
+    e: (i e)
+    o: (i bits.pred)
+    i: (o (incr bits.pred))
+  }

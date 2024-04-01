@@ -1,0 +1,4 @@
+data Bits
+| e // end of bit sequence
+| o (pred: Bits) // bit 0
+| i (pred: Bits) // bit 1
