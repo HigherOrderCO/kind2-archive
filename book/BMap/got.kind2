@@ -1,0 +1,22 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+
+got <V> (path: Bits) (map: (BMap V)) : (Pair (Maybe V) (BMap V)) =
+  match map {
+    leaf: (Pair/new none (leaf V))
+    node:
+      match path {
+        e: (Pair/new map.val map)
+        o: match new_pair = (got path map.lft) {
+            Pair/new:
+              let map = (node V new_pair.snd map.val map.rgt)
+              (Pair/new new_pair.fst map)
+        }
+        i: match new_pair = (got path map.rgt) {
+            Pair/new:
+              let map = (node V map.lft map.val new_pair.snd)
+              (Pair/new new_pair.fst map)
+        }
+      }
+  }

@@ -1,0 +1,16 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+
+has <V> (path: Bits) (map: (BMap V)) : Bool =
+  match map {
+    leaf: Bool/false
+    node: match path {
+      e: match map.val {
+        none: Bool/false
+        some: Bool/true
+      }
+      o: (has path.pred map.lft)
+      i: (has path.pred map.rgt)
+    }
+  }

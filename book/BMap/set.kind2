@@ -1,0 +1,23 @@
+use Maybe/{none,some}
+use BMap/{node,leaf}
+use Bits/{e,o,i}
+
+// Sets the node given by `path` to `val`.
+// Replaces the old value if the given path is already in the map.
+//
+// Bits/o traverses to the left and Bits/i to the right.
+set <V> (path: Bits) (val: (Maybe V)) (map: (BMap V)) : (BMap V) =
+  match map {
+    leaf: match path {
+      e: (node V (leaf V) val (leaf V))
+      // NOTE: New intermediary notes have their value set to `none`
+      o: (node V (set path.pred val (leaf V)) none (leaf V))
+      // NOTE: New intermediary notes have their value set to `none`
+      i: (node V (leaf V) none (set path.pred val (leaf V)))
+    }
+    node: match path {
+      e: (node V (map.lft) val (map.rgt))
+      o: (node V (set path.pred val map.lft) (map.val) map.rgt)
+      i: (node V map.lft (map.val) (set path.pred val map.rgt))
+    }
+  }

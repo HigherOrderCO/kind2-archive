@@ -1,0 +1,15 @@
+use BMap/{node,leaf}
+use Bits/{e,o,i}
+
+// Gets the value in a node given by `path`.
+//
+// Bits/o traverses to the left and Bits/i to the right.
+get <V> (path: Bits) (map: (BMap V)) : (Maybe V) =
+  match map {
+    leaf: (Maybe/none)
+    node: match path {
+      e: (map.val)
+      o: (get path.pred map.lft)
+      i: (get path.pred map.rgt)
+    }
+  }

@@ -1,0 +1,6 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+
+to_list <V> (map: (BMap V)) : (List (Pair Bits V)) =
+  (BMap/to_list/go e map)

@@ -1,0 +1,12 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+
+size <V> (map: (BMap V)) : U60 =
+  match map {
+    leaf: 0
+    node: match map.val {
+      none: (+ (size map.lft) (size map.rgt))
+      some: (+ 1 (+ (size map.lft) (size map.rgt)))
+    }
+  }

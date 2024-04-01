@@ -1,0 +1,11 @@
+use Maybe/{some}
+use BMap/{leaf,set}
+
+from_list <V> (list: (List (Pair Bits V))) : (BMap V) =
+  match list {
+    List/cons:
+      match pair = list.head {
+        Pair/new: (set pair.fst (some pair.snd) (from_list list.tail))
+      }
+    List/nil: (leaf V)
+  }

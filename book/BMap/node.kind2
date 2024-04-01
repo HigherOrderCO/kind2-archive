@@ -1,7 +1,7 @@
 BMap.node
 : ∀(A: *)
   ∀(lft: (BMap A))
-  ∀(val: A)
+  ∀(val: (Maybe A))
   ∀(rgt: (BMap A))
   (BMap A)
 = λA λlft λval λrgt

@@ -1,0 +1,16 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+
+go <V> (curr: Bits) (map: (BMap V)) : (List (Pair Bits V)) =
+  match map {
+    leaf: List/nil
+    node: match map.val {
+      none: (List/concat (go (o curr) map.lft) (go (i curr) map.rgt))
+      some:
+        use lft = (go (o curr) map.lft)
+        use rgt = (go (i curr) map.rgt)
+        use new_head = (Pair/new curr map.val.value)
+        (List/cons new_head (List/concat lft rgt))
+    }
+  }
