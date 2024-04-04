@@ -1,0 +1,22 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+use Bool/{true,false}
+
+// Linear version of `BMap/has`. Won't consume the map.
+linear <V> (path: Bits) (map: (BMap V)): (Pair Bool (BMap V)) =
+  match map {
+    leaf: (Pair/new false (leaf V))
+    node: match path {
+      e: match map.val {
+        none: (Pair/new false (node V map.lft map.val map.rgt))
+        some: (Pair/new true  (node V map.lft map.val map.rgt))
+      }
+      o: match result = (linear path.pred map.lft) {
+        Pair/new: (Pair/new result.fst (node V result.snd map.val map.rgt))
+      }
+      i: match result = (linear path.pred map.rgt) {
+        Pair/new: (Pair/new result.fst (node V map.lft map.val result.snd))
+      }
+    }
+  }

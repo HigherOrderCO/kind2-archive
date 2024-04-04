@@ -1,0 +1,22 @@
+use BMap/{leaf,node}
+use Bits/{e,o,i}
+use Maybe/{some,none}
+
+got_size <V> (map: (BMap V)) : (Pair U60 (BMap V)) =
+  match map {
+    leaf: (Pair/new 0 (leaf V))
+    node:
+      use res_lft = (got_size map.lft)
+      use res_rgt = (got_size map.rgt)
+      // NOTE: can only access `pair.fst` and `pair.snd` after matching
+      match res_lft {Pair/new: match res_rgt {Pair/new: 
+        match map.val {
+          none: (Pair/new
+            (+ (res_lft.fst) (res_lft.fst))
+            (node V res_lft.snd map.val res_rgt.snd))
+          some: (Pair/new
+            (+ 1 (+ (res_lft.fst) (res_lft.fst)))
+            (node V res_lft.snd map.val res_rgt.snd))
+        }
+      }}
+  }
