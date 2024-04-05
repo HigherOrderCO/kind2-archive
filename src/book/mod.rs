@@ -2,6 +2,7 @@ use crate::{*};
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::iter::once;
 
 mod compile;
 mod parse;
@@ -77,6 +78,47 @@ impl Book {
         def_term.get_free_vars(im::Vector::new(), &mut dependencies);
         for ref_name in dependencies {
           if let Err(_) = self.load(&base, &ref_name) {
+            // If `ref_name` is an unbound constructor of the ADT `def_term`,
+            // we can generate it.
+
+            // TODO: returning None since the ADT is wrapped in an `Ann` term
+            println!("{:?}", def_term);
+            let maybe_ctrs = def_term.as_adt().map(|adt| adt.ctrs);
+
+            let maybe_ref = maybe_ctrs.clone()
+              .and_then(|ctrs| ctrs.into_iter().find(|ctr| ctr.name == ref_name));
+
+            let maybe_names = maybe_ctrs
+              .map(|ctrs| ctrs.into_iter().map(|ctr| ctr.name));
+
+            // TODO: move this to the desugaring module once it is refactored
+            // TODO: test if it matches all of the implemented book
+            if let (Some(names), Some(ctr)) = (maybe_names, maybe_ref) {
+              let format_idx = |idx: &Term| format!("<{}>", idx.show());
+              let format_fld = |(name, typ): &(String, Term)| format!("({name}: {})", typ.show());
+              let format_ctr = |ctr_name| format!("λ{ctr_name}");
+
+              let ctr_text = once(ctr.name.clone())
+                .chain(ctr.idxs.iter().map(format_idx))
+                .chain(ctr.flds.iter().map(format_fld))
+                .chain(once(":".to_string()))
+                .chain(once(def_term.format().flatten(None)))
+                .chain(once("=\n".to_string()))
+                .chain(once("~λP".to_string()))
+                .chain(names.map(format_ctr))
+                .chain(once("(".to_string()))
+                .chain(once(ctr.name.clone()))
+                .chain(ctr.flds.iter().map(|(fld_name, _)| fld_name.clone()))
+                .chain(once(")".to_string()))
+                .collect::<Vec<String>>()
+                .join(" ");
+
+              println!("{}", ctr_text);
+              let ctr_code = KindParser::new(&ctr_text).parse_term(fid, &im::HashMap::new());
+
+              // continue;
+            } 
+
             self.handle_unbound(&file, &ref_name)?;
           }
         }
