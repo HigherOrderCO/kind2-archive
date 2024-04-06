@@ -80,11 +80,16 @@ impl Book {
           if let Err(_) = self.load(&base, &ref_name) {
             // If `ref_name` is an unbound constructor of the ADT `def_term`,
             // we can generate it.
+            let maybe_adt = match &def_term {
+              Term::Ann { val, .. } => val.as_adt(),
+              Term::Slf { .. } => def_term.as_adt(),
+              _ => None
+            };
 
-            // TODO: returning None since the ADT is wrapped in an `Ann` term
-            println!("{:?}", def_term);
-            let maybe_ctrs = def_term.as_adt().map(|adt| adt.ctrs);
+            // println!("{:?}", maybe_adt);
+            let maybe_ctrs = maybe_adt.map(|adt| adt.ctrs);
 
+            // TODO: "Test/constructor/" != "constructor"
             let maybe_ref = maybe_ctrs.clone()
               .and_then(|ctrs| ctrs.into_iter().find(|ctr| ctr.name == ref_name));
 
