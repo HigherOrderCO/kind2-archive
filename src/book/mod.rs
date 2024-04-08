@@ -79,11 +79,15 @@ impl Book {
           if let Err(_) = self.load(&base, &ref_name) {
             // If `ref_name` is an unbound constructor of the ADT `def_term`,
             // we can generate it.
-            let maybe_ctr_code = Term::constructor_code((&def_name, &def_term), &ref_name);
-            if let Some(ctr_code) = maybe_ctr_code {
-              // println!("got constructor!");
-              // let ctr_code = KindParser::new(&ctr_text).parse_term(fid, &im::HashMap::new());
-              // continue;
+            let maybe_ctr = Term::constructor_code((&def_name, &def_term), &ref_name);
+
+            if let Some(ctr_code) = maybe_ctr {
+              let file = format!("{}.kind2", ref_name.trim_end_matches('/'));
+              std::fs::write(&file, ctr_code)
+                .map_err(|_| format!("ERROR: could not create file for generated constructor {ref_name}"))?;
+
+              self.load(&base, &ref_name)?;
+              continue;
             }
 
             self.handle_unbound(&file, &ref_name)?;
