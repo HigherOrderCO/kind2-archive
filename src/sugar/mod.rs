@@ -662,6 +662,52 @@ impl Term {
     return term;
   }
 
+  // TODO: test if it matches all of the implemented book
+  pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_name: &str) -> Option<String> {
+    let (adt, adt_typ) = match &adt_term {
+      // Type variables wrap ADTs in Lams
+      Term::Lam { bod, .. } => return Term::constructor_code((adt_name, bod), ctr_name),
+      // Skip `Ann` and `Src`
+      Term::Ann { val, .. } => return Term::constructor_code((adt_name, val), ctr_name),
+      Term::Src { val, .. } => return Term::constructor_code((adt_name, val), ctr_name),
+      // Found an ADT
+      Term::Slf { typ, .. } => (adt_term.as_adt()?, typ.show()),
+      _ => return None,
+    };
+
+    let ctrs = adt.ctrs.clone();
+    let ctr_name = ctr_name.trim_end_matches('/'); // last "/" is not part of name
+
+    // NOTE: "{ADT}/{constructor}" != "{constructor}"
+    let ctr = ctrs.iter().find(|ctr| format!("{adt_name}/{}", ctr.name) == ctr_name)?.clone();
+    let names = ctrs.into_iter().map(|ctr| ctr.name);
+
+    // TODO: what should I do with ctr.idxs?
+    // let format_idx = ...
+    let format_param = |param| format!("<{}>", param);
+    let format_fld = |(name, typ): &(String, Term)| format!("({name}: {})", typ.show());
+    let format_ctr_name = |ctr_name| format!("λ{ctr_name}");
+
+    // Generate constructor function
+    use std::iter::once;
+    let ctr_text = once(ctr.name.clone())
+      // `as_adt` reads type parameters in reverse
+      .chain(adt.pars.iter().map(format_param).rev())
+      .chain(ctr.flds.iter().map(format_fld))
+      .chain(once(":".to_string()))
+      .chain(once(adt_typ))
+      .chain(once("=\n".to_string()))
+      .chain(once("~λP".to_string()))
+      .chain(names.map(format_ctr_name))
+      .chain(once("(".to_string()))
+      .chain(once(ctr.name.clone()))
+      .chain(ctr.flds.iter().map(|(fld_name, _)| fld_name.clone()))
+      .chain(once(")".to_string()))
+      .collect::<Vec<String>>()
+      .join(" ");
+
+    Some(ctr_text)
+  }
 }
 
 impl ADT {
