@@ -88,8 +88,8 @@ impl Book {
 
               // Create folder structure
               std::fs::create_dir_all(file_path.parent().ok_or_else(err)?).map_err(|_| err())?;
-              // Write constructor to its own file
-              // TODO: What should I do when the file already exists?
+              // Write constructor to its own file.
+              // It rewrites the file if it already exists.
               // TODO: If the ADT definition does not type check, the wrong constructor
               //       is still written to its own file. What should I do in this case?
               std::fs::write(&file_name, ctr_code).map_err(|_| err())?;
