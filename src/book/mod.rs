@@ -82,9 +82,17 @@ impl Book {
             let maybe_ctr = Term::constructor_code((&def_name, &def_term), &ref_name);
 
             if let Some(ctr_code) = maybe_ctr {
-              let file = format!("{}.kind2", ref_name.trim_end_matches('/'));
-              std::fs::write(&file, ctr_code)
-                .map_err(|_| format!("ERROR: could not create file for generated constructor {ref_name}"))?;
+              let file_name = format!("{}.kind2", ref_name.trim_end_matches('/'));
+              let file_path = std::path::Path::new(&file_name);
+              let err = || format!("ERROR: could not create file for generated constructor {ref_name}");
+
+              // Create folder structure
+              std::fs::create_dir_all(file_path.parent().ok_or_else(err)?).map_err(|_| err())?;
+              // Write constructor to its own file
+              // TODO: What should I do when the file already exists?
+              // TODO: If the ADT definition does not type check, the wrong constructor
+              //       is still written to its own file. What should I do in this case?
+              std::fs::write(&file_name, ctr_code).map_err(|_| err())?;
 
               self.load(&base, &ref_name)?;
               continue;
