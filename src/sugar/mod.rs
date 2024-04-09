@@ -708,7 +708,7 @@ impl Term {
     let field_names = ctr.flds.iter().map(|(name, _)| name.clone()).collect::<Vec<_>>().join(" ");
 
     // The result should be in the following format:
-    // ctr_name P_1 .. P_n (f_1: T_1) .. (f_n: T_n): (adt_name P_1 .. P_n Idx_1 .. Idx_n) =
+    // ctr_name <Par_1> .. <Par_n> (f_1: T_1) .. (f_n: T_n): (adt_name Par_1 .. Par_n Idx_1 .. Idx_n) =
     //   ~λP λctr_name_1 .. λctr_name_n (ctr_name f_1 .. f_n)
     let ctr_text = format!(
       "{ctr_name} {params} {fields}: {ctr_typ} =\n  ~λP {ctr_lam_names} ({ctr_name} {field_names})"
