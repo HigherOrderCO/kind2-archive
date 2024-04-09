@@ -665,14 +665,14 @@ impl Term {
   // TODO: test if it matches all of the implemented book
   pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_ref: &str) -> Option<String> {
     // Check if `adt_name` really is an ADT
-    let (adt, adt_typ) = match &adt_term {
+    let adt = match &adt_term {
       // Type variables wrap ADTs in Lams
       Term::Lam { bod, .. } => return Term::constructor_code((adt_name, bod), ctr_ref),
       // Skip `Ann` and `Src`
       Term::Ann { val, .. } => return Term::constructor_code((adt_name, val), ctr_ref),
       Term::Src { val, .. } => return Term::constructor_code((adt_name, val), ctr_ref),
       // Found an ADT
-      Term::Slf { typ, .. } => (adt_term.as_adt()?, typ.show()),
+      Term::Slf { .. } => adt_term.as_adt()?,
       _ => return None,
     };
 
@@ -681,26 +681,37 @@ impl Term {
     // Search for constructor in ADT
     let ctr_ref = ctr_ref.trim_end_matches('/'); // last "/" is not part of name
     let ctr = ctrs.iter().find(|ctr| format!("{adt_name}/{}", ctr.name) == ctr_ref)?.clone();
-    let ctr_name = ctr.name;
+    let ctr_name = &ctr.name;
     let names = ctrs.into_iter().map(|ctr| ctr.name);
 
-    // Generate constructor code
-    // TODO: what should I do with ctr.idxs?
-    // let format_idx = ...
+    // Generate constructor code:
 
+    // Type parameters
     let format_param = |param| format!("<{}>", param);
     let params = adt.pars.iter().map(format_param).rev().collect::<Vec<_>>().join(" ");
 
+    // Constructor fields
     let format_field = |(name, typ): &(String, Term)| format!("({name}: {})", typ.show());
     let fields = ctr.flds.iter().map(format_field).collect::<Vec<_>>().join(" ");
 
-    let format_ctr_name = |ctr_name| format!("λ{ctr_name}");
-    let ctr_names = names.map(format_ctr_name).collect::<Vec<_>>().join(" ");
+    // Constructor return type with type parameters and type indices
+    let mut ctr_typ = vec![adt.name.clone()];
+    adt.pars.into_iter().rev().for_each(|par| ctr_typ.push(par));
+    ctr.idxs.into_iter().rev().for_each(|idx| ctr_typ.push(idx.show()));
+    let ctr_typ = format!("({})", ctr_typ.join(" "));
 
+    // Constructor names into Scott-encoding
+    let format_ctr_lam_name = |ctr_name| format!("λ{ctr_name}");
+    let ctr_lam_names = names.map(format_ctr_lam_name).collect::<Vec<_>>().join(" ");
+
+    // Fields without their types
     let field_names = ctr.flds.iter().map(|(name, _)| name.clone()).collect::<Vec<_>>().join(" ");
 
+    // The result should be in the following format:
+    // ctr_name P_1 .. P_n (f_1: T_1) .. (f_n: T_n): (adt_name P_1 .. P_n Idx_1 .. Idx_n) =
+    //   ~λP λctr_name_1 .. λctr_name_n (ctr_name f_1 .. f_n)
     let ctr_text = format!(
-      "{ctr_name} {params} {fields}: {adt_typ} =\n  ~λP {ctr_names} ({ctr_name} {field_names})"
+      "{ctr_name} {params} {fields}: {ctr_typ} =\n  ~λP {ctr_lam_names} ({ctr_name} {field_names})"
     );
 
     Some(ctr_text)
