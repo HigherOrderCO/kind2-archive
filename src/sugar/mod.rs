@@ -663,48 +663,45 @@ impl Term {
   }
 
   // TODO: test if it matches all of the implemented book
-  pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_name: &str) -> Option<String> {
+  pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_ref: &str) -> Option<String> {
+    // Check if `adt_name` really is an ADT
     let (adt, adt_typ) = match &adt_term {
       // Type variables wrap ADTs in Lams
-      Term::Lam { bod, .. } => return Term::constructor_code((adt_name, bod), ctr_name),
+      Term::Lam { bod, .. } => return Term::constructor_code((adt_name, bod), ctr_ref),
       // Skip `Ann` and `Src`
-      Term::Ann { val, .. } => return Term::constructor_code((adt_name, val), ctr_name),
-      Term::Src { val, .. } => return Term::constructor_code((adt_name, val), ctr_name),
+      Term::Ann { val, .. } => return Term::constructor_code((adt_name, val), ctr_ref),
+      Term::Src { val, .. } => return Term::constructor_code((adt_name, val), ctr_ref),
       // Found an ADT
       Term::Slf { typ, .. } => (adt_term.as_adt()?, typ.show()),
       _ => return None,
     };
 
     let ctrs = adt.ctrs.clone();
-    let ctr_name = ctr_name.trim_end_matches('/'); // last "/" is not part of name
 
-    // NOTE: "{ADT}/{constructor}" != "{constructor}"
-    let ctr = ctrs.iter().find(|ctr| format!("{adt_name}/{}", ctr.name) == ctr_name)?.clone();
+    // Search for constructor in ADT
+    let ctr_ref = ctr_ref.trim_end_matches('/'); // last "/" is not part of name
+    let ctr = ctrs.iter().find(|ctr| format!("{adt_name}/{}", ctr.name) == ctr_ref)?.clone();
+    let ctr_name = ctr.name;
     let names = ctrs.into_iter().map(|ctr| ctr.name);
 
+    // Generate constructor code
     // TODO: what should I do with ctr.idxs?
     // let format_idx = ...
-    let format_param = |param| format!("<{}>", param);
-    let format_fld = |(name, typ): &(String, Term)| format!("({name}: {})", typ.show());
-    let format_ctr_name = |ctr_name| format!("λ{ctr_name}");
 
-    // Generate constructor function
-    use std::iter::once;
-    let ctr_text = once(ctr.name.clone())
-      // `as_adt` reads type parameters in reverse
-      .chain(adt.pars.iter().map(format_param).rev())
-      .chain(ctr.flds.iter().map(format_fld))
-      .chain(once(":".to_string()))
-      .chain(once(adt_typ))
-      .chain(once("=\n".to_string()))
-      .chain(once("~λP".to_string()))
-      .chain(names.map(format_ctr_name))
-      .chain(once("(".to_string()))
-      .chain(once(ctr.name.clone()))
-      .chain(ctr.flds.iter().map(|(fld_name, _)| fld_name.clone()))
-      .chain(once(")".to_string()))
-      .collect::<Vec<String>>()
-      .join(" ");
+    let format_param = |param| format!("<{}>", param);
+    let params = adt.pars.iter().map(format_param).rev().collect::<Vec<_>>().join(" ");
+
+    let format_field = |(name, typ): &(String, Term)| format!("({name}: {})", typ.show());
+    let fields = ctr.flds.iter().map(format_field).collect::<Vec<_>>().join(" ");
+
+    let format_ctr_name = |ctr_name| format!("λ{ctr_name}");
+    let ctr_names = names.map(format_ctr_name).collect::<Vec<_>>().join(" ");
+
+    let field_names = ctr.flds.iter().map(|(name, _)| name.clone()).collect::<Vec<_>>().join(" ");
+
+    let ctr_text = format!(
+      "{ctr_name} {params} {fields}: {adt_typ} =\n  ~λP {ctr_names} ({ctr_name} {field_names})"
+    );
 
     Some(ctr_text)
   }
