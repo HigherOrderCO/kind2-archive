@@ -146,25 +146,92 @@ impl Book {
 mod tests {
   use crate::*;
 
+  // TODO: this could be in the `sugar` module
+  fn extract_adt(t: &Term) -> &Term {
+    match t {
+      Term::Lam { bod, .. } => extract_adt(bod),
+      Term::Ann { val, .. } => extract_adt(val),
+      Term::Src { val, .. } => extract_adt(val),
+      // Found ADT
+      Term::Slf { .. } => t,
+      // Couldn't find ADT
+      _ => t,
+    }
+  }
+
+  // TODO: this could be in the `term` module
+  fn apply(t: &Term, f: impl Fn(&Term) -> Term) -> Term {
+    match t {
+      Term::All { era, nam, inp, bod } => {
+        Term::All { era: *era, nam: nam.clone(), inp: Box::new(f(inp)), bod: Box::new(f(bod)) }
+      }
+      Term::Lam { era, nam, bod } => Term::Lam { era: *era, nam: nam.clone(), bod: Box::new(f(bod)) },
+      Term::App { era, fun, arg } => Term::App { era: *era, fun: Box::new(f(fun)), arg: Box::new(f(arg)) },
+      Term::Ann { chk, val, typ } => Term::Ann { chk: *chk, val: Box::new(f(val)), typ: Box::new(f(typ)) },
+      Term::Slf { nam, typ, bod } => {
+        Term::Slf { nam: nam.clone(), typ: Box::new(f(typ)), bod: Box::new(f(bod)) }
+      }
+      Term::Ins { val } => Term::Ins { val: Box::new(f(val)) },
+      Term::Set => Term::Set,
+      Term::U60 => Term::U60,
+      Term::Num { val } => Term::Num { val: *val },
+      Term::Op2 { opr, fst, snd } => Term::Op2 { opr: *opr, fst: Box::new(f(fst)), snd: Box::new(f(snd)) },
+      Term::Swi { nam, x, z, s, p } => Term::Swi {
+        nam: nam.clone(),
+        x: Box::new(f(x)),
+        z: Box::new(f(z)),
+        s: Box::new(f(s)),
+        p: Box::new(f(p)),
+      },
+      Term::Nat { nat } => Term::Nat { nat: *nat },
+      Term::Txt { txt } => Term::Txt { txt: txt.clone() },
+      Term::Let { nam, val, bod } => {
+        Term::Let { nam: nam.clone(), val: Box::new(f(val)), bod: Box::new(f(bod)) }
+      }
+      Term::Use { nam, val, bod } => {
+        Term::Use { nam: nam.clone(), val: Box::new(f(val)), bod: Box::new(f(bod)) }
+      }
+      Term::Var { nam } => Term::Var { nam: nam.clone() },
+      Term::Hol { nam } => Term::Hol { nam: nam.clone() },
+      Term::Met {} => Term::Met {},
+      Term::Src { src, val } => Term::Src { src: src.clone(), val: Box::new(f(val)) },
+      Term::Mch { mch } => f(&Term::new_match(mch)),
+    }
+  }
+
+  // TODO: this could be used to implement term equality
+  fn rename_variables(t: &Term, i: usize, uses: &Uses) -> Term {
+    match t {
+      Term::Lam { era, nam, bod } => match uses.get(nam) {
+        Some(nam) => Term::Lam {
+          era: *era,
+          nam: nam.clone(),
+          bod: Box::new(rename_variables(bod, i, uses)),
+        },
+        None => {
+          let new_nam = format!("x{i}");
+          Term::Lam {
+            era: *era,
+            nam: new_nam.clone(),
+            bod: Box::new(rename_variables(bod, i + 1, &uses.update(nam.clone(), new_nam.clone()))),
+          }
+        }
+      },
+      Term::Var { nam } => {
+        Term::Var { nam: uses.get(nam).unwrap_or(nam).clone() }
+      }
+      _ => apply(t, |t| rename_variables(t, i, uses)),
+    }
+  }
+
   #[test]
   /// Test if construction generation matches book
   fn constructor_generation() {
     let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
+    // TODO: test with all books instead of only "Test"
     let book = Book::boot(&book_dir.to_string_lossy(), "Test").unwrap();
 
     for (_, term) in book.defs.iter() {
-      fn extract_adt(t: &Term) -> &Term {
-        match t {
-          Term::Lam { bod, .. } => extract_adt(bod),
-          Term::Ann { val, .. } => extract_adt(val),
-          Term::Src { val, .. } => extract_adt(val),
-          // Found ADT
-          Term::Slf { .. } => t,
-          // Couldn't find ADT
-          _ => t,
-        }
-      }
-
       if let Some(adt) = extract_adt(term).as_adt() {
         let full_name = |adt_name: &str, ctr_name: &str| format!("{adt_name}/{ctr_name}");
 
@@ -175,17 +242,13 @@ mod tests {
           .collect();
 
         for (ctr_name, ctr_term) in ctrs {
-          println!("{ctr_name} = {}", ctr_term.show());
-
           let ctr_ref = full_name(&adt.name, ctr_name);
           let gen_code = Term::constructor_code((&adt.name, term), &ctr_ref).unwrap();
           let gen_term = KindParser::new(&gen_code).parse_def(0, &im::HashMap::new()).unwrap().1;
 
-          // TODO: deal with cases like this:
-          // assertion `left == right` failed
-          //   left: "λn ~λP λsucc λzero (succ n)"
-          //  right: "λpred ~λP λsucc λzero (succ pred)"
-          assert_eq!(ctr_term.show(), gen_term.show());
+          let t1 = rename_variables(ctr_term, 0, &im::HashMap::new());
+          let t2 = rename_variables(&gen_term, 0, &im::HashMap::new());
+          assert_eq!(t1.show(), t2.show());
         }
       }
     }
