@@ -141,3 +141,53 @@ impl Book {
   }
 
 }
+
+#[cfg(test)]
+mod tests {
+  use crate::*;
+
+  #[test]
+  /// Test if construction generation matches book
+  fn constructor_generation() {
+    let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
+    let book = Book::boot(&book_dir.to_string_lossy(), "Test").unwrap();
+
+    for (_, term) in book.defs.iter() {
+      fn extract_adt(t: &Term) -> &Term {
+        match t {
+          Term::Lam { bod, .. } => extract_adt(bod),
+          Term::Ann { val, .. } => extract_adt(val),
+          Term::Src { val, .. } => extract_adt(val),
+          // Found ADT
+          Term::Slf { .. } => t,
+          // Couldn't find ADT
+          _ => t,
+        }
+      }
+
+      if let Some(adt) = extract_adt(term).as_adt() {
+        let full_name = |adt_name: &str, ctr_name: &str| format!("{adt_name}/{ctr_name}");
+
+        let ctrs: Vec<(&str, &Term)> = adt
+          .ctrs
+          .iter()
+          .map(|ctr| (ctr.name.as_ref(), &book.defs[&full_name(&adt.name, &ctr.name)]))
+          .collect();
+
+        for (ctr_name, ctr_term) in ctrs {
+          println!("{ctr_name} = {}", ctr_term.show());
+
+          let ctr_ref = full_name(&adt.name, ctr_name);
+          let gen_code = Term::constructor_code((&adt.name, term), &ctr_ref).unwrap();
+          let gen_term = KindParser::new(&gen_code).parse_def(0, &im::HashMap::new()).unwrap().1;
+
+          // TODO: deal with cases like this:
+          // assertion `left == right` failed
+          //   left: "λn ~λP λsucc λzero (succ n)"
+          //  right: "λpred ~λP λsucc λzero (succ pred)"
+          assert_eq!(ctr_term.show(), gen_term.show());
+        }
+      }
+    }
+  }
+}
