@@ -1,2 +1,0 @@
-ctr2 <T> <Z> : (Nested/Test T Z) =
-  ~λP λctr1 λctr2 (ctr2 )
