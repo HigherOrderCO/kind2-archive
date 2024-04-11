@@ -1,0 +1,4 @@
+data Nested/Test T Z
+| ctr1 : (Nested/Test T Z)
+| ctr2 : (Nested/Test T Z)
+

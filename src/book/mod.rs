@@ -228,7 +228,7 @@ mod tests {
     let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
     let modules_to_test = [
       "BBT", "BMap", "Bool", "Char", "Cmp", "Empty", "Equal", "List", "Maybe", "Monad", "Nat", "Pair",
-      "String", "Vector",
+      "String", "Vector", "Nested/Test"
     ];
 
     for module in modules_to_test {
