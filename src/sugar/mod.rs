@@ -662,7 +662,6 @@ impl Term {
     return term;
   }
 
-  // TODO: test if it matches all of the implemented book
   pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_ref: &str) -> Option<String> {
     // Check if `adt_name` really is an ADT
     let adt = match &adt_term {

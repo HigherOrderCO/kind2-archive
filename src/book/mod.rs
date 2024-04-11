@@ -206,20 +206,18 @@ mod tests {
         Some(nam) => Term::Lam {
           era: *era,
           nam: nam.clone(),
-          bod: Box::new(rename_variables(bod, i, uses)),
+          bod: Box::new(rename_variables(bod, i, uses))
         },
         None => {
           let new_nam = format!("x{i}");
           Term::Lam {
             era: *era,
             nam: new_nam.clone(),
-            bod: Box::new(rename_variables(bod, i + 1, &uses.update(nam.clone(), new_nam.clone()))),
+            bod: Box::new(rename_variables(bod, i + 1, &uses.update(nam.clone(), new_nam))),
           }
         }
       },
-      Term::Var { nam } => {
-        Term::Var { nam: uses.get(nam).unwrap_or(nam).clone() }
-      }
+      Term::Var { nam } => Term::Var { nam: uses.get(nam).unwrap_or(nam).clone() },
       _ => apply(t, |t| rename_variables(t, i, uses)),
     }
   }
@@ -228,29 +226,45 @@ mod tests {
   /// Test if construction generation matches book
   fn constructor_generation() {
     let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
-    // TODO: test with all books instead of only "Test"
-    let book = Book::boot(&book_dir.to_string_lossy(), "Test").unwrap();
+    let modules_to_test = [
+      "BBT", "BMap", "Bool", "Char", "Cmp", "Empty", "Equal", "List", "Maybe", "Monad", "Nat", "Pair",
+      "String", "Vector",
+    ];
 
-    for (_, term) in book.defs.iter() {
-      if let Some(adt) = extract_adt(term).as_adt() {
-        let full_name = |adt_name: &str, ctr_name: &str| format!("{adt_name}/{ctr_name}");
+    for module in modules_to_test {
+      println!("Testing module `{module}`.");
+      let mut book = Book::boot(&book_dir.to_string_lossy(), module).unwrap();
+      // Needed because some constructors are loaded as ADT.cons instead of ADT/cons
+      book.defs = book.defs.into_iter().map(|(key, val)| (key.replace(".", "/"), val)).collect();
 
-        let ctrs: Vec<(&str, &Term)> = adt
-          .ctrs
-          .iter()
-          .map(|ctr| (ctr.name.as_ref(), &book.defs[&full_name(&adt.name, &ctr.name)]))
-          .collect();
+      for (_, term) in book.defs.iter() {
+        if let Some(adt) = extract_adt(term).as_adt() {
+          println!("Testing ADT `{}`.", adt.name);
+          let full_name = |adt_name: &str, ctr_name: &str| format!("{adt_name}/{ctr_name}");
 
-        for (ctr_name, ctr_term) in ctrs {
-          let ctr_ref = full_name(&adt.name, ctr_name);
-          let gen_code = Term::constructor_code((&adt.name, term), &ctr_ref).unwrap();
-          let gen_term = KindParser::new(&gen_code).parse_def(0, &im::HashMap::new()).unwrap().1;
+          let ctrs: Vec<(&str, &Term)> = adt
+            .ctrs
+            .iter()
+            .map(|ctr| {
+              let name = full_name(&adt.name, &ctr.name);
+              (ctr.name.as_ref(), book.defs.get(&name).expect(&format!("couldn't find {name}")))
+            })
+            .collect();
 
-          let t1 = rename_variables(ctr_term, 0, &im::HashMap::new());
-          let t2 = rename_variables(&gen_term, 0, &im::HashMap::new());
-          assert_eq!(t1.show(), t2.show());
+          for (ctr_name, ctr_term) in ctrs {
+            println!("Testing constructor {ctr_name}");
+            
+            let ctr_ref = full_name(&adt.name, ctr_name);
+            let gen_code = Term::constructor_code((&adt.name, term), &ctr_ref).unwrap();
+            let gen_term = KindParser::new(&gen_code).parse_def(0, &im::HashMap::new()).unwrap().1;
+
+            let t1 = rename_variables(ctr_term, 0, &im::HashMap::new());
+            let t2 = rename_variables(&gen_term, 0, &im::HashMap::new());
+            assert_eq!(t1.show(), t2.show());
+          }
         }
       }
+      println!();
     }
   }
 }
