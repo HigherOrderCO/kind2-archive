@@ -394,7 +394,6 @@ impl<'i> KindParser<'i> {
 // ---
 
 impl Term {
-
   // Interprets a λ-encoded Algebraic Data Type definition as an ADT struct.
   pub fn as_adt(&self) -> Option<ADT> {
     let name: String;
@@ -662,7 +661,7 @@ impl Term {
     return term;
   }
 
-  pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_ref: &str) -> Option<String> {
+  pub fn constructor_code((adt_name, adt_term): (&str, &Term), ctr_ref: &str) -> Option<Box<Show>> {
     // Check if `adt_name` really is an ADT
     let adt = match &adt_term {
       // Type variables wrap ADTs in Lams
@@ -680,38 +679,68 @@ impl Term {
     // Search for constructor in ADT
     let ctr_ref = ctr_ref.trim_end_matches('/'); // last "/" is not part of name
     let ctr = ctrs.iter().find(|ctr| format!("{adt_name}/{}", ctr.name) == ctr_ref)?.clone();
-    let ctr_name = &ctr.name;
-    let names = ctrs.into_iter().map(|ctr| ctr.name);
 
     // Generate constructor code:
 
-    // Type parameters
-    let format_param = |param| format!("<{}>", param);
-    let params = adt.pars.iter().map(format_param).rev().collect::<Vec<_>>().join(" ");
+    // Constructor name.
+    let ctr_name = &ctr.name;
 
-    // Constructor fields
-    let format_field = |(name, typ): &(String, Term)| format!("({name}: {})", typ.show());
-    let fields = ctr.flds.iter().map(format_field).collect::<Vec<_>>().join(" ");
+    // Type parameters.
+    // Format: <Par_1> .. <Par_n>
+    let format_param = |param| Show::text(&format!("<{}>", param));
+    let params = Show::glue(" ", adt.pars.iter().map(format_param).rev().collect());
 
-    // Constructor return type with type parameters and type indices
-    let mut ctr_typ = vec![adt.name.clone()];
-    adt.pars.into_iter().rev().for_each(|par| ctr_typ.push(par));
-    ctr.idxs.into_iter().rev().for_each(|idx| ctr_typ.push(idx.show()));
-    let ctr_typ = format!("({})", ctr_typ.join(" "));
+    // Constructor fields.
+    // Format: (f_1: T_1) .. (f_n: T_n)
+    let format_field = |(name, typ): &(String, Term)| {
+      Show::glue("", vec![
+        Show::text("("),
+        Show::glue("", vec![Show::text(name), Show::text(": "), typ.format()]),
+        Show::text(")"),
+      ])
+    };
+    let fields = Show::glue(" ", ctr.flds.iter().map(format_field).collect());
 
-    // Constructor names into Scott-encoding
-    let format_ctr_lam_name = |ctr_name| format!("λ{ctr_name}");
-    let ctr_lam_names = names.map(format_ctr_lam_name).collect::<Vec<_>>().join(" ");
+    // Constructor return type with type parameters and type indices.
+    // Format: (adt_name Par_1 .. Par_n Idx_1 .. Idx_n)
+    let mut ctr_typ = vec![Show::text(&adt.name)];
+    adt.pars.iter().rev().for_each(|par| ctr_typ.push(Show::text(par)));
+    ctr.idxs.iter().rev().for_each(|idx| ctr_typ.push(idx.format()));
+    let ctr_typ = Show::glue("", vec![Show::text("("), Show::glue(" ", ctr_typ), Show::text(")")]);
 
-    // Fields without their types
-    let field_names = ctr.flds.iter().map(|(name, _)| name.clone()).collect::<Vec<_>>().join(" ");
+    // Constructor names into Scott-encoding.
+    // Format: λctr_name_1 .. λctr_name_n
+    let format_ctr_lam_name = |ctr_name| Show::text(&format!("λ{ctr_name}"));
+    let names = ctrs.into_iter().map(|ctr| ctr.name);
+    let ctr_lam_names = Show::glue(" ", names.map(format_ctr_lam_name).collect());
+
+    // Fields without their types.
+    // Format: f_1 .. f_n
+    let field_names = Show::glue(" ", ctr.flds.iter().map(|(name, _)| Show::text(name)).collect());
+
+    // Applies constructor and fields.
+    // Format: (ctr_name f_1 .. f_n)
+    let final_app = Show::glue("", vec![
+      Show::text("("),
+      Show::glue(" ", vec![Show::text(ctr_name), field_names]),
+      Show::text(")"),
+    ]);
 
     // The result should be in the following format:
     // ctr_name <Par_1> .. <Par_n> (f_1: T_1) .. (f_n: T_n): (adt_name Par_1 .. Par_n Idx_1 .. Idx_n) =
     //   ~λP λctr_name_1 .. λctr_name_n (ctr_name f_1 .. f_n)
-    let ctr_text = format!(
-      "{ctr_name} {params} {fields}: {ctr_typ} =\n  ~λP {ctr_lam_names} ({ctr_name} {field_names})"
-    );
+    let ctr_text = Show::glue(" ", vec![
+      Show::text(ctr_name),
+      params,
+      fields,
+      Show::text(":"),
+      ctr_typ,
+      Show::text("="),
+      Show::line(),
+      Show::text("~λP"),
+      ctr_lam_names,
+      final_app,
+    ]);
 
     Some(ctr_text)
   }

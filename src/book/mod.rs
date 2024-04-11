@@ -82,6 +82,8 @@ impl Book {
             let maybe_ctr = Term::constructor_code((&def_name, &def_term), &ref_name);
 
             if let Some(ctr_code) = maybe_ctr {
+              let ctr_code = ctr_code.flatten(Some(80));
+
               let file_name = format!("{}.kind2", ref_name.trim_end_matches('/'));
               let file_path = std::path::Path::new(&file_name);
               let err = || format!("ERROR: could not create file for generated constructor {ref_name}");
@@ -227,8 +229,22 @@ mod tests {
   fn constructor_generation() {
     let book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("book");
     let modules_to_test = [
-      "BBT", "BMap", "Bool", "Char", "Cmp", "Empty", "Equal", "List", "Maybe", "Monad", "Nat", "Pair",
-      "String", "Vector", "Tests/CtrGen/ParamsTest", "Tests/CtrGen/VectorTest"
+      "BBT",
+      "BMap",
+      "Bool",
+      "Char",
+      "Cmp",
+      "Empty",
+      "Equal",
+      "List",
+      "Maybe",
+      "Monad",
+      "Nat",
+      "Pair",
+      "String",
+      "Vector",
+      "Tests/CtrGen/ParamsTest",
+      "Tests/CtrGen/VectorTest",
     ];
 
     for module in modules_to_test {
@@ -253,10 +269,11 @@ mod tests {
 
           for (ctr_name, ctr_term) in ctrs {
             println!("Testing constructor {ctr_name}");
-            
+
             let ctr_ref = full_name(&adt.name, ctr_name);
             let gen_code = Term::constructor_code((&adt.name, term), &ctr_ref).unwrap();
-            let gen_term = KindParser::new(&gen_code).parse_def(0, &im::HashMap::new()).unwrap().1;
+            let gen_term =
+              KindParser::new(&gen_code.flatten(None)).parse_def(0, &im::HashMap::new()).unwrap().1;
 
             let t1 = rename_variables(ctr_term, 0, &im::HashMap::new());
             let t2 = rename_variables(&gen_term, 0, &im::HashMap::new());
