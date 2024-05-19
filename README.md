@@ -1,5 +1,7 @@
 # Kind2: a parallel proof & programming language
 
+> NOTE: THIS REPOSITORY IS A WIP. OFFICIAL RELEASE COMING SOON!
+
 Kind2 is a general-purpose programming language made from scratch to harness
 [HVM](https://github.com/HigherOrderCO/HVM)'s **massive parallelism** and
 computational advantages (no garbage collection, optimal β-reduction). Its type
@@ -18,7 +20,7 @@ inherently secure. Essentially, Kind2 aims to be:
 
 And it seeks to accomplish that goal by relying on the solid foundations of [Interaction Combinators](https://www.semanticscholar.org/paper/Interaction-Combinators-Lafont/6cfe09aa6e5da6ce98077b7a048cb1badd78cc76).
 
-> NOTE: THIS REPOSITORY IS A WIP. OFFICIAL RELEASE COMING SOON!
+
 
 ## Usage
 

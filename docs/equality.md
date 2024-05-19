@@ -69,7 +69,7 @@ A <> B ::=
   check if A and B are "textually" the same
 ```
 
-So, for example, to check if `(pair 1 2) == (pair 1 (+ 2 2))`, we would first
+So, for example, to check if `(pair 1 4) == (pair 1 (+ 2 2))`, we would first
 check of both sides are identical. They're not, as evidenced by the fact they
 have different writings. We then reduce A and B to weak normal, and check if 
 they're similar. This will recursivelly check if `1 == 1` and `4 == (+ 2 2)`.

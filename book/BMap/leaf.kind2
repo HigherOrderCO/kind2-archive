@@ -1,0 +1,3 @@
+BMap.leaf
+: ∀(A: *) (BMap A)
+= λA ~λP λnode λleaf leaf

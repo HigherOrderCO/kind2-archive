@@ -1,8 +1,18 @@
-HVM.print.many
-: ∀(A: *) ∀(msgs: (List String)) ∀(ret: A) A
-= λA λmsgs λret
-  use P = λx A
-  use cons = λmsg λmsgs
-    (HVM.print A msg (HVM.print.many A msgs ret))
-  use nil = ret
-  (~msgs P cons nil)
+use List/{cons,nil}
+
+many <A> (msgs: (List String)) (ret: A) : A =
+  match msgs {
+    cons: (HVM/print msgs.head (HVM/print/many msgs.tail ret))
+    nil: ret
+  }
+
+
+
+//HVM.print.many
+//: ∀(A: *) ∀(msgs: (List String)) ∀(ret: A) A
+//= λA λmsgs λret
+  //use P = λx A
+  //use cons = λmsg λmsgs
+    //(HVM.print A msg (HVM.print.many A msgs ret))
+  //use nil = ret
+  //(~msgs P cons nil)

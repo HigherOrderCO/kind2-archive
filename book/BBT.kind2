@@ -1,15 +1,19 @@
-BBT
-: ∀(K: *) ∀(V: *) *
-= λK λV
-  $(self: (BBT K V))
-  ∀(P: ∀(bbt: (BBT K V)) *)
-  ∀(bin: 
-    ∀(size: U60)
-    ∀(key: K)
-    ∀(val: V)
-    ∀(lft: (BBT K V))
-    ∀(rgt: (BBT K V))
-    (P (BBT.bin K V size key val lft rgt))
-  )
-  ∀(tip: (P (BBT.tip K V)))
-  (P self)
+//BBT
+//: ∀(K: *) ∀(V: *) *
+//= λK λV
+  //$(self: (BBT K V))
+  //∀(P: ∀(bbt: (BBT K V)) *)
+  //∀(bin:
+    //∀(size: U60)
+    //∀(key: K)
+    //∀(val: V)
+    //∀(lft: (BBT K V))
+    //∀(rgt: (BBT K V))
+    //(P (BBT.bin K V size key val lft rgt))
+  //)
+  //∀(tip: (P (BBT.tip K V)))
+  //(P self)
+
+data BBT K V
+| bin (size: U60) (key: K) (val: V) (lft: (BBT K V)) (rgt: (BBT K V))
+| tip

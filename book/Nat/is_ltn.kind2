@@ -1,0 +1,14 @@
+use Nat/{succ,zero}
+use Bool/{true,false}
+
+is_ltn (a: Nat) (b: Nat) : Bool =
+  match a with (b: Nat) {
+    zero: match b {
+      zero: false
+      succ: true
+    }
+    succ: match b {
+      zero: false
+      succ: (is_ltn a.pred b.pred)
+    }
+  }

@@ -1,66 +1,97 @@
-BBT.balance
-: ∀(K: *)
-  ∀(V: *)
-  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(set_key: K)
-  ∀(node_key: K)
-  ∀(val: V)
-  ∀(lft: (BBT K V))
-  ∀(rgt: (BBT K V))
-  (BBT K V)
-= λK λV λcmp λset_key λnode_key λval λlft λrgt
-  use P = λx (BBT K V)
-  use new = λlft.size λlft
-    use P = λx (BBT K V)
-    use new = λrgt.size λrgt
-      use new_size = (+ 1 (U60.max lft.size rgt.size))
-      use balance = (U60.abs_diff lft.size rgt.size)
-      use P = λx
-        ∀(new_size: U60)
-        ∀(node_key: K)
-        ∀(val: V)
-        ∀(lft: (BBT K V))
-        ∀(rgt: (BBT K V))
-        (BBT K V)
-      use true = λnew_size λnode_key λval λlft λrgt
-        use P = λx
-          ∀(K: *)
-          ∀(V: *)
-          ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-          ∀(new_size: U60)
-          ∀(node_key: K)
-          ∀(set_key: K)
-          ∀(val: V)
-          ∀(lft: (BBT K V))
-          ∀(rgt: (BBT K V))
-          (BBT K V)
-        use true = BBT.balance.lft_heavier
-        use false = BBT.balance.rgt_heavier
-        (~(U60.to_bool (< rgt.size lft.size))
-          P
-          true
-          false
-          K
-          V
-          cmp
-          new_size
-          node_key
-          set_key
-          val
-          lft
-          rgt
-        )
-      use false = λnew_size λnode_key λval λlft λrgt
-        (BBT.bin K V new_size node_key val lft rgt)
-      (~(U60.to_bool (> balance 1))
-        P
-        true
-        false
-        new_size
-        node_key
-        val
-        lft
-        rgt
-      )
-    (~(BBT.got_size K V rgt) P new)
-  (~(BBT.got_size K V lft) P new)
+use BBT/{bin,tip}
+use Bool/{true,false}
+
+balance <K> <V>
+  (cmp: ∀(a: K) ∀(b: K) Cmp)
+  (set_key: K)
+  (node_key: K)
+  (val: V)
+  (lft: (BBT K V))
+  (rgt: (BBT K V))
+: (BBT K V) =
+ match got_lft = (BBT/got_size lft) {
+   Pair/new:
+     match got_rgt = (BBT/got_size rgt) {
+       Pair/new:
+        use new_size = (+ got_lft.fst got_rgt.fst)
+        use balance = (U60/abs_diff got_lft.fst got_rgt.fst)
+
+        match _ = (U60/to_bool (> balance 1)) {
+          true:
+            match _ = (U60/to_bool (< got_lft.fst got_rgt.fst)) {
+              true: (BBT/balance/lft_heavier cmp new_size node_key set_key val lft rgt)
+              false: (BBT/balance/rgt_heavier cmp new_size node_key set_key val lft rgt)
+            }
+          false: (bin K V new_size node_key val lft rgt)
+        }
+     }
+ }
+
+
+
+//BBT.balance
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  //∀(set_key: K)
+  //∀(node_key: K)
+  //∀(val: V)
+  //∀(lft: (BBT K V))
+  //∀(rgt: (BBT K V))
+  //(BBT K V)
+//= λK λV λcmp λset_key λnode_key λval λlft λrgt
+  //use P = λx (BBT K V)
+  //use new = λlft.size λlft
+    //use P = λx (BBT K V)
+    //use new = λrgt.size λrgt
+      //use new_size = (+ 1 (U60.max lft.size rgt.size))
+      //use balance = (U60.abs_diff lft.size rgt.size)
+      //use P = λx
+        //∀(new_size: U60)
+        //∀(node_key: K)
+        //∀(val: V)
+        //∀(lft: (BBT K V))
+        //∀(rgt: (BBT K V))
+        //(BBT K V)
+      //use true = λnew_size λnode_key λval λlft λrgt
+        //use P = λx
+          //∀(K: *)
+          //∀(V: *)
+          //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+          //∀(new_size: U60)
+          //∀(node_key: K)
+          //∀(set_key: K)
+          //∀(val: V)
+          //∀(lft: (BBT K V))
+          //∀(rgt: (BBT K V))
+          //(BBT K V)
+        //use true = BBT.balance.lft_heavier
+        //use false = BBT.balance.rgt_heavier
+        //(~(U60.to_bool (< rgt.size lft.size))
+          //P
+          //true
+          //false
+          //K
+          //V
+          //cmp
+          //new_size
+          //node_key
+          //set_key
+          //val
+          //lft
+          //rgt
+        //)
+      //use false = λnew_size λnode_key λval λlft λrgt
+        //(BBT.bin K V new_size node_key val lft rgt)
+      //(~(U60.to_bool (> balance 1))
+        //P
+        //true
+        //false
+        //new_size
+        //node_key
+        //val
+        //lft
+        //rgt
+      //)
+    //(~(BBT.got_size K V rgt) P new)
+  //(~(BBT.got_size K V lft) P new)

@@ -1,51 +1,74 @@
-BBT.has.linear
-: ∀(K: *)
-  ∀(V: *)
-  ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-  ∀(key: K)
-  ∀(map: (BBT K V))
-  (Pair Bool (BBT K V))
-= λK λV λcmp λhas_key λmap
-  use P = λx (Pair Bool (BBT K V))
-  use bin = λsize λnode_key λval λlft λrgt
-    use P = λx
-      ∀(cmp: ∀(a: K) ∀(b: K) Cmp)
-      ∀(size: U60)
-      ∀(node_key: K)
-      ∀(val: V)
-      ∀(lft: (BBT K V))
-      ∀(rgt: (BBT K V))
-      ∀(key: K)
-      (Pair Bool (BBT K V))
-    use ltn = λcmp λsize λnode_key λval λlft λrgt λhas_key
-      use P = λx (Pair Bool (BBT K V))
-      use new = λbool λlft
-        use map = (BBT.bin K V size node_key val lft rgt)
-        (Pair.new Bool (BBT K V) bool map)
-      (~(BBT.has.linear K V cmp has_key lft) P new)
-    use eql = λcmp λsize λnode_key λval λlft λrgt λhas_key
-      (Pair.new
-        Bool
-        (BBT K V)
-        Bool.true
-        (BBT.bin K V size node_key val lft rgt)
-      )
-    use gtn = λcmp λsize λnode_key λval λlft λrgt λhas_key
-      use P = λx (Pair Bool (BBT K V))
-      use new = λbool λrgt
-        use map = (BBT.bin K V size node_key val lft rgt)
-        (Pair.new Bool (BBT K V) bool rgt)
-      (~(BBT.has.linear K V cmp has_key rgt) P new)
-    ((~(cmp has_key node_key) P ltn eql gtn)
-      cmp
-      size
-      node_key
-      val
-      lft
-      rgt
-      has_key
-    )
-  use tip = (Pair.new Bool (BBT K V) Bool.false (BBT.tip K V))
-  (~map P bin tip)
+use BBT/{bin,tip}
+use Bool/{false,true}
+use Cmp/{ltn,eql,gtn}
 
-  
+linear <K> <V> (cmp: ∀(a: K) ∀(b: K) Cmp) (key: K) (map: (BBT K V)) : (Pair Bool (BBT K V)) =
+  match map {
+    bin:
+      match _ = (cmp key map.key) {
+        ltn:
+          match result = (linear cmp key map.lft) {
+            Pair/new:
+              (Pair/new result.fst (bin K V map.size map.key map.val result.snd map.rgt))
+          }
+        eql: (Pair/new true (bin K V map.size map.key map.val map.lft map.rgt))
+        gtn:
+          match result = (linear cmp key map.rgt) {
+            Pair/new:
+              (Pair/new result.fst (bin K V map.size map.key map.val map.lft result.snd))
+          }
+      }
+    tip: (Pair/new false (tip K V))
+  }
+
+
+
+//BBT.has.linear
+//: ∀(K: *)
+  //∀(V: *)
+  //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+  //∀(key: K)
+  //∀(map: (BBT K V))
+  //(Pair Bool (BBT K V))
+//= λK λV λcmp λhas_key λmap
+  //use P = λx (Pair Bool (BBT K V))
+  //use bin = λsize λnode_key λval λlft λrgt
+    //use P = λx
+      //∀(cmp: ∀(a: K) ∀(b: K) Cmp)
+      //∀(size: U60)
+      //∀(node_key: K)
+      //∀(val: V)
+      //∀(lft: (BBT K V))
+      //∀(rgt: (BBT K V))
+      //∀(key: K)
+      //(Pair Bool (BBT K V))
+    //use ltn = λcmp λsize λnode_key λval λlft λrgt λhas_key
+      //use P = λx (Pair Bool (BBT K V))
+      //use new = λbool λlft
+        //use map = (BBT.bin K V size node_key val lft rgt)
+        //(Pair.new Bool (BBT K V) bool map)
+      //(~(BBT.has.linear K V cmp has_key lft) P new)
+    //use eql = λcmp λsize λnode_key λval λlft λrgt λhas_key
+      //(Pair.new
+        //Bool
+        //(BBT K V)
+        //Bool.true
+        //(BBT.bin K V size node_key val lft rgt)
+      //)
+    //use gtn = λcmp λsize λnode_key λval λlft λrgt λhas_key
+      //use P = λx (Pair Bool (BBT K V))
+      //use new = λbool λrgt
+        //use map = (BBT.bin K V size node_key val lft rgt)
+        //(Pair.new Bool (BBT K V) bool rgt)
+      //(~(BBT.has.linear K V cmp has_key rgt) P new)
+    //((~(cmp has_key node_key) P ltn eql gtn)
+      //cmp
+      //size
+      //node_key
+      //val
+      //lft
+      //rgt
+      //has_key
+    //)
+  //use tip = (Pair.new Bool (BBT K V) Bool.false (BBT.tip K V))
+  //(~map P bin tip)

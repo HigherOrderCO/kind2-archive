@@ -1,0 +1,11 @@
+use List/{cons,nil}
+use Nat/{succ,zero}
+
+take <A> (n: Nat) (list: (List A)) : (List A) =
+  match n with (list: (List A)) {
+    zero: nil
+    succ: match list {
+      cons: (cons list.head (take n.pred list.tail))
+      nil: nil
+    }
+  }

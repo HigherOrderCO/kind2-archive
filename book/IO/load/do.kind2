@@ -1,3 +1,8 @@
-IO.load.do
-: ∀(file: String) (IO String)
-= λfile (IO.load String file λx (IO.done String x))
+do (file: String) : (IO String) =
+  (IO/load String file λx (IO/done String x))
+
+
+
+//IO.load.do
+//: ∀(file: String) (IO String)
+//= λfile (IO.load String file λx (IO.done String x))
