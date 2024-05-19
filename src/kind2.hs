@@ -596,7 +596,7 @@ termUnifySubst lvl neo (Src src val)     = Src src (termUnifySubst lvl neo val)
 termInfer :: Term -> Int -> Env Term
 termInfer term dep =
   -- trace ("infer: " ++ termShow term dep) $
-  termInferGo term dep
+    termInferGo term dep
 
 termInferGo :: Term -> Int -> Env Term
 

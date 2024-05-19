@@ -919,38 +919,22 @@ impl Term {
       }
     }
 
-    // 3. Create either `(~x <motive>)` or `(Type/fold/ _ <motive> x)`
-    if mat.fold {
-      term = Term::Let {
-        nam: mat.name.clone(), 
-        val: Box::new(mat.expr.clone()),
-        bod: Box::new(Term::App {
-          era: false,
-          fun: Box::new(Term::App {
-            era: true,
-            fun: Box::new(Term::App {
-              era: true,
-              fun: Box::new(Term::Var { nam: format!("{}/fold/", adt.name) }),
-              arg: Box::new(Term::Met {}),
-            }),
-            arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
-          }),
-          arg: Box::new(Term::Var { nam: mat.name.clone() }),
-        })
-      };
-    } else {
-      term = Term::Let {
-        nam: mat.name.clone(), 
-        val: Box::new(mat.expr.clone()),
-        bod: Box::new(Term::App {
-          era: false,
-          fun: Box::new(Term::Ins {
-            val: Box::new(Term::Var { nam: mat.name.clone() })
-          }),
-          arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
-        })
+    // 3. Create `(Type/fold|match <param_holes> <motive>)`
+    term = Term::Var {
+      nam: format!("{}/{}/", adt.name, if mat.fold { "fold" } else { "match" })
+    };
+    for _par in &adt.pars {
+      term = Term::App {
+        era: true,
+        fun: Box::new(term),
+        arg: Box::new(Term::Met {}),
       };
     }
+    term = Term::App {
+      era: true,
+      fun: Box::new(term),
+      arg: Box::new(Term::Var { nam: format!("{}.P", mat.name) }),
+    };
 
     // 4. Apply each constructor (by name)
     for ctr in &adt.ctrs {
@@ -961,7 +945,14 @@ impl Term {
       };
     }
 
-    // 5. Annotates with the moved var foralls
+    // 5. Apply the scrutinee
+    term = Term::App {
+      era: false,
+      fun: Box::new(term),
+      arg: Box::new(mat.expr.clone()),
+    };
+
+    // 6. Annotates with the moved var foralls
     if mat.with.len() > 0 {
       let mut ann_type = Term::Met {};
       for (nam, typ) in mat.with.iter().rev() {
@@ -979,7 +970,7 @@ impl Term {
       };
     }
 
-    // 6. Applies each moved var
+    // 7. Applies each moved var
     for (nam, _) in mat.with.iter() {
       term = Term::App {
         era: false,
@@ -988,7 +979,7 @@ impl Term {
       };  
     }
 
-    // 7. Create the local 'use' definition for each term
+    // 8. Create the local 'use' definition for each term
     for (i,ctr) in adt.ctrs.iter().enumerate().rev() {
       term = Term::Use {
         nam: format!("{}.{}", mat.name, ctr.name),
@@ -997,14 +988,14 @@ impl Term {
       };
     }
 
-    // 8. Create the local 'use' definition for the motive
+    // 9. Create the local 'use' definition for the motive
     term = Term::Use {
       nam: format!("{}.P", mat.name),
       val: Box::new(motive),
       bod: Box::new(term)
     };
 
-    // 9. Return 'term'
+    // 10. Return 'term'
     return term;
   }
 
