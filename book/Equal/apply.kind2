@@ -1,10 +1,12 @@
-//use Equal/{refl}
-
 apply <A: *> <B: *> <a: A> <b: B> (f: A -> B) (e: (Equal A a b)) : (Equal B (f a) (f b)) =
   match e {
-    Equal/refl: {=}
-  }
+    Equal/refl: ~λPλrefl(refl (f e.a))
+  }: (Equal B (f a) (f b))
 
+  //(Equal/match
+    //λaλbλe(Equal B (f a) (f b))
+    //λx ~λPλrefl(refl (f x))
+    //e)
 
 //Equal.apply
 //: ∀(A: *)

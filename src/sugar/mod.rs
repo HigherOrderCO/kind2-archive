@@ -919,17 +919,17 @@ impl Term {
       }
     }
 
-    // 3. Create `(Type/fold|match <param_holes> <motive>)`
+    // 3. Create `(Type/fold|match <motive>)`
     term = Term::Var {
-      nam: format!("{}/{}/", adt.name, if mat.fold { "fold" } else { "match" })
+      nam: format!("{}/{}", adt.name, if mat.fold { "fold" } else { "match" })
     };
-    for _par in &adt.pars {
-      term = Term::App {
-        era: true,
-        fun: Box::new(term),
-        arg: Box::new(Term::Met {}),
-      };
-    }
+    //for _par in &adt.pars {
+      //term = Term::App {
+        //era: true,
+        //fun: Box::new(term),
+        //arg: Box::new(Term::Met {}),
+      //};
+    //}
     term = Term::App {
       era: true,
       fun: Box::new(term),
@@ -994,6 +994,9 @@ impl Term {
       val: Box::new(motive),
       bod: Box::new(term)
     };
+
+    // Debug: Prints the generated term
+    //println!("{}", term.format().flatten(Some(800)));
 
     // 10. Return 'term'
     return term;
