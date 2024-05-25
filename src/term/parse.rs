@@ -82,9 +82,15 @@ impl<'i> KindParser<'i> {
     //println!("parsing ||{}", self.input[self.index..].replace("\n",""));
 
     // ALL ::= ∀(<name>: <term>) <term>
-    if self.starts_with("∀") {
+    // "forall" can be used as an ascii alternative to "∀"
+    if self.starts_with("∀") || self.starts_with("forall") {
       let ini = *self.index() as u64;
-      self.consume("∀")?;
+      if self.starts_with("∀") {
+          self.consume("∀")?;
+      } else if self.starts_with("forall") {
+          self.consume("forall")?;
+      }
+      self.skip_spaces();
       self.consume("(")?;
       let nam = self.parse_name()?;
       self.consume(":")?;
@@ -97,9 +103,15 @@ impl<'i> KindParser<'i> {
     }
 
     // LAM ::= λ<name> <term>
-    if self.starts_with("λ") {
+    // "lambda" can be used as an ascii alternative to "λ"
+    if self.starts_with("λ") || self.starts_with("lambda") {
       let ini = *self.index() as u64;
-      self.consume("λ")?;
+      if self.starts_with("λ") {
+        self.consume("λ")?;
+      } else if self.starts_with("lambda") {
+          self.consume("lambda")?;
+      }
+      self.skip_spaces();
       // Annotated
       if self.peek_one() == Some('(') {
         self.consume("(")?;
