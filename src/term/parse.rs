@@ -83,7 +83,9 @@ impl<'i> KindParser<'i> {
 
     // ALL ::= ∀(<name>: <term>) <term>
     // "forall" can be used as an ascii alternative to "∀"
-    if self.starts_with("∀") || self.starts_with("forall") {
+    if self.starts_with("∀") ||
+        self.starts_with("forall ") ||
+        self.starts_with("forall(") {
       let ini = *self.index() as u64;
       if self.starts_with("∀") {
           self.consume("∀")?;
@@ -104,7 +106,9 @@ impl<'i> KindParser<'i> {
 
     // LAM ::= λ<name> <term>
     // "lambda" can be used as an ascii alternative to "λ"
-    if self.starts_with("λ") || self.starts_with("lambda") {
+    if self.starts_with("λ") ||
+        self.starts_with("lambda ") ||
+        self.starts_with("lambda(") {
       let ini = *self.index() as u64;
       if self.starts_with("λ") {
         self.consume("λ")?;
