@@ -9,9 +9,8 @@
 -- will reimplement Prelude functions, and will use a primitive coding style.
 
 import Data.Char (chr, ord)
-import Prelude hiding (LT, GT, EQ)
+import Prelude hiding (LT, GT, EQ, map, even, reverse, elem)
 import Debug.Trace
-import Control.Monad (forM_)
 
 -- Kind2 Types
 -- -----------
@@ -106,6 +105,18 @@ data Map a = Leaf | Node (Maybe a) (Map a) (Map a) deriving Show
 
 -- Prelude
 -- -------
+
+even :: Int -> Bool
+even n = mod n 2 == 0
+
+reverse :: [a] -> [a] 
+reverse l =  reverseGo l [] where
+  reverseGo []     a = a
+  reverseGo (x:xs) a = reverseGo xs (x:a)
+
+elem :: Eq a => a -> [a] -> Bool
+elem a []     = False
+elem a (x:xs) = if a == x then True else elem a xs
 
 u60Show :: Int -> String
 u60Show n = u60ShowGo n "" where
@@ -571,8 +582,8 @@ termUnifySubst lvl neo (Ins val)         = Ins (termUnifySubst lvl neo val)
 termUnifySubst lvl neo (Ref nam val)     = Ref nam (termUnifySubst lvl neo val)
 termUnifySubst lvl neo (Let nam val bod) = Let nam (termUnifySubst lvl neo val) (\x -> termUnifySubst lvl neo (bod x))
 termUnifySubst lvl neo (Use nam val bod) = Use nam (termUnifySubst lvl neo val) (\x -> termUnifySubst lvl neo (bod x))
-termUnifySubst lvl neo (Met uid spn)     = Met uid (map (termUnifySubst lvl neo) spn)
-termUnifySubst lvl neo (Hol nam ctx)     = Hol nam (map (termUnifySubst lvl neo) ctx)
+termUnifySubst lvl neo (Met uid spn)     = Met uid (listMap (termUnifySubst lvl neo) spn)
+termUnifySubst lvl neo (Hol nam ctx)     = Hol nam (listMap (termUnifySubst lvl neo) ctx)
 termUnifySubst lvl neo Set               = Set
 termUnifySubst lvl neo U60               = U60
 termUnifySubst lvl neo (Num n)           = Num n
@@ -842,12 +853,19 @@ termCheckCompare src term expected detected dep = do
   equal <- termEqual expected detected dep
   if equal then do
     susp <- envTakeSusp
-    forM_ susp $ \(Check src val typ dep) -> do
-      termCheckGo src val typ dep
+    listCheck susp 
     return ()
   else do
     envLog (Error src expected detected term dep)
     envFail
+
+listCheck :: [Check] -> Env ()
+listCheck []     = do
+  return ()
+listCheck (x:xs) = do
+  let (Check src val typ dep) = x;
+  termCheck src val typ dep
+  listCheck xs
 
 termCheckDef :: Term -> Env ()
 termCheckDef (Ref nam (Ann chk val typ)) = termCheck 0 val typ 0 >> return ()
