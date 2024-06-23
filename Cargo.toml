@@ -2,13 +2,21 @@
 name = "kind2"
 version = "0.1.0"
 edition = "2021"
+default-run = "kind2"
 
 [[bin]]
 name = "kind2"
 path = "src/main.rs"
+
+[[bin]]
+name = "kindc"
+path = "src/kindc.rs"
 
 [dependencies]
 TSPL = "0.0.9"
 highlight_error = "0.1.1"
 im = "15.1.0"
 clap = "4.5.2"
+
+[build-dependencies]
+ghc = "0.1.0"

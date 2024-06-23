@@ -5,4 +5,4 @@ load <A> (file: String) (cont: String -> A) : A =
 
 //HVM.load
 //: ∀(A: *) ∀(file: String) ∀(cont: ∀(x: String) A) A
-//= λA λfile λcont (cont String.nil)
+//= λA λfile λcont (cont String/nil)

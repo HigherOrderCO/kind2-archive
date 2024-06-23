@@ -1,2 +1,2 @@
-String.cons (head: Char) (tail: String) : String =
+String/cons (head: Char) (tail: String) : String =
   ~λP λcons λnil (cons head tail)

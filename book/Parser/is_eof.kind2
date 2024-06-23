@@ -5,8 +5,8 @@ Parser.is_eof
   use cons = λcode.head λcode.tail
     (Parser.Result.done
       Bool
-      (String.cons code.head code.tail)
+      (String/cons code.head code.tail)
       Bool.false
     )
-  use nil = (Parser.Result.done Bool String.nil Bool.true)
+  use nil = (Parser.Result.done Bool String/nil Bool.true)
   (~(String.skip code) P cons nil)

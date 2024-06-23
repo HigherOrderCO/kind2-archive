@@ -10,3 +10,10 @@ demo/
 guide.txt
 .hvm
 .hvm/
+-e 
+# Compiled Haskell files
+*.hi
+*.o
+-e 
+# Hidden files
+.*

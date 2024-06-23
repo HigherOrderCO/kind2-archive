@@ -6,9 +6,9 @@ Kind.reduce.txt
     (Kind.reduce
       Bool.true
       (Kind.app
-        (Kind.app Kind.Book.String.cons (Kind.num x))
+        (Kind.app Kind.Book.String/cons (Kind.num x))
         (Kind.txt xs)
       )
     )
-  use nil = (Kind.reduce Bool.true Kind.Book.String.nil)
+  use nil = (Kind.reduce Bool.true Kind.Book.String/nil)
   (~txt P cons nil)

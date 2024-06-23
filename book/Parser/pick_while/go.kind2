@@ -8,15 +8,15 @@ Parser.pick_while.go
     use true = λhead λtail
       use P = λx (Parser.Result String)
       use done = λcode λvalue
-        (Parser.Result.done String code (String.cons head value))
+        (Parser.Result.done String code (String/cons head value))
       use fail = λerror (Parser.Result.fail String error)
       (~(Parser.pick_while.go cond tail) P done fail)
     use false = λhead λtail
       (Parser.Result.done
         String
-        (String.cons head tail)
-        String.nil
+        (String/cons head tail)
+        String/nil
       )
     (~(cond head) P true false head tail)
-  use nil = (Parser.Result.done String String.nil String.nil)
+  use nil = (Parser.Result.done String String/nil String/nil)
   (~code P cons nil)

@@ -1,3 +1,3 @@
 String.quote
 : String
-= (String.cons 34 String.nil)
+= (String/cons 34 String/nil)

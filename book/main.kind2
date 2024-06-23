@@ -1,0 +1,5 @@
+use Nat/{succ,zero}
+
+main : (List U60) =
+  let list = [10, 20]
+  list
