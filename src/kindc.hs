@@ -1086,7 +1086,12 @@ parseNat = do
 parseHol = do
   P.char '?'
   nam <- parseName
-  return $ Hol nam []
+  ctx <- P.option [] $ do
+    P.char '['
+    terms <- P.sepBy parseTerm (P.char ',')
+    P.char ']'
+    return terms
+  return $ Hol nam ctx
 
 parseMet = do
   P.char '_'
@@ -1103,7 +1108,7 @@ parseSrc = do
 parseName :: P.Parsec String () String
 parseName = do
   head <- P.letter
-  tail <- P.many (P.alphaNum <|> P.char '/' <|> P.char '.')
+  tail <- P.many (P.alphaNum <|> P.char '/' <|> P.char '.' <|> P.char '_')
   return (head : tail)
 
 parseOper = P.choice

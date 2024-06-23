@@ -12,8 +12,9 @@ impl Book {
 
   pub fn to_kindc(&self) -> String {
     let mut code = String::new();
+    let mut meta = 0;
     for (name, term) in &self.defs {
-      code.push_str(&format!("{} = {};\n", name, term.to_kindc(&mut 0)));
+      code.push_str(&format!("{} = {};\n", name, term.to_kindc(im::Vector::new(), &mut meta)));
     }
     code
   }

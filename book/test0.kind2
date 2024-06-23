@@ -9,4 +9,4 @@ test0
   ∀(b: B)
   A
 = λA λB λaa λab λba λbb λa λb
-  (ba (ab (aa a)))
+  (ba (ab (aa (aa a))))
