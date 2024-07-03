@@ -59,7 +59,7 @@ impl Show {
   pub fn glue(join: &str, child: Vec<Box<Show>>) -> Box<Show> {
     Show::many(Style::Glue, join, child)
   }
-    
+
   // Allocs a new Line node.
   pub fn line() -> Box<Show> {
     Box::new(Show::Line)

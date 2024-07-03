@@ -4,7 +4,7 @@
 -- This is a Haskell implementation of Kind2's proof kernel. It is based on the
 -- Calculus of Constructions, extended with Self-Types and U60 operations. This
 -- allows us to express arbitrary inductive types and proofs with a simple core.
--- 
+--
 -- HVM1 and HVM2 versions are provided. To make all versions similar, this file
 -- will reimplement Prelude functions, and will use a primitive coding style.
 
@@ -20,12 +20,12 @@ import Control.Monad (forM_)
 data Term
 
   -- Product: `∀(x: A) B`
-  = All String Term (Term -> Term) 
+  = All String Term (Term -> Term)
 
   -- Lambda: `λx f`
   | Lam String (Term -> Term)
 
-  -- Application: 
+  -- Application: `x y`
   | App Term Term
 
   -- Annotation: `{x: T}`

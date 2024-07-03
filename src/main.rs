@@ -192,7 +192,7 @@ fn main() {
         .long("use")
         .value_parser(["hs", "hvm2"])
         .default_value("hs")))
-    .subcommand(Command::new("normal")  
+    .subcommand(Command::new("normal")
       .about("Normalizes a term")
       .arg(Arg::new("name").required(true))
       .arg(Arg::new("level")
@@ -208,7 +208,7 @@ fn main() {
       .about("Auto-formats a file")
       .arg(Arg::new("name").required(true)))
     .subcommand(Command::new("compile")
-      .about("Compiles to HVM2")  
+      .about("Compiles to HVM2")
       .arg(Arg::new("name").required(true)))
     .subcommand(Command::new("compare").about("Runs internal comparison tests"))
     .get_matches();
