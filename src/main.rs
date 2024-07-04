@@ -4,7 +4,6 @@
 //./term/parse.rs//
 //./term/compile.rs//
 //./sugar/mod.rs//
-//./show/mod.rs//
 //./info/mod.rs//
 //./info/parse.rs//
 //./info/show.rs//
@@ -23,13 +22,11 @@ use std::process::Command as SysCommand;
 
 mod book;
 mod info;
-mod show;
 mod sugar;
 mod term;
 
 use book::*;
 use info::*;
-use show::*;
 use sugar::*;
 use term::*;
 
@@ -123,10 +120,9 @@ fn auto_format(file_name: &str) {
   let base = std::env::current_dir().expect("failed to get current directory");
   let file = base.join(format!("{file_name}.kind2"));
   let text = std::fs::read_to_string(&file).expect("failed to read file");
-  let fid  = Book::new().get_file_id(&file.to_str().unwrap().to_string());
+  let fid  = Book::new().get_file_id(file.to_str().unwrap());
   let book = KindParser::new(&text).parse_book(file_name, fid).expect("failed to parse book");
-  let form = book.defs.iter().map(|(name, term)| book.format_def(name, term)).collect();
-  let form = Show::pile("\n\n", form).flatten(Some(60));
+  let form = book.to_string();
   std::fs::write(&file, form).expect(&format!("failed to write to file '{}'", file_name));
 }
 
