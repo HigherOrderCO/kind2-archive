@@ -77,7 +77,7 @@ impl Display for Term {
       Term::Lam { .. } => {
         let mut bod = self;
         while let Term::Lam { era: _, nam, bod: in_bod } = bod {
-          write!(f, "λ{nam} ");
+          write!(f, "λ{nam} ")?;
           bod = in_bod;
         }
 
