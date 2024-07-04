@@ -43,7 +43,7 @@ pub struct Match {
 }
 
 // Examples:
-// 
+//
 // The Nat sugar is merely a shortcut. For example:
 //
 //   (Nat.succ (Nat.succ (Nat.succ Nat.zero)))
@@ -57,7 +57,7 @@ pub struct Match {
 //   (List/cons _ a (List/cons _ b (List/cons _ c (List/nil _))))
 //
 // Is converted to and from:
-//    
+//
 //   [a, b, c]
 //
 // The Equal sugar is also a shortcut. For example:
@@ -100,7 +100,7 @@ pub struct Match {
 //           Term::Var { nam: "zero".to_string() },
 //         ],
 //       },
-//       Constructor { 
+//       Constructor {
 //         name: "cons".to_string(),
 //         flds: vec![
 //           ("len".to_string(), Term::Var { nam: "Nat".to_string() }),
@@ -111,7 +111,7 @@ pub struct Match {
 //               arg: Box::new(Term::Var { nam: "A".to_string() }),
 //             }),
 //             arg: Box::new(Term::Var { nam: "len".to_string() }),
-//           }),        
+//           }),
 //         ],
 //         idxs: vec![
 //           Term::Var { nam: "A".to_string() },
@@ -124,7 +124,7 @@ pub struct Match {
 //     ],
 //   };
 //
-// A pattern-match is represented as: 
+// A pattern-match is represented as:
 //
 //   match name = expr with (a: A) (b: B) ... {
 //     ADT.foo: ...
@@ -286,7 +286,7 @@ impl Term {
 }
 
 impl List {
-  
+
   pub fn format(&self) -> Box<Show> {
     if self.vals.len() == 0 {
       return Show::text("[]");
@@ -357,16 +357,16 @@ impl Term {
           fun: Box::new(Term::Var { nam: "Equal".to_string() }),
           arg: Box::new(Term::Met {}),
         }),
-        arg: Box::new(eq.a.clone()),  
+        arg: Box::new(eq.a.clone()),
       }),
-      arg: Box::new(eq.b.clone()),    
+      arg: Box::new(eq.b.clone()),
     }
   }
 
 }
 
 impl Equal {
-  
+
   pub fn format(&self) -> Box<Show> {
     Show::glue(" ", vec![
       self.a.format_go(),
@@ -490,7 +490,7 @@ impl Term {
       }
 
       // Now, the ctyp will be in the form (P I0 I1 ... (Ctr P0 P1 ... F0 F1 ...))
-      
+
       // Skips the outermost application
       if let Term::App { era: _, fun: ctyp_fun, arg: _ } = ctyp {
         ctyp = ctyp_fun;
@@ -513,10 +513,10 @@ impl Term {
       } else {
         return None;
       }
-      
+
       ctr_idxs.reverse();
       ctrs.push(Constructor { name: nam.clone(), flds, idxs: ctr_idxs });
-      
+
       term = bod;
     }
 
@@ -526,7 +526,7 @@ impl Term {
   // Builds a λ-encoded Algebraic Data Type definition from an ADT struct.
   pub fn new_adt(adt: &ADT) -> Term {
     // 1. Builds the self type: (Type P0 P1 ... I0 I1 ...)
-    
+
     // Starts with the type name
     let mut self_type = Term::Var { nam: adt.name.clone() };
 
@@ -541,7 +541,7 @@ impl Term {
     }
 
     // 2. Builds the motive type: ∀(I0: I0.TY) ∀(I1: I1.TY) ... ∀(x: (Type P0 P1 ... I0 I1 ...)) *
-    
+
     // Starts with the witness type: ∀(x: (Type P0 P1 ... I0 I1 ...)) *
     let mut motive_type = Term::All {
       era: false,
@@ -559,7 +559,7 @@ impl Term {
         bod: Box::new(motive_type),
       };
     }
-    
+
     // 3. Builds the final term, starting with the self application: (P I0 I1 ... self)
     let mut term = Term::Var { nam: "P".to_string() };
 
@@ -635,7 +635,7 @@ impl Term {
       // And quantifies the constructor
       term = Term::All {
         era: false,
-        nam: ctr.name.clone(), 
+        nam: ctr.name.clone(),
         inp: Box::new(ctr_term),
         bod: Box::new(term),
       };
@@ -665,7 +665,7 @@ impl Term {
 }
 
 impl ADT {
-  
+
   // Loads an ADT from its λ-encoded file.
   pub fn load(name: &str) -> Result<ADT, String> {
     let book = Book::boot(".", name)?;
@@ -686,7 +686,7 @@ impl ADT {
       Err(format!("Cannot find definition for type '{}'.", name))
     }
   }
-  
+
   // Formats an ADT
   pub fn format(&self) -> Box<Show> {
 
@@ -724,7 +724,7 @@ impl ADT {
             Show::text(": "),
           ]),
           typ.format_go(),
-          Show::text(")"),  
+          Show::text(")"),
         ]));
       }
       // Constructor tail: return
@@ -976,7 +976,7 @@ impl Term {
         era: false,
         fun: Box::new(term),
         arg: Box::new(Term::Var { nam: nam.clone() }),
-      };  
+      };
     }
 
     // 8. Create the local 'use' definition for each term
@@ -1012,7 +1012,7 @@ impl Match {
         Show::text(if self.fold { "fold" } else { "match" }),
         Show::text(&self.name),
         Show::text("="),
-        self.expr.format_go(),  
+        self.expr.format_go(),
       ]),
       Show::glue(" ", vec![
         Show::text("{"),
@@ -1045,21 +1045,21 @@ impl<'i> KindParser<'i> {
     self.consume(if fold { "fold " } else { "match " })?;
     let name = self.parse_name()?;
     self.skip_trivia();
-    let expr = if self.peek_one() == Some('=') { 
+    let expr = if self.peek_one() == Some('=') {
       self.consume("=")?;
       self.parse_term(fid, uses)?
     } else {
-      Term::Var { nam: name.clone() }  
+      Term::Var { nam: name.clone() }
     };
     // Parses the with clause: 'with (a: A) (b: B) ...'
     let mut with = Vec::new();
     self.skip_trivia();
     if self.peek_many(5) == Some("with ") {
       self.consume("with")?;
-      self.skip_trivia();  
+      self.skip_trivia();
       while self.peek_one() == Some('(') {
         self.consume("(")?;
-        let mov_name = self.parse_name()?;  
+        let mov_name = self.parse_name()?;
         self.consume(":")?;
         let mov_type = self.parse_term(fid, uses)?;
         self.consume(")")?;
