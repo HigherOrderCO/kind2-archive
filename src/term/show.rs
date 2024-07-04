@@ -66,14 +66,9 @@ impl Display for Term {
     match self {
       Term::All { .. } => {
         let mut bod = self;
-        while let Term::All {
-          era: _,
-          nam,
-          inp,
-          bod: in_bod,
-        } = bod
-        {
+        while let Term::All { era: _, nam, inp, bod: in_bod } = bod {
           write!(f, "∀({nam}: {inp}) ")?;
+          bod = in_bod;
         }
 
         write!(f, "{bod}")
@@ -81,12 +76,7 @@ impl Display for Term {
 
       Term::Lam { .. } => {
         let mut bod = self;
-        while let Term::Lam {
-          era: _,
-          nam,
-          bod: in_bod,
-        } = bod
-        {
+        while let Term::Lam { era: _, nam, bod: in_bod } = bod {
           write!(f, "λ{nam} ");
           bod = in_bod;
         }
@@ -97,12 +87,7 @@ impl Display for Term {
       Term::App { .. } => {
         let mut fun = self;
         let mut args = vec![];
-        while let Term::App {
-          era: _,
-          fun: in_fun,
-          arg,
-        } = fun
-        {
+        while let Term::App { era: _, fun: in_fun, arg } = fun {
           args.push(arg.to_string());
           fun = in_fun;
         }
@@ -111,83 +96,23 @@ impl Display for Term {
         write!(f, "({fun} {})", args.join(" "))
       }
 
-      Term::Ann { chk: _, val, typ: _ } => {
-        write!(f, "{val}")
-      }
-
-      Term::Slf { nam, typ, bod } => {
-        write!(f, "$({nam}: {typ}) {bod}")
-      }
-
-      Term::Ins { val } => {
-        write!(f, "~{val}")
-      }
-
-      Term::Set => {
-        write!(f, "*")
-      }
-
-      Term::U60 => {
-        write!(f, "U60")
-      }
-
-      Term::Num { val } => {
-        write!(f, "{val}")
-      }
-
-      Term::Op2 { opr, fst, snd } => {
-        write!(f, "({opr} {fst} {snd})")
-      }
-
-      Term::Swi { nam, x, z, s, p } => {
-        write!(f, "switch {nam} = {x} {{0: {z} _: {s}}}: {p}")
-      }
-
-      Term::Let { nam, val, bod } => {
-        write!(f, "let {nam} = {val}; {bod}")
-      }
-
-      Term::Use { nam, val, bod } => {
-        write!(f, "use {nam} = {val}; {bod}")
-      }
-
-      Term::Hol { nam } => {
-        write!(f, "?{nam}")
-      }
-
-      Term::Met {} => {
-        write!(f, "_")
-      }
-
-      Term::Var { nam } => {
-        write!(f, "{nam}")
-      }
-
-      Term::Src { src: _, val } => {
-        write!(f, "{val}")
-      }
-
-      Term::Txt { txt } => {
-        write!(f, "\"{txt}\"")
-      }
-
-      Term::Nat { nat } => {
-        write!(f, "{nat}")
-      }
-
-      Term::Mch { mch } => {
-        write!(f, "match {name} = {expr} {{", name = mch.name, expr = mch.expr)?;
-        for (nam, bod) in mch.cses {
-          write!(f, "{nam}: {bod};")?;
-        }
-        write!(f, "}}")?;
-
-        if let Some(moti) = mch.moti {
-          write!(f, ": {moti}")?;
-        }
-
-        Ok(())
-      }
+      Term::Ann { chk: _, val, typ: _ } => write!(f, "{val}"),
+      Term::Slf { nam, typ, bod } => write!(f, "$({nam}: {typ}) {bod}"),
+      Term::Ins { val } => write!(f, "~{val}"),
+      Term::Set => write!(f, "*"),
+      Term::U60 => write!(f, "U60"),
+      Term::Num { val } => write!(f, "{val}"),
+      Term::Op2 { opr, fst, snd } => write!(f, "({opr} {fst} {snd})"),
+      Term::Swi { nam, x, z, s, p } => write!(f, "switch {nam} = {x} {{0: {z} _: {s}}}: {p}"),
+      Term::Let { nam, val, bod } => write!(f, "let {nam} = {val}; {bod}"),
+      Term::Use { nam, val, bod } => write!(f, "use {nam} = {val}; {bod}"),
+      Term::Hol { nam } => write!(f, "?{nam}"),
+      Term::Met {} => write!(f, "_"),
+      Term::Var { nam } => write!(f, "{nam}"),
+      Term::Src { src: _, val } => write!(f, "{val}"),
+      Term::Txt { txt } => write!(f, "\"{txt}\""),
+      Term::Nat { nat } => write!(f, "{nat}"),
+      Term::Mch { mch } => write!(f, "{mch}"),
     }
   }
 }
