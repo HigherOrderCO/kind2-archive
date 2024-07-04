@@ -1,55 +1,30 @@
-use crate::{*};
+use std::fmt::Display;
+
+use crate::*;
 
 impl Book {
-
   pub fn show(&self) -> String {
-    return self.format().flatten(None);
+    self.to_string()
   }
+}
 
-  pub fn format_def(&self, name: &str, term: &Term) -> Box<Show> {
-    match term {
-      Term::Ann { chk: _, val, typ } => {
-        Show::glue("", vec![
-          Show::text(name),
-          Show::line(),
-          Show::glue("", vec![
-            Show::text(": "),
-            Show::inc(),
-            typ.format(),
-            Show::dec(),
-          ]),
-          Show::line(),
-          Show::glue("", vec![
-            Show::text("= "),
-            Show::inc(),
-            val.format(),
-            Show::dec(),
-          ]),
-        ])
-      },
-      val => {
-        Show::glue("", vec![
-          Show::text(name),
-          Show::line(),
-          Show::glue("", vec![
-            Show::text("="),
-            Show::inc(),
-            val.format(),
-            Show::dec(),
-          ]),
-        ])
+impl Display for Book {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    for (i, (name, term)) in self.defs.iter().enumerate() {
+      write!(f, "{name}")?;
+
+      if let Term::Ann { chk: _, val, typ } = term {
+        write!(f, ": {typ} = {val}")?;
+      } else {
+        write!(f, " = {term}")?;
+      }
+
+      if i < self.defs.len() - 1 {
+        writeln!(f)?;
+        writeln!(f)?;
       }
     }
-  }
 
-  pub fn format(&self) -> Box<Show> {
-    Show::glue("", self.defs.iter().map(|(name, term)| {
-      Show::glue("", vec![
-        self.format_def(&name, term),
-        Show::line(),
-        Show::line(),
-      ])
-    }).collect())
+    Ok(())
   }
-
 }
