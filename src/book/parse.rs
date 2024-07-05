@@ -158,7 +158,7 @@ impl Term {
     }
 
     // NOTE: match-passthrough removed due to problems. For example:
-    // U60.if (x: U60) (P: *) (t: P) (f: P) : P = switch x { 0: t _: f }
+    // U48.if (x: U48) (P: *) (t: P) (f: P) : P = switch x { 0: t _: f }
     // This wouldn't check, because 'P' is moved inside, becoming a different 'P'.
     // I think automatic behaviors like this are dangerous and should be avoided.
 

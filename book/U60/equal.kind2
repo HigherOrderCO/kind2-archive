@@ -1,6 +1,6 @@
 use Bool/{true,false}
 
-equal (a: U60) (b: U60) : Bool =
+equal (a: U48) (b: U48) : Bool =
   switch x = (== a b) {
     0: false
     _: true 

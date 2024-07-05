@@ -1,7 +1,0 @@
-test8
-: ∀(b: Bool) (~b λx(*) U60 U60)
-= λb (~b _h ?A ?B)
-
-//test8
-//: U60
-//= (U60.test 0)

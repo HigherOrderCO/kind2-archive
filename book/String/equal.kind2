@@ -4,7 +4,7 @@ String/equal (a: String) (b: String) : Bool =
     use P = λx ∀(a.head: Char) ∀(a.tail: String) Bool
     use cons = λb.head λb.tail λa.head λa.tail
       (Bool/and
-        (U60/equal a.head b.head)
+        (U48/equal a.head b.head)
         (String/equal a.tail b.tail)
       )
     use nil = λa.head λa.tail Bool/false

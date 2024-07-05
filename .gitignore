@@ -18,3 +18,7 @@ guide.txt
 -e 
 # Hidden files
 .*
+# .bak files
+*.bak
+# all tmp/ directories
+tmp/

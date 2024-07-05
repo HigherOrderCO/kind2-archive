@@ -32,7 +32,7 @@ def to_map(t):
     case Arr/Node:
       return merge(to_map(t.a), to_map(t.b))
 
-# ToArr : U60 -> Map -> Arr
+# ToArr : U48 -> Map -> Arr
 def to_arr(x, m):
   match m:
     case Map_/Free:
@@ -58,7 +58,7 @@ def merge(a, b):
         case Map_/Both:
           return Map_/Both{ a: merge(a.a, b.a), b: merge(a.b, b.b) }
   
-# Radix : U60 -> Map
+# Radix : U48 -> Map
 def radix(n):
   r = Map_/Used
   r = swap(n & 1, r, Map_/Free)
@@ -105,7 +105,7 @@ def reverse(t):
     case Arr/Node:
       return Arr/Node{ a: reverse(t.b), b: reverse(t.a) }
 
-# Sum : Arr -> U60
+# Sum : Arr -> U48
 def sum(t):
   match t:
     case Arr/Null:
@@ -115,7 +115,7 @@ def sum(t):
     case Arr/Node:
       return sum(t.a) + sum(t.b)
 
-# Gen : U60 -> Arr
+# Gen : U48 -> Arr
 def gen(n):
   return gen_go(n, 0)
 

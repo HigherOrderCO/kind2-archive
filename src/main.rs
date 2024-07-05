@@ -43,7 +43,7 @@ fn check(name: &str) {
     println!("{}", info.pretty(&book));
   }
   if stderr.is_empty() && infos.is_empty() {
-    println!("check!");
+    println!("Checked.");
   }
   eprintln!("{stderr}");
 }

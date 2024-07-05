@@ -1,2 +1,2 @@
-U60/name (n: U60) : String =
-  (String/Chunk/build (U60/name/go (+ n 1)))
+U48/name (n: U48) : String =
+  (String/Chunk/build (U48/name/go (+ n 1)))

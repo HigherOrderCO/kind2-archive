@@ -1,3 +1,0 @@
-test5
-: ∀(x: Bool) (Equal Bool (Bool.not (Bool.not x)) x)
-= λb (~b ?A ?T ?F)

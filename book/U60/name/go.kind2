@@ -1,11 +1,11 @@
-U60.name.go
-: ∀(n: U60) String.Chunk
+U48.name.go
+: ∀(n: U48) String.Chunk
 = λn
   switch n = n {
     0: λnil nil
     _: λnil
     (String/cons
       (+ 97 (% n-1 26))
-      (U60.name.go (/ n-1 26) nil)
+      (U48.name.go (/ n-1 26) nil)
     ) 
   }: String.Chunk

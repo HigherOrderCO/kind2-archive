@@ -1,3 +1,5 @@
+//./../sugar/mod.rs//
+
 use crate::{*};
 
 impl Oper {
@@ -142,8 +144,8 @@ impl Term {
       Term::Set => {
         Show::text("*")
       },
-      Term::U60 => {
-        Show::text("U60")
+      Term::U48 => {
+        Show::text("U48")
       },
       Term::Num { val } => {
         Show::text(&format!("{}", val))
@@ -229,33 +231,57 @@ impl Term {
       Term::Nat { nat } => {
         Show::text(&format!("{}", nat))
       },
-      Term::Mch { mch } => {
-        Show::call(" ", vec![
-          Show::glue(" ", vec![
-            Show::text("match"),
-            Show::text(&mch.name),
-            Show::text("= "),
-            mch.expr.format_go(),
-            Show::text("{"),
-          ]),
-          Show::pile("; ", mch.cses.iter().map(|(nam, bod)| {
-            Show::glue("", vec![
-              Show::text(nam),
-              Show::text(": "),
-              bod.format_go(),
-            ])
-          }).collect()),
-          Show::glue("", vec![
-            Show::text("}"),
-          ]),
-          mch.moti.as_ref().map_or(
-            Show::text(""),
-            |bod| Show::glue("", vec![
-              Show::text(": "),
-              bod.format_go(),
-            ])  
-          ),
-        ])
+      Term::Mch { mch: _ } => {
+        // FIXME: isn't this unreachable?
+        unreachable!()
+        //Show::call(" ", vec![
+          //Show::glue(" ", vec![
+            //Show::text("match"),
+            //Show::text(&mch.name),
+            //if let Some(expr) = &mch.expr {
+              //Show::glue(" ", vec![
+                //Show::text("="),
+                //expr.format_go(),
+              //])
+            //} else {
+              //Show::text("")
+            //},
+            //if !mch.with.is_empty() {
+              //Show::glue(" ", vec![
+                //Show::text("with"),
+                //Show::pile(" ", mch.with.iter().map(|(name, typ)| {
+                  //Show::call("", vec![
+                    //Show::text("("),
+                    //Show::text(name),
+                    //Show::text(":"),
+                    //typ.format_go(),
+                    //Show::text(")"),
+                  //])
+                //}).collect()),
+              //])
+            //} else {
+              //Show::text("")
+            //},
+            //Show::text("{"),
+          //]),
+          //Show::pile("; ", mch.cses.iter().map(|(nam, bod)| {
+            //Show::glue("", vec![
+              //Show::text(nam),
+              //Show::text(": "),
+              //bod.format_go(),
+            //])
+          //}).collect()),
+          //Show::glue("", vec![
+            //Show::text("}"),
+          //]),
+          //mch.moti.as_ref().map_or(
+            //Show::text(""),
+            //|bod| Show::glue("", vec![
+              //Show::text(": "),
+              //bod.format_go(),
+            //])  
+          //),
+        //])
       },
     }
   }

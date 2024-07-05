@@ -7,7 +7,7 @@ use Tree/{node,leaf}
 //  /   \   /   \       (4)     (9)
 // (1) (2) (3) (4)       
 
-sum (x: (Tree U60)) : U60 =
+sum (x: (Tree U48)) : U48 =
   fold x {
     node: (+ x.val (+ x.lft x.rgt))
     leaf: 0

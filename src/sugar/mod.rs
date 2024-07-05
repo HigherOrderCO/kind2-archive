@@ -36,7 +36,7 @@ pub struct Match {
   pub adt: String, // datatype
   pub fold: bool, // is this a fold?
   pub name: String, // scrutinee name
-  pub expr: Term, // structinee expression
+  pub expr: Option<Term>, // structinee expression
   pub with: Vec<(String,Term)>, // terms to move in
   pub cses: Vec<(String,Term)>, // matched cases
   pub moti: Option<Term>, // motive
@@ -174,14 +174,14 @@ pub struct Match {
 // For a full example, the expression:
 //
 //   match x = (f arg) with (a: A) (b: B) {
-//     Vector.cons: (U60.add x.head (sum x.tail))
+//     Vector.cons: (U48.add x.head (sum x.tail))
 //     Vector.nil: #0
-//   }: #U60
+//   }: #U48
 //
 // Is converted to:
 //
-//   use x.P = λx.len λx ∀(a: A) ∀(b: B) #U60
-//   use x.cons = λx.head λx.tail λa λb ((U60.add x.head) (sum x.tail))
+//   use x.P = λx.len λx ∀(a: A) ∀(b: B) #U48
+//   use x.cons = λx.head λx.tail λa λb ((U48.add x.head) (sum x.tail))
 //   use x.nil = λx.len λa λb #0
 //   (({(((~(f arg) x.P) x.cons) x.nil): ∀(a: A) ∀(b: B) _} a) b)
 
@@ -961,7 +961,7 @@ impl Term {
     term = Term::App {
       era: false,
       fun: Box::new(term),
-      arg: Box::new(mat.expr.clone()),
+      arg: Box::new(Term::Var { nam: mat.name.clone() }),
     };
 
     // 6. Annotates with the moved var foralls
@@ -1007,6 +1007,15 @@ impl Term {
       bod: Box::new(term)
     };
 
+    // 10. Create the local 'let' for the expr
+    if let Some(expr) = &mat.expr {
+      term = Term::Let {
+        nam: mat.name.clone(),
+        val: Box::new(expr.clone()),
+        bod: Box::new(term),
+      };
+    }
+
     // Debug: Prints the generated term
     //println!("{}", term.format().flatten(Some(800)));
 
@@ -1023,8 +1032,30 @@ impl Match {
       Show::glue(" ", vec![
         Show::text(if self.fold { "fold" } else { "match" }),
         Show::text(&self.name),
-        Show::text("="),
-        self.expr.format_go(),  
+        if let Some(expr) = &self.expr {
+          Show::glue(" ", vec![
+            Show::text("="),
+            expr.format_go(),
+          ])
+        } else {
+          Show::text("")
+        },
+        if !self.with.is_empty() {
+          Show::glue(" ", vec![
+            Show::text("with"),
+            Show::pile(" ", self.with.iter().map(|(name, typ)| {
+              Show::call("", vec![
+                Show::text("("),
+                Show::text(name),
+                Show::text(":"),
+                typ.format_go(),
+                Show::text(")"),
+              ])
+            }).collect()),
+          ])
+        } else {
+          Show::text("")
+        },
       ]),
       Show::glue(" ", vec![
         Show::text("{"),
@@ -1059,9 +1090,9 @@ impl<'i> KindParser<'i> {
     self.skip_trivia();
     let expr = if self.peek_one() == Some('=') { 
       self.consume("=")?;
-      self.parse_term(fid, uses)?
+      Some(self.parse_term(fid, uses)?)
     } else {
-      Term::Var { nam: name.clone() }  
+      None
     };
     // Parses the with clause: 'with (a: A) (b: B) ...'
     let mut with = Vec::new();
@@ -1136,6 +1167,9 @@ impl<'i> KindParser<'i> {
     } else {
       None
     };
+
+
+
     return Ok(Match { adt, fold, name, expr, with, cses, moti });
   }
 

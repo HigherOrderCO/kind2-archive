@@ -8,8 +8,8 @@ Kind.Term.parser.num
       (Parser.text "")
       λ_
       (Kind.Term.parser.bind
-        U60
-        U60.parser.decimal
+        U48
+        U48.parser.decimal
         λnum (Kind.Term.parser.pure λscp (Kind.num num))
       )
     )

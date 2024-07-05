@@ -80,7 +80,7 @@ impl Term {
       Term::Set => {
         format!("0")
       },
-      Term::U60 => {
+      Term::U48 => {
         format!("0")
       },
       Term::Num { val } => {
@@ -161,7 +161,7 @@ impl Term {
         format!("~{}", val.to_kindc(env.clone(), met))
       },
       Term::Set => "*".to_string(),
-      Term::U60 => "U60".to_string(),
+      Term::U48 => "U48".to_string(),
       Term::Num { val } => val.to_string(),
       Term::Op2 { opr, fst, snd } => {
         format!("({} {} {})", opr.to_kindc(), fst.to_kindc(env.clone(), met), snd.to_kindc(env.clone(), met))

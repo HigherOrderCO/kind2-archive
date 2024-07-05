@@ -2,7 +2,7 @@
 -- ==========
 --
 -- This is a Haskell implementation of Kind2's proof kernel. It is based on the
--- Calculus of Constructions, extended with Self-Types and U60 operations. This
+-- Calculus of Constructions, extended with Self-Types and U48 operations. This
 -- allows us to express arbitrary inductive types and proofs with a simple core.
 
 import Control.Monad (forM_)
@@ -52,16 +52,16 @@ data Term
   -- Type : Type
   | Set
 
-  -- U60 Type
-  | U60
+  -- U48 Type
+  | U48
 
-  -- U60 Value
+  -- U48 Value
   | Num Int
 
-  -- U60 Binary Operation
+  -- U48 Binary Operation
   | Op2 Oper Term Term
 
-  -- U60 Elimination
+  -- U48 Elimination
   | Swi String Term Term (Term -> Term) (Term -> Term)
 
   -- Inspection Hole
@@ -185,7 +185,7 @@ bind term = go term [] where
   go (Let nam val bod) ctx = Let nam (go val ctx) (\x -> go (bod (Var nam 0)) ((nam, x) : ctx))
   go (Use nam val bod) ctx = Use nam (go val ctx) (\x -> go (bod (Var nam 0)) ((nam, x) : ctx))
   go Set               ctx = Set
-  go U60               ctx = U60
+  go U48               ctx = U48
   go (Num val)         ctx = Num val
   go (Op2 opr fst snd) ctx = Op2 opr (go fst ctx) (go snd ctx)
   go (Swi nam x z s p) ctx = Swi nam (go x ctx) (go z ctx) (\k -> go (s (Var (nam ++ "-1") 0)) ((nam ++ "-1", k) : ctx)) (\k -> go (p (Var nam 0)) ((nam, k) : ctx))
@@ -292,7 +292,7 @@ normal book fill lv term dep = normalGo book fill lv (reduce book fill lv term) 
   normalGo book fill lv (Use nam val bod) dep = Use nam (normal book fill lv val dep) (\x -> normal book fill lv (bod (Var nam dep)) (dep + 1))
   normalGo book fill lv (Hol nam ctx)     dep = Hol nam ctx
   normalGo book fill lv Set               dep = Set
-  normalGo book fill lv U60               dep = U60
+  normalGo book fill lv U48               dep = U48
   normalGo book fill lv (Num val)         dep = Num val
   normalGo book fill lv (Op2 opr fst snd) dep = Op2 opr (normal book fill lv fst dep) (normal book fill lv snd dep)
   normalGo book fill lv (Swi nam x z s p) dep = Swi nam (normal book fill lv x dep) (normal book fill lv z dep) (\k -> normal book fill lv (s (Var (nam ++ "-1") dep)) dep) (\k -> normal book fill lv (p (Var nam dep)) dep)
@@ -315,7 +315,7 @@ normal book fill lv term dep = normalGo book fill lv (reduce book fill lv term) 
 
 equal :: Term -> Term -> Int -> Env Bool
 equal a b dep = do
-  -- trace ("= " ++ termStr a dep ++ "\n? " ++ termStr b dep) $ do
+  -- trace ("== " ++ termStr a dep ++ "\n.. " ++ termStr b dep) $ do
     book <- envGetBook
     fill <- envGetFill
     let a' = reduce book fill 2 a
@@ -335,7 +335,10 @@ tryIdentical a b dep = do
     else envRewind state >> envPure False
 
 similar :: Term -> Term -> Int -> Env Bool
-similar a b dep = go a b dep where
+similar a b dep =
+  -- trace ("~~ " ++ termStr a dep ++ "\n.. " ++ termStr b dep) $ do
+  go a b dep
+  where
   go (All aNam aInp aBod) (All bNam bInp bBod) dep = do
     eInp <- equal aInp bInp dep
     eBod <- equal (aBod (Var aNam dep)) (bBod (Var bNam dep)) (dep + 1)
@@ -401,7 +404,7 @@ identical a b dep = go a b dep where
     return True
   go a (Hol bNam bCtx) dep =
     return True
-  go U60 U60 dep =
+  go U48 U48 dep =
     return True
   go (Num aVal) (Num bVal) dep =
     return (aVal == bVal)
@@ -455,17 +458,19 @@ unify uid spn b dep = do
   let unsolved = not (IM.member uid fill) -- is this hole not already solved?
   let solvable = unifyValid fill spn [] -- does the spine satisfies conditions?
   let no_loops = not $ unifyIsRec book fill uid b dep -- is the solution not recursive?
-  -- If all is ok, generate the solution and return true
-  if unsolved && solvable && no_loops then do
-    let solution = unifySolve book fill uid spn b
-    envFill uid solution
-    return True
-  -- Otherwise, return true iff both are identical metavars
-  else case b of
-    (Met bUid bSpn) -> return $ uid == bUid
-    other           -> return False
+  -- trace ("unify: " ++ show uid ++ " " ++ termStr b dep ++ " | " ++ show unsolved ++ " " ++ show solvable ++ " " ++ show no_loops) $ do
+  do
+    -- If all is ok, generate the solution and return true
+    if unsolved && solvable && no_loops then do
+      let solution = unifySolve book fill uid spn b
+      envFill uid solution
+      return True
+    -- Otherwise, return true iff both are identical metavars
+    else case b of
+      (Met bUid bSpn) -> return $ uid == bUid
+      other           -> return False
 
--- Checks if an problem is solveable by pattern unification.
+-- Checks if a problem is solveable by pattern unification.
 unifyValid :: Fill -> [Term] -> [Int] -> Bool
 unifyValid fill []        vars = True
 unifyValid fill (x : spn) vars = case reduce M.empty fill 0 x of
@@ -512,7 +517,7 @@ unifySubst lvl neo (Use nam val bod) = Use nam (unifySubst lvl neo val) (\x -> u
 unifySubst lvl neo (Met uid spn)     = Met uid (map (unifySubst lvl neo) spn)
 unifySubst lvl neo (Hol nam ctx)     = Hol nam (map (unifySubst lvl neo) ctx)
 unifySubst lvl neo Set               = Set
-unifySubst lvl neo U60               = U60
+unifySubst lvl neo U48               = U48
 unifySubst lvl neo (Num n)           = Num n
 unifySubst lvl neo (Op2 opr fst snd) = Op2 opr (unifySubst lvl neo fst) (unifySubst lvl neo snd)
 unifySubst lvl neo (Swi nam x z s p) = Swi nam (unifySubst lvl neo x) (unifySubst lvl neo z) (\k -> unifySubst lvl neo (s k)) (\k -> unifySubst lvl neo (p k))
@@ -612,16 +617,16 @@ inferGo Set dep = do
   return Set
 
 -- ...
--- --------- U60-type
--- U60 : Set
-inferGo U60 dep = do
+-- --------- U48-type
+-- U48 : Set
+inferGo U48 dep = do
   return Set
 
 -- ...
--- ----------- U60-value
--- <num> : U60
+-- ----------- U48-value
+-- <num> : U48
 inferGo (Num num) dep = do
-  return U60
+  return U48
 
 -- ...
 -- -------------- String-literal
@@ -635,26 +640,26 @@ inferGo (Txt txt) dep = do
 inferGo (Nat val) dep = do
   return (Ref "Nat")
 
--- fst : U60
--- snd : U60
--- ----------------- U60-operator
--- (+ fst snd) : U60
+-- fst : U48
+-- snd : U48
+-- ----------------- U48-operator
+-- (+ fst snd) : U48
 inferGo (Op2 opr fst snd) dep = do
-  envSusp (Check 0 fst U60 dep)
-  envSusp (Check 0 snd U60 dep)
-  return U60
+  envSusp (Check 0 fst U48 dep)
+  envSusp (Check 0 snd U48 dep)
+  return U48
 
--- x : U60
--- p : U60 -> Set
+-- x : U48
+-- p : U48 -> Set
 -- z : (p 0)
--- s : (n: U60) -> (p (+ 1 n))
--- ------------------------------------- U60-elim
+-- s : (n: U48) -> (p (+ 1 n))
+-- ------------------------------------- U48-elim
 -- (switch x { 0: z ; _: s }: p) : (p x)
 inferGo (Swi nam x z s p) dep = do
-  envSusp (Check 0 x U60 dep)
-  envSusp (Check 0 (p (Ann False (Var nam dep) U60)) Set dep)
+  envSusp (Check 0 x U48 dep)
+  envSusp (Check 0 (p (Ann False (Var nam dep) U48)) Set dep)
   envSusp (Check 0 z (p (Num 0)) dep)
-  envSusp (Check 0 (s (Ann False (Var (nam ++ "-1") dep) U60)) (p (Op2 ADD (Num 1) (Var (nam ++ "-1") dep))) (dep + 1))
+  envSusp (Check 0 (s (Ann False (Var (nam ++ "-1") dep) U48)) (p (Op2 ADD (Num 1) (Var (nam ++ "-1") dep))) (dep + 1))
   return (p x)
 
 -- val : typ
@@ -847,7 +852,7 @@ termStr (Use nam val bod) dep =
       bod' = termStr (bod (Var nam dep)) (dep + 1)
   in concat ["use " , nam' , " = " , val' , "; " , bod']
 termStr Set dep = "*"
-termStr U60 dep = "U60"
+termStr U48 dep = "U48"
 termStr (Num val) dep =
   let val' = show val
   in concat [val']
@@ -928,51 +933,48 @@ doParseTerm input = case P.parse parseTerm "" input of
   Right term -> bind term
 
 parseTerm :: P.Parsec String () Term
-parseTerm = P.choice
-  [ parseAll
-  , parseLam
-  , parseOp2
-  , parseApp
-  , parseAnn
-  , parseSlf
-  , parseIns
-  , parseUse
-  , parseLet
-  , parseSet
-  , parseNum
-  , parseSwi
-  , parseTxt
-  , parseNat
-  , parseHol
-  , parseMet
-  , parseSrc
-  , parseRef
-  ]
+parseTerm = do
+  P.spaces
+  P.choice
+    [ parseAll
+    , parseLam
+    , parseOp2
+    , parseApp
+    , parseAnn
+    , parseSlf
+    , parseIns
+    , parseUse
+    , parseLet
+    , parseSet
+    , parseNum
+    , parseSwi
+    , parseTxt
+    , parseNat
+    , parseHol
+    , parseMet
+    , parseSrc
+    , parseRef
+    ]
 
 parseAll = do
   P.string "∀"
-  P.spaces
   P.char '('
   nam <- parseName
   P.char ':'
-  P.spaces
   inp <- parseTerm
   P.char ')'
-  P.spaces
   bod <- parseTerm
   return $ All nam inp (\x -> bod)
 
 parseLam = do
   P.string "λ"
   nam <- parseName
-  P.spaces
   bod <- parseTerm
   return $ Lam nam (\x -> bod)
 
 parseApp = do
   P.char '('
   fun <- parseTerm
-  P.spaces
   arg <- parseTerm
   P.char ')'
   return $ App fun arg
@@ -980,10 +982,11 @@ parseApp = do
 parseAnn = do
   P.char '{'
   val <- parseTerm
+  P.spaces
   P.char ':'
   chk <- P.option False (P.char ':' >> return True)
-  P.spaces
   typ <- parseTerm
+  P.spaces
   P.char '}'
   return $ Ann chk val typ
 
@@ -991,10 +994,8 @@ parseSlf = do
   P.string "$("
   nam <- parseName
   P.char ':'
-  P.spaces
   typ <- parseTerm
   P.char ')'
-  P.spaces
   bod <- parseTerm
   return $ Slf nam typ (\x -> bod)
 
@@ -1006,32 +1007,26 @@ parseIns = do
 parseRef = do
   name <- parseName
   return $ case name of
-    "U60" -> U60
+    "U48" -> U48
     _     -> Ref name
 
 parseUse = do
   P.try (P.string "use ")
-  P.spaces
   nam <- parseName
   P.spaces
   P.char '='
-  P.spaces
   val <- parseTerm
   P.char ';'
-  P.spaces
   bod <- parseTerm
   return $ Use nam val (\x -> bod)
 
 parseLet = do
   P.try (P.string "let ")
-  P.spaces
   nam <- parseName
   P.spaces
   P.char '='
-  P.spaces
   val <- parseTerm
   P.char ';'
-  P.spaces
   bod <- parseTerm
   return $ Let nam val (\x -> bod)
 
@@ -1044,35 +1039,28 @@ parseOp2 = do
     P.string "("
     opr <- parseOper
     return opr
-  P.spaces
   fst <- parseTerm
-  P.spaces
   snd <- parseTerm
   P.char ')'
   return $ Op2 opr fst snd
 
 parseSwi = do
   P.try (P.string "switch ")
-  P.spaces
   nam <- parseName
   P.spaces
   P.char '='
-  P.spaces
   x <- parseTerm
   P.spaces
   P.char '{'
   P.spaces
   P.string "0:"
-  P.spaces
   z <- parseTerm
   P.spaces
   P.string "_:"
-  P.spaces
   s <- parseTerm
   P.spaces
   P.char '}'
   P.char ':'
-  P.spaces
   p <- parseTerm
   return $ Swi nam x z (\k -> s) (\k -> p)
 
@@ -1105,12 +1093,12 @@ parseMet = do
 parseSrc = do
   P.char '!'
   src <- read <$> P.many1 P.digit
-  P.spaces
   val <- parseTerm
   return $ Src src val
 
 parseName :: P.Parsec String () String
 parseName = do
+  P.spaces
   head <- P.letter
   tail <- P.many (P.alphaNum <|> P.char '/' <|> P.char '.' <|> P.char '_' <|> P.char '-')
   return (head : tail)
@@ -1141,17 +1129,14 @@ parseBook = do
 
 parseDef :: P.Parsec String () (String, Term)
 parseDef = do
-  P.spaces
   name <- parseName
   P.spaces
   (typ, hasType) <- P.option (undefined, False) $ do
     P.char ':'
-    P.spaces
     typ <- parseTerm
     P.spaces
     return (typ, True)
   P.char '='
-  P.spaces
   value <- parseTerm
   P.char ';'
   P.spaces

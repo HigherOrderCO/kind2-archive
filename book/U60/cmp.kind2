@@ -1,4 +1,4 @@
-cmp (a: U60) (b: U60) : Cmp =
-  (U60/if (== a b)
-    (U60/if (< a b) Cmp/gtn Cmp/ltn)
+cmp (a: U48) (b: U48) : Cmp =
+  (U48/if (== a b)
+    (U48/if (< a b) Cmp/gtn Cmp/ltn)
     Cmp/eql)

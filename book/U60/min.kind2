@@ -1,4 +1,4 @@
-min (a: U60) (b: U60) : U60 =
+min (a: U48) (b: U48) : U48 =
   switch x = (< a b) {
     0: b
     _: a

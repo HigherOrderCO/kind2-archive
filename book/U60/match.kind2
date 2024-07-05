@@ -1,4 +1,4 @@
-U60.match (x: U60) (P: U60 -> *) (s: U60 -> (P (+ 1 x))) (z: (P 0)) : (P x) =
+U48.match (x: U48) (P: U48 -> *) (s: U48 -> (P (+ 1 x))) (z: (P 0)) : (P x) =
   switch x {
     0: z
     _: (s x-1)

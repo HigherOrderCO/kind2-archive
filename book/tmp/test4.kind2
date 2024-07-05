@@ -1,3 +1,0 @@
-test4
-: String
-= (~"abc" λx String λh λt t String/nil)

@@ -3,7 +3,7 @@ QUnit
 = $(self: QUnit)
   ∀(P: ∀(x: QUnit) *)
   (Sigma
-    U60
+    U48
     λtag
     switch tag = tag {
       0: ∀(one: (P QUnit.one)) (P self)

@@ -40,7 +40,7 @@ complex, hardcoded datatype system. It compiles to
 
 ```javascript
 // The Fibonacci function
-fib (n: U60) : U60 =
+fib (n: U48) : U48 =
   switch n {
     0: 0
     1: 1

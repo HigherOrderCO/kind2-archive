@@ -104,8 +104,8 @@ Kind.Term.show.go
       )
     )
   use set = λnil (Kind.Text.show.go "*" nil)
-  use u60 = λnil (Kind.Text.show.go "U60" nil)
-  use num = λval λnil (Kind.Text.show.go "" (U60.show.go val nil))
+  use u60 = λnil (Kind.Text.show.go "U48" nil)
+  use num = λval λnil (Kind.Text.show.go "" (U48.show.go val nil))
   use op2 = λopr λfst λsnd λnil
     (Kind.Text.show.go
       "("

@@ -1,4 +1,4 @@
-sum (xs: (List U60)): U60 =
+sum (xs: (List U48)): U48 =
   match xs {
     ++: (+ xs.head (sum xs.tail))
     []: 0

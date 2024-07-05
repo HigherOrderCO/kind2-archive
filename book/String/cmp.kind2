@@ -9,7 +9,7 @@ String/cmp
       use ltn = Cmp/ltn
       use eql = (cmp a.tail b.tail)
       use gtn = Cmp/gtn
-      (~(U60/cmp a.head b.head) P ltn eql gtn)
+      (~(U48/cmp a.head b.head) P ltn eql gtn)
     use nil = λa.head λa.tail Cmp/gtn
     (~b P cons nil a.head a.tail)
   use nil = λb

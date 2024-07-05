@@ -4,9 +4,9 @@ Kind.reduce.op2
 = λopr λfst λsnd
   use P = ∀(snd: Kind.Term) Kind.Term
   use Y = λfst_val λsnd
-    use P = ∀(fst_val: U60) Kind.Term
+    use P = ∀(fst_val: U48) Kind.Term
     use Y = λsnd_val λfst_val
-      use P = λx ∀(fst_val: U60) ∀(snd_val: U60) Kind.Term
+      use P = λx ∀(fst_val: U48) ∀(snd_val: U48) Kind.Term
       use add = λfst_val λsnd_val (Kind.num (+ fst_val snd_val))
       use mul = λfst_val λsnd_val (Kind.num (* fst_val snd_val))
       use sub = λfst_val λsnd_val (Kind.num (- fst_val snd_val))

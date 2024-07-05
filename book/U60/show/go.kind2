@@ -1,4 +1,4 @@
-go (n: U60) : String/Chunk =
+go (n: U48) : String/Chunk =
   switch x = (< n 10) {
     0: λnil (go (/ n 10) (String/cons (+ 48 (% n 10)) nil))
     _: λnil (String/cons (+ 48 n) nil) 

@@ -33,7 +33,7 @@ pub struct Src {
 //   SLF | $(<name>: <term>) <term>
 //   INS | ~<term>
 //   SET | *
-//   U60 | U60
+//   U48 | U48
 //   NUM | <uint>
 //   OP2 | (<oper> <term> <term>)
 //   SWI | switch <name> = <term> { 0: <term>; +: <term> }: <term>
@@ -52,7 +52,7 @@ pub enum Term {
   Slf { nam: String, typ: Box<Term>, bod: Box<Term> },
   Ins { val: Box<Term> },
   Set,
-  U60,
+  U48,
   Num { val: u64 },
   Op2 { opr: Oper, fst: Box<Term>, snd: Box<Term> },
   Swi { nam: String, x: Box<Term>, z: Box<Term>, s: Box<Term>, p: Box<Term> },
@@ -62,11 +62,11 @@ pub enum Term {
   Hol { nam: String },
   Met {},
   Src { src: Src, val: Box<Term> },
-  // Syntax Sugars that are NOT compiled
-  Mch { mch: Box<Match> },
   // Syntax Sugars that are compiled
   Nat { nat: u64 },
   Txt { txt: String },
+  // Syntax Sugars that are NOT compiled
+  Mch { mch: Box<Match> },
 }
 
 impl Src {
@@ -130,7 +130,7 @@ impl Term {
         val.get_free_vars(env.clone(), free_vars);
       },
       Term::Set => {},
-      Term::U60 => {},
+      Term::U48 => {},
       Term::Num { val: _ } => {},
       Term::Op2 { opr: _, fst, snd } => {
         fst.get_free_vars(env.clone(), free_vars);
@@ -215,8 +215,8 @@ impl Term {
       Term::Set => {
         Term::Set
       },
-      Term::U60 => {
-        Term::U60
+      Term::U48 => {
+        Term::U48
       },
       Term::Num { val } => {
         Term::Num { val: *val }
@@ -328,7 +328,7 @@ impl Term {
         val.desugar();
       },
       Term::Set => {},
-      Term::U60 => {},
+      Term::U48 => {},
       Term::Num { .. } => {},
       Term::Nat { .. } => {},
       Term::Txt { .. } => {},
@@ -364,7 +364,7 @@ impl Term {
         val.expand_implicits(env.clone(), implicit_count);
       },
       Term::Set => {},
-      Term::U60 => {},
+      Term::U48 => {},
       Term::Num { val: _ } => {},
       Term::Op2 { opr: _, fst, snd } => {
         fst.expand_implicits(env.clone(), implicit_count);

@@ -1,7 +1,8 @@
 use Bool/{true,false}
 
-abs_diff (a: U60) (b: U60) : U60 =
-  match Bool/true {
+abs_diff (a: U48) (b: U48) : U48 =
+  let x = (U48/to_bool (< a b))
+  match x {
     true: (- b a)
     false: (- a b)
   }

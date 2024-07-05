@@ -1,8 +1,0 @@
-test7
-: (IO Unit)
-= (IO.run
-    Unit
-    (IO.print.do
-      (Kind.Book.to_hvm (Kind.Book.parse test7.book))
-    )
-  )

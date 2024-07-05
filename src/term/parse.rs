@@ -452,8 +452,8 @@ impl<'i> KindParser<'i> {
     let nam = uses.get(&old).unwrap_or(&old).to_string();
     let end = *self.index() as u64;
     let src = Src::new(fid, ini, end);
-    let val = if nam == "U60" {
-      Box::new(Term::U60)
+    let val = if nam == "U48" {
+      Box::new(Term::U48)
     } else {
       Box::new(Term::Var { nam })
     };

@@ -77,7 +77,7 @@ Kind.comparer
         (Kind.if.u60 b P Y N dep)
       use num = λa.val λb λdep
         use P = ∀(dep: Nat) Bool
-        use Y = λb.val λdep (U60.equal a.val b.val)
+        use Y = λb.val λdep (U48.equal a.val b.val)
         use N = λval λdep Bool.false
         (Kind.if.num b P Y N dep)
       use op2 = λa.opr λa.fst λa.snd λb λdep
