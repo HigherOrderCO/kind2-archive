@@ -1,5 +1,0 @@
-Kind.load
-: ∀(name: String) (IO Kind.Book)
-= λname
-  use book = (String.Map.new Kind.Term)
-  (Kind.load.name name book)

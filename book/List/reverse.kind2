@@ -1,10 +1,10 @@
 use List/{cons,nil}
 
-List/reverse/go <A> (list: (List A)) (result: (List A)) : (List A) =
+reverse/go <A> (list: (List A)) (result: (List A)) : (List A) =
   match list {
     nil: result
-    cons: (List/reverse/go list.tail (List/cons list.head result))
+    cons: (reverse/go _ list.tail (cons _ list.head result))
   }
 
 reverse <A> (list: (List A)) : (List A) =
-  (List/reverse/go list [])
+  (reverse/go _ list (nil _))

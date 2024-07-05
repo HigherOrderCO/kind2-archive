@@ -1,11 +1,8 @@
-Parser.bind
-: ∀(A: *)
-  ∀(B: *)
-  ∀(a: (Parser A))
-  ∀(b: ∀(x: A) (Parser B))
-  (Parser B)
-= λA λB λa λb λcode
-  use P = λx ∀(b: ∀(x: A) (Parser B)) (Parser.Result B)
-  use done = λa.code λa.value λb (b a.value a.code)
-  use fail = λa.error λb (Parser.Result.fail B a.error)
-  (~(a code) P done fail b)
+use Parser/Result/{done,fail}
+
+bind <A> <B> (pa: (Parser A)) (f: A -> (Parser B)) : (Parser B) =
+  λcode
+    match result = (pa code) {
+      done: (f result.value result.code)
+      fail: (fail _ result.error)
+    }

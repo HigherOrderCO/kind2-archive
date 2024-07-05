@@ -2,6 +2,6 @@ use Tree/{node,leaf}
 
 gen (n: U48) (x: U48) : (Tree U48) =
   switch n {
-    0: leaf
-    _: (node x (gen n-1 (+ (* x 2) 1)) (gen n-1 (+ (* x 2) 2)))
+    0: (leaf _)
+    _: (node _ x (gen (- n 1) (+ (* x 2) 1)) (gen (- n 1) (+ (* x 2) 2)))
   }

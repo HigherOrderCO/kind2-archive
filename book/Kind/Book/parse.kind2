@@ -1,7 +1,0 @@
-Kind.Book.parse
-: ∀(code: String) Kind.Book
-= λcode
-  use P = λx Kind.Book
-  use done = λcode λbook book
-  use fail = λerror (String.Map.new Kind.Term)
-  (~(Kind.Book.parser code) P done fail)

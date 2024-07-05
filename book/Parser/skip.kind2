@@ -1,3 +1,2 @@
-Parser.skip
-: ∀(A: *) ∀(parser: (Parser A)) (Parser A)
-= λA λparser λcode (parser (String.skip code))
+skip <A> (parser: (Parser A)) : (Parser A) =
+  λcode (parser code)

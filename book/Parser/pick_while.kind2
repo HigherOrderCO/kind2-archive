@@ -1,3 +1,0 @@
-Parser.pick_while
-: ∀(cond: ∀(chr: Char) Bool) (Parser String)
-= λcond λcode (Parser.pick_while.go cond code)

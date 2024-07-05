@@ -1,7 +1,7 @@
 use List/{cons,nil}
 
-List/fold <A> <B> (xs: (List A)) (c: A -> B -> B) (n: B) : B =
+List/fold <A> (P: *) (c: A -> P -> P) (n: P) (xs: (List A)) : P =
   match xs {
-    ++: (c xs.head (List/fold xs.tail c n))
-    []: n
+    cons: (c xs.head (List/fold _ P c n xs.tail))
+    nil: n
   }

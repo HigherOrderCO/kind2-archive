@@ -1,4 +1,2 @@
-Parser.Result.done
-: ∀(T: *) ∀(code: String) ∀(value: T)
-  (Parser.Result T)
-= λT λcode λvalue ~λP λdone λfail (done code value)
+Parser/Result/done <T> (code: String) (value: T) : (Parser/Result T) =
+  (Parser/Result/done _ code value)

@@ -1,6 +1,6 @@
 match <T: *> <a: T> <b: T> 
   (P: ∀(a:T) ∀(b:T) ∀(e: (Equal T a b)) *)
-  (refl: ∀(x: T) (P x x (Equal/refl/ T x)))
+  (refl: ∀(x: T) (P x x (Equal/refl T x)))
   (e: (Equal T a b))
 : (P a b e) =
   (~e P refl)

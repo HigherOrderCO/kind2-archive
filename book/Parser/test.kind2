@@ -1,37 +1,26 @@
-Parser.test
-: ∀(test: String) (Parser Bool)
-= λtest λcode
-  use P = λx ∀(code: String) (Parser.Result Bool)
-  use cons = λtest.head λtest.tail λcode
-    use P = λx (Parser.Result Bool)
-    use cons = λcode.head λcode.tail
-      use P = λx
-        ∀(code.head: Char) ∀(code.tail: String)
-        (Parser.Result Bool)
-      use true = λcode.head λcode.tail
-        use P = λx (Parser.Result Bool)
-        use done = λcode λvalue
-          (Parser.Result.done
-            Bool
-            (String/cons code.head code)
-            value
-          )
-        use fail = λerror (Parser.Result.fail Bool error)
-        (~(Parser.test test.tail code.tail) P done fail)
-      use false = λcode.head λcode.tail
-        (Parser.Result.done
-          Bool
-          (String/cons code.head code.tail)
-          Bool.false
-        )
-      (~(Char.equal test.head code.head)
-        P
-        true
-        false
-        code.head
-        code.tail
-      )
-    use nil = (Parser.Result.done Bool String/nil Bool.false)
-    (~code P cons nil)
-  use nil = λcode (Parser.Result.done Bool code Bool.true)
-  (~test P cons nil code)
+// TODO: auto refactored by Sonnet; review
+
+use List/{cons,nil}
+use Parser/Result/{done,fail}
+use Bool/{true,false}
+use Char/{equal}
+
+test (test_str: String) : (Parser Bool) =
+  λcode
+    match test_str {
+      cons:
+        match code {
+          cons:
+            match eq = (equal test_str.head code.head) {
+              true: 
+                match result = (test test_str.tail code.tail) {
+                  done: (done _ code result.value)
+                  fail: (fail _ result.error)
+                }
+              false: (done _ code false)
+            }
+          nil: (done _ code false)
+        }
+      nil: (done _ code true)
+    }
+

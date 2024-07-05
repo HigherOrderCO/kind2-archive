@@ -1,12 +1,10 @@
-Parser.is_eof
-: (Parser Bool)
-= λcode
-  use P = λx (Parser.Result Bool)
-  use cons = λcode.head λcode.tail
-    (Parser.Result.done
-      Bool
-      (String/cons code.head code.tail)
-      Bool.false
-    )
-  use nil = (Parser.Result.done Bool String/nil Bool.true)
-  (~(String.skip code) P cons nil)
+use Parser/Result/{done}
+use Bool/{true,false}
+use List/{cons,nil}
+
+is_eof : (Parser Bool) =
+  λcode
+    match code {
+      cons: (done _ code false)
+      nil: (done _ (nil _) true)
+    }

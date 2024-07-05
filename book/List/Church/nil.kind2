@@ -1,3 +1,2 @@
-List.Church.nil (T) : (List.Church T)
-= λP λcons λnil
-  nil
+List/Church/nil <T> : (List/Church T) =
+  (λP (λcons (λnil nil)))

@@ -1,7 +1,3 @@
-//./../sugar/mod.rs//
-//./parse.rs//
-//./../book/parse.rs//
-
 use crate::{*};
 use std::collections::BTreeSet;
 use std::collections::BTreeMap;
@@ -338,7 +334,8 @@ impl Term {
     }
   }
 
-  // Expands implicit calls, applying them to the right number of metavars.
+  // Expands implicit calls, applying them to the correct number of metavars.
+  // When a variable name ends with "/", we fill erased arguments with metas.
   pub fn expand_implicits(&mut self, env: im::Vector<String>, implicit_count: &BTreeMap<String, u64>) {
     match self {
       Term::All { era: _, nam, inp, bod } => {
@@ -392,12 +389,9 @@ impl Term {
         val.expand_implicits(env, implicit_count);
       },
       Term::Var { nam } => {
-        // When a name ends with "/", it must apply its implicits manually
         if nam.ends_with("/") {
-          *self = Term::Var { nam: nam.trim_end_matches('/').to_string() };
-        // Otherwise, we apply its implicits, turning 'F' into '(F _ _ ...)'
-        } else if !env.contains(nam) {
-          if let Some(implicits) = implicit_count.get(nam) {
+          if let Some(implicits) = implicit_count.get(nam.trim_end_matches('/')) {
+            *self = Term::Var { nam: nam.trim_end_matches('/').to_string() };
             for _ in 0..*implicits {
               *self = Term::App {
                 era: true,

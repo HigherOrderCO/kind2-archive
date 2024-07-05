@@ -1,4 +1,4 @@
-IO.save
+IO/save
 : ∀(A: *)
   ∀(file: String)
   ∀(text: String)

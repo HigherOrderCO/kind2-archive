@@ -1,4 +1,0 @@
-Kind.Oper.show
-: ∀(oper: Kind.Oper) String
-= λoper
-  (String.Chunk.build (Kind.Oper.show.go oper))

@@ -1,4 +1,0 @@
-Kind.Oper.gte
-: Kind.Oper
-= ~λP λadd λmul λsub λdiv λmod λeq λne λlt λgt λlte λgte λand λor λxor λlsh λrsh
-  gte

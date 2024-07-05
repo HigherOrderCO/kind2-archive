@@ -1,6 +1,0 @@
-Kind.export
-: Unit
-= use x = Kind.Book.get_refs
-  use x = Kind.Book.parse
-  use x = Kind.Book.to_hvm
-  Unit.one

@@ -1,3 +1,0 @@
-Kind.Book.String
-: Kind.Term
-= (Kind.hol "TODO" (List.nil Kind.Term))

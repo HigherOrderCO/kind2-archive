@@ -1,0 +1,8 @@
+use String/{cons}
+
+go (n: U48) : String/Chunk =
+  λnil
+    switch n {
+      0: nil
+      _: (cons (+ 97 (% n-1 26)) (go (/ n-1 26) nil))
+    }

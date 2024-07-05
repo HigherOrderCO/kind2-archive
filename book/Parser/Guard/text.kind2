@@ -1,9 +1,8 @@
-Parser.Guard.text
-: ∀(A: *) ∀(text: String) ∀(then: (Parser A))
-  (Parser.Guard A)
-= λA λtext λthen
-  (Parser.Guard.new
-    A
-    (Parser.skip Bool (Parser.test text))
-    then
-  )
+use Parser/Guard/new
+use Parser/skip
+use Parser/test
+
+text <A> (txt: String) (then: (Parser A)) : (Parser/Guard A) =
+  (new _
+    (skip _ (test txt))
+    then)

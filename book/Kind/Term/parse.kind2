@@ -1,7 +1,0 @@
-Kind.Term.parse
-: ∀(code: String) Kind.Term
-= λcode
-  use P = λx Kind.Term
-  use done = λcode λterm (term (List.nil Kind.Binder))
-  use fail = λerror (Kind.hol "error" (List.nil Kind.Term))
-  (~(Kind.Term.parser code) P done fail)

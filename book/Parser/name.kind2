@@ -1,3 +1,5 @@
-Parser.name
-: (Parser String)
-= (Parser.pick_while Char.is_name)
+use Char/{is_name}
+use Parser/pick_while
+
+name : (Parser String) =
+  (pick_while is_name)

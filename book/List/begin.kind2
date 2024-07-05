@@ -2,9 +2,9 @@ use List/{cons,nil}
 
 begin <A> (xs: (List A)) : (List A) =
   match xs {
-    ++: match xs.tail {
-      ++: (cons xs.head (begin (cons xs.tail.head xs.tail)))
-      []: []
+    cons: match xs.tail {
+      cons: (cons _ xs.head (begin _ (cons _ xs.tail.head xs.tail.tail)))
+      nil: (cons _ xs.head (nil _))
     }
-    []: []
+    nil: (nil _)
   }

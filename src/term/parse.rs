@@ -146,7 +146,7 @@ impl<'i> KindParser<'i> {
         src,
         val: Box::new(Term::App {
           era: false,
-          fun: Box::new(Term::Var { nam: "Equal/refl".to_string() }),
+          fun: Box::new(Term::Var { nam: "Equal/refl/".to_string() }),
           arg: Box::new(Term::Met {}),
         })
       });
@@ -513,7 +513,7 @@ impl<'i> KindParser<'i> {
           era: false,
           fun: Box::new(Term::App {
             era: false,
-            fun: Box::new(Term::Var { nam: "List/cons".to_string() }),
+            fun: Box::new(Term::Var { nam: "List/cons/".to_string() }),
             arg: hd,
           }),
           arg: tl,

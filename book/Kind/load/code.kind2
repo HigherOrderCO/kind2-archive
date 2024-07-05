@@ -1,8 +1,0 @@
-Kind.load.code
-: ∀(name: String) (IO Kind.Book)
-= λname
-  (IO.load
-    Kind.Book
-    (String.concat name ".kind2")
-    λdata (IO.done Kind.Book (Kind.Book.parse data))
-  )

@@ -1,7 +1,9 @@
-Parser.pick
-: (Parser Char)
-= λcode
-  use P = λx (Parser.Result Char)
-  use cons = λhead λtail (Parser.Result.done Char tail head)
-  use nil = (Parser.Result.fail Char "empty")
-  (~code P cons nil)
+use Parser/Result/{done,fail}
+use List/{cons,nil}
+
+pick : (Parser Char) =
+  λcode
+    match code {
+      cons: (done _ code.tail code.head)
+      nil: (fail _ "empty")
+    }

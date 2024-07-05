@@ -1,5 +1,0 @@
-Kind.Scope.extend
-: ∀(nam: String) ∀(typ: Kind.Term) ∀(scp: Kind.Scope)
-  Kind.Scope
-= λnam λtyp λscp
-  (Kind.Scope.cons (Kind.Binder.new nam typ) scp)

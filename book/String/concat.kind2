@@ -1,2 +1,4 @@
-concat (xs: String) (ys: String) : String =
-  (List/concat xs ys)
+use List/{concat}
+
+concat (xs: (List Char)) (ys: (List Char)) : (List Char) =
+  (concat xs ys)

@@ -1,11 +1,9 @@
-Parser.char
-: (Parser Char)
-= λcode
-  use P = λx (Parser.Result Char)
-  use cons = λhead λtail
-    use P = λx (Parser.Result Char)
-    use true = (Parser.Result.done Char tail head)
-    use false = (Parser.Result.done Char tail head)
-    (~(Char.is_slash head) P true false)
-  use nil = (Parser.Result.fail Char "eof")
-  (~code P cons nil)
+use Parser/Result/{done,fail}
+use List/{cons,nil}
+
+char : (Parser Char) =
+  λcode
+    match code {
+      cons: (done _ code.tail code.head)
+      nil: (fail _ "eof")
+    }

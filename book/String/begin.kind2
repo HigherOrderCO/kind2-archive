@@ -1,2 +1,11 @@
-begin (str: String) : String =
-  (List/begin str)
+use List/{cons,nil}
+
+begin (str: (List Char)) : (List Char) =
+  match str {
+    cons: 
+      match str.tail {
+        cons: (cons _ str.head (begin str.tail))
+        nil: str
+      }
+    nil: str
+  }

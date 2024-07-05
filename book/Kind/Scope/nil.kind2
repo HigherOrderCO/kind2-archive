@@ -1,3 +1,0 @@
-Kind.Scope.nil
-: Kind.Scope
-= (List.nil Kind.Binder)

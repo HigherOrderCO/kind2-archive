@@ -911,12 +911,12 @@ infoStr book fill (Found name typ ctx dep) =
       ctx' = drop 1 (contextStr book fill ctx dep)
   in concat ["#found{", name, " ", typ', " [", ctx', "]}"]
 infoStr book fill (Error src expected detected value dep) =
-  let exp = termStr (normal book fill 1 expected dep) dep
-      det = termStr (normal book fill 1 detected dep) dep
+  let exp = termStr (normal book fill 0 expected dep) dep
+      det = termStr (normal book fill 0 detected dep) dep
       val = termStr (normal book fill 0 value dep) dep
   in concat ["#error{", exp, " ", det, " ", val, " ", show src, "}"]
 infoStr book fill (Solve name term dep) =
-  let term' = termStr (normal book fill 1 term dep) dep
+  let term' = termStr (normal book fill 0 term dep) dep
   in concat ["#solve{", show name, " ",  term', "}"]
 infoStr book fill (Vague name) =
   concat ["#vague{", name, "}"]
@@ -1104,22 +1104,22 @@ parseName = do
   return (head : tail)
 
 parseOper = P.choice
-  [ P.string "+" >> return ADD
-  , P.string "-" >> return SUB
-  , P.string "*" >> return MUL
-  , P.string "/" >> return DIV
-  , P.string "%" >> return MOD
-  , P.string "<" >> return LT
-  , P.string ">" >> return GT
-  , P.string "==" >> return EQ
-  , P.string "!=" >> return NE
-  , P.string "<=" >> return LTE
-  , P.string ">=" >> return GTE
-  , P.string "&" >> return AND
-  , P.string "|" >> return OR
-  , P.string "^" >> return XOR
-  , P.string "<<" >> return LSH
-  , P.string ">>" >> return RSH
+  [ P.try (P.string "+") >> return ADD
+  , P.try (P.string "-") >> return SUB
+  , P.try (P.string "*") >> return MUL
+  , P.try (P.string "/") >> return DIV
+  , P.try (P.string "%") >> return MOD
+  , P.try (P.string "<=") >> return LTE
+  , P.try (P.string ">=") >> return GTE
+  , P.try (P.string "<") >> return LT
+  , P.try (P.string ">") >> return GT
+  , P.try (P.string "==") >> return EQ
+  , P.try (P.string "!=") >> return NE
+  , P.try (P.string "&") >> return AND
+  , P.try (P.string "|") >> return OR
+  , P.try (P.string "^") >> return XOR
+  , P.try (P.string "<<") >> return LSH
+  , P.try (P.string ">>") >> return RSH
   ]
 
 parseBook :: P.Parsec String () Book

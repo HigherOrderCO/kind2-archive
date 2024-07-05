@@ -1,16 +1,12 @@
 use Nat/{succ,zero,half,double}
 
-bft (n: Nat) : (Equal Nat (half (double n)) n) =
+bft (n: Nat) :
+  (Equal Nat (half (double n)) n) =
   match n {
     succ:
       let ind = (bft n.pred)
-      (~ind λaλbλx(Equal Nat (succ a) (succ b))
-        λa (Equal/refl/ Nat (succ a)))
-      //match ind {
-        //Equal/refl: ?a
-      //}
-      //let prf = (Equal/apply succ ind)
-      //?a
+      let prf = (Equal/apply _ _ _ _ succ ind)
+      prf
     zero:
       {=}
   }

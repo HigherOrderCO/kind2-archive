@@ -1,7 +1,6 @@
 use crate::{*};
 
 impl Book {
-
   pub fn to_hvm2(&self) -> String {
     let mut code = String::new();
     for (name, term) in &self.defs {

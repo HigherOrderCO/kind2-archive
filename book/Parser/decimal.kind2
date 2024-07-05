@@ -1,3 +1,5 @@
-Parser.decimal
-: (Parser String)
-= (Parser.pick_while Char.is_decimal)
+use Char/{is_decimal}
+use Parser/pick_while
+
+decimal : (Parser String) =
+  (pick_while is_decimal)

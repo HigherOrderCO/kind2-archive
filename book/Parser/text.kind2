@@ -1,23 +1,20 @@
-Parser.text
-: ∀(text: String) (Parser Unit)
-= λtext
-  (Parser.skip
-    Unit
-    (Parser.bind
-      Bool
-      Unit
-      (Parser.test text)
-      λsuccess
-      (Bool.if
-        success
-        (Parser Unit)
-        (Parser.bind
-          String
-          Unit
-          (Parser.take (String.length text))
-          λx (Parser.pure Unit Unit.one)
-        )
-        (Parser.fail Unit "error")
-      )
+use Parser/skip
+use Parser/bind
+use Parser/test
+use Parser/take
+use Parser/pure
+use Parser/fail
+use Bool/{true,false}
+use String/{length}
+
+text (txt: String) : (Parser Unit) =
+  (skip _
+    (bind _ _ (test txt) λsuccess
+      match success {
+        true: 
+          (bind _ _ (take (length txt)) λx
+            (pure _ Unit/new))
+        false: (fail _ "Text mismatch")
+      }
     )
   )

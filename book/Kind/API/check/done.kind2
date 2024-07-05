@@ -1,7 +1,0 @@
-Kind.API.check.done
-: ∀(result: (Maybe Kind.Term)) (IO Unit)
-= λresult
-  use P = λx (IO Unit)
-  use some = λvalue (IO.print.do "check")
-  use none = (IO.print.do "error")
-  (~result P some none)

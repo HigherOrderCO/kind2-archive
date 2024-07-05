@@ -1,0 +1,7 @@
+match <A>
+  (P: (Tree A) -> *)
+  (n: ∀(val: A) ∀(lft: (Tree A)) ∀(rgt: (Tree A)) (P (Tree/node A val lft rgt)))
+  (l: (P (Tree/leaf A)))
+  (t: (Tree A))
+: (P t) =
+  (~t P n l)

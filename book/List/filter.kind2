@@ -1,10 +1,11 @@
 use List/{cons,nil}
+use Bool/{true,false}
 
 filter <A> (cond: A -> Bool) (list: (List A)) : (List A) =
   match list {
-    nil: nil
-    cons:
-      (Bool/if (cond list.head) (List A)
-        (cons list.head (filter cond list.tail))
-        (filter cond list.tail))
+    nil: (nil _)
+    cons: match result = (cond list.head) {
+      true: (cons _ list.head (filter _ cond list.tail))
+      false: (filter _ cond list.tail)
+    }
   }

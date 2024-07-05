@@ -1,0 +1,7 @@
+match <A>
+  (P: (Maybe A) -> *)
+  (s: ∀(value: A) (P (Maybe/some A value)))
+  (n: (P (Maybe/none A)))
+  (ma: (Maybe A))
+: (P ma) =
+  (~ma P s n)

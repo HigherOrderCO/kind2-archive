@@ -1,4 +1,4 @@
-Unit.match
-  (x: Unit) (P: Unit -> *) (new: (P Unit.new))
+match
+  (x: Unit) (P: Unit -> *) (new: (P Unit/new))
 : (P x)
 = (~x P new)

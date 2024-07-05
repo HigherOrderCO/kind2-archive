@@ -1,3 +1,5 @@
-Parser.oper
-: (Parser String)
-= (Parser.pick_while Char.is_oper)
+use Char/{is_oper}
+use Parser/pick_while
+
+oper : (Parser String) =
+  (pick_while is_oper)

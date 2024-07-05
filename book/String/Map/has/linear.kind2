@@ -1,2 +1,0 @@
-linear <V> (key: String) (map: (BBT String V)) : (Pair Bool (BBT String V)) =
-  (BBT/has/linear String/cmp key map)

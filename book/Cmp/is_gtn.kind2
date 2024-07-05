@@ -1,8 +1,8 @@
 use Bool/{true,false}
 use Cmp/{ltn,eql,gtn}
 
-Cmp.is_gtn (cmp: Cmp) : Bool =
-  match cmp {
+Cmp/is_gtn (cmp: Cmp) : Bool
+  = match cmp {
     ltn: false
     eql: false
     gtn: true

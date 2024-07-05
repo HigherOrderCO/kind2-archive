@@ -1,1 +1,0 @@
-new <V> : (String/Map V) = (BBT/tip String V)

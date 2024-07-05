@@ -1,2 +1,9 @@
-data The A (x: A)
+data The <A: *> (x: A)
 | value (x: A) : (The A x)
+
+// λ-encoded version:
+// The <A: *> (x: A) : * =
+//   $(self: (The A x))
+//   ∀(P: ∀(x: A) ∀(t: (The A x)) *)
+//   ∀(value: ∀(x: A) (P x (The/value A x)))
+//   (P x self)

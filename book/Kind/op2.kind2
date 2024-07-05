@@ -1,6 +1,0 @@
-Kind.op2
-: ∀(opr: Kind.Oper) ∀(fst: Kind.Term) ∀(snd: Kind.Term)
-  Kind.Term
-= λopr λfst λsnd
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
-  (op2 opr fst snd)

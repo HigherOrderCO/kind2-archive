@@ -1,0 +1,6 @@
+use Parser/{bind,pure}
+use Parser/decimal
+use List/{cons,nil}
+
+decimal : (Parser U48) =
+  ?TODO

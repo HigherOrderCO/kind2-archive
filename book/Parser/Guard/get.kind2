@@ -1,7 +1,4 @@
-Parser.Guard.get
-: ∀(A: *)
-  ∀(p: (Parser.Guard A))
-  ∀(P: *)
-  ∀(f: ∀(a: (Parser Bool)) ∀(b: (Parser A)) P)
-  P
-= λA (Pair.get (Parser Bool) (Parser A))
+get <A> (p: (Parser/Guard A)) <P> (f: (Parser Bool) -> (Parser A) -> P) : P =
+  match p {
+    Pair/new: (f p.fst p.snd)
+  }

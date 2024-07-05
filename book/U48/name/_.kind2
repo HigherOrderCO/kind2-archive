@@ -1,0 +1,5 @@
+use String/Chunk/{build}
+use U48/name/{go}
+
+name (n: U48) : String =
+  (build (go (+ n 1)))

@@ -1,8 +1,7 @@
 match <A>
   (P: (List A) -> *)
-  (c: ∀(head: A) ∀(tail: (List A)) (P (List/cons/ A head tail)))
-  (n: (P (List/nil/ A)))
+  (c: ∀(head: A) ∀(tail: (List A)) (P (List/cons A head tail)))
+  (n: (P (List/nil A)))
   (xs: (List A))
 : (P xs) =
   (~xs P c n)
-  

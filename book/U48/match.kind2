@@ -1,0 +1,5 @@
+match (x: U48) (P: U48 -> *) (s: U48 -> (P (+ 1 x))) (z: (P 0)) : (P x) =
+  switch x {
+    0: z
+    _: (s x-1)
+  }: (P x)

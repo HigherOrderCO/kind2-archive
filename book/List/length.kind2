@@ -3,6 +3,6 @@ use Nat/{succ,zero}
 
 length <A> (xs: (List A)) : Nat =
   match xs {
-    ++: (succ (length xs.tail))
-    []: zero
+    cons: (succ (length _ xs.tail))
+    nil: zero
   }

@@ -1,3 +1,0 @@
-Kind.PreTerm
-: *
-= ∀(ctx: Kind.Scope) Kind.Term

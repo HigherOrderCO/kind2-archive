@@ -1,2 +1,2 @@
-Unit.new : Unit =
+Unit/new : Unit =
   ~λP λone one

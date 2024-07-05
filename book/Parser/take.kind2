@@ -1,3 +1,5 @@
-Parser.take
-: ∀(n: Nat) (Parser String)
-= λn (Parser.repeat n Char Parser.pick)
+use Parser/repeat
+use Parser/char
+
+take (n: Nat) : (Parser String) =
+  (repeat _ n char)

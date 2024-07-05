@@ -1,3 +1,0 @@
-Kind.Book
-: *
-= (String.Map Kind.Term)

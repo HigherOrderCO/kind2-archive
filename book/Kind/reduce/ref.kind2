@@ -1,8 +1,0 @@
-Kind.reduce.ref
-: ∀(maj: Bool) ∀(nam: String) ∀(val: Kind.Term)
-  Kind.Term
-= λmaj λnam λval
-  use P = λx ∀(nam: String) ∀(val: Kind.Term) Kind.Term
-  use true = λnam λval (Kind.reduce maj val)
-  use false = Kind.ref
-  (~maj P true false nam val)

@@ -246,7 +246,7 @@ impl Term {
           if let Term::App { era: _, fun: cons, arg: head } = &**fun {
             if let Term::App { era: _, fun: cons_fun, arg: _ } = &**cons {
               if let Term::Var { nam } = &**cons_fun {
-                if nam == "List/cons" {
+                if nam == "List/cons/" {
                   vals.push(head.clone());
                   term = arg;
                   continue;
@@ -255,7 +255,7 @@ impl Term {
             }
           }
           if let Term::Var { nam } = &**fun {
-            if nam == "List/nil" {
+            if nam == "List/nil/" {
               return Some(List { vals });
             }
           }
@@ -268,13 +268,13 @@ impl Term {
 
   // Builds a chain of applications of List/cons and List/nil from a Vec<Box<Term>>
   pub fn new_list(list: &List) -> Term {
-    let mut term = Term::Var { nam: "List/nil".to_string() };
+    let mut term = Term::Var { nam: "List/nil/".to_string() };
     for item in (&list.vals).into_iter().rev() {
       term = Term::App {
         era: false,
         fun: Box::new(Term::App {
           era: false,
-          fun: Box::new(Term::Var { nam: "List/cons".to_string() }),
+          fun: Box::new(Term::Var { nam: "List/cons/".to_string() }),
           arg: item.clone(),
         }),
         arg: Box::new(term),
@@ -594,7 +594,7 @@ impl Term {
       }
 
       // Builds the constructor type: (Type.C0 P0 P1 ... C0_F0 C0_F1 ...)
-      let mut ctr_type = Term::Var { nam: format!("{}/{}/", adt.name, ctr.name) };
+      let mut ctr_type = Term::Var { nam: format!("{}/{}", adt.name, ctr.name) };
 
       // For each type parameter
       // NOTE: Not necessary anymore due to auto implicit arguments
@@ -933,7 +933,7 @@ impl Term {
 
     // 3. Create `(Type/fold|match <motive>)`
     term = Term::Var {
-      nam: format!("{}/{}", adt.name, if mat.fold { "fold" } else { "match" })
+      nam: format!("{}/{}/", adt.name, if mat.fold { "fold" } else { "match" })
     };
     //for _par in &adt.pars {
       //term = Term::App {

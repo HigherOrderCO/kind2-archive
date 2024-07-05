@@ -1,2 +1,0 @@
-from_list <V> (list: (List (Pair String V))) : (String/Map V) =
-  (BBT/from_list String/cmp list)

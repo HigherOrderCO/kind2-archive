@@ -1,5 +1,0 @@
-Kind.var
-: ∀(nam: String) ∀(idx: Nat) Kind.Term
-= λnam λidx
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
-  (var nam idx)

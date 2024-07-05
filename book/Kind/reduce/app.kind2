@@ -1,9 +1,0 @@
-Kind.reduce.app
-: ∀(maj: Bool) ∀(fun: Kind.Term) ∀(arg: Kind.Term)
-  Kind.Term
-= λmaj λfun λarg
-  use P = ∀(arg: Kind.Term) Kind.Term
-  use Y = λnam λbod λarg
-    (Kind.reduce maj (bod (Kind.reduce maj arg)))
-  use N = λfun λarg (Kind.app fun arg)
-  (Kind.if.lam fun P Y N arg)

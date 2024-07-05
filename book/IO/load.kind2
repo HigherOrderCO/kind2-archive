@@ -1,4 +1,4 @@
-IO.load
+IO/load
 : ∀(A: *)
   ∀(file: String)
   ∀(then: ∀(x: String) (IO A))

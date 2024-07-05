@@ -1,3 +1,2 @@
-Parser
-: ∀(A: *) *
-= λA ∀(code: String) (Parser.Result A)
+Parser <A: *> : * =
+  String -> (Parser/Result A)

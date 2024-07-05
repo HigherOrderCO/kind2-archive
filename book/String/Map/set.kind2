@@ -1,2 +1,0 @@
-set <V> (key: String) (val: V) (map: (String/Map V)) : (String/Map V) =
-  (BBT/set String/cmp key val map)

@@ -1,0 +1,3 @@
+data Parser/Result <T>
+| done (code: String) (value: T)
+| fail (error: String)

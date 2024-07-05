@@ -1,7 +1,8 @@
 use List/{cons,nil}
+use List/Chunk
 
 from_list <T> (xs: (List T)) : (List/Chunk T) =
   match xs {
-    ++: λnil (cons xs.head (from_list xs.tail nil))
-    []: λnil nil
+    cons: λk (cons _ xs.head (from_list _ xs.tail k))
+    nil: λk k
   }

@@ -1,20 +1,4 @@
 apply <A: *> <B: *> <a: A> <b: B> (f: A -> B) (e: (Equal A a b)) : (Equal B (f a) (f b)) =
   match e {
-    Equal/refl: ~λPλrefl(refl (f e.a))
+    Equal/refl: ~λPλe(e (f e.a))
   }: (Equal B (f a) (f b))
-
-  //(Equal/match
-    //λaλbλe(Equal B (f a) (f b))
-    //λx ~λPλrefl(refl (f x))
-    //e)
-
-//Equal.apply
-//: ∀(A: *)
-  //∀(B: *)
-  //∀(f: ∀(x: A) B)
-  //∀(a: A)
-  //∀(b: A)
-  //∀(e: (Equal A a b))
-  //(Equal B (f a) (f b))
-//= λA λB λf λa λb λe
-  //(e λx (Equal B (f a) (f x)) λP λx x)

@@ -1,2 +1,0 @@
-has <V> (key: String) (map: (BBT String V)) : Bool =
-  (BBT/has String/cmp key map)

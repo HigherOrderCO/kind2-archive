@@ -2,10 +2,10 @@ use List/{cons,nil}
 use Nat/{succ,zero}
 
 take <A> (n: Nat) (list: (List A)) : (List A) =
-  match n with (list: (List A)) {
-    zero: nil
+  match n {
+    zero: (nil _)
     succ: match list {
-      cons: (cons list.head (take n.pred list.tail))
-      nil: nil
+      cons: (cons _ list.head (take _ n.pred list.tail))
+      nil: (nil _)
     }
   }

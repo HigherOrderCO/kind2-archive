@@ -1,5 +1,4 @@
-length (s: String) : Nat = (List/length s)
+use List/{length}
 
-//String/length
-//: ∀(a: String) Nat
-//= λa (List/length a)
+length (s: (List Char)) : Nat =
+  (length s)

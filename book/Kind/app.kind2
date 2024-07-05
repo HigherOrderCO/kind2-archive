@@ -1,5 +1,0 @@
-Kind.app
-: ∀(fun: Kind.Term) ∀(arg: Kind.Term) Kind.Term
-= λfun λarg
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
-  (app fun arg)

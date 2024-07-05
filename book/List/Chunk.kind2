@@ -1,2 +1,2 @@
-List.Chunk (T: *) : * =
+List/Chunk <T> : * =
   ∀(nil: (List T)) (List T)

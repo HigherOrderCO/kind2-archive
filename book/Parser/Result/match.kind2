@@ -1,0 +1,7 @@
+match <A>
+  (P: (Parser/Result A) -> *)
+  (d: ∀(code: String) ∀(value: A) (P (Parser/Result/done A code value)))
+  (f: ∀(error: String) (P (Parser/Result/fail A error)))
+  (result: (Parser/Result A))
+: (P result) =
+  (~result P d f)

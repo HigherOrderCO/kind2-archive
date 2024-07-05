@@ -12,7 +12,3 @@ sum (x: (Tree U48)) : U48 =
     node: (+ x.val (+ x.lft x.rgt))
     leaf: 0
   }
-
-
-
-

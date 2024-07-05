@@ -1,8 +1,8 @@
-Parser.map
-: ∀(A: *) ∀(B: *) ∀(f: ∀(a: A) B) ∀(p: (Parser A))
-  (Parser B)
-= λA λB λf λp λcode
-  use P = λx (Parser.Result B)
-  use done = λcode λvalue (Parser.Result.done B code (f value))
-  use fail = λerror (Parser.Result.fail B error)
-  (~(p code) P done fail)
+use Parser/Result/{done,fail}
+
+map <A> <B> (f: A -> B) (p: (Parser A)) : (Parser B) =
+  λcode
+    match result = (p code) {
+      done: (done _ result.code (f result.value))
+      fail: (fail _ result.error)
+    }

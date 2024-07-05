@@ -1,8 +1,0 @@
-Kind.all
-: ∀(nam: String)
-  ∀(inp: Kind.Term)
-  ∀(bod: ∀(x: Kind.Term) Kind.Term)
-  Kind.Term
-= λnam λinp λbod
-  ~λP λall λlam λapp λann λslf λins λref λdef λset λu60 λnum λop2 λmat λtxt λhol λvar
-  (all nam inp bod)

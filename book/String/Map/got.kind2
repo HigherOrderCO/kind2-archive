@@ -1,2 +1,0 @@
-got <V> (key: String) (map: (String/Map V)) : (Pair (Maybe V) (String/Map V)) =
-  (BBT/got String/cmp key map)

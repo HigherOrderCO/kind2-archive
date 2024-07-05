@@ -1,3 +1,2 @@
-cons <T> (head: T) (tail: (List.Church T)) : (List.Church T)
-= λP λcons λnil
-  (cons head (tail P cons nil))
+List/Church/cons <T> (head: T) (tail: (List/Church T)) : (List/Church T) =
+  (λP (λcons (λnil (cons head (tail P cons nil)))))

@@ -1,3 +1,0 @@
-Kind.Text.show.go
-: ∀(text: Kind.Text) String.Chunk
-= String.Chunk.from_string

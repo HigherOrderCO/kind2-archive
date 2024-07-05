@@ -2,6 +2,6 @@ use List/{cons,nil}
 
 concat <T> (xs: (List T)) (ys: (List T)) : (List T) =
   match xs {
-    ++: (cons xs.head (concat xs.tail ys))
-    []: ys
+    cons: (cons _ xs.head (concat _ xs.tail ys))
+    nil: ys
   }

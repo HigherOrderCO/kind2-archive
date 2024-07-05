@@ -1,3 +1,0 @@
-Parser.Guard
-: ∀(A: *) *
-= λA (Pair (Parser Bool) (Parser A))
