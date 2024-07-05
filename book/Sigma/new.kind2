@@ -1,4 +1,4 @@
-Sigma.new
+Sigma/new
 : ∀(A: *) ∀(B: ∀(x: A) *) ∀(a: A) ∀(b: (B a))
   (Sigma A B)
 = λA λB λa λb ~λP λnew (new a b)

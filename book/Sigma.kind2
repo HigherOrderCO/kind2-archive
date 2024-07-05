@@ -1,7 +1,11 @@
-Sigma
-: ∀(A: *) ∀(B: ∀(x: A) *) *
-= λA λB
-  $(self: (Sigma A B))
-  ∀(P: ∀(x: (Sigma A B)) *)
-  ∀(new: ∀(a: A) ∀(b: (B a)) (P (Sigma.new A B a b)))
-  (P self)
+data Sigma <A: *> <B: A -> *>
+| new (fst: A) (snd: (B fst))
+
+// λ-encoded version:
+//Sigma
+//: ∀(A: *) ∀(B: ∀(x: A) *) *
+//= λA λB
+ //$(self: (Sigma A B))
+ //∀(P: ∀(x: (Sigma A B)) *)
+ //∀(new: ∀(a: A) ∀(b: (B a)) (P (Sigma/new A B a b)))
+ //(P self)

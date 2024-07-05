@@ -52,8 +52,8 @@ impl<'i> KindParser<'i> {
         typ = Term::All { era: false, nam: idx_nam.clone(), inp: Box::new(idx_typ.clone()), bod: Box::new(typ) };
         val = Term::Lam { era: false, nam: idx_nam.clone(), bod: Box::new(val) };
       }
-      for par_nam in adt.pars.iter().rev() {
-        typ = Term::All { era: false, nam: par_nam.clone(), inp: Box::new(Term::Set), bod: Box::new(typ) };
+      for (par_nam, par_typ) in adt.pars.iter().rev() {
+        typ = Term::All { era: false, nam: par_nam.clone(), inp: Box::new(par_typ.clone()), bod: Box::new(typ) };
         val = Term::Lam { era: false, nam: par_nam.clone(), bod: Box::new(val) };
       }
       //println!("NAM: {}", adt.name);

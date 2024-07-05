@@ -2,6 +2,6 @@ use Nat/{succ,zero}
 
 double (n: Nat) : Nat =
   match n {
-    succ: (succ (succ (double n.pred)))
+    succ: (succ (succ (double succ)))
     zero: #0
   }

@@ -1,26 +1,10 @@
 # Kind2: a parallel proof & programming language
 
-> NOTE: THIS REPOSITORY IS A WIP. OFFICIAL RELEASE COMING SOON!
-
-Kind2 is a general-purpose programming language made from scratch to harness
-[HVM](https://github.com/HigherOrderCO/HVM)'s **massive parallelism** and
-computational advantages (no garbage collection, optimal β-reduction). Its type
-system is a minimal core based on the Calculus of Constructions, making it
-inherently secure. Essentially, Kind2 aims to be:
-
-- As *friendly* as **Python**
-
-- As *efficient* as **Rust**
-
-- As *high-level* as **Haskell**
-
-- As *parallel* as **CUDA**
-
-- As *formal* as **Lean**
-
-And it seeks to accomplish that goal by relying on the solid foundations of [Interaction Combinators](https://www.semanticscholar.org/paper/Interaction-Combinators-Lafont/6cfe09aa6e5da6ce98077b7a048cb1badd78cc76).
-
-
+Kind2 is a minimalist proof language based on [Self
+types](https://cse.sc.edu/~pfu/document/papers/rta-tlca.pdf), a simple extension
+to the Calculus of Constructions that allows encoding inductive types without a
+complex, hardcoded datatype system. It compiles to
+[Bend](https://github.com/HigherOrderCO/Bend).
 
 ## Usage
 
@@ -52,16 +36,7 @@ And it seeks to accomplish that goal by relying on the solid foundations of [Int
     ./name
     ```
 
-## Syntax
-
-Kind2's syntax aims to be as friendly as Python's, while still exposing the
-high-level functional idioms that result in fast, parallel HVM binaries.
-Function application (`(f x y z ...)`) follows a Lisp-like style and
-pattern-matching `(match x { ctr: .. })` feels like Haskell; but control-flow is
-more Python-like. In short, it can be seen as *"Haskell inside, Python
-outside"*: a friendly syntax on top of a powerful functional core.
-
-### Functions:
+## Examples
 
 ```javascript
 // The Fibonacci function
@@ -104,4 +79,4 @@ bft (n: Nat) : (half (double n)) == n =
 
 ### More Examples:
 
-There are countless examples on the [`Book/`](book) directory. Check it!
+There are countless examples on the [`Book/`](book) directory.

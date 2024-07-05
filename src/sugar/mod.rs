@@ -17,7 +17,7 @@ pub struct Equal {
 #[derive(Debug, Clone)]
 pub struct ADT {
   pub name: String,
-  pub pars: Vec<String>, // parameters
+  pub pars: Vec<(String,Term)>, // parameters
   pub idxs: Vec<(String,Term)>, // indices
   pub ctrs: Vec<Constructor>, // constructors
 }
@@ -70,7 +70,7 @@ pub struct Match {
 //
 // The Vector type:
 //
-//   data Vector A (len: Nat)
+//   data Vector <A: *> (len: Nat)
 //   | nil : (Vector A zero)
 //   | cons (len: Nat) (head: A) (tail: (Vector A len)) : (Vector A (succ len))
 //
@@ -400,7 +400,7 @@ impl Term {
     let name: String;
     let pvar: String;
 
-    let mut pars: Vec<String> = Vec::new();
+    let mut pars: Vec<(String,Term)> = Vec::new();
     let mut idxs: Vec<(String,Term)> = Vec::new();
     let mut ctrs: Vec<Constructor> = Vec::new();
     let mut term = self;
@@ -448,7 +448,7 @@ impl Term {
         // Collects the wit's parameters (remaining Apps)
         while let Term::App { era: _, fun: wit_inp_fun, arg: wit_inp_arg } = &**wit_inp {
           if let Term::Var { nam: parameter } = &**wit_inp_arg {
-            pars.push(parameter.to_string());
+            pars.push((parameter.to_string(), Term::Met {})); // FIXME: fill type
             wit_inp = wit_inp_fun;
           } else {
             return None;
@@ -531,8 +531,8 @@ impl Term {
     let mut self_type = Term::Var { nam: adt.name.clone() };
 
     // Then appends each type parameter
-    for par in adt.pars.iter() {
-      self_type = Term::App { era: false, fun: Box::new(self_type), arg: Box::new(Term::Var { nam: par.clone() }) };
+    for (par_name, _) in adt.pars.iter() {
+      self_type = Term::App { era: false, fun: Box::new(self_type), arg: Box::new(Term::Var { nam: par_name.clone() }) };
     }
 
     // And finally appends each index
@@ -598,7 +598,7 @@ impl Term {
 
       // For each type parameter
       // NOTE: Not necessary anymore due to auto implicit arguments
-      for par in adt.pars.iter() {
+      for (par, _) in adt.pars.iter() {
         ctr_type = Term::App {
           era: true,
           fun: Box::new(ctr_type),
@@ -694,8 +694,12 @@ impl ADT {
     let mut adt_head = vec![];
     adt_head.push(Show::text("data"));
     adt_head.push(Show::text(&self.name));
-    for par in self.pars.iter() {
-      adt_head.push(Show::text(par));
+    for (nam,typ) in self.pars.iter() {
+      adt_head.push(Show::call("", vec![
+        Show::glue("", vec![Show::text("<"), Show::text(nam), Show::text(": ")]),
+        typ.format_go(),
+        Show::text(">"),
+      ]));
     }
     for (nam,typ) in self.idxs.iter() {
       adt_head.push(Show::call("", vec![
@@ -733,7 +737,7 @@ impl ADT {
         Show::call(" ", {
           let mut ret_typ = vec![];
           ret_typ.push(Show::text(&format!("({}", &self.name)));
-          for par in &self.pars {
+          for (par,_typ) in &self.pars {
             ret_typ.push(Show::text(par));
           }
           for idx in &ctr.idxs {
@@ -764,11 +768,19 @@ impl<'i> KindParser<'i> {
     let mut uses = uses.clone();
     // Parses ADT parameters (if any)
     self.skip_trivia();
-    while self.peek_one().map_or(false, |c| c.is_ascii_alphabetic()) {
+    while self.peek_one() == Some('<') {
+      self.consume("<")?;
       let par = self.parse_name()?;
-      self.skip_trivia();
+      let par_type = if self.peek_one() == Some(':') {
+        self.consume(":")?;
+        Some(self.parse_term(fid, &uses)?)
+      } else {
+        None
+      };
+      self.consume(">")?;
       uses = shadow(&par, &uses);
-      pars.push(par);
+      pars.push((par, par_type.unwrap_or(Term::Met {})));
+      self.skip_trivia();
     }
     // Parses ADT fields
     while self.peek_one() == Some('(') {
@@ -814,7 +826,7 @@ impl<'i> KindParser<'i> {
           // Parses the type (must be fixed, equal to 'name')
           self.consume(&name)?;
           // Parses each parameter (must be fixed, equal to 'pars')
-          for par in &pars {
+          for (par,_typ) in &pars {
             self.consume(par)?;
           }
           // Parses the indices
