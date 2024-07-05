@@ -4,15 +4,3 @@ match <T: *> <a: T> <b: T>
   (e: (Equal T a b))
 : (P a b e) =
   (~e P refl)
-
-can you understand this?
-
-Yes, this appears to be a dependently-typed pattern matching function, likely written in a language similar to Idris, Agda, or Coq. It's implementing the principle of indiscernibility of identicals, also known as Leibniz's law. Here's a brief explanation:
-
-1. It takes two values `a` and `b` of some type `T`.
-2. It takes a predicate `P` that depends on two values of type `T` and a proof of their equality.
-3. It takes a proof `refl` that the predicate holds for any value `x` when compared to itself.
-4. It takes a proof `e` that `a` and `b` are equal.
-5. It returns a proof that the predicate `P` holds for `a`, `b`, and the equality proof `e`.
-
-The implementation uses the equality proof `e` to rewrite the goal, effectively turning it into `P a a (Equal/refl/ T a)`, which can be solved by the `refl` argument.

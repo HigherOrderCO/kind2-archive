@@ -200,9 +200,9 @@ bind term = go term [] where
 -- ----------
 
 -- Evaluation levels:
--- - 0: reduces refs never
--- - 1: reduces refs on redexes
--- - 2: reduces refs always
+-- - 0: reduces refs: never
+-- - 1: reduces refs: redexes
+-- - 2: reduces refs: always
 
 reduce :: Book -> Fill -> Int -> Term -> Term
 reduce book fill lv (App fun arg)     = reduceApp book fill lv (reduce book fill lv fun) arg
@@ -315,15 +315,16 @@ normal book fill lv term dep = normalGo book fill lv (reduce book fill lv term) 
 
 equal :: Term -> Term -> Int -> Env Bool
 equal a b dep = do
-  book <- envGetBook
-  fill <- envGetFill
-  let a' = reduce book fill 2 a
-  let b' = reduce book fill 2 b
-  same <- tryIdentical a' b' dep
-  if same then do
-    return True
-  else do
-    similar a' b' dep
+  -- trace ("= " ++ termStr a dep ++ "\n? " ++ termStr b dep) $ do
+    book <- envGetBook
+    fill <- envGetFill
+    let a' = reduce book fill 2 a
+    let b' = reduce book fill 2 b
+    same <- tryIdentical a' b' dep
+    if same then do
+      return True
+    else do
+      similar a' b' dep
 
 tryIdentical :: Term -> Term -> Int -> Env Bool
 tryIdentical a b dep = do
@@ -802,7 +803,7 @@ checkDef (Ref nam) = do
     Just val -> case val of
       Ann chk val typ -> check 0 val typ 0 >> return ()
       Ref nm2         -> checkDef (Ref nm2)
-      _               -> trace ("oxi" ++ termStr val 0) $ infer val 0 >> return ()
+      _               -> infer val 0 >> return ()
     Nothing  -> do
       envLog (Error 0 (Hol "undefined_reference" []) (Hol "unknown_type" []) (Ref nam) 0)
       envFail
@@ -901,7 +902,7 @@ contextStrAnn book fill term              dep = termStr (normal book fill 0 term
 
 infoStr :: Book -> Fill -> Info -> String
 infoStr book fill (Found name typ ctx dep) =
-  let typ' = termStr (normal book fill 1 typ dep) dep
+  let typ' = termStr (normal book fill 0 typ dep) dep
       ctx' = drop 1 (contextStr book fill ctx dep)
   in concat ["#found{", name, " ", typ', " [", ctx', "]}"]
 infoStr book fill (Error src expected detected value dep) =
@@ -930,6 +931,7 @@ parseTerm :: P.Parsec String () Term
 parseTerm = P.choice
   [ parseAll
   , parseLam
+  , parseOp2
   , parseApp
   , parseAnn
   , parseSlf
@@ -937,9 +939,7 @@ parseTerm = P.choice
   , parseUse
   , parseLet
   , parseSet
-  , parseU60
   , parseNum
-  , parseOp2
   , parseSwi
   , parseTxt
   , parseNat
@@ -1003,7 +1003,11 @@ parseIns = do
   val <- parseTerm
   return $ Ins val
 
-parseRef = Ref <$> parseName
+parseRef = do
+  name <- parseName
+  return $ case name of
+    "U60" -> U60
+    _     -> Ref name
 
 parseUse = do
   P.try (P.string "use ")
@@ -1033,13 +1037,13 @@ parseLet = do
 
 parseSet = P.char '*' >> return Set
 
-parseU60 = P.try $ P.string "U60" >> return U60
-
 parseNum = Num . read <$> P.many1 P.digit
 
 parseOp2 = do
-  P.char '('
-  opr <- parseOper
+  opr <- P.try $ do
+    P.string "("
+    opr <- parseOper
+    return opr
   P.spaces
   fst <- parseTerm
   P.spaces
@@ -1108,7 +1112,7 @@ parseSrc = do
 parseName :: P.Parsec String () String
 parseName = do
   head <- P.letter
-  tail <- P.many (P.alphaNum <|> P.char '/' <|> P.char '.' <|> P.char '_')
+  tail <- P.many (P.alphaNum <|> P.char '/' <|> P.char '.' <|> P.char '_' <|> P.char '-')
   return (head : tail)
 
 parseOper = P.choice
@@ -1117,12 +1121,12 @@ parseOper = P.choice
   , P.string "*" >> return MUL
   , P.string "/" >> return DIV
   , P.string "%" >> return MOD
+  , P.string "<" >> return LT
+  , P.string ">" >> return GT
   , P.string "==" >> return EQ
   , P.string "!=" >> return NE
   , P.string "<=" >> return LTE
   , P.string ">=" >> return GTE
-  , P.string "<" >> return LT
-  , P.string ">" >> return GT
   , P.string "&" >> return AND
   , P.string "|" >> return OR
   , P.string "^" >> return XOR

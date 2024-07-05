@@ -1,3 +1,3 @@
-data BMap A
+data BMap <A>
 | node (lft: (BMap A)) (val: A) (rgt: (BMap A))
 | leaf

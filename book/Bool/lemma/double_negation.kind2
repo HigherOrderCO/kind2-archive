@@ -1,4 +1,7 @@
 use Bool/{true,false,not}
 
 double_negation (x: Bool) : (Equal Bool (not (not x)) x) =
-  ?a
+  match x {
+    true : {=}
+    false: {=}
+  }

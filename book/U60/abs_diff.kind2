@@ -1,7 +1,7 @@
 use Bool/{true,false}
 
 abs_diff (a: U60) (b: U60) : U60 =
-  match x = (U60/to_bool (< a b)) {
+  match Bool/true {
     true: (- b a)
     false: (- a b)
   }

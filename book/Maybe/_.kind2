@@ -1,3 +1,3 @@
-data Maybe T
+data Maybe <T: *>
 | some (value: T)
 | none

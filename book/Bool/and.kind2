@@ -2,6 +2,6 @@ use Bool/{true,false,and}
 
 and (a: Bool) (b: Bool) : Bool =
   match a {
-    true: "foo"
+    true: b
     false: false
   }

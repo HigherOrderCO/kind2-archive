@@ -1,4 +1,5 @@
 /target
+.bkp/
 .tmp/
 .kind21/
 plans.txt

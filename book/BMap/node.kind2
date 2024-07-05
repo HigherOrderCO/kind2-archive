@@ -1,4 +1,4 @@
-BMap.node
+BMap/node
 : ∀(A: *)
   ∀(lft: (BMap A))
   ∀(val: A)

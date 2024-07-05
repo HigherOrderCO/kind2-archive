@@ -1,2 +1,2 @@
-data Pair A B
+data Pair <A: *> <B: *>
 | new (fst: A) (snd: B) : (Pair A B)
