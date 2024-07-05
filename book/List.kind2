@@ -1,3 +1,10 @@
 data List <T>
 | cons (head: T) (tail: (List T))
 | nil
+
+// List (A: *) : * =
+//   $(self: (List A))
+//   ∀(P: (List A) -> *)
+//   ∀(cons: ∀(head: A) ∀(tail: (List A)) (P (List/cons/ A head tail)))
+//   ∀(nil: (P (List/nil/ A)))
+//   (P self)
