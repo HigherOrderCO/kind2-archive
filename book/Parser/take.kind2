@@ -1,5 +1,8 @@
 use Parser/repeat
 use Parser/char
 
-take (n: Nat) : (Parser String) =
-  (repeat _ n char)
+take
+- n: Nat
+: (Parser String)
+
+(repeat _ n char)

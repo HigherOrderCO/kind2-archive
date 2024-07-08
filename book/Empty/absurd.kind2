@@ -1,2 +1,6 @@
-absurd (e: Empty) (P: *) : P =
-  (~e λx(P))
+absurd
+- e: Empty
+- P: *
+: P
+
+(~e λx(P))

@@ -1,8 +1,9 @@
 Cmp/match
-  (P: Cmp -> *)
-  (l: (P Cmp/ltn))
-  (e: (P Cmp/eql))
-  (g: (P Cmp/gtn))
-  (c: Cmp)
-: (P c) =
-  (~c P l e g)
+- P: Cmp -> *
+- l: (P Cmp/ltn)
+- e: (P Cmp/eql)
+- g: (P Cmp/gtn)
+- c: Cmp
+: (P c)
+
+(~c P l e g)

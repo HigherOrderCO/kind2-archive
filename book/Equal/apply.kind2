@@ -1,4 +1,8 @@
-apply <A: *> <B: *> <a: A> <b: B> (f: A -> B) (e: (Equal A a b)) : (Equal B (f a) (f b)) =
-  match e {
-    Equal/refl: ~λPλe(e (f e.a))
-  }: (Equal B (f a) (f b))
+apply <A: *> <B: *> <a: A> <b: B>
+- f: A -> B
+- e: (Equal A a b)
+: (Equal B (f a) (f b))
+
+match e {
+  Equal/refl: ~λPλe(e (f e.a))
+}: (Equal B (f a) (f b))

@@ -1,3 +1,4 @@
 BMap/leaf
 : ∀(A: *) (BMap A)
-= λA ~λP λnode λleaf leaf
+
+λA ~λP λnode λleaf leaf

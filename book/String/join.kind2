@@ -1,15 +1,9 @@
-join (sep: String) (strs: (List String)) : String =
-  match strs {
-    List/cons: (String/concat strs.head (String/join/go sep strs.tail))
-    List/nil: String/nil
-  }
+join
+- sep: String
+- strs: (List String)
+: String
 
-
-
-//join
-//: ∀(sep: String) ∀(strs: (List String)) String
-//= λsep λstrs
-  //use P = λx String
-  //use cons = λh λt (String/concat h (String/join/go sep t))
-  //use nil = String/nil
-  //(~strs P cons nil)
+match strs {
+  List/cons: (String/concat strs.head (String/join/go sep strs.tail))
+  List/nil: String/nil
+}

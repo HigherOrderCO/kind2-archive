@@ -879,7 +879,7 @@ impl Term {
       for (idx_name, _) in adt.idxs.iter().rev() {
         motive = Term::Lam {
           era: false,
-          nam: idx_name.clone(),
+          nam: format!("{}.{}", mat.name, idx_name),
           bod: Box::new(motive),
         };
       }

@@ -1,8 +1,11 @@
 use List/{cons,nil}
 use Bool/{true}
 
-and (list: (List Bool)) : Bool =
-  fold list {
-    cons: (Bool/and list.head list.tail)
-    nil: true
-  }
+and
+- list: (List Bool)
+: Bool
+
+fold list {
+  cons: (Bool/and list.head list.tail)
+  nil: true
+}

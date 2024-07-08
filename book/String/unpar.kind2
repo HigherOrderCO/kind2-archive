@@ -1,11 +1,12 @@
 unpar
 : ∀(fst: Char) ∀(lst: Char) ∀(str: String) String
-= λfst λlst λstr
-  use P = λx String
-  use cons = λhead λtail
-    use P = λx ∀(head: Char) ∀(tail: String) String
-    use true = λhead λtail (String/begin tail)
-    use false = λhead λtail (String/cons head tail)
-    (~(Char/equal head fst) P true false head tail)
-  use nil = String/nil
-  (~str P cons nil)
+
+λfst λlst λstr
+use P = λx String
+use cons = λhead λtail
+  use P = λx ∀(head: Char) ∀(tail: String) String
+  use true = λhead λtail (String/begin tail)
+  use false = λhead λtail (String/cons head tail)
+  (~(Char/equal head fst) P true false head tail)
+use nil = String/nil
+(~str P cons nil)

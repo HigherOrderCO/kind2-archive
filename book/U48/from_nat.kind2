@@ -1,7 +1,10 @@
 use Nat/{succ,zero}
 
-from_nat (n: Nat) : U48 =
-  match n {
-    succ: (+ 1 (from_nat n.pred))
-    zero: 0
-  }
+from_nat
+- n: Nat
+: U48
+
+match n {
+  succ: (+ 1 (from_nat n.pred))
+  zero: 0
+}

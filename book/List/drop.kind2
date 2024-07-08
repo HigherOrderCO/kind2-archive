@@ -1,11 +1,15 @@
 use List/{cons,nil}
 use Nat/{succ,zero}
 
-drop <A> (n: Nat) (list: (List A)) : (List A) =
-  match n {
-    zero: list
-    succ: match list {
-      cons: (drop _ n.pred list.tail)
-      nil: (nil _)
-    }
+drop <A>
+- n: Nat
+- list: (List A)
+: (List A)
+
+match n {
+  zero: list
+  succ: match list {
+    cons: (drop _ n.pred list.tail)
+    nil: (nil _)
   }
+}

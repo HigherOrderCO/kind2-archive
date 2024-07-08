@@ -1,2 +1,4 @@
-String/nil : String =
-  ~λP λcons λnil nil
+String/nil
+: String
+
+~λP λcons λnil nil

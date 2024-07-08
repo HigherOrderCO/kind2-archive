@@ -1,2 +1,4 @@
-nil <T> : (List T) =
-  ~λP λcons λnil nil
+nil <T>
+: (List T)
+
+~λP λcons λnil nil

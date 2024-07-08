@@ -1,5 +1,8 @@
-sum (n: U48) : U48 =
-  switch n {
-    0: 0
-    _: (+ n (sum n-1))
-  }
+sum
+- n: U48
+: U48
+
+switch n {
+  0: 0
+  _: (+ n (sum n-1))
+}

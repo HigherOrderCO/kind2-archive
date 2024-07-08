@@ -1,7 +1,10 @@
 use Bool/{true,false}
 
-to_bool (x: U48) : Bool =
-  switch x {
-    0: false
-    _: true
-  }: Bool
+to_bool
+- x: U48
+: Bool
+
+switch x {
+  0: false
+  _: true
+}: Bool

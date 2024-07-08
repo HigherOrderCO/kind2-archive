@@ -1,6 +1,9 @@
-fib (n: U48) : U48 =
-  switch n {
-    0: 0
-    1: 1
-    _: (+ (fib (- n 1)) (fib (- n 2)))
-  }
+fib
+- n: U48
+: U48
+
+switch n {
+  0: 0
+  1: 1
+  _: (+ (fib (- n 1)) (fib (- n 2)))
+}

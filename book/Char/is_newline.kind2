@@ -1,2 +1,5 @@
-is_newline (a: Char) : Bool =
-  (Char/equal a 10)
+is_newline
+- a: Char
+: Bool
+
+(Char/equal a 10)

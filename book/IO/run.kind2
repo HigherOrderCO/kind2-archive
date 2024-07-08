@@ -1,20 +1,10 @@
-run <A> (x: (IO A)) : (IO A) =
-  match x {
-    IO/print: (IO/print A x.text λu (run A (x.then Unit/new)))
-    IO/load: (IO/load A x.file λs (run A (x.then s)))
-    IO/save: (IO/save A x.file x.text λu (run A (x.then Unit/new)))
-    IO/done: (IO/done A x.term)
-  }
+run <A>
+- x: (IO A)
+: (IO A)
 
-//IO/run
-//: ∀(A: *) ∀(x: (IO A)) (IO A)
-//= λA λx
-  //use P = λx (IO A)
-  //use print = λtext λthen
-    //(IO/print A text λu (IO/run A (then Unit/new)))
-  //use load = λfile λthen
-    //(IO/load A file λs (IO/run A (then s)))
-  //use save = λfile λtext λthen
-    //(IO/save A file text λu (IO/run A (then Unit/new)))
-  //use done = λterm (IO/done A term)
-  //(~x P print load save done)
+match x {
+  IO/print: (IO/print A x.text λu (run A (x.then Unit/new)))
+  IO/load: (IO/load A x.file λs (run A (x.then s)))
+  IO/save: (IO/save A x.file x.text λu (run A (x.then Unit/new)))
+  IO/done: (IO/done A x.term)
+}

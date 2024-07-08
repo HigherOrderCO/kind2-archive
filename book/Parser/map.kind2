@@ -1,8 +1,12 @@
 use Parser/Result/{done,fail}
 
-map <A> <B> (f: A -> B) (p: (Parser A)) : (Parser B) =
-  λcode
-    match result = (p code) {
-      done: (done _ result.code (f result.value))
-      fail: (fail _ result.error)
-    }
+map <A> <B>
+- f: A -> B
+- p: (Parser A)
+: (Parser B)
+
+λcode
+  match result = (p code) {
+    done: (done _ result.code (f result.value))
+    fail: (fail _ result.error)
+  }

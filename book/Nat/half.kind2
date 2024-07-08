@@ -1,10 +1,13 @@
 use Nat/{succ,zero}
 
-half (n: Nat) : Nat =
-  match n {
-    succ: match n.pred {
-      succ: (succ (half n.pred.pred))
-      zero: zero
-    }
+half
+- n: Nat
+: Nat
+
+match n {
+  succ: match n.pred {
+    succ: (succ (half n.pred.pred))
     zero: zero
   }
+  zero: zero
+}

@@ -1,2 +1,3 @@
-Cmp/gtn : Cmp =
-  ~λP λltn λeql λgtn gtn
+Cmp/gtn : Cmp
+
+~λP λltn λeql λgtn gtn

@@ -1,2 +1,4 @@
-false : Bool =
-  ~λP λt λf f
+false
+: Bool
+
+~λP λt λf f

@@ -1,5 +1,9 @@
-max (a: U48) (b: U48) : U48 =
-  switch x = (< a b) {
-    0: a
-    _: b
-  }
+max
+- a: U48
+- b: U48
+: U48
+
+switch x = (< a b) {
+  0: a
+  _: b
+}

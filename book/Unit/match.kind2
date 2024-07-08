@@ -1,4 +1,7 @@
 match
-  (x: Unit) (P: Unit -> *) (new: (P Unit/new))
+- x: Unit
+- P: Unit -> *
+- new: (P Unit/new)
 : (P x)
-= (~x P new)
+
+(~x P new)

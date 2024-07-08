@@ -1,5 +1,10 @@
-if <P> (x: U48) (t: P) (f: P) : P =
-  switch x {
-    0: t
-    _: f
-  }
+if <P>
+- x: U48
+- t: P
+- f: P
+: P
+
+switch x {
+  0: t
+  _: f
+}

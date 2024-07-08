@@ -4,5 +4,6 @@ BMap/node
   ∀(val: A)
   ∀(rgt: (BMap A))
   (BMap A)
-= λA λlft λval λrgt
-  ~λP λnode λleaf (node lft val rgt)
+
+λA λlft λval λrgt
+~λP λnode λleaf (node lft val rgt)

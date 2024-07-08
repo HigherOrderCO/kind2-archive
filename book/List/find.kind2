@@ -2,11 +2,15 @@ use Bool/{true,false}
 use List/{cons,nil}
 use Maybe/{some,none}
 
-find <A> (cond: A -> Bool) (xs: (List A)) : (Maybe A) =
-  match xs {
-    cons: match result = (cond xs.head) {
-      true: (some _ xs.head)
-      false: (find _ cond xs.tail)
-    }
-    nil: (none _)
+find <A>
+- cond: A -> Bool
+- xs: (List A)
+: (Maybe A)
+
+match xs {
+  cons: match result = (cond xs.head) {
+    true: (some _ xs.head)
+    false: (find _ cond xs.tail)
   }
+  nil: (none _)
+}

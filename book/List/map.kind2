@@ -1,7 +1,11 @@
 use List/{cons,nil}
 
-map <A> <B> (xs: (List A)) (f: A -> B) : (List B) =
-  fold xs {
-    cons: (cons _ (f xs.head) xs.tail)
-    nil: (nil _)
-  }
+map <A> <B>
+- xs: (List A)
+- fn: A -> B
+: (List B)
+
+fold xs {
+  cons: (cons _ (fn xs.head) xs.tail)
+  nil: (nil _)
+}

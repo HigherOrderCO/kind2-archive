@@ -1,7 +1,12 @@
 use Tree/{node,leaf}
 
-Tree/fold <A> (P: *) (nd: A -> P -> P -> P) (lf: P) (bm: (Tree A)) : P =
-  match bm with (nd: A -> P -> P -> P) (lf: P) {
-    node: (nd bm.val (Tree/fold _ P nd lf bm.lft) (Tree/fold _ P nd lf bm.rgt))
-    leaf: lf
-  }
+Tree/fold <A> (P: *)
+- nd: A -> P -> P -> P
+- lf: P
+- bm: (Tree A)
+: P
+
+match bm with (nd: A -> P -> P -> P) (lf: P) {
+  node: (nd bm.val (Tree/fold _ P nd lf bm.lft) (Tree/fold _ P nd lf bm.rgt))
+  leaf: lf
+}

@@ -1,7 +1,11 @@
 use Maybe/{some,none}
 
-bind <A> <B> (ma: (Maybe A)) (f: A -> (Maybe B)) : (Maybe B) =
-  match ma {
-    some: (f ma.value)
-    none: (none _)
-  }
+bind <A> <B>
+- ma: (Maybe A)
+- f: A -> (Maybe B)
+: (Maybe B)
+
+match ma {
+  some: (f ma.value)
+  none: (none _)
+}

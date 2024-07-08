@@ -1,9 +1,10 @@
 use Bool/{true,false}
 
 match
-  (P: ∀(x: Bool) *)
-  (t: (P true))
-  (f: (P false))
-  (b: Bool)
+- P: ∀(x: Bool) *
+- t: (P true)
+- f: (P false)
+- b: Bool
 : (P b)
-= (~b P t f)
+
+(~b P t f)

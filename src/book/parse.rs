@@ -71,9 +71,14 @@ impl<'i> KindParser<'i> {
     // Arguments (optional)
     let mut args = im::Vector::new();
     let mut uses = uses.clone();
-    while self.peek_one() == Some('<') || self.peek_one() == Some('(') {
-      let implicit = self.peek_one() == Some('<');
-      self.consume(if implicit { "<" } else { "(" })?;
+    while self.peek_one() == Some('<') || self.peek_one() == Some('(') || self.peek_one() == Some('~') || self.peek_one() == Some('-') {
+      let implicit = self.peek_one() == Some('<') || self.peek_one() == Some('~');
+      let closing = self.peek_one() == Some('<') || self.peek_one() == Some('(');
+      if closing {
+        self.consume(if implicit { "<" } else { "(" })?;
+      } else {
+        self.consume(if implicit { "~" } else { "-" })?;
+      }
       let arg_name = self.parse_name()?;
       self.skip_trivia();
       let arg_type = if self.peek_one() == Some(':') {
@@ -82,7 +87,9 @@ impl<'i> KindParser<'i> {
       } else {
         Term::Met {}
       };
-      self.consume(if implicit { ">" } else { ")" })?;
+      if closing {
+        self.consume(if implicit { ">" } else { ")" })?;
+      }
       uses = shadow(&arg_name, &uses);
       args.push_back((implicit, arg_name, arg_type));
       self.skip_trivia();
@@ -100,8 +107,13 @@ impl<'i> KindParser<'i> {
       ann = false;
     }
 
-    // Value (mandatory)
-    self.consume("=")?;
+    // Optional '=' sign
+    self.skip_trivia();
+    if self.peek_one() == Some('=') {
+      self.consume("=")?;
+      self.skip_trivia();
+    }
+
     let mut val = self.parse_term(fid, &uses)?;
 
     //println!("PARSING {}", nam);

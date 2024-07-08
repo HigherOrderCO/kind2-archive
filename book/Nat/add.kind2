@@ -1,7 +1,11 @@
 use Nat/{succ,zero}
 
-add (a: Nat) (b: Nat) : Nat =
-  match a {
-    succ: (succ (add a.pred a))
-    zero: b
-  }
+add
+- a: Nat
+- b: Nat
+: Nat
+
+match a {
+  succ: (succ (add a.pred b))
+  zero: b
+}

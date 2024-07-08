@@ -1,7 +1,12 @@
 use List/{cons,nil}
 
-List/fold <A> (P: *) (c: A -> P -> P) (n: P) (xs: (List A)) : P =
-  match xs {
-    cons: (c xs.head (List/fold _ P c n xs.tail))
-    nil: n
-  }
+List/fold <A> (P: *)
+- c: A -> P -> P
+- n: P
+- xs: (List A)
+: P
+
+match xs {
+  cons: (c xs.head (List/fold _ P c n xs.tail))
+  nil: n
+}

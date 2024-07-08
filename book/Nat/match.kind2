@@ -1,8 +1,8 @@
 match
-  (P: Nat -> *)
-  (s: ∀(pred: Nat) (P (Nat/succ pred)))
-  (z: (P Nat/zero))
-  (n: Nat)
-: (P n) =
-  (~n P s z)
-  
+- P: Nat -> *
+- s: ∀(pred: Nat) (P (Nat/succ pred))
+- z: (P Nat/zero)
+- n: Nat
+: (P n)
+
+(~n P s z)

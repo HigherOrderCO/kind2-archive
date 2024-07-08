@@ -1,4 +1,6 @@
 use List/{cons,nil}
 
-quote : (List Char) =
-  (cons _ '"' (nil _))
+quote
+: (List Char)
+
+(cons _ '"' (nil _))

@@ -1,9 +1,10 @@
 match <A> <B>
-  (P: (IO A) -> *)
-  (print: ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO/print A text then)))
-  (load: ∀(file: String) ∀(then: ∀(x: String) (IO A)) (P (IO/load A file then)))
-  (save: ∀(file: String) ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO/save A file text then)))
-  (done: ∀(term: A) (P (IO/done A term)))
-  (x: (IO A))
-: (P x) =
-  (~x P print load save done)
+- P: (IO A) -> *
+- print: ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO/print A text then))
+- load: ∀(file: String) ∀(then: ∀(x: String) (IO A)) (P (IO/load A file then))
+- save: ∀(file: String) ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO/save A file text then))
+- done: ∀(term: A) (P (IO/done A term))
+- x: (IO A)
+: (P x)
+
+(~x P print load save done)

@@ -1,2 +1,4 @@
-zero : Nat = 
-  ~λP λsucc λzero zero
+zero
+: Nat
+
+~λP λsucc λzero zero

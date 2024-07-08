@@ -1,2 +1,5 @@
-U48/show (n: U48) : String =
-  (String/Chunk/build (U48/show/go n))
+U48/show
+- n: U48
+: String
+
+(String/Chunk/build (U48/show/go n))

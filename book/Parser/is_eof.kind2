@@ -2,9 +2,11 @@ use Parser/Result/{done}
 use Bool/{true,false}
 use List/{cons,nil}
 
-is_eof : (Parser Bool) =
-  λcode
-    match code {
-      cons: (done _ code false)
-      nil: (done _ (nil _) true)
-    }
+is_eof
+: (Parser Bool)
+
+λcode
+  match code {
+    cons: (done _ code false)
+    nil: (done _ (nil _) true)
+  }

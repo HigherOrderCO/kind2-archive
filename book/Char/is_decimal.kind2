@@ -1,2 +1,5 @@
-is_decimal (a: Char) : Bool =
-  (Char/is_between 48 57 a)
+is_decimal
+- a: Char
+: Bool
+
+(Char/is_between 48 57 a)

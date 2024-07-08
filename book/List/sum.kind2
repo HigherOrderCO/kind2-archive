@@ -1,5 +1,8 @@
-sum (xs: (List U48)): U48 =
-  match xs {
-    ++: (+ xs.head (sum xs.tail))
-    []: 0
-  }
+sum
+- xs: (List U48)
+: U48
+
+match xs {
+  ++: (+ xs.head (sum xs.tail))
+  []: 0
+}

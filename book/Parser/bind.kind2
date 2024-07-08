@@ -1,8 +1,12 @@
 use Parser/Result/{done,fail}
 
-bind <A> <B> (pa: (Parser A)) (f: A -> (Parser B)) : (Parser B) =
-  λcode
-    match result = (pa code) {
-      done: (f result.value result.code)
-      fail: (fail _ result.error)
-    }
+bind <A> <B>
+- pa: (Parser A)
+- f: A -> (Parser B)
+: (Parser B)
+
+λcode
+  match result = (pa code) {
+    done: (f result.value result.code)
+    fail: (fail _ result.error)
+  }

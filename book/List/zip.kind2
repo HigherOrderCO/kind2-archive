@@ -1,10 +1,14 @@
 use List/{cons,nil}
 
-zip <A> <B> (as: (List A)) (bs: (List B)) : (List (Pair A B)) =
-  match as {
-    cons: match bs {
-      cons: (cons _ (Pair/new _ _ as.head bs.head) (zip _ _ as.tail bs.tail))
-      nil: (nil _)
-    }
+zip <A> <B>
+- as: (List A)
+- bs: (List B)
+: (List (Pair A B))
+
+match as {
+  cons: match bs {
+    cons: (cons _ (Pair/new _ _ as.head bs.head) (zip _ _ as.tail bs.tail))
     nil: (nil _)
   }
+  nil: (nil _)
+}

@@ -1,2 +1,4 @@
-Maybe/monad : (Monad Maybe) =
-  (Monad/new _ Maybe/bind Maybe/pure)
+Maybe/monad
+: (Monad Maybe)
+
+(Monad/new _ Maybe/bind Maybe/pure)

@@ -1,8 +1,11 @@
 use List/{cons,nil}
 use Nat/{succ,zero}
 
-length <A> (xs: (List A)) : Nat =
-  match xs {
-    cons: (succ (length _ xs.tail))
-    nil: zero
-  }
+length <A>
+- xs: (List A)
+: Nat
+
+match xs {
+  cons: (succ (length _ xs.tail))
+  nil: zero
+}

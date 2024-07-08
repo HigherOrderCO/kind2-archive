@@ -1,5 +1,7 @@
 use Char/{is_name}
 use Parser/pick_while
 
-name : (Parser String) =
-  (pick_while is_name)
+name
+: (Parser String)
+
+(pick_while is_name)

@@ -5,22 +5,24 @@ use Parser/Result/{done,fail}
 use Bool/{true,false}
 use Char/{equal}
 
-test (test_str: String) : (Parser Bool) =
-  λcode
-    match test_str {
-      cons:
-        match code {
-          cons:
-            match eq = (equal test_str.head code.head) {
-              true: 
-                match result = (test test_str.tail code.tail) {
-                  done: (done _ code result.value)
-                  fail: (fail _ result.error)
-                }
-              false: (done _ code false)
-            }
-          nil: (done _ code false)
-        }
-      nil: (done _ code true)
-    }
+test
+- test_str: String
+: (Parser Bool)
 
+λcode
+  match test_str {
+    cons:
+      match code {
+        cons:
+          match eq = (equal test_str.head code.head) {
+            true: 
+              match result = (test test_str.tail code.tail) {
+                done: (done _ code result.value)
+                fail: (fail _ result.error)
+              }
+            false: (done _ code false)
+          }
+        nil: (done _ code false)
+      }
+    nil: (done _ code true)
+  }

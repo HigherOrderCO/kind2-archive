@@ -1,9 +1,11 @@
 use Parser/Result/{done,fail}
 use List/{cons,nil}
 
-char : (Parser Char) =
-  λcode
-    match code {
-      cons: (done _ code.tail code.head)
-      nil: (fail _ "eof")
-    }
+char
+: (Parser Char)
+
+λcode
+  match code {
+    cons: (done _ code.tail code.head)
+    nil: (fail _ "eof")
+  }

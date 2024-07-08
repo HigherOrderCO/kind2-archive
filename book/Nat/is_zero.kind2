@@ -1,8 +1,11 @@
 use Nat/{zero,succ}
 use Bool/{true,false}
 
-is_zero (n: Nat) : Bool =
-  match n {
-    zero: true
-    succ: false
-  }
+is_zero
+- n: Nat
+: Bool
+
+match n {
+  zero: true
+  succ: false
+}

@@ -1,5 +1,9 @@
 use Parser/until/go
 use List/{nil}
 
-until <A> (until: (Parser Bool)) (parse: (Parser A)) : (Parser (List A)) =
-  (go _ until parse (nil _))
+until <A>
+- until: (Parser Bool)
+- parse: (Parser A)
+: (Parser (List A))
+
+(go _ until parse (nil _))

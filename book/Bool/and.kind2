@@ -1,7 +1,11 @@
 use Bool/{true,false,and}
 
-and (a: Bool) (b: Bool) : Bool =
-  match a {
-    true: b
-    false: false
-  }
+and
+- a: Bool
+- b: Bool
+: Bool
+
+match a {
+  true: b
+  false: false
+}

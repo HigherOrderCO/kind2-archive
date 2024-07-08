@@ -1,14 +1,18 @@
 use Nat/{succ,zero}
 use Bool/{true,false}
 
-equal (a: Nat) (b: Nat) : Bool =
-  match a with (b: Nat) {
-    succ: match b {
-      succ: (equal a.pred b.pred)
-      zero: false
-    }
-    zero: match b {
-      succ: false
-      zero: true
-    }
+equal
+- a: Nat
+- b: Nat
+: Bool
+
+match a with (b: Nat) {
+  succ: match b {
+    succ: (equal a.pred b.pred)
+    zero: false
   }
+  zero: match b {
+    succ: false
+    zero: true
+  }
+}

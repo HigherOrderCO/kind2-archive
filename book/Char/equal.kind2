@@ -1,2 +1,6 @@
-equal (a: Char) (b: Char) : Bool =
-  (U48/equal a b)
+equal
+- a: Char
+- b: Char
+: Bool
+
+(U48/equal a b)

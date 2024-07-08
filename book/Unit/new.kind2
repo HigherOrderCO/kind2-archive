@@ -1,2 +1,3 @@
-Unit/new : Unit =
-  ~λP λone one
+Unit/new : Unit
+
+~λP λone one

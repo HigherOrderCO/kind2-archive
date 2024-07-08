@@ -3,11 +3,15 @@ use Parser/pure
 use List/{cons,nil}
 use Nat/{succ,zero}
 
-repeat <A> (n: Nat) (p: (Parser A)) : (Parser (List A)) =
-  match n {
-    zero: (pure _ (nil _))
-    succ: 
-      (bind _ _ p (λhead
-        (bind _ _ (repeat _ n.pred p) (λtail
-          (pure _ (cons _ head tail))))))
-  }
+repeat <A>
+- n: Nat
+- p: (Parser A)
+: (Parser (List A))
+
+match n {
+  zero: (pure _ (nil _))
+  succ: 
+    (bind _ _ p (λhead
+      (bind _ _ (repeat _ n.pred p) (λtail
+        (pure _ (cons _ head tail))))))
+}

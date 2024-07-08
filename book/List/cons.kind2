@@ -1,2 +1,6 @@
-cons <T> (head: T) (tail: (List T)) : (List T) =
-  ~λP λcons λnil (cons head tail)
+cons <T>
+- head: T
+- tail: (List T)
+: (List T)
+
+~λP λcons λnil (cons head tail)

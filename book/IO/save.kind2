@@ -4,5 +4,6 @@ IO/save
   ∀(text: String)
   ∀(then: ∀(x: Unit) (IO A))
   (IO A)
-= λA λfile λtext λthen
-  ~λP λprint λload λsave λdone (save file text then)
+
+λA λfile λtext λthen
+~λP λprint λload λsave λdone (save file text then)

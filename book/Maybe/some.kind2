@@ -1,2 +1,5 @@
-some <T> (value: T) : (Maybe T) =
-  ~λP λsome λnone (some value)
+some <T>
+- value: T
+: (Maybe T)
+
+~λP λsome λnone (some value)

@@ -1,2 +1,3 @@
-eql : Cmp =
-  ~λP λltn λeql λgtn eql
+eql : Cmp
+
+~λP λltn λeql λgtn eql

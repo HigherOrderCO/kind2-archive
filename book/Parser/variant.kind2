@@ -4,13 +4,16 @@ use Parser/bind
 use Parser/fail
 use Bool/{true,false}
 
-variant <A> (variants: (List (Parser/Guard A))) : (Parser A) =
-  match variants {
-    cons:
-      (bind _ _ (fst _ _ variants.head) λsuccess
-        match success {
-          true: (snd _ _ variants.head)
-          false: (variant _ variants.tail)
-        })
-    nil: (fail _ "No matching variant")
-  }
+variant <A>
+- variants: (List (Parser/Guard A))
+: (Parser A)
+
+match variants {
+  cons:
+    (bind _ _ (fst _ _ variants.head) λsuccess
+      match success {
+        true: (snd _ _ variants.head)
+        false: (variant _ variants.tail)
+      })
+  nil: (fail _ "No matching variant")
+}
