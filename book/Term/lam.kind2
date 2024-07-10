@@ -1,0 +1,17 @@
+/// Constructs a lambda abstraction term in the untyped lambda calculus.
+///
+/// This function creates a new Term representing a lambda abstraction.
+///
+/// # Input
+///
+/// * `bod` - A function that takes a Term and returns a Term, representing the body of the lambda abstraction.
+///
+/// # Output
+///
+/// A new Term representing the lambda abstraction.
+
+lam
+- bod: Term -> Term
+: Term
+
+~λP λlam λapp λvar (lam bod)

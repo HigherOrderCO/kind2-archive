@@ -335,7 +335,7 @@ impl Term {
   }
 
   // Expands implicit calls, applying them to the correct number of metavars.
-  // When a variable name ends with "/", we fill erased arguments with metas.
+  // When a variable name ends with "!", we fill erased arguments with metas.
   pub fn expand_implicits(&mut self, env: im::Vector<String>, implicit_count: &BTreeMap<String, u64>) {
     match self {
       Term::All { era: _, nam, inp, bod } => {

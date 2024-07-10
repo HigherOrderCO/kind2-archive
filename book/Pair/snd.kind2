@@ -1,6 +1,9 @@
 use Pair/{new}
 
-snd <A> <B> (p: (Pair A B)) : B =
-  match p {
-    new: p.snd
-  }
+snd <A> <B>
+- p: (Pair A B)
+: B
+
+match p {
+  new: p.snd
+}

@@ -1,3 +1,9 @@
+/// Represents the 'false' boolean value.
+///
+/// # Output
+///
+/// The 'false' value of type Bool.
+
 false
 : Bool
 

@@ -82,6 +82,18 @@ fn load_book(name: &str) -> Book {
   })
 }
 
+fn deps(name: &str) {
+  let mut book = Book::new();
+  let cwd = std::env::current_dir().expect("failed to get current directory");
+  if let Err(e) = book.load(cwd.to_str().unwrap(), name) {
+    eprintln!("{e}");
+    std::process::exit(1);
+  }
+  for dep in book.defs.keys() {
+    println!("{}", dep);
+  }
+}
+
 fn main() {
   let matches = Command::new("kind2")
     .about("The Kind2 Programming Language")
@@ -104,6 +116,9 @@ fn main() {
     .subcommand(Command::new("compile")
       .about("Compiles to KINDC")  
       .arg(Arg::new("name").required(true)))
+    .subcommand(Command::new("deps")
+      .about("Lists all dependencies of a symbol")
+      .arg(Arg::new("name").required(true)))
     .get_matches();
 
   match matches.subcommand() {
@@ -123,6 +138,10 @@ fn main() {
     Some(("compile", sub_matches)) => {
       let name = sub_matches.get_one::<String>("name").expect("required");
       compile(name);
+    }
+    Some(("deps", sub_matches)) => {
+      let name = sub_matches.get_one::<String>("name").expect("required");
+      deps(name);
     }
     _ => unreachable!(),
   }

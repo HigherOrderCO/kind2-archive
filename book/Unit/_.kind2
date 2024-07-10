@@ -1,2 +1,11 @@
+/// Defines the Unit type, which has only one inhabitant.
+///
+/// The Unit type is often used to represent a trivial or empty type,
+/// or as a placeholder when no meaningful value is needed.
+///
+/// # Constructor
+///
+/// * `new` - The single constructor for the Unit type.
+
 data Unit
 | new

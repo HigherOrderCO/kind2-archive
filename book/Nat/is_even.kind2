@@ -1,0 +1,24 @@
+/// Determines if a natural number is even.
+///
+/// # Input
+///
+/// * `n` - The natural number to check.
+///
+/// # Output
+///
+/// `true` if `n` is even, `false` otherwise.
+
+use Nat/{succ,zero}
+use Bool/{true,false}
+
+is_even
+- n: Nat
+: Bool
+
+match n {
+  succ: match n.pred {
+    succ: (is_even n.pred.pred)
+    zero: false
+  }
+  zero: true
+}

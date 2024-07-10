@@ -1,3 +1,14 @@
+/// Checks if two natural numbers are equal.
+///
+/// # Inputs
+///
+/// * `a` - The first natural number.
+/// * `b` - The second natural number.
+///
+/// # Output
+///
+/// `true` if `a` and `b` are equal, `false` otherwise.
+
 use Nat/{succ,zero}
 use Bool/{true,false}
 

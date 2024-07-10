@@ -1,0 +1,18 @@
+use Nat/{succ,zero}
+use Bool/{true,false}
+
+is_gtn_or_eql
+- a: Nat
+- b: Nat
+: Bool
+
+match a {
+  zero: match b {
+    zero: true
+    succ: false
+  }
+  succ: match b {
+    zero: true
+    succ: (is_gtn_or_eql a.pred b.pred)
+  }
+}

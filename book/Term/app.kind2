@@ -1,0 +1,19 @@
+/// Constructs an application term in the untyped lambda calculus.
+///
+/// This function creates a new Term representing the application of one term to another.
+///
+/// # Inputs
+///
+/// * `fun` - The function term (the term being applied).
+/// * `arg` - The argument term (the term being passed to the function).
+///
+/// # Output
+///
+/// A new Term representing the application of `fun` to `arg`.
+
+app
+- fun: Term
+- arg: Term
+: Term
+
+~λP λlam λapp λvar (app fun arg)

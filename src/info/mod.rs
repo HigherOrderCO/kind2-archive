@@ -39,14 +39,14 @@ impl Info {
   pub fn pretty(&self, book: &Book) -> String {
     match self {
       Info::Found { nam, typ, ctx } => {
-        let msg = format!("?{} :: {}", nam, typ.show());
+        let msg = format!("?{} : {}", nam, typ.show());
         let mut ctx_str = String::new();
         for x in ctx.iter() {
           if let Term::Ann { chk: _, val, typ } = x.clean() {
             ctx_str.push_str(&format!("\n- {}: {}", val.show(), typ.show()));
           }
         }
-        format!("\x1b[1mFOUND:\x1b[0m {}{}", msg, ctx_str)
+        format!("\x1b[1mGOAL\x1b[0m {}{}", msg, ctx_str)
       },
       Info::Error { exp, det, bad, src } => {
         let exp  = format!("- expected: \x1b[32m{}\x1b[0m", exp.show());

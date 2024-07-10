@@ -1,0 +1,23 @@
+/// Checks if a natural number is less than or equal to another.
+///
+/// # Inputs
+///
+/// * `a` - The first natural number.
+/// * `b` - The second natural number.
+///
+/// # Output
+///
+/// `true` if `a` is less than or equal to `b`, `false` otherwise.
+
+use Nat/{succ,zero}
+use Bool/{true,false}
+
+is_lte
+- a: Nat
+- b: Nat
+: Bool
+
+match is_lt = (Nat/is_ltn a b) {
+  true: true
+  false: (Nat/equal a b)
+}

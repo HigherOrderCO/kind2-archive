@@ -1,3 +1,13 @@
+/// Negates a boolean value.
+///
+/// # Input
+///
+/// * `x` - The boolean value to negate.
+///
+/// # Output
+///
+/// The negation of the input boolean.
+
 use Bool/{true,false}
 
 not

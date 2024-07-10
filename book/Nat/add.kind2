@@ -1,3 +1,14 @@
+/// Adds two natural numbers.
+///
+/// # Inputs
+///
+/// * `a` - The first natural number.
+/// * `b` - The second natural number.
+///
+/// # Output
+///
+/// The sum of `a` and `b`.
+
 use Nat/{succ,zero}
 
 add

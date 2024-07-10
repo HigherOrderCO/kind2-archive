@@ -1,6 +1,7 @@
 match <A> <B>
-  (P: (Pair A B) -> *)
-  (new: ∀(fst: A) ∀(snd: B) (P (Pair/new A B fst snd)))
-  (pair: (Pair A B))
-: (P pair) =
-  (~pair P new)
+- P: (Pair A B) -> *
+- new: ∀(fst: A) ∀(snd: B) (P (Pair/new A B fst snd))
+- pair: (Pair A B)
+: (P pair)
+
+(~pair P new)

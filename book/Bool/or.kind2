@@ -1,3 +1,14 @@
+/// Performs the logical OR operation on two boolean values.
+///
+/// # Inputs
+///
+/// * `a` - The first boolean value.
+/// * `b` - The second boolean value.
+///
+/// # Output
+///
+/// The result of `a OR b`.
+
 use Bool/{true,false}
 
 or

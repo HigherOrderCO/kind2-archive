@@ -1,3 +1,14 @@
+/// Performs the logical AND operation on two boolean values.
+///
+/// # Inputs
+///
+/// * `a` - The first boolean value.
+/// * `b` - The second boolean value.
+///
+/// # Output
+///
+/// Returns `true` if both `a` and `b` are `true`, otherwise returns `false`.
+
 use Bool/{true,false,and}
 
 and

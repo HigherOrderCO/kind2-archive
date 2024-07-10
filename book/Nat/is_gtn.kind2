@@ -1,3 +1,14 @@
+/// Checks if the first natural number is greater than the second.
+///
+/// # Inputs
+///
+/// * `a` - The first natural number.
+/// * `b` - The second natural number.
+///
+/// # Output
+///
+/// `true` if `a` is greater than `b`, `false` otherwise.
+
 use Nat/{succ,zero}
 use Bool/{true,false}
 

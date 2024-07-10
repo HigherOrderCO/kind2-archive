@@ -3,14 +3,16 @@ use List/{cons,nil}
 use Maybe/{some,none}
 
 find <A>
-- cond: A -> Bool
+- fn: A -> Bool
 - xs: (List A)
 : (Maybe A)
 
 match xs {
-  cons: match result = (cond xs.head) {
-    true: (some _ xs.head)
-    false: (find _ cond xs.tail)
-  }
+  cons: 
+    let result = (fn xs.head)
+    match result {
+      true: (some _ xs.head)
+      false: (find _ fn xs.tail)
+    }
   nil: (none _)
 }

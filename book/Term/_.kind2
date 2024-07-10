@@ -1,0 +1,12 @@
+/// Defines the type for untyped lambda calculus terms using Higher-Order Abstract Syntax (HOAS).
+///
+/// # Constructors
+///
+/// * `app` - Represents function application.
+/// * `lam` - Represents lambda abstraction.
+/// * `var` - Represents a variable.
+
+data Term
+| lam (bod: Term -> Term)
+| app (fun: Term) (arg: Term)
+| var (idx: U48)

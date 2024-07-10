@@ -1,0 +1,8 @@
+match <T> <len: Nat>
+- P: ∀(l: Nat) (Vector T l) -> *
+- c: ∀(l: Nat) ∀(head: T) ∀(tail: (Vector T l)) (P (Nat/succ l) (Vector/cons T l head tail))
+- n: (P Nat/zero (Vector/nil T))
+- v: (Vector T len)
+: (P len v)
+
+(~v P c n)

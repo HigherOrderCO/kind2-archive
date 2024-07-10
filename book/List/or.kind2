@@ -1,3 +1,13 @@
+/// Performs a logical OR operation on a list of booleans.
+///
+/// # Input
+///
+/// * `list` - A list of boolean values.
+///
+/// # Output
+///
+/// The result of applying OR to all elements in the list.
+
 use List/{cons,nil}
 use Bool/{false}
 

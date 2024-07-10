@@ -1,2 +1,6 @@
-new <A> <B> (a: A) (b: B) : (Pair A B) =
-  ~λP λnew (new a b)
+new <A> <B>
+- a: A
+- b: B
+: (Pair A B)
+
+~λP λnew (new a b)

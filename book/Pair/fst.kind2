@@ -1,6 +1,9 @@
 use Pair/{new}
 
-fst <A> <B> (p: (Pair A B)) : A =
-  match p {
-    new: p.fst
-  }
+fst <A> <B>
+- p: (Pair A B)
+: A
+
+match p {
+  new: p.fst
+}
