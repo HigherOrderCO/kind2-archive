@@ -1,3 +1,6 @@
+//./book/compile.rs//
+//./term/compile.rs//
+
 use clap::{Arg, ArgAction, Command};
 use std::fs;
 use std::io::Write;
@@ -20,6 +23,7 @@ use TSPL::Parser;
 
 TSPL::new_parser!(KindParser);
 
+// FIXME: not necessary, already on book
 fn generate_kindc(book: &Book, arg: &str) -> String {
   let book_kindc = book.to_kindc();
   let main_kindc = format!("MAIN = {};\n", Term::to_kindc_name(arg));
@@ -68,12 +72,6 @@ fn auto_format(file_name: &str) {
   std::fs::write(&file, form).expect(&format!("failed to write to file '{}'", file_name));
 }
 
-fn compile(name: &str) {
-  let book = load_book(name);
-  let code = generate_kindc(&book, name);
-  println!("{code}");
-}
-
 fn load_book(name: &str) -> Book {
   let cwd = std::env::current_dir().expect("failed to get current directory");
   Book::boot(cwd.to_str().unwrap(), name).unwrap_or_else(|e| {
@@ -92,6 +90,18 @@ fn deps(name: &str) {
   for dep in book.defs.keys() {
     println!("{}", dep);
   }
+}
+
+fn compile_to_kindc(name: &str) {
+  let book = load_book(name);
+  let code = generate_kindc(&book, name);
+  println!("{code}");
+}
+
+fn compile_to_js(name: &str) {
+  let book = load_book(name);
+  let code = book.to_js();
+  println!("{}", code);
 }
 
 fn main() {
@@ -113,11 +123,14 @@ fn main() {
     .subcommand(Command::new("format")
       .about("Auto-formats a file")
       .arg(Arg::new("name").required(true)))
-    .subcommand(Command::new("compile")
-      .about("Compiles to KINDC")  
-      .arg(Arg::new("name").required(true)))
     .subcommand(Command::new("deps")
       .about("Lists all dependencies of a symbol")
+      .arg(Arg::new("name").required(true)))
+    .subcommand(Command::new("to-kindc")
+      .about("Compiles to KINDC")  
+      .arg(Arg::new("name").required(true)))
+    .subcommand(Command::new("to-js")
+      .about("Compiles to JavaScript")
       .arg(Arg::new("name").required(true)))
     .get_matches();
 
@@ -135,13 +148,17 @@ fn main() {
       let name = sub_matches.get_one::<String>("name").expect("required");
       auto_format(name);
     }
-    Some(("compile", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      compile(name);
-    }
     Some(("deps", sub_matches)) => {
       let name = sub_matches.get_one::<String>("name").expect("required");
       deps(name);
+    }
+    Some(("to-kindc", sub_matches)) => {
+      let name = sub_matches.get_one::<String>("name").expect("required");
+      compile_to_kindc(name);
+    }
+    Some(("to-js", sub_matches)) => {
+      let name = sub_matches.get_one::<String>("name").expect("required");
+      compile_to_js(name);
     }
     _ => unreachable!(),
   }

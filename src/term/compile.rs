@@ -1,28 +1,11 @@
 use crate::{*};
+use std::collections::BTreeMap;
+
+// Kind -> HVM2
+// ------------
 
 impl Oper {
-  pub fn to_ctr(&self) -> &'static str {
-    match self {
-      Oper::Add => "ADD",
-      Oper::Sub => "SUB",
-      Oper::Mul => "MUL",
-      Oper::Div => "DIV",
-      Oper::Mod => "MOD",
-      Oper::Eq  => "EQ",
-      Oper::Ne  => "NE",
-      Oper::Lt  => "LT",
-      Oper::Gt  => "GT",
-      Oper::Lte => "LTE",
-      Oper::Gte => "GTE",
-      Oper::And => "AND",
-      Oper::Or  => "OR",
-      Oper::Xor => "XOR",
-      Oper::Lsh => "LSH",
-      Oper::Rsh => "RSH",
-    }
-  }
-
-  pub fn to_sym(&self) -> &'static str {
+  pub fn to_hvm2(&self) -> &'static str {
     match self {
       Oper::Add => "+",
       Oper::Sub => "-",
@@ -89,7 +72,7 @@ impl Term {
       Term::Op2 { opr, fst, snd } => {
         let fst = fst.to_hvm2();
         let snd = snd.to_hvm2();
-        format!("({} {} {})", opr.to_sym(), fst, snd)
+        format!("({} {} {})", opr.to_hvm2(), fst, snd)
       },
       Term::Swi { nam, x, z, s, p: _ } => {
         let x = x.to_hvm2();
@@ -138,8 +121,10 @@ impl Term {
   }
 }
 
-impl Term {
+// Kind -> KindCore
+// ----------------
 
+impl Term {
   pub fn to_kindc(&self, env: im::Vector<String>, met: &mut usize) -> String {
     match self {
       Term::All { era: _, nam, inp, bod } => {
@@ -190,7 +175,6 @@ impl Term {
       Term::Txt { txt } => format!("\"{}\"", txt.replace("\n", "\\n")),
       Term::Mch { .. } => unreachable!(),
     }
-
   }
 
   pub fn to_kindc_name(name: &str) -> String {
@@ -220,3 +204,113 @@ impl Oper {
     }
   }
 }
+
+// Kind -> JavaScript
+// ------------------
+
+impl Term {
+
+  pub fn to_js(&self) -> String {
+    let mut term = self.clone();
+    term.sanitize(&mut BTreeMap::new(), &mut 0);
+    //term.desugar();
+    //term.expand_implicits(im::Vector::new(), &BTreeMap::new());
+    term.to_js_go()
+  }
+  
+  pub fn to_js_go(&self) -> String {
+    match self {
+      Term::All { era: _, nam: _, inp: _, bod: _ } => {
+        "null".to_string()
+      },
+      Term::Lam { era: _, nam, bod } => {
+        format!("({}) => {}", Term::to_js_name(nam), bod.to_js_go())
+      },
+      Term::App { era: _, fun, arg } => {
+        format!("{}({})", fun.to_js_go(), arg.to_js_go())
+      },
+      Term::Ann { chk: _, val, typ: _ } => {
+        val.to_js_go()
+      },
+      Term::Slf { nam: _, typ: _, bod: _ } => {
+        "null".to_string()
+      },
+      Term::Ins { val } => {
+        val.to_js_go()
+      },
+      Term::Set => {
+        "null".to_string()
+      },
+      Term::U48 => {
+        "null".to_string()
+      },
+      Term::Num { val } => {
+        val.to_string()
+      },
+      Term::Op2 { opr, fst, snd } => {
+        format!("Math.floor({} {} {})", fst.to_js_go(), opr.to_js(), snd.to_js_go())
+      },
+      Term::Swi { nam, x, z, s, p: _ } => {
+        format!("(() => {{ const {} = {}; switch ({}) {{ case 0: return {}; default: return (({} => {})(({}) - 1)); }} }})()",
+          Term::to_js_name(nam), x.to_js_go(), Term::to_js_name(nam), z.to_js_go(), Term::to_js_name(nam), s.to_js_go(), Term::to_js_name(nam))
+      },
+      Term::Let { nam, val, bod } => {
+        format!("(() => {{ const {} = {}; return {}; }})()", Term::to_js_name(nam), val.to_js_go(), bod.to_js_go())
+      },
+      Term::Use { nam, val, bod } => {
+        format!("(() => {{ const {} = {}; return {}; }})()", Term::to_js_name(nam), val.to_js_go(), bod.to_js_go())
+      },
+      Term::Hol { nam: _ } => {
+        "null".to_string()
+      },
+      Term::Met {} => {
+        //println!("WARNING: unsolved metas.");
+        "null".to_string()
+      },
+      Term::Var { nam } => {
+        Term::to_js_name(nam)
+      },
+      Term::Src { src: _, val } => {
+        val.to_js_go()
+      },
+      Term::Nat { nat } => {
+        format!("{}", nat)
+      },
+      Term::Txt { txt } => {
+        format!("\"{}\"", txt.replace("\n", "\\n"))
+      },
+      Term::Mch { .. } => {
+        unreachable!()
+      },
+    }
+  }
+
+  pub fn to_js_name(name: &str) -> String {
+    name.replace("/", "_").replace(".","_")
+  }
+}
+
+impl Oper {
+  pub fn to_js(&self) -> &'static str {
+    match self {
+      Oper::Add => "+",
+      Oper::Sub => "-",
+      Oper::Mul => "*",
+      Oper::Div => "/",
+      Oper::Mod => "%",
+      Oper::Eq  => "===",
+      Oper::Ne  => "!==",
+      Oper::Lt  => "<",
+      Oper::Gt  => ">",
+      Oper::Lte => "<=",
+      Oper::Gte => ">=",
+      Oper::And => "&&",
+      Oper::Or  => "||",
+      Oper::Xor => "^",
+      Oper::Lsh => "<<",
+      Oper::Rsh => ">>",
+    }
+  }
+}
+
+

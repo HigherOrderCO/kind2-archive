@@ -164,6 +164,97 @@ impl Term {
     }
   }
 
+  // FIXME: remove this comment \/
+  // Implement a function that renames shadowed variable to have unique names
+  // Have an immutable map from name to new name
+  // Have a depth counter
+  // On binders, add a mapping: name => name_{depth}
+  // On variables, just retrieve
+  // Receive a mutable term
+  pub fn sanitize(&mut self, name_map: &mut BTreeMap<String, String>, depth: &mut u64) {
+    match self {
+      Term::All { era: _, nam, inp, bod } => {
+        inp.sanitize(name_map, depth);
+        *depth += 1;
+        let new_name = format!("{}_{}", nam, depth);
+        name_map.insert(nam.clone(), new_name.clone());
+        *nam = new_name;
+        bod.sanitize(name_map, depth);
+        *depth -= 1;
+      },
+      Term::Lam { era: _, nam, bod } => {
+        *depth += 1;
+        let new_name = format!("{}_{}", nam, depth);
+        name_map.insert(nam.clone(), new_name.clone());
+        *nam = new_name;
+        bod.sanitize(name_map, depth);
+        *depth -= 1;
+      },
+      Term::App { era: _, fun, arg } => {
+        fun.sanitize(name_map, depth);
+        arg.sanitize(name_map, depth);
+      },
+      Term::Ann { chk: _, val, typ } => {
+        val.sanitize(name_map, depth);
+        typ.sanitize(name_map, depth);
+      },
+      Term::Slf { nam, typ, bod } => {
+        typ.sanitize(name_map, depth);
+        *depth += 1;
+        let new_name = format!("{}_{}", nam, depth);
+        name_map.insert(nam.clone(), new_name.clone());
+        *nam = new_name;
+        bod.sanitize(name_map, depth);
+        *depth -= 1;
+      },
+      Term::Ins { val } => {
+        val.sanitize(name_map, depth);
+      },
+      Term::Op2 { opr: _, fst, snd } => {
+        fst.sanitize(name_map, depth);
+        snd.sanitize(name_map, depth);
+      },
+      Term::Swi { nam, x, z, s, p } => {
+        x.sanitize(name_map, depth);
+        z.sanitize(name_map, depth);
+        *depth += 1;
+        let new_name = format!("{}_{}", nam, depth);
+        name_map.insert(nam.clone(), new_name.clone());
+        *nam = new_name;
+        s.sanitize(name_map, depth);
+        p.sanitize(name_map, depth);
+        *depth -= 1;
+      },
+      Term::Let { nam, val, bod } => {
+        val.sanitize(name_map, depth);
+        *depth += 1;
+        let new_name = format!("{}_{}", nam, depth);
+        name_map.insert(nam.clone(), new_name.clone());
+        *nam = new_name;
+        bod.sanitize(name_map, depth);
+        *depth -= 1;
+      },
+      Term::Use { nam, val, bod } => {
+        val.sanitize(name_map, depth);
+        *depth += 1;
+        let new_name = format!("{}_{}", nam, depth);
+        name_map.insert(nam.clone(), new_name.clone());
+        *nam = new_name;
+        bod.sanitize(name_map, depth);
+        *depth -= 1;
+      },
+      Term::Var { nam } => {
+        if let Some(new_name) = name_map.get(nam) {
+          *nam = new_name.clone();
+        }
+      },
+      Term::Src { src: _, val } => {
+        val.sanitize(name_map, depth);
+      },
+      _ => {}
+    }
+  }
+
   // Removes Src's
   pub fn clean(&self) -> Term {
     match self {

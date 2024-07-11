@@ -17,4 +17,12 @@ impl Book {
     }
     code
   }
+
+  pub fn to_js(&self) -> String {
+    let mut code = String::new();
+    for (name, term) in &self.defs {
+      code.push_str(&format!("const {} = {};\n", Term::to_js_name(name), term.to_js()));
+    }
+    code
+  }
 }
