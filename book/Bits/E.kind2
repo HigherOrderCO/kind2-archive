@@ -1,0 +1,10 @@
+/// Constructs an empty Bits value.
+///
+/// # Output
+///
+/// An empty Bits value, representing the end of a bit sequence.
+
+E
+: Bits
+
+~λP λO λI λE E

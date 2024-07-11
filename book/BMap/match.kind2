@@ -1,0 +1,27 @@
+/// Provides a way to pattern match on BMap values.
+///
+/// # Type Parameters
+///
+/// * `A` - The type of values stored in the binary map.
+///
+/// # Inputs
+///
+/// * `P` - The motive of the elimination, a type family indexed by (BMap A).
+/// * `n` - The case for when the BMap is a node.
+/// * `l` - The case for when the BMap is a leaf.
+/// * `bm` - The BMap value to match on.
+///
+/// # Output
+///
+/// The result of the elimination, which has type `(P bm)`.
+
+use BMap/{node,leaf}
+
+match <A>
+- P: (BMap A) -> *
+- n: ∀(lft: (BMap A)) ∀(val: (Maybe A)) ∀(rgt: (BMap A)) (P (BMap/node A lft val rgt))
+- l: (P (BMap/leaf A))
+- bm: (BMap A)
+: (P bm)
+
+(~bm P n l)

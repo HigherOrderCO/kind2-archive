@@ -22,7 +22,7 @@ TSPL::new_parser!(KindParser);
 
 fn generate_kindc(book: &Book, arg: &str) -> String {
   let book_kindc = book.to_kindc();
-  let main_kindc = format!("main = {};\n", Term::to_kindc_name(arg));
+  let main_kindc = format!("MAIN = {};\n", Term::to_kindc_name(arg));
   format!("{}{}", book_kindc, main_kindc)
 }
 

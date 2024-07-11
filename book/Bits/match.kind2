@@ -1,0 +1,28 @@
+/// Provides a way to pattern match on Bits values.
+///
+/// # Parameters
+///
+/// * `P` - The motive of the elimination, a type family indexed by Bits.
+///
+/// # Inputs
+///
+/// * `o` - The case for when the Bits value starts with a zero bit.
+/// * `i` - The case for when the Bits value starts with a one bit.
+/// * `e` - The case for when the Bits value is empty.
+/// * `b` - The Bits value to match on.
+///
+/// # Output
+///
+/// The result of the elimination, which has type `(P b)`.
+
+use Bits/{O,I,E}
+
+match
+- P: Bits -> *
+- o: ∀(tail: Bits) (P (O tail))
+- i: ∀(tail: Bits) (P (I tail))
+- e: (P E)
+- b: Bits
+: (P b)
+
+(~b P o i e)

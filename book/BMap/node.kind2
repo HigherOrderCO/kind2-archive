@@ -1,7 +1,23 @@
+/// Creates a new node in the binary map (BMap) data structure.
+///
+/// # Type Parameters
+///
+/// * `A` - The type of values stored in the binary map.
+///
+/// # Inputs
+///
+/// * `lft` - The left subtree of the node.
+/// * `val` - The value stored in the node, wrapped in a Maybe.
+/// * `rgt` - The right subtree of the node.
+///
+/// # Output
+///
+/// A new BMap node containing the given value and subtrees.
+
 BMap/node
 : ∀(A: *)
   ∀(lft: (BMap A))
-  ∀(val: A)
+  ∀(val: (Maybe A))
   ∀(rgt: (BMap A))
   (BMap A)
 

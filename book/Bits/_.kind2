@@ -1,0 +1,12 @@
+/// Defines a binary representation of numbers using bits.
+///
+/// # Constructors
+///
+/// * `O` - Represents a zero bit followed by more bits.
+/// * `I` - Represents a one bit followed by more bits.
+/// * `E` - Represents the end of the bit sequence (empty).
+
+data Bits
+| O (tail: Bits)
+| I (tail: Bits)
+| E
