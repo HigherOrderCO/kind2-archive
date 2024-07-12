@@ -1,0 +1,16 @@
+use RGB/{R,G,B,spin,unspin}
+use Equal/refl
+
+unspin_spec
+- x: RGB
+: (Equal RGB (unspin (spin x)) x)
+
+match x {
+  R: (refl RGB R)
+  G: (refl RGB G)
+  B: (refl RGB B)
+}
+
+//there is no way to complete this file
+
+//unless "unspin" is correct w.r.t. the spec

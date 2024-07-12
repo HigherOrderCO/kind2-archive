@@ -1,0 +1,21 @@
+/// Unspins the RGB color to the previous one in the sequence.
+///
+/// # Input
+///
+/// * `color` - The current RGB color.
+///
+/// # Output
+///
+/// The previous RGB color in the sequence (R <- G <- B <- R).
+
+use RGB/{R,G,B}
+
+unspin
+- color: RGB
+: RGB
+
+match color {
+  R: B
+  G: R
+  B: G
+}

@@ -1,0 +1,4 @@
+test_a
+
+let n = 123
+(U48/to_bits n)

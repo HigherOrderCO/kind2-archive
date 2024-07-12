@@ -1,0 +1,2 @@
+data Planet
+| new (pos: V2) (vel: V2) (rad: U48) : Planet

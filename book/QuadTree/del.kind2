@@ -1,0 +1,30 @@
+use QuadTree/{node,leaf}
+use Bits/{O,I,E}
+use Maybe/{some,none}
+
+del <A>
+- t: (QuadTree A)
+- x: Bits
+- y: Bits
+: (QuadTree A)
+
+let emp = (QuadTree/leaf _ [])
+
+match t {
+  node:
+    match x {
+      O: match y {
+        O: (QuadTree/node _ (del _ t.nw x.tail y.tail) t.ne t.sw t.se)
+        I: (QuadTree/node _ t.nw t.ne (del _ t.sw x.tail y.tail) t.se)
+        E: emp
+      }
+      I: match y {
+        O: (QuadTree/node _ t.nw (del _ t.ne x.tail y.tail) t.sw t.se)
+        I: (QuadTree/node _ t.nw t.ne t.sw (del _ t.se x.tail y.tail))
+        E: emp
+      }
+      E: emp
+    }
+  leaf:
+    emp
+}

@@ -1,0 +1,58 @@
+
+use Bits/{O,I,E}
+use Shape/{circle,line}
+
+//main: (App V2)
+main
+
+// Empty QuadTree
+let t = (QuadTree/leaf _ [])
+
+// Adds an entry
+let x = (I (I (I (I (I E)))))
+let y = (I (I (I (I (I E)))))
+let t = (QuadTree/set _ t x y 12)
+
+// Adds an entry
+let x = (O (O (O (O (O E)))))
+let y = (O (O (O (O (O E)))))
+let t = (QuadTree/set _ t x y 24)
+//let t = (QuadTree/set _ t x y 42)
+
+// Dels an entry
+let t = (QuadTree/del _ t x y)
+
+// Normalize the tree
+let t = (QuadTree/nrm _ t)
+
+//let v = (QuadTree/get _ t x y)
+//v
+
+use init = (V2/new 256 256)
+use tick = λstate
+  match state {
+    V2/new: (V2/new (+ state.x 1) state.y)
+  }
+
+//use draw = λstate [
+  //(line (V2/new 50 50) (V2/new 100 100))
+  //(circle state 12)
+//]
+
+use draw = λstate
+  (QuadTree/draw t (V2/new 256 256) 256) 
+
+use when = λkey λstate
+  match state {
+    V2/new:
+      (U48/if _ (== key 'W') (V2/new state.x (- state.y 16))
+      (U48/if _ (== key 'S') (V2/new state.x (+ state.y 16))
+      (U48/if _ (== key 'A') (V2/new (- state.x 16) state.y)
+      (U48/if _ (== key 'D') (V2/new (+ state.x 16) state.y)
+      state))))
+  }
+
+(App/new _ init tick draw when)
+
+
+

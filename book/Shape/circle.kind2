@@ -1,0 +1,17 @@
+/// Creates a circle shape.
+///
+/// # Input
+///
+/// * `pos` - The center position of the circle (V2)
+/// * `rad` - The radius of the circle (U48)
+///
+/// # Output
+///
+/// A Shape representing a circle with center `pos` and radius `rad`
+
+circle
+- pos: V2
+- rad: U48
+: Shape
+
+~λP λline λcircle (circle pos rad)

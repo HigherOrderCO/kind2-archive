@@ -1,0 +1,25 @@
+/// Flattens a list of lists into a single list.
+///
+/// # Parameters
+///
+/// * `T` - The type of elements in the inner lists.
+///
+/// # Input
+///
+/// * `xss` - A list of lists to be flattened.
+///
+/// # Output
+///
+/// A single list containing all elements from the inner lists.
+
+use List/{cons,nil}
+use List/concat
+
+flatten <T>
+- xss: (List (List T))
+: (List T)
+
+match xss {
+  cons: (List/concat _ xss.head (flatten _ xss.tail))
+  nil: (nil _)
+}

@@ -1,0 +1,21 @@
+/// Spins the RGB color to the next one in the sequence.
+///
+/// # Input
+///
+/// * `color` - The current RGB color.
+///
+/// # Output
+///
+/// The next RGB color in the sequence (R -> G -> B -> R).
+
+use RGB/{R,G,B}
+
+spin
+- color: RGB
+: RGB
+
+match color {
+  R: G
+  G: B
+  B: R
+}

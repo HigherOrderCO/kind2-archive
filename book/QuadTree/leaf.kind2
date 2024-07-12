@@ -1,0 +1,19 @@
+/// Creates a leaf node in a QuadTree.
+///
+/// # Parameters
+///
+/// * `A` - The type of data stored in the QuadTree
+///
+/// # Input
+///
+/// * `data` - The data to be stored in the leaf node
+///
+/// # Output
+///
+/// A new QuadTree leaf containing the given data
+
+leaf <A>
+- xs: (List A)
+: (QuadTree A)
+
+~λP λnode λleaf (leaf xs)

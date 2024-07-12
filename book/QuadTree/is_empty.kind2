@@ -1,0 +1,26 @@
+/// Checks if a QuadTree is an empty leaf
+///
+/// # Parameters
+///
+/// * `A` - The type of data stored in the QuadTree
+///
+/// # Input
+///
+/// * `tree` - The QuadTree to check
+///
+/// # Output
+///
+/// Returns `true` if the QuadTree is an empty leaf, `false` otherwise
+
+use QuadTree/{node,leaf}
+use Bool/{true,false}
+use List/is_empty
+
+is_empty <A>
+- tree: (QuadTree A)
+: Bool
+
+match tree {
+  node: false
+  leaf: (List/is_empty _ tree.xs)
+}

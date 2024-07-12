@@ -27,5 +27,21 @@ match n {
     succ: (succ (half n.pred.pred))
     zero: zero
   }
-  zero: zero
+  zero: (succ zero)
 }
+
+
+//half 0 == 1 wrong
+//half 1 == 1 wrong
+//half 2 == correct
+//half 3 == correct
+//half 4 == correct
+//half 5 == correct
+
+
+
+
+
+
+
+

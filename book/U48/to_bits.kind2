@@ -1,0 +1,26 @@
+/// Converts a U48 number to its binary representation as Bits.
+///
+/// # Input
+///
+/// * `n` - The U48 number to convert.
+///
+/// # Output
+///
+/// The Bits representation of the input number.
+
+use Bits/{O,I,E}
+
+to_bits
+- d: U48
+- n: U48
+: Bits
+
+switch d {
+  0: E
+  _: let tail = (to_bits (- d 1) (/ n 2))
+     let bit  = (% n 2)
+     switch bit {
+       0: (O tail)
+       _: (I tail)
+     }
+}: Bits

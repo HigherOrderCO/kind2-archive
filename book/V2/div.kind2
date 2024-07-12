@@ -1,0 +1,24 @@
+/// Divides two V2 vectors component-wise.
+///
+/// # Input
+///
+/// * `a` - The first V2 vector (dividend)
+/// * `b` - The second V2 vector (divisor)
+///
+/// # Output
+///
+/// A new V2 vector representing the component-wise division of `a` by `b`
+/// Note: This function does not handle division by zero.
+
+use V2/{new}
+
+div
+- a: V2
+- b: V2
+: V2
+
+match a {
+  new: match b {
+    new: (new (/ a.x b.x) (/ a.y b.y))
+  }
+}

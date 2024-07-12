@@ -1,0 +1,153 @@
+// PLEASE FORMAT THIS FILE BETTER
+// IMPROVE ITS INDENTATION
+// don't change anything else
+// ty <3
+
+const BMap = (A_1) => null;
+
+const BMap_get = (A_1) => (map_2) => (key_3) => (() => {
+  const key_P_4 = null;
+  return (() => {
+    const key_O_5 = (key_tail_5) => (() => {
+      const map_P_6 = null;
+      return (() => {
+        const map_node_7 = (map_lft_7) => (map_val_8) => (map_rgt_9) =>
+          BMap_get(null)(map_lft_7)(key_tail_5);
+        return (() => {
+          const map_leaf_8 = Maybe_none(null);
+          return BMap_match(null)(map_P_6)(map_node_7)(map_leaf_8)(map_2);
+        })();
+      })();
+    })();
+    return (() => {
+      const key_I_6 = (key_tail_6) => (() => {
+        const map_P_7 = null;
+        return (() => {
+          const map_node_8 = (map_lft_8) => (map_val_9) => (map_rgt_10) =>
+            BMap_get(null)(map_rgt_10)(key_tail_6);
+          return (() => {
+            const map_leaf_9 = Maybe_none(null);
+            return BMap_match(null)(map_P_7)(map_node_8)(map_leaf_9)(map_2);
+          })();
+        })();
+      })();
+      return (() => {
+        const key_E_7 = (() => {
+          const map_P_7 = null;
+          return (() => {
+            const map_node_8 = (map_lft_8) => (map_val_9) => (map_rgt_10) => map_val_9;
+            return (() => {
+              const map_leaf_9 = Maybe_none(null);
+              return BMap_match(null)(map_P_7)(map_node_8)(map_leaf_9)(map_2);
+            })();
+          })();
+        })();
+        return Bits_match(key_P_4)(key_O_5)(key_I_6)(key_E_7)(key_3);
+      })();
+    })();
+  })();
+})();
+
+const BMap_leaf = (A_1) => (P_2) => (node_3) => (leaf_4) => leaf_4;
+
+const BMap_match = (A_1) => (P_2) => (n_3) => (l_4) => (bm_5) => bm_5(P_2)(n_3)(l_4);
+
+const BMap_node = (A_1) => (lft_2) => (val_3) => (rgt_4) => (P_5) => (node_6) => (leaf_7) =>
+  node_6(lft_2)(val_3)(rgt_4);
+
+const BMap_set = (A_1) => (map_2) => (key_3) => (val_4) => (() => {
+  const key_P_5 = null;
+  return (() => {
+    const key_O_6 = (key_tail_6) => (() => {
+      const map_P_7 = null;
+      return (() => {
+        const map_node_8 = (map_lft_8) => (map_val_9) => (map_rgt_10) =>
+          BMap_node(null)(BMap_set(null)(map_lft_8)(key_tail_6)(val_4))(map_val_9)(map_rgt_10);
+        return (() => {
+          const map_leaf_9 = BMap_node(null)(BMap_set(null)(BMap_leaf(null))(key_tail_6)(val_4))(Maybe_none(null))(BMap_leaf(null));
+          return BMap_match(null)(map_P_7)(map_node_8)(map_leaf_9)(map_2);
+        })();
+      })();
+    })();
+    return (() => {
+      const key_I_7 = (key_tail_7) => (() => {
+        const map_P_8 = null;
+        return (() => {
+          const map_node_9 = (map_lft_9) => (map_val_10) => (map_rgt_11) =>
+            BMap_node(null)(map_lft_9)(map_val_10)(BMap_set(null)(map_rgt_11)(key_tail_7)(val_4));
+          return (() => {
+            const map_leaf_10 = BMap_node(null)(BMap_leaf(null))(Maybe_none(null))(BMap_set(null)(BMap_leaf(null))(key_tail_7)(val_4));
+            return BMap_match(null)(map_P_8)(map_node_9)(map_leaf_10)(map_2);
+          })();
+        })();
+      })();
+      return (() => {
+        const key_E_8 = BMap_node(null)(BMap_leaf(null))(val_4)(BMap_leaf(null));
+        return Bits_match(key_P_5)(key_O_6)(key_I_7)(key_E_8)(key_3);
+      })();
+    })();
+  })();
+})();
+
+const Bits = null;
+
+const Bits_E = (P_1) => (O_2) => (I_3) => (E_4) => E_4;
+
+const Bits_I = (tail_1) => (P_2) => (O_3) => (I_4) => (E_5) => I_4(tail_1);
+
+const Bits_O = (tail_1) => (P_2) => (O_3) => (I_4) => (E_5) => O_3(tail_1);
+
+const Bits_match = (P_1) => (o_2) => (i_3) => (e_4) => (b_5) => b_5(P_1)(o_2)(i_3)(e_4);
+
+const Char = null;
+
+const List = (T_1) => null;
+
+const List_cons = (T_1) => (head_2) => (tail_3) => (P_4) => (cons_5) => (nil_6) =>
+  cons_5(head_2)(tail_3);
+
+const List_nil = (T_1) => (P_2) => (cons_3) => (nil_4) => nil_4;
+
+const Maybe = (T_1) => null;
+
+const Maybe_none = (T_1) => (P_2) => (some_3) => (none_4) => none_4;
+
+const Maybe_some = (T_1) => (value_2) => (P_3) => (some_4) => (none_5) => some_4(value_2);
+
+const Nat = null;
+
+const Nat_succ = (n_1) => (P_2) => (succ_3) => (zero_4) => succ_3(n_1);
+
+const Nat_zero = (P_1) => (succ_2) => (zero_3) => zero_3;
+
+const String = List(Char);
+
+const String_cons = (head_1) => (tail_2) => (P_3) => (cons_4) => (nil_5) =>
+  cons_4(head_1)(tail_2);
+
+const String_nil = (P_1) => (cons_2) => (nil_3) => nil_3;
+
+const main = (() => {
+  const key_1 = Bits_O(Bits_O(Bits_E));
+  return (() => {
+    const val_2 = 123;
+    return (() => {
+      const map_3 = BMap_leaf(null);
+      return (() => {
+        const map_4 = BMap_set(null)(map_3)(key_1)(Maybe_some(null)(val_2));
+        return (() => {
+          const map_5 = BMap_get(null)(map_4)(key_1);
+          return val_2;
+        })();
+      })();
+    })();
+  })();
+})();
+
+
+console.log(main);
+
+
+
+
+

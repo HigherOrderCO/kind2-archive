@@ -1,0 +1,12 @@
+/// Defines the RGB color space with three basic colors.
+///
+/// # Constructors
+///
+/// * `R` - Represents the Red color.
+/// * `G` - Represents the Green color.
+/// * `B` - Represents the Blue color.
+
+data RGB
+| R
+| G
+| B

@@ -1,0 +1,26 @@
+// Hello Circle
+
+use Shape/{circle,line}
+
+main: (App V2)
+
+use init = (V2/new 256 256)
+use tick = λstate
+  match state {
+    V2/new: (V2/new (+ state.x 1) state.y)
+  }
+use draw = λstate [
+  (line (V2/new 50 50) (V2/new 100 100))
+  (circle state 12)
+]
+use when = λkey λstate
+  match state {
+    V2/new:
+      (U48/if _ (== key 'W') (V2/new state.x (- state.y 16))
+      (U48/if _ (== key 'S') (V2/new state.x (+ state.y 16))
+      (U48/if _ (== key 'A') (V2/new (- state.x 16) state.y)
+      (U48/if _ (== key 'D') (V2/new (+ state.x 16) state.y)
+      state))))
+  }
+
+(App/new _ init tick draw when)

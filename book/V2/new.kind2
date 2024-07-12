@@ -1,0 +1,17 @@
+/// Creates a new V2 vector.
+///
+/// # Input
+///
+/// * `x` - The x-coordinate (U48)
+/// * `y` - The y-coordinate (U48)
+///
+/// # Output
+///
+/// A new V2 vector with the given coordinates
+
+new
+- x: U48
+- y: U48
+: V2
+
+~λP λnew (new x y)

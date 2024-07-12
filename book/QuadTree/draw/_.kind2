@@ -1,0 +1,42 @@
+/// Draws a QuadTree as a list of shapes.
+///
+/// This function recursively traverses the QuadTree and generates a list of shapes
+/// representing the structure of the tree. For internal nodes, it draws a square
+/// and recursively draws its four children. For leaf nodes, it draws a single square.
+///
+/// # Parameters
+///
+/// * `qt` - The QuadTree to be drawn.
+/// * `pos` - The position (V2) of the current node's center.
+/// * `rad` - The radius (half-width) of the current node.
+///
+/// # Returns
+///
+/// A list of shapes representing the drawn QuadTree.
+
+use List/{concat,flatten}
+use QuadTree/{node,leaf}
+use V2/new
+
+draw <A>
+- qt: (QuadTree A)
+- pos: V2
+- rad: U48
+: (List Shape)
+
+match qt {
+  node:
+    let half_r = (/ rad 2)
+    let nw_pos = (V2/new (- (V2/get_x pos) half_r) (+ (V2/get_y pos) half_r))
+    let ne_pos = (V2/new (+ (V2/get_x pos) half_r) (+ (V2/get_y pos) half_r))
+    let sw_pos = (V2/new (- (V2/get_x pos) half_r) (- (V2/get_y pos) half_r))
+    let se_pos = (V2/new (+ (V2/get_x pos) half_r) (- (V2/get_y pos) half_r))
+    let nw_rec = (draw A qt.nw nw_pos half_r)
+    let ne_rec = (draw A qt.ne ne_pos half_r)
+    let sw_rec = (draw A qt.sw sw_pos half_r)
+    let se_rec = (draw A qt.se se_pos half_r)
+    let square = (QuadTree/draw/area pos rad)
+    (List/flatten _ [ square nw_rec ne_rec sw_rec se_rec ])
+  leaf:
+    (QuadTree/draw/area pos rad)
+}

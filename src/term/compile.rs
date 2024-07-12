@@ -1,5 +1,4 @@
 use crate::{*};
-use std::collections::BTreeMap;
 
 // Kind -> HVM2
 // ------------
@@ -212,7 +211,10 @@ impl Term {
 
   pub fn to_js(&self) -> String {
     let mut term = self.clone();
-    term.sanitize(&mut BTreeMap::new(), &mut 0);
+    //println!("OVERSHADOW:");
+    //println!("{}", term.show());
+    term.overshadow(&im::HashMap::new(), &mut 0);
+    //println!("{}", term.show());
     //term.desugar();
     //term.expand_implicits(im::Vector::new(), &BTreeMap::new());
     term.to_js_go()
@@ -286,7 +288,7 @@ impl Term {
   }
 
   pub fn to_js_name(name: &str) -> String {
-    name.replace("/", "_").replace(".","_")
+    name.replace("/", "_").replace(".","_").replace("-","_")
   }
 }
 

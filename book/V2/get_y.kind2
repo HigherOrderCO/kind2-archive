@@ -1,0 +1,19 @@
+/// Gets the y-coordinate of a V2 vector.
+///
+/// # Input
+///
+/// * `v` - The V2 vector
+///
+/// # Output
+///
+/// The y-coordinate of the vector as a U48
+
+use V2/{new}
+
+get_y
+- v: V2
+: U48
+
+match v {
+  new: v.y
+}

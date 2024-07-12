@@ -1,0 +1,13 @@
+// TASK:
+// create a Shape type that allows the user
+// to create simple shapes that can be rendered
+// on HTML5 Canvas
+// including:
+// - line (from / to)
+// - circle (pos / radius)
+// (only that for now)
+// uses the V2 type
+
+data Shape
+| line (ini: V2) (end: V2)
+| circle (pos: V2) (rad: U48)

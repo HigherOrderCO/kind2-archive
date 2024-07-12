@@ -1,0 +1,29 @@
+PLANS - can finish by 20h?
+
+[X] Build a Kind2 -> JavaScript compiler ~ 1 hour
+
+[X] Build a simple spec for live CanvasApps on Kind2
+
+[X] Build a Kind2 -> HTML5 canvas renderer
+
+[X] Implement a QuadTree type on Kind2
+
+[X] Implement a n-body particle integrator
+
+[ ] Render that live as a Solar System emulator
+
+___________________________________
+|                |       | O  |   |
+|                |       |____|___|
+|                |       |        |
+-----|---|-------|-------|---------
+|____|___|       |       |        |
+| O  |   |       |       |        |
+-----|---|-------|-------|--------|
+|                |                |
+|                |                |
+|                |                |
+|                |                |
+|                |                |
+|                |                |
+-----------------|-----------------

@@ -1,0 +1,23 @@
+/// Computes the dot product of two V2 vectors.
+///
+/// # Input
+///
+/// * `a` - The first V2 vector
+/// * `b` - The second V2 vector
+///
+/// # Output
+///
+/// The dot product of `a` and `b` as a U48
+
+use V2/{new}
+
+dot
+- a: V2
+- b: V2
+: U48
+
+match a {
+  new: match b {
+    new: (+ (* a.x b.x) (* a.y b.y))
+  }
+}

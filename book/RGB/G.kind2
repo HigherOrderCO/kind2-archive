@@ -1,0 +1,10 @@
+/// Constructs the Green color in the RGB color space.
+///
+/// # Output
+///
+/// The Green color representation in RGB.
+
+G
+: RGB
+
+~λP λR λG λB G

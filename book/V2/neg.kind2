@@ -1,0 +1,19 @@
+/// Negates a V2 vector.
+///
+/// # Input
+///
+/// * `v` - The V2 vector to negate
+///
+/// # Output
+///
+/// A new V2 vector with negated coordinates
+
+use V2/{new}
+
+neg
+- v: V2
+: V2
+
+match v {
+  new: (new (- 0 v.x) (- 0 v.y))
+}

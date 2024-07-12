@@ -1,0 +1,27 @@
+/// Provides a way to pattern match on QuadTree values.
+///
+/// # Parameters
+///
+/// * `A` - The type of data stored in the QuadTree
+///
+/// # Inputs
+///
+/// * `P` - The motive of the elimination, a type family indexed by QuadTree A.
+/// * `n` - The case for when the QuadTree is a node.
+/// * `l` - The case for when the QuadTree is a leaf.
+/// * `t` - The QuadTree value to match on.
+///
+/// # Output
+///
+/// The result of the elimination, which has type `(P t)`.
+
+use QuadTree/{node,leaf}
+
+match <A>
+- P: (QuadTree A) -> *
+- n: ∀(nw: (QuadTree A)) ∀(ne: (QuadTree A)) ∀(sw: (QuadTree A)) ∀(se: (QuadTree A)) (P (QuadTree/node A nw ne sw se))
+- l: ∀(data: (List A)) (P (QuadTree/leaf A data))
+- t: (QuadTree A)
+: (P t)
+
+(~t P n l)

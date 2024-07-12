@@ -1,0 +1,13 @@
+use Bits/{O,I,E}
+
+go
+- bits: Bits
+- acc: Bits
+: Bits
+
+match bits {
+  O: (go bits.tail (O acc))
+  I: (go bits.tail (I acc))
+  E: acc
+}
+

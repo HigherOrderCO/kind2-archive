@@ -1,0 +1,25 @@
+/// Checks if a list is empty.
+///
+/// # Parameters
+///
+/// * `A` - The type of elements in the list.
+///
+/// # Input
+///
+/// * `xs` - The list to check.
+///
+/// # Output
+///
+/// Returns `true` if the list is empty, `false` otherwise.
+
+use List/{cons,nil}
+use Bool/{true,false}
+
+is_empty <A>
+- xs: (List A)
+: Bool
+
+match xs {
+  cons: false
+  nil: true
+}

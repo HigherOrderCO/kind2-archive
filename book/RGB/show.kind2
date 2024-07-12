@@ -1,0 +1,21 @@
+/// Converts an RGB color to its string representation.
+///
+/// # Input
+///
+/// * `x` - The RGB color to convert.
+///
+/// # Output
+///
+/// A string representation of the RGB color.
+
+use RGB/{R,G,B}
+
+show
+- x: RGB
+: String
+
+match x {
+  R: "Red"   // Return "Red" for the Red color
+  G: "Green" // Return "Green" for the Green color
+  B: "Blue"  // Return "Blue" for the Blue color
+}

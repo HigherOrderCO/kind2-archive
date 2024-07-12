@@ -1,0 +1,13 @@
+/// Defines a 2D vector with U48 coordinates.
+///
+/// # Constructor
+///
+/// * `new` - Creates a new V2 vector with given x and y coordinates.
+///
+/// # Fields
+///
+/// * `x` - The x-coordinate (U48)
+/// * `y` - The y-coordinate (U48)
+
+data V2
+| new (x: U48) (y: U48)

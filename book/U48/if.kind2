@@ -1,3 +1,19 @@
+/// Conditional expression for U48 values.
+///
+/// # Parameters
+///
+/// * `P` - The type of the result.
+///
+/// # Inputs
+///
+/// * `x` - The U48 condition.
+/// * `t` - The value to return if the condition is non-zero.
+/// * `f` - The value to return if the condition is zero.
+///
+/// # Output
+///
+/// Returns `t` if `x` is non-zero, otherwise returns `f`.
+
 if <P>
 - x: U48
 - t: P
@@ -5,6 +21,6 @@ if <P>
 : P
 
 switch x {
-  0: t
-  _: f
-}
+  0: f
+  _: t
+}: P

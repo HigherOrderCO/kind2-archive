@@ -1,0 +1,14 @@
+/// Defines a QuadTree data structure for spatial partitioning.
+///
+/// # Parameters
+///
+/// * `A` - The type of data stored in the QuadTree
+///
+/// # Constructors
+///
+/// * `node` - An internal node with four children
+/// * `leaf` - A leaf node containing data
+
+data QuadTree <A: *>
+| node (nw: (QuadTree A)) (ne: (QuadTree A)) (sw: (QuadTree A)) (se: (QuadTree A))
+| leaf (xs: (List A))

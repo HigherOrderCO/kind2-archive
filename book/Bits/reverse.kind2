@@ -1,0 +1,17 @@
+/// Reverses the order of bits in a Bits value.
+///
+/// # Input
+///
+/// * `bits` - The Bits value to reverse.
+///
+/// # Output
+///
+/// A new Bits value with the bits in reverse order.
+
+use Bits/{O,I,E}
+
+reverse
+- bits: Bits
+: Bits
+
+(Bits/reverse/go bits E)

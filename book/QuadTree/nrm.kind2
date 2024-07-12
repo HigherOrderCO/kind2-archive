@@ -1,0 +1,25 @@
+use QuadTree/{node,leaf}
+use Bool/{and}
+use List/is_empty
+
+nrm <A>
+- tree: (QuadTree A)
+: (QuadTree A)
+
+match tree {
+  node:
+    let nw_rec = (nrm _ tree.nw)
+    let ne_rec = (nrm _ tree.ne)
+    let sw_rec = (nrm _ tree.sw)
+    let se_rec = (nrm _ tree.se)
+    let nw_emp = (QuadTree/is_empty _ nw_rec)
+    let ne_emp = (QuadTree/is_empty _ ne_rec)
+    let sw_emp = (QuadTree/is_empty _ sw_rec)
+    let se_emp = (QuadTree/is_empty _ se_rec)
+    let qt_emp = (and (and nw_emp ne_emp) (and sw_emp se_emp))
+    (Bool/if (QuadTree A) qt_emp
+      (QuadTree/leaf _ [])
+      (QuadTree/node _ nw_rec ne_rec sw_rec se_rec))
+  leaf:
+    tree
+}

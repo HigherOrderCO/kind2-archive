@@ -1,0 +1,34 @@
+/// Performs the iterative step of the integer square root calculation using Newton's method.
+///
+/// This function implements the core logic of the integer square root algorithm,
+/// using Newton's method for successive approximations.
+///
+/// # Inputs
+///
+/// * `n` - The number for which we're calculating the square root.
+/// * `guess` - The current guess for the square root.
+/// * `prev_guess` - The previous guess, used to check for convergence.
+///
+/// # Output
+///
+/// Returns the calculated integer square root of `n`.
+///
+/// # Algorithm
+///
+/// 1. Calculate a new guess using the formula: (guess + n/guess) / 2
+/// 2. If the new guess equals the previous guess, we've converged; return the guess.
+/// 3. Otherwise, recurse with the new guess as the current guess and the old guess as the previous guess.
+
+// TODO: review
+
+go
+- n: U48
+- guess: U48
+- prev_guess: U48
+: U48
+
+let new_guess = (/ (+ guess (/ n guess)) 2)
+switch x = (== guess prev_guess) {
+  0: guess
+  _: (U48/sqrt/go n new_guess guess)
+}

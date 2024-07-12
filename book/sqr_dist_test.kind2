@@ -1,0 +1,7 @@
+sqr_dist_test
+
+let a = (V2/new 10000 10000)
+let b = (V2/new 20000 20000)
+
+(V2/sqr_dist a b)
+
