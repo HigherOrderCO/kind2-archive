@@ -72,6 +72,40 @@ fn auto_format(file_name: &str) {
   std::fs::write(&file, form).expect(&format!("failed to write to file '{}'", file_name));
 }
 
+#[cfg(test)]
+mod test {
+  use std::{io::{BufReader, BufRead}, process::Command};
+
+use crate::{Book, KindParser};
+
+  #[test]
+  fn test_parse() {
+    std::env::set_current_dir("./book").unwrap();
+
+    let stdout = Command::new("fd").args(["-t", "f", "-0", "-e", "kind2"]).output().unwrap().stdout;
+
+    for file in BufReader::new(stdout.as_slice()).split(b'\0') {
+      let file = String::from_utf8_lossy(&file.unwrap()).into_owned();
+      // ignore random top-level stuff in book/
+      if !file.strip_prefix("./").unwrap().contains("/") {
+        continue;
+      }
+
+      eprintln!("parsing {file:?}");
+
+      let fid  = Book::new().get_file_id(&file);
+      let source = std::fs::read_to_string(&file).unwrap();
+
+      let book = KindParser::new(&source).parse_book(&file, fid).expect(&format!("failed to parse {file:?}"));
+    }
+  }
+
+  #[test]
+  fn test_display() {
+    // let stdout = Command::new("fd").args(["-t", "f", "-0", "-e", "kind2"])
+  }
+}
+
 fn load_book(name: &str) -> Book {
   let cwd = std::env::current_dir().expect("failed to get current directory");
   Book::boot(cwd.to_str().unwrap(), name).unwrap_or_else(|e| {
