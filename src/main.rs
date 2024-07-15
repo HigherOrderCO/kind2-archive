@@ -14,7 +14,6 @@ mod term;
 
 use book::*;
 use info::*;
-use show::*;
 use sugar::*;
 use term::*;
 
@@ -61,17 +60,6 @@ fn normal(name: &str, _level: u32) {
   eprintln!("{stderr}");
 }
 
-fn auto_format(file_name: &str) {
-  let base = std::env::current_dir().expect("failed to get current directory");
-  let file = base.join(format!("{file_name}.kind2"));
-  let text = std::fs::read_to_string(&file).expect("failed to read file");
-  let fid  = Book::new().get_file_id(&file.to_str().unwrap().to_string());
-  let book = KindParser::new(&text).parse_book(file_name, fid).expect("failed to parse book");
-  let form = book.defs.iter().map(|(name, term)| book.format_def(name, term)).collect();
-  let form = Show::pile("\n\n", form).flatten(Some(60));
-  std::fs::write(&file, form).expect(&format!("failed to write to file '{}'", file_name));
-}
-
 #[cfg(test)]
 mod test {
   use std::{io::{BufReader, BufRead}, process::Command};
@@ -90,8 +78,6 @@ use crate::{Book, KindParser};
       if !file.strip_prefix("./").unwrap().contains("/") {
         continue;
       }
-
-      eprintln!("parsing {file:?}");
 
       let fid  = Book::new().get_file_id(&file);
       let source = std::fs::read_to_string(&file).unwrap();
@@ -177,10 +163,6 @@ fn main() {
       let name = sub_matches.get_one::<String>("name").expect("required");
       let level = sub_matches.get_one::<u32>("level").copied().unwrap_or(0);
       normal(name, level);
-    }
-    Some(("format", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      auto_format(name);
     }
     Some(("deps", sub_matches)) => {
       let name = sub_matches.get_one::<String>("name").expect("required");
