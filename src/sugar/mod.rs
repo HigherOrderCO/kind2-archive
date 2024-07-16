@@ -691,7 +691,7 @@ impl Display for ADT {
     }
 
     if !self.idxs.is_empty() {
-      for (nam, typ) in &self.pars {
+      for (nam, typ) in &self.idxs {
         write!(f, " ({nam}: {typ})")?;
       }
     }
