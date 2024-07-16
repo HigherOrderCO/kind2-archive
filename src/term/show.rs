@@ -102,7 +102,7 @@ impl Display for Term {
       Term::Num { val } => write!(f, "{val}"),
       Term::Op2 { opr, fst, snd } => write!(f, "({opr} {fst} {snd})"),
       Term::Swi { nam, x, z, s, p } => write!(f, "switch {nam} = {x} {{0: {z} _: {s}}}: {p}"),
-      Term::Let { nam, val, bod } => write!(f, "let {nam} = {val}; {bod}"),
+      Term::Let { nam, val, bod } => write!(f, "let {nam} = {val} {bod}"),
       Term::Use { nam, val, bod } => write!(f, "use {nam} = {val} {bod}"),
       Term::Hol { nam } => write!(f, "?{nam}"),
       Term::Met {} => write!(f, "_"),
