@@ -696,10 +696,8 @@ impl Display for ADT {
       }
     }
 
-    writeln!(f)?;
-
     for ctr in &self.ctrs {
-      writeln!(f, "| {}", ctr.name)?;
+      write!(f, " | {}", ctr.name)?;
 
       if !ctr.flds.is_empty() {
         write!(f, " {}", ctr.flds.iter().map(|(nam, typ)| format!("({nam}: {typ})")).collect::<Vec<_>>().join(" "))?;
@@ -715,7 +713,7 @@ impl Display for ADT {
         write!(f, " {}", ctr.idxs.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" "))?;
       }
 
-      writeln!(f, ")")?;
+      write!(f, ")")?;
     }
 
     Ok(())
@@ -1086,7 +1084,7 @@ impl<'i> KindParser<'i> {
       let cnm = cse_name.split('/').last().unwrap().to_string();
       let ctr = ADT::load(&adt).ok().and_then(|adt| adt.ctrs.iter().find(|ctr| ctr.name == cnm).cloned());
       if ctr.is_none() {
-        return self.expected(&format!("a valid constructor ({}/{} doesn't exit)", adt_name, cnm));
+        return self.expected(&format!("a valid constructor ({}/{} doesn't exist)", adt_name, cnm));
       }
       // Shadows this constructor's field variables
       let mut uses = uses.clone();
