@@ -1,0 +1,22 @@
+/// Divides a V2 vector by a scalar.
+///
+/// # Input
+///
+/// * `a` - The first V2 vector (dividend)
+/// * `s` - The U48 scalar (divisor)
+///
+/// # Output
+///
+/// A new V2 vector representing the component-wise division of `a` by `s`
+/// Note: This function does not handle division by zero.
+
+use V2/{new}
+
+div_scalar
+- a: V2
+- s: U48
+: V2
+
+match a {
+  new: (new (/ a.x s) (/ a.y s))
+}

@@ -1,0 +1,21 @@
+/// Calculates the distance between two V2 vectors.
+/// Equivalent to the square root of sqr_dist
+/// # Input
+///
+/// * `a` - The first V2 vector
+/// * `b` - The second V2 vector
+///
+/// # Output
+///
+/// The distance between `a` and `b` as a U48
+
+use V2/{new,sqr_dist}
+use U48/{sqrt}
+
+dist
+- a: V2
+- b: V2
+: U48
+
+let sqr_dst = (sqr_dist a b)
+(sqrt sqr_dst)

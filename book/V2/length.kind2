@@ -1,0 +1,23 @@
+/// Calculates the length (magnitude) of a V2 vector using Euclidean norm.
+///
+/// # Input
+///
+/// * `a` - The first V2 vector
+///
+/// # Output
+///
+/// The length of the V2 vector `a` as a U48
+
+use V2/{new}
+use U48/{sqrt}
+
+length
+- a: V2
+: U48
+
+match a {
+  new:
+    let x_sqr = (* a.x a.x)
+    let y_sqr = (* a.y a.y)
+    (sqrt (+ x_sqr y_sqr)) 
+}

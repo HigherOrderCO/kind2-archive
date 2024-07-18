@@ -1,0 +1,30 @@
+/// Calculates the linear interpolation between two V2 vecctors given a parameter `t`.
+///
+/// # Input
+///
+/// * `a` - The first V2 vector
+/// * `b` - The second V2 vector
+/// * `t` - The interpolation parameter (in theory 0 <= t <= 1, when we have floats)
+///
+/// # Output
+///
+/// A V2 vector containing the interpolated x and y coordinates. 
+
+use V2/{new}
+
+// kinda useless when having no floats. if t = 0, we will get the first vec, if t = 1 we will get the second
+linear_interpolation
+- a: V2
+- b: V2
+- t: U48
+: V2
+
+match a {
+  new: match b {
+    new: 
+      let interpol_x = (+ a.x (* t (- b.x a.x)))
+      let interpol_y = (+ a.y (* t (- b.y a.y)))
+      (new interpol_x interpol_y)
+  }
+}
+
