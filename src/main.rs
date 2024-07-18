@@ -3,6 +3,7 @@
 
 use clap::{Arg, ArgAction, Command};
 use std::fs;
+use std::path::Path;
 use std::io::Write;
 use std::process::Command as SysCommand;
 
@@ -104,6 +105,14 @@ fn compile_to_js(name: &str) {
   println!("{}", code);
 }
 
+fn strip_extension(filename: &str) -> String {
+    Path::new(filename)
+        .with_extension("")
+        .to_str()
+        .unwrap_or(filename)
+        .to_string()
+}
+
 fn main() {
   let matches = Command::new("kind2")
     .about("The Kind2 Programming Language")
@@ -136,29 +145,29 @@ fn main() {
 
   match matches.subcommand() {
     Some(("check", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      check(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      check(&name);
     }
     Some(("normal", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
       let level = sub_matches.get_one::<u32>("level").copied().unwrap_or(0);
-      normal(name, level);
+      normal(&name, level);
     }
     Some(("format", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      auto_format(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      auto_format(&name);
     }
     Some(("deps", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      deps(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      deps(&name);
     }
     Some(("to-kindc", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      compile_to_kindc(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      compile_to_kindc(&name);
     }
     Some(("to-js", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      compile_to_js(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      compile_to_js(&name);
     }
     _ => unreachable!(),
   }
