@@ -64,8 +64,12 @@ impl Display for Term {
     match self {
       Term::All { .. } => {
         let mut bod = self;
-        while let Term::All { era: _, nam, inp, bod: in_bod } = bod {
-          write!(f, "∀({nam}: {inp}) ")?;
+        while let Term::All { era, nam, inp, bod: in_bod } = bod {
+          if *era {
+            write!(f, "∀(-{nam}: {inp}) ")?;
+          } else {
+            write!(f, "∀({nam}: {inp}) ")?;
+          }
           bod = in_bod;
         }
 
@@ -74,8 +78,12 @@ impl Display for Term {
 
       Term::Lam { .. } => {
         let mut bod = self;
-        while let Term::Lam { era: _, nam, bod: in_bod } = bod {
-          write!(f, "λ{nam} ")?;
+        while let Term::Lam { era, nam, bod: in_bod } = bod {
+          if *era {
+            write!(f, "λ-{nam} ")?;
+          } else {
+            write!(f, "λ{nam} ")?;
+          }
           bod = in_bod;
         }
 
