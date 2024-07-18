@@ -27,7 +27,7 @@ match n {
     succ: (succ (half n.pred.pred))
     zero: zero
   }
-  zero: (succ zero)
+  zero: zero
 }
 
 

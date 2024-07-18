@@ -1,0 +1,20 @@
+/// Finds a V2 vector perpendicular to the input V2 vector `a`. 
+///
+/// # Input
+///
+/// * `a` - A V2 vector
+///
+/// # Output
+///
+/// A V2 vector perpendicular to A
+
+use V2/{new}
+
+perpendicular
+- a: V2
+: V2
+
+match a {
+  new:
+    (new (- 0 a.y) a.x)
+}

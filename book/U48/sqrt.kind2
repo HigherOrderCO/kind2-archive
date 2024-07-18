@@ -1,1 +1,28 @@
-// TODO
+/// Calculates the integer square root of a given number using Newton's method.
+///
+/// This function implements an iterative approach to find the square root,
+/// starting with an initial guess and refining it until convergence.
+///
+/// # Input
+///
+/// * `n` - The number for which to calculate the square root.
+///
+/// # Output
+///
+/// Returns the calculated integer square root of `n`.
+///
+/// # Algorithm
+///
+/// 1. If n is 0 or 1, return n as its own square root.
+/// 2. For n > 1, use n/2 as the initial guess.
+
+// if true returns 1, else return false (0)
+
+use U48/sqrt/{go}
+
+sqrt
+- n: U48
+: U48
+
+(go n (/ n 2) n)
+
