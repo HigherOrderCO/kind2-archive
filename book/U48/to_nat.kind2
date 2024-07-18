@@ -1,0 +1,10 @@
+use Nat/{succ,zero}
+
+to_nat
+- n: U48
+: Nat
+
+switch n {
+  0: zero
+  _: (succ (to_nat (- n 1)))
+}
