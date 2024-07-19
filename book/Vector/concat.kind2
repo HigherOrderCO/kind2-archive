@@ -1,19 +1,12 @@
 use Vector/{cons,nil}
 use Nat/{succ,zero,add}
 
-concat <T>
-- xs_len: Nat
-- ys_len: Nat
+concat <T> <xs_len: Nat> <ys_len: Nat>
 - xs: (Vector T xs_len)
 - ys: (Vector T ys_len)
 : (Vector T (add xs_len ys_len))
 
-(Vector/match _ _ λxs.len(_)
-  λxs.lenλxs.headλxs.tail(cons _ (add xs.len ys_len) xs.head (concat _ xs.len ys_len xs.tail ys))
-  ys
-  xs)
-
-//match xs {
-  //cons: (cons _ (add xs.len ys_len) xs.head (concat _ xs.len ys_len xs.tail ys))
-  //nil: ys
-//}: (Vector T (add xs.len ys_len))
+match xs {
+  cons: (Vector/cons/ (add xs.len ys_len) xs.head (Vector/concat/ xs.tail ys))
+  nil: ys
+}: (Vector T (add xs.len ys_len))
