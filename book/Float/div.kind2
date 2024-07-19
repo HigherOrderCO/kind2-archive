@@ -8,10 +8,9 @@
 /// # Output
 ///
 /// The division of `a` and `b` as a new Float.
-/// TODO: Fix U48 division to result in a floating point, for now we will have errors on divisions like 3 / 2 for exponents
 /// 
 
-use Float/{new}
+use Float/{new,normalize}
 use U48/{exp}
 
 div
@@ -32,7 +31,7 @@ match a {
           new:
             let new_mantissa = (/ shifted_num.mantissa b.mantissa)
             let new_exponent = (- shifted_num.exponent b.exponent) 
-            (Float/new new_mantissa (+ new_exponent digits_precision))
+            (normalize (Float/new new_mantissa (+ new_exponent digits_precision)))
         }
     }
 }
