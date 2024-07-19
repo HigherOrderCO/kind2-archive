@@ -18,17 +18,33 @@
 /// 1. Calculate a new guess using the formula: (guess + n/guess) / 2
 /// 2. If the new guess equals the previous guess, we've converged; return the guess.
 /// 3. Otherwise, recurse with the new guess as the current guess and the old guess as the previous guess.
+/// FIXME: find a way to do without nat conversion. The conventional algorithm was running forever for u48 for some reason
 
-// TODO: review
+use U48/{to_nat,from_nat}
+use Nat/{add,half,equal}
+use Bool/{true,false}
 
 go
 - n: U48
 - guess: U48
-- prev_guess: U48
+- old_guess: U48
 : U48
 
-let new_guess = (/ (+ guess (/ n guess)) 2)
-switch x = (== guess prev_guess) {
-  0: guess
-  _: (U48/sqrt/go n new_guess guess)
+let n_nat = (to_nat n)
+let guess_nat = (to_nat guess)
+let old_guess_nat = (to_nat old_guess)
+
+let n_div_guess = (to_nat (/ n guess))
+let guess_plus_n_div = (add n_div_guess guess_nat)
+
+let new_guess_nat = (half guess_plus_n_div)
+
+let eq = (equal new_guess_nat old_guess_nat)
+let next_guess = (from_nat new_guess_nat)
+
+match eq {
+  true: (from_nat new_guess_nat)
+  false: (U48/sqrt/go n next_guess guess)
 }
+
+
