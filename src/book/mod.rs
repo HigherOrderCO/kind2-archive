@@ -64,11 +64,13 @@ impl Book {
     if !self.defs.contains_key(name) {
       // Parses a file into a new book
       let file = format!("{}/{}.kind2", base, name);
-      let text = match std::fs::read_to_string(&file) {
-        Ok(content) => content,
+      let (file, text) = match std::fs::read_to_string(&file) {
+        Ok(content) => (file, content),
         Err(_) => {
           let backup_file = format!("{}/{}/_.kind2", base, name);
-          std::fs::read_to_string(&backup_file).map_err(|_| format!("Could not read file: {} or {}", file, backup_file))?
+          let text = std::fs::read_to_string(&backup_file).map_err(|_| format!("Could not read file: {} or {}", file, backup_file))?;
+
+          (backup_file, text)
         }
       };
       let fid  = self.get_file_id(&file);
