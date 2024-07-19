@@ -102,7 +102,14 @@ impl Display for Term {
         write!(f, "({fun} {})", args.join(" "))
       }
 
-      Term::Ann { chk: _, val, typ: _ } => write!(f, "{val}"),
+      Term::Ann { chk, val, typ } => {
+        if *chk {
+          write!(f, "{{{val} : {typ}}}")
+        } else {
+          write!(f, "{val}")
+        }
+      }
+
       Term::Slf { nam, typ, bod } => write!(f, "$({nam}: {typ}) {bod}"),
       Term::Ins { val } => write!(f, "~{val}"),
       Term::Set => write!(f, "*"),
