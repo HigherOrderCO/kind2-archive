@@ -1,8 +1,6 @@
-use List/{concat}
-
 concat
 - xs: (List Char)
 - ys: (List Char)
 : (List Char)
 
-(concat xs ys)
+(List/concat/ xs ys)
