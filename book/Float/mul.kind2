@@ -9,9 +9,7 @@
 ///
 /// The product of `a` and `b` as a new Float.
 
-use Float/{new}
-use Bool/{true,false}
-use U48/{exp,less_than,equal}
+use Float/{new,normalize}
 
 mul
 - a: Float
@@ -25,7 +23,7 @@ match a {
       new:
         let new_mantissa = (* a.mantissa b.mantissa)
         let new_exponent = (+ a.exponent b.exponent)
-        (Float/new new_mantissa new_exponent)
+        (normalize (Float/new new_mantissa new_exponent))
      }
 }
 
