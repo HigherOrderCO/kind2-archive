@@ -62,9 +62,8 @@ fn normal(name: &str, _level: u32) {
 
 #[cfg(test)]
 mod test {
+  use crate::{Book, KindParser};
   use std::{io::{BufReader, BufRead}, process::Command};
-
-use crate::{Book, KindParser};
 
   #[test]
   fn test_parse() {
@@ -83,12 +82,9 @@ use crate::{Book, KindParser};
       let source = std::fs::read_to_string(&file).unwrap();
 
       let book = KindParser::new(&source).parse_book(&file, fid).expect(&format!("failed to parse {file:?}"));
-    }
-  }
 
-  #[test]
-  fn test_display() {
-    // let stdout = Command::new("fd").args(["-t", "f", "-0", "-e", "kind2"])
+      std::fs::write(&file, book.to_string()).unwrap();
+    }
   }
 }
 
