@@ -510,6 +510,8 @@ impl Term {
       term = bod;
     }
 
+    pars.reverse();
+
     return Some(ADT { name, pars, idxs, ctrs });
   }
 
