@@ -145,9 +145,6 @@ fn main() {
         .short('l')
         .action(ArgAction::Set)
         .value_parser(clap::value_parser!(u32))))
-    .subcommand(Command::new("format")
-      .about("Auto-formats a file")
-      .arg(Arg::new("name").required(true)))
     .subcommand(Command::new("deps")
       .about("Lists all dependencies of a symbol")
       .arg(Arg::new("name").required(true)))
@@ -168,10 +165,6 @@ fn main() {
       let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
       let level = sub_matches.get_one::<u32>("level").copied().unwrap_or(0);
       normal(&name, level);
-    }
-    Some(("format", sub_matches)) => {
-      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
-      auto_format(&name);
     }
     Some(("deps", sub_matches)) => {
       let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
