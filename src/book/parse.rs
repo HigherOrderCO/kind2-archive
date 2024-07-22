@@ -65,7 +65,6 @@ impl<'i> KindParser<'i> {
     // Top level definition
     self.skip_trivia();
     let nam = self.parse_name()?;
-    let nam = uses.get(&nam).unwrap_or(&nam).to_string();
     self.skip_trivia();
 
     // Arguments (optional)

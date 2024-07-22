@@ -2,7 +2,7 @@ use List/{cons,nil}
 
 many <A> (msgs: (List String)) (ret: A) : A =
   match msgs {
-    cons: (HVM/print msgs.head (HVM/print/many msgs.tail ret))
+    cons: (HVM/print/ msgs.head (HVM/print/many/ msgs.tail ret))
     nil: ret
   }
 

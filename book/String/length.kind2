@@ -1,7 +1,5 @@
-use List/{length}
-
 length
 - s: (List Char)
 : Nat
 
-(length s)
+(List/length/ s)

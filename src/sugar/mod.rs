@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{*};
 
 // A List.
@@ -285,20 +287,14 @@ impl Term {
 
 }
 
-impl List {
-  
-  pub fn format(&self) -> Box<Show> {
-    if self.vals.len() == 0 {
-      return Show::text("[]");
+impl Display for List {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    if self.vals.is_empty() {
+      write!(f, "[]")
     } else {
-      return Show::call("", vec![
-        Show::text("["),
-        Show::pile(", ", self.vals.iter().map(|x| x.format_go()).collect()),
-        Show::text("]"),
-      ]);
+      write!(f, "[{}]", self.vals.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "))
     }
   }
-
 }
 
 impl<'i> KindParser<'i> {
@@ -365,16 +361,10 @@ impl Term {
 
 }
 
-impl Equal {
-  
-  pub fn format(&self) -> Box<Show> {
-    Show::glue(" ", vec![
-      self.a.format_go(),
-      Show::text("=="),
-      self.b.format_go(),
-    ])
+impl Display for Equal {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{a} == {b}", a = self.a, b = self.b)
   }
-
 }
 
 impl<'i> KindParser<'i> {
@@ -519,6 +509,8 @@ impl Term {
       
       term = bod;
     }
+
+    pars.reverse();
 
     return Some(ADT { name, pars, idxs, ctrs });
   }
@@ -686,76 +678,48 @@ impl ADT {
       Err(format!("Cannot find definition for type '{}'.", name))
     }
   }
-  
-  // Formats an ADT
-  pub fn format(&self) -> Box<Show> {
+}
 
-    // ADT head: `data Name <params> <indices>`
-    let mut adt_head = vec![];
-    adt_head.push(Show::text("data"));
-    adt_head.push(Show::text(&self.name));
-    for (nam,typ) in self.pars.iter() {
-      adt_head.push(Show::call("", vec![
-        Show::glue("", vec![Show::text("<"), Show::text(nam), Show::text(": ")]),
-        typ.format_go(),
-        Show::text(">"),
-      ]));
-    }
-    for (nam,typ) in self.idxs.iter() {
-      adt_head.push(Show::call("", vec![
-        Show::glue("", vec![Show::text("("), Show::text(nam), Show::text(": ")]),
-        typ.format_go(),
-        Show::text(")"),
-      ]));
-    }
+impl Display for ADT {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    eprintln!("Stringifying ADT with pars={:?}", self.pars);
 
-    // ADT tail: constructors
-    let mut adt_tail = vec![];
-    for ctr in &self.ctrs {
-      let mut adt_ctr = vec![];
-      // Constructor head: name
-      adt_ctr.push(Show::glue("", vec![
-        Show::line(),
-        Show::text("| "),
-        Show::text(&ctr.name),
-      ]));
-      // Constructor body: fields
-      for (nam,typ) in ctr.flds.iter() {
-        adt_ctr.push(Show::call("", vec![
-          Show::glue("", vec![
-            Show::text("("),
-            Show::text(nam),
-            Show::text(": "),
-          ]),
-          typ.format_go(),
-          Show::text(")"),  
-        ]));
+    write!(f, "data {}", self.name)?;
+
+    if !self.pars.is_empty() {
+      for (nam, typ) in &self.pars {
+        write!(f, " <{nam}: {typ}>")?;
       }
-      // Constructor tail: return
-      adt_ctr.push(Show::glue(" ", vec![
-        Show::text(":"),
-        Show::call(" ", {
-          let mut ret_typ = vec![];
-          ret_typ.push(Show::text(&format!("({}", &self.name)));
-          for (par,_typ) in &self.pars {
-            ret_typ.push(Show::text(par));
-          }
-          for idx in &ctr.idxs {
-            ret_typ.push(idx.format_go());
-          }
-          ret_typ.push(Show::text(")"));
-          ret_typ
-        })
-      ]));
-      adt_tail.push(Show::call(" ", adt_ctr));
     }
 
-    return Show::glue(" ", vec![
-      Show::glue(" ", adt_head),
-      Show::glue(" ", adt_tail),
-    ]);
-  }
+    if !self.idxs.is_empty() {
+      for (nam, typ) in &self.idxs {
+        write!(f, " ({nam}: {typ})")?;
+      }
+    }
 
+    for ctr in &self.ctrs {
+      write!(f, " | {}", ctr.name)?;
+
+      if !ctr.flds.is_empty() {
+        write!(f, " {}", ctr.flds.iter().map(|(nam, typ)| format!("({nam}: {typ})")).collect::<Vec<_>>().join(" "))?;
+      }
+
+      write!(f, ": ({name}", name = self.name)?;
+      if !self.pars.is_empty() {
+        for (nam, _) in &self.pars {
+          write!(f, " {nam}")?;
+        }
+      }
+      if !ctr.idxs.is_empty() {
+        write!(f, " {}", ctr.idxs.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" "))?;
+      }
+
+      write!(f, ")")?;
+    }
+
+    Ok(())
+  }
 }
 
 impl<'i> KindParser<'i> {
@@ -1025,59 +989,35 @@ impl Term {
 
 }
 
-impl Match {
+impl Display for Match {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{keyword} {name}", keyword = if self.fold { "fold" } else { "match" }, name = self.name)?;
 
-  pub fn format(&self) -> Box<Show> {
-    Show::pile(" ", vec![
-      Show::glue(" ", vec![
-        Show::text(if self.fold { "fold" } else { "match" }),
-        Show::text(&self.name),
-        if let Some(expr) = &self.expr {
-          Show::glue(" ", vec![
-            Show::text("="),
-            expr.format_go(),
-          ])
-        } else {
-          Show::text("")
-        },
-        if !self.with.is_empty() {
-          Show::glue(" ", vec![
-            Show::text("with"),
-            Show::pile(" ", self.with.iter().map(|(name, typ)| {
-              Show::call("", vec![
-                Show::text("("),
-                Show::text(name),
-                Show::text(":"),
-                typ.format_go(),
-                Show::text(")"),
-              ])
-            }).collect()),
-          ])
-        } else {
-          Show::text("")
-        },
-      ]),
-      Show::glue(" ", vec![
-        Show::text("{"),
-        Show::pile("; ", self.cses.iter().map(|(name,term)| {
-          Show::glue(" ", vec![
-            Show::text(name),
-            Show::text(":"),
-            term.format_go(),
-          ])
-        }).collect()),
-      ]),
-      if let Some(moti) = &self.moti {
-        Show::glue(" ", vec![
-          Show::text(":"),
-          moti.format_go()
-        ])
-      } else {
-        Show::text("")
+    if let Some(expr) = &self.expr {
+      write!(f, " = {expr}")?;
+    }
+
+    if !self.with.is_empty() {
+      write!(f, " with")?;
+      for (name, typ) in &self.with {
+        write!(f, " ({name}: {typ})")?;
       }
-    ])
-  }
+    }
 
+    write!(f, "{{")?;
+
+    for (name, term) in &self.cses {
+      write!(f, "{name}: {term};")?;
+    }
+
+    write!(f, "}}")?;
+
+    if let Some(moti) = &self.moti {
+      write!(f, ": {moti}")?;
+    }
+
+    Ok(())
+  }
 }
 
 impl<'i> KindParser<'i> {
@@ -1146,7 +1086,7 @@ impl<'i> KindParser<'i> {
       let cnm = cse_name.split('/').last().unwrap().to_string();
       let ctr = ADT::load(&adt).ok().and_then(|adt| adt.ctrs.iter().find(|ctr| ctr.name == cnm).cloned());
       if ctr.is_none() {
-        return self.expected(&format!("a valid constructor ({}/{} doesn't exit)", adt_name, cnm));
+        return self.expected(&format!("a valid constructor ({}/{} doesn't exist)", adt_name, cnm));
       }
       // Shadows this constructor's field variables
       let mut uses = uses.clone();
