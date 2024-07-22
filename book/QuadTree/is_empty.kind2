@@ -14,7 +14,6 @@
 
 use QuadTree/{node,leaf}
 use Bool/{true,false}
-use List/is_empty
 
 is_empty <A>
 - tree: (QuadTree A)
