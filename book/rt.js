@@ -64,12 +64,12 @@ DRAW = (canvas, shapes) => {
         const XSIZE = 20;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(shape.x_ini.x, shape.x_ini.y - XSIZE);
-        ctx.lineTo(shape.x_ini.x + XSIZE, shape.x_ini.y + XSIZE);
+        ctx.moveTo(shape.x_ini.x - XSIZE / 2, shape.x_ini.y - XSIZE);
+        ctx.lineTo(shape.x_ini.x + XSIZE / 2, shape.x_ini.y + XSIZE);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(shape.x_ini.x + XSIZE, shape.x_ini.y - XSIZE);
-        ctx.lineTo(shape.x_ini.x, shape.x_ini.y + XSIZE);
+        ctx.moveTo(shape.x_ini.x + XSIZE / 2, shape.x_ini.y - XSIZE);
+        ctx.lineTo(shape.x_ini.x - XSIZE / 2, shape.x_ini.y + XSIZE);
         ctx.stroke();
         break;
       case 'line':

@@ -1,0 +1,19 @@
+/// Creates a new Planet.
+///
+/// # Input
+///
+/// * `pos` - The position of the planet (V2)
+/// * `vel` - The velocity of the planet (V2)
+/// * `rad` - The radius of the planet (U48)
+///
+/// # Output
+///
+/// A new Planet with the given position, velocity, and radius
+
+
+new
+- entities: (List Entity)
+: Board
+
+~λP λnew (new entities)
+

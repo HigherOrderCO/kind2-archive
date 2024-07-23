@@ -1,0 +1,22 @@
+/// Provides a way to pattern match on Planet values.
+///
+/// # Parameters
+///
+/// * `P` - The motive of the elimination, a type family indexed by Planet.
+///
+/// # Inputs
+///
+/// * `n` - The case for when the Planet is constructed with 'new'.
+/// * `p` - The Planet value to match on.
+///
+/// # Output
+///
+/// The result of the elimination, which has type `(P p)`.
+
+match
+- B: Board -> *
+- n: ∀(entities: Entity) (B (Board/new entities))
+- b: Board
+: (B b)
+
+(~b B n)

@@ -1,0 +1,2 @@
+data Board
+| new (entities: (List Entity)) : Board

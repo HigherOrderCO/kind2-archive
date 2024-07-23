@@ -27,8 +27,7 @@ main: (App (List Planet))
 
 use init =
   let sun     = (Planet/new (V2/new 256000 256000) (V2/new 0 0) 20)
-  let moon    = (Planet/new (V2/new 322000 256000) (V2/new 0 3100) 2)
-  [ sun moon ]
+  [ sun ]
 
 use tick = λstate
   let state = (List/map _ _ state Planet/tick)
@@ -48,24 +47,6 @@ use draw = λstate
       }
   }: V2 // FIXME: why cant infer this?
 
-  // Draws the QuadTree
-  let qt = (QuadTree/leaf U48 [])
-  let qt = (List/fold _ (QuadTree U48) λpλqt(match p {
-    Planet/new:
-      let pp = (V2/sub p.pos sun_pos)
-      let px = (+ (/ (V2/get_x pp) 1000) 256)
-      let py = (- 512 (+ (/ (V2/get_y pp) 1000) 256))
-      let kx = (Bits/reverse (U48/to_bits 9 px))
-      let ky = (Bits/reverse (U48/to_bits 9 py))
-      let qt = (QuadTree/set _ qt kx ky 42)
-      qt
-  }) qt state)
-
-  //let qt = (QuadTree/leaf U48 [])
-  //let kx = (Bits/reverse (U48/to_bits 9 255))
-  //let ky = (Bits/reverse (U48/to_bits 9 256))
-  //let qt = (QuadTree/set _ qt kx ky 42)
-  let aa = (QuadTree/draw _ qt (V2/new 256 256) 256)
 
   // Draws the planets
   let pl = match state {
@@ -83,7 +64,9 @@ use draw = λstate
     )))
   }: (List Shape)
 
-  (List/concat _ aa pl)
+  let board = (Board/new [])
+  let board_list = (Board/draw board)
+  (List/concat _ board_list pl)
   //aa
 
 

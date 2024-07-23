@@ -1,0 +1,14 @@
+
+draw
+- board: Board
+: (List Shape)
+
+match board {
+  Board/new:
+    [
+      (Shape/line (V2/new 170 0) (V2/new 170 512)),
+      (Shape/line (V2/new 340 0) (V2/new 340 512)),
+      (Shape/line (V2/new 0 170) (V2/new 512 170)),
+      (Shape/line (V2/new 0 340) (V2/new 512 340))
+    ]
+}
