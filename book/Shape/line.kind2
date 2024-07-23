@@ -14,4 +14,4 @@ line
 - end: V2
 : Shape
 
-~λP λline λcircle (line ini end)
+~λP λline λcircle λxshape (line ini end)

@@ -1,5 +1,5 @@
 use Bits/{O,I,E}
-use Shape/{circle,line}
+use Shape/{circle,line,xshape}
 
 main: (App (List Planet))
 
@@ -27,16 +27,8 @@ main: (App (List Planet))
 
 use init =
   let sun     = (Planet/new (V2/new 256000 256000) (V2/new 0 0) 20)
-  let mercury = (Planet/new (V2/new 286000 256000) (V2/new 0 3700) 3)
-  let venus   = (Planet/new (V2/new 296000 256000) (V2/new 0 3500) 3)
-  let earth   = (Planet/new (V2/new 320000 256000) (V2/new 0 3000) 3)
-  let mars    = (Planet/new (V2/new 352000 256000) (V2/new 0 2400) 3)
-  let jupiter = (Planet/new (V2/new 400000 256000) (V2/new 0 1300) 11)
-  let saturn  = (Planet/new (V2/new 448000 256000) (V2/new 0 970) 9)
-  let uranus  = (Planet/new (V2/new 488000 256000) (V2/new 0 680) 4)
-  let neptune = (Planet/new (V2/new 510000 256000) (V2/new 0 540) 4)
   let moon    = (Planet/new (V2/new 322000 256000) (V2/new 0 3100) 2)
-  [ sun mercury venus earth mars jupiter saturn uranus neptune moon ]
+  [ sun moon ]
 
 use tick = λstate
   let state = (List/map _ _ state Planet/tick)

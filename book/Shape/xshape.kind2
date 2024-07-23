@@ -1,0 +1,5 @@
+xshape
+- x_ini: V2
+: Shape
+
+~λP λline λcircle λxshape (xshape x_ini)

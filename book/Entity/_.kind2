@@ -1,0 +1,2 @@
+data Entity
+| new (pos: V2) (type: U48) : Entity

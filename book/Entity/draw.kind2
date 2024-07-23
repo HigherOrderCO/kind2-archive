@@ -12,11 +12,15 @@
 /// A list of shapes representing the drawn Planet
 
 draw
-- planet: Planet
+- planet: Entity
 : (List Shape)
 
-match planet {
-  Planet/new:
+match planet.type {
+  0:
     let pos = (V2/div planet.pos (V2/new 1000 1000))
     [(Shape/xshape pos)]
+  1:
+    let pos = (V2/div planet.pos (V2/new 1000 1000))
+    let rad = 20
+    [(Shape/circle pos rad)]
 }

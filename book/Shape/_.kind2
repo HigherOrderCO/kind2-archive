@@ -10,4 +10,5 @@
 
 data Shape
 | line (ini: V2) (end: V2)
+| xshape (x_ini: V2)
 | circle (pos: V2) (rad: U48)

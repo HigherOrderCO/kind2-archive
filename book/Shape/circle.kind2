@@ -14,4 +14,4 @@ circle
 - rad: U48
 : Shape
 
-~λP λline λcircle (circle pos rad)
+~λP λline λcircle λxshape (circle pos rad)
