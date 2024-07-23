@@ -1,6 +1,6 @@
 build:
 	cd book; \
-		kind2 to-js main > main.js
+		cargo run -- to-js main > main.js
 
 check:
 	cd book; \
