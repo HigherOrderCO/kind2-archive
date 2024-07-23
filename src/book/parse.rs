@@ -65,6 +65,8 @@ impl<'i> KindParser<'i> {
     // Top level definition
     self.skip_trivia();
     let nam = self.parse_name()?;
+    // FIXME: this breaks definitions of terms with a name equivalent to one that has been imported.
+    let nam = uses.get(&nam).unwrap_or(&nam).to_string();
     self.skip_trivia();
 
     // Arguments (optional)
