@@ -1,0 +1,44 @@
+add
+- board: Board
+- pos: V2
+: Board
+
+match board {
+  Board/new:
+   match board.won {
+      Bool/true:
+        board
+      Bool/false:
+        let new_type = (Board/type board.type)
+
+        let line = (List/filter _ λel (U48/if _ (|(!= (V2/get_y pos) (Entity/posY el)) (!= (Entity/team el) (new_type))) (Bool/false) (Bool/true)) board.entities)
+        let col  = (List/filter _ λel (U48/if _ (|(!= (V2/get_x pos) (Entity/posX el)) (!= (Entity/team el) (new_type))) (Bool/false) (Bool/true)) board.entities)
+
+        let line_length = (List/len _ line)
+        let col_length = (List/len _ col)
+
+        let use_first = (U48/if _ (== line_length 2) line (U48/if _ (== col_length 2) col []))
+
+        let first = (List/head _ use_first)
+
+        let won_end = match first {
+          Maybe/some:
+            (Entity/v2 first.value)
+          Maybe/none:
+            (V2/new 1 1)
+        }:V2
+
+        let has = (List/find _ λel (U48/if _ (& (== (V2/get_x pos) (Entity/posX el)) (== (V2/get_y pos) (Entity/posY el))) (Bool/true) (Bool/false)) board.entities)
+
+        (U48/if _ (| (== line_length 2) (== col_length 2))
+        (Board/new (List/concat _ board.entities [(Entity/new pos new_type)]) new_type Bool/true pos won_end)
+        (match has {
+          Maybe/some:
+            board
+          Maybe/none:
+            (Board/new (List/concat _ board.entities [(Entity/new pos new_type)]) new_type Bool/false board.won_ini board.won_end)
+        })
+        )
+    }
+
+   }

@@ -1,0 +1,18 @@
+add
+- board: Board
+- pos: V2
+: Board
+
+match board {
+  Board/new:
+
+    let new_type = (Board/type board.type)
+
+    let line = (List/filter _ λel (U48/if _ (|(!= (V2/get_y pos) (Entity/posY el)) (!= (Entity/team el) (new_type))) (Bool/true) (Bool/false)) board.entities)
+    let col = (List/filter _ λel (U48/if _ (|(!= (V2/get_x pos) (Entity/posX el)) (!= (Entity/team el) (new_type))) (Bool/true) (Bool/false)) board.entities)
+
+    (U48/if _ (== (List/length line) 3) (Board/new (List/concat _ board.entities [(Entity/new pos new_type)]) new_type Bool/false board.won_ini board.won_end)
+    (U48/if _ (== (List/length col) 3) (Board/new (List/concat _ board.entities [(Entity/new pos new_type)]) new_type Bool/false board.won_ini board.won_end)
+    board))
+
+   }

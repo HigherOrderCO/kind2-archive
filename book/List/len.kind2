@@ -1,0 +1,10 @@
+use List/{cons,nil}
+
+len <A>
+- xs: (List A)
+: U48
+
+match xs {
+  cons: (+ 1 (len _ xs.tail))
+  nil: 0
+}

@@ -1,2 +1,2 @@
 data Board
-| new (entities: (List Entity)) : Board
+| new (entities: (List Entity)) (type: U48) (won: Bool) (won_ini: V2) (won_end: V2) : Board

@@ -1,0 +1,9 @@
+team
+- entity: Entity
+: U48
+
+match entity {
+  Entity/new:
+    entity.type
+}
+

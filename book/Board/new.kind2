@@ -13,7 +13,11 @@
 
 new
 - entities: (List Entity)
+- type: U48
+- won: Bool
+- won_ini: V2
+- won_end: V2
 : Board
 
-~λP λnew (new entities)
+~λP λnew (new entities type won won_ini won_end)
 

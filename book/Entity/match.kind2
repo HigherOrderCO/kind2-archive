@@ -14,9 +14,9 @@
 /// The result of the elimination, which has type `(P p)`.
 
 match
-- P: Planet -> *
-- n: ∀(pos: V2) ∀(vel: V2) ∀(rad: U48) (P (Planet/new pos vel rad))
-- p: Planet
-: (P p)
+- E: Entity -> *
+- n: ∀(pos: V2) ∀(type: U48) (E (Entity/new pos type))
+- e: Entity
+: (E e)
 
-(~p P n)
+(~e E n)

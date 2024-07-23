@@ -54,7 +54,6 @@ App_to_JSON = (app) => {
 };
 
 DRAW = (canvas, shapes) => {
-  console.log("hii", canvas, shapes);
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   shapes.forEach(shape => {
@@ -73,31 +72,23 @@ DRAW = (canvas, shapes) => {
         ctx.stroke();
         break;
       case 'line':
-        ctx.lineWidth = 0.2;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(shape.ini.x, shape.ini.y);
         ctx.lineTo(shape.end.x, shape.end.y);
         ctx.stroke();
         break;
       case 'circle':
-        //ctx.lineWidth = 1;
-        //ctx.beginPath();
-        //ctx.arc(shape.pos.x, shape.pos.y, shape.rad, 0, 2 * Math.PI);
-        //ctx.stroke();
-        //TODO: fill this with a black color
-        ctx.fillStyle = 'gray';
+        ctx.fillStyle = 'black';
         ctx.beginPath();
         ctx.arc(shape.pos.x, shape.pos.y, shape.rad, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.stroke();
         break;
     }
   });
 };
 
 RENDER = () => {
-  //console.log(main);
-  //console.log(V2_to_JSON(state));
-  //console.log(canvas);
   DRAW(CANVAS, List_to_JSON(Shape_to_JSON, APP.draw(STATE)));
 }
 
@@ -115,21 +106,21 @@ if (typeof window !== "undefined") {
   };
   setInterval(TICK, 1000 / 30);
 
-  // implement a keyboard event handler
-  // when the user presses a key, it will call the global APP.when
-  // function and update the global state mutably
-  document.addEventListener('keydown', (event) => {
-    // Convert the key code to a number
-    const keyCode = event.keyCode || event.which;
+  document.addEventListener('DOMContentLoaded', () => {
 
-    console.log("->", keyCode);
+    document.getElementById('canvas').addEventListener('click', (event) => {
+      const rect = canvas.getBoundingClientRect();
 
-    // Call the 'when' function of the APP with the current state and key code
-    STATE = APP.when(keyCode)(STATE);
-    console.log(V2_to_JSON(STATE));
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
 
-    // Re-render the canvas with the updated state
-    RENDER();
+      STATE = APP.when(x)(y)(STATE);
+
+      RENDER();
+
+    });
   });
+
+
 
 }

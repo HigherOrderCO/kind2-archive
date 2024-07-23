@@ -1,0 +1,5 @@
+type
+- last_type: U48
+: U48
+
+(U48/if _ (== last_type 0) 1 0)

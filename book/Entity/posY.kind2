@@ -11,13 +11,16 @@
 ///
 /// A list of shapes representing the drawn Planet
 
-draw
+posY
 - entity: Entity
-: Shape
+: U48
+
 
 match entity {
   Entity/new:
-    let pos = (V2/add (V2/mul entity.pos (V2/new 170 170)) (V2/new (/ 170 2) (/ 170 2)))
-    (U48/if _ (== entity.type 0) (Shape/circle pos 35) 
-    (Shape/xshape pos))
+    match entity.pos {
+      V2/new:
+        entity.pos.y
+    }
 }
+

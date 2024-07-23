@@ -18,7 +18,7 @@ new <S>
 - init: S
 - tick: ∀(state: S) S
 - draw: ∀(state: S) (List Shape)
-- when: ∀(key: U48) ∀(state: S) S
+- when: ∀(x: U48) ∀(y: U48) ∀(state: S) S
 : (App S)
 
 ~λP λnew (new init tick draw when)

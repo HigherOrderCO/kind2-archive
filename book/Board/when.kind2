@@ -1,0 +1,19 @@
+when 
+- x: U48
+- y: U48
+- state: Board
+: Board
+
+match state {
+  Board/new:
+    (U48/if _ (&(< x 170) (< y 170)) (Board/add state (V2/new 0 0))
+    (U48/if _ (&(< x 170) (&(< y 340) (> y 170))) (Board/add state (V2/new 0 1))
+    (U48/if _ (&(< x 170) (&(< y 512) (> y 340))) (Board/add state (V2/new 0 2))
+    (U48/if _ (&(&(< x 340) (> x 170)) (< y 170)) (Board/add state (V2/new 1 0))
+    (U48/if _ (&(&(< x 340) (> x 170)) (&(< y 340) (> y 170))) (Board/add state (V2/new 1 1))
+    (U48/if _ (&(&(< x 340) (> x 170)) (&(< y 512) (> y 340))) (Board/add state (V2/new 1 2))
+    (U48/if _ (&(&(< x 512) (> x 340)) (&(< y 170) (> y 0))) (Board/add state (V2/new 2 0))
+    (U48/if _ (&(&(< x 512) (> x 340)) (&(< y 340) (> y 170))) (Board/add state (V2/new 2 1))
+    (U48/if _ (&(&(< x 512) (> x 340)) (&(< y 512) (> y 340))) (Board/add state (V2/new 2 2))
+    state)))))))))
+}

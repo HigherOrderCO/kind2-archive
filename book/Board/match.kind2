@@ -15,7 +15,7 @@
 
 match
 - B: Board -> *
-- n: ∀(entities: Entity) (B (Board/new entities))
+- n: ∀(entities: (List Entity)) ∀(type: U48) ∀(won: Bool) ∀(won_ini: V2) ∀(won_end: V2) (B (Board/new entities type won))
 - b: Board
 : (B b)
 

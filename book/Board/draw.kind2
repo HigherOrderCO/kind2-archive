@@ -1,14 +1,18 @@
-
 draw
 - board: Board
 : (List Shape)
 
 match board {
   Board/new:
-    [
-      (Shape/line (V2/new 170 0) (V2/new 170 512)),
-      (Shape/line (V2/new 340 0) (V2/new 340 512)),
-      (Shape/line (V2/new 0 170) (V2/new 512 170)),
-      (Shape/line (V2/new 0 340) (V2/new 512 340))
-    ]
+    let posIni = (V2/add (V2/mul board.won_ini (V2/new 170 170)) (V2/new (/ 170 2) (/ 170 2)))
+    let posEnd = (V2/add (V2/mul board.won_end (V2/new 170 170)) (V2/new (/ 170 2) (/ 170 2)))
+    let line = (Shape/line posIni posEnd)
+    (List/concat _ (Bool/if _ (board.won) [line] [])
+    (List/concat _  (List/map _ _ board.entities λe (Entity/draw e))
+        [
+          (Shape/line (V2/new 170 0) (V2/new 170 512)),
+          (Shape/line (V2/new 340 0) (V2/new 340 512)),
+          (Shape/line (V2/new 0 170) (V2/new 512 170)),
+          (Shape/line (V2/new 0 340) (V2/new 512 340))
+        ]))
 }

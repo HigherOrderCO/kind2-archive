@@ -1,0 +1,10 @@
+v2
+- entity: Entity
+: V2
+
+match entity {
+  Entity/new:
+    entity.pos
+}
+
+

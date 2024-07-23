@@ -1,91 +1,26 @@
 use Bits/{O,I,E}
 use Shape/{circle,line,xshape}
 
-main: (App (List Planet))
-
-//use init =
-  //let sun   = (Planet/new (V2/new 256000 256000) (V2/new 0 0) 30)
-  //let earth = (Planet/new (V2/new 450000 256000) (V2/new 0 2000) 20)
-  //let moon  = (Planet/new (V2/new 350000 256000) (V2/new 0 2000) 3)
-  //[ sun earth moon ]
-
-// PROBLEM:
-// the init list above was meant to represent the solar
-// system, in a canvas with 512000 x 512000 pixels, and
-// the sun in the center (256000 256000). sadly, it is
-// wrong. the moon and earth are misplaced, the sizes
-// are incorrect and the other planes are missing. this
-// only needs to have earth's moon, no other moon and
-// no other celestial body.
-// this should be done in a way such that Neptune is around
-// the edge of the canvas. pluto should be out because
-// nobody likes pluto
-// remember: every planet should be included in the
-// segment from x=256000 to x=512000, and their radiuses
-// should be from 1 to 20 (sun)
-// implement the corrected init below:
+main: (App (Board))
 
 use init =
-  let sun     = (Planet/new (V2/new 256000 256000) (V2/new 0 0) 20)
-  [ sun ]
+  let board = (Board/new [] 0 Bool/false (V2/new 0 0) (V2/new 0 0))
+  board
 
 use tick = λstate
-  let state = (List/map _ _ state Planet/tick)
-  let state = (Planet/interactions state λx(x))
   state
 
-// FIXME: ugly code just to center the camera around the sun
 use draw = λstate
 
-  // Gets the sun (first planet) position
-  let sun_pos = match state {
-    List/nil: (V2/new 0 0)
-    List/cons: 
-      let sun = state.head
-      match sun {
-        Planet/new: sun.pos
-      }
-  }: V2 // FIXME: why cant infer this?
+  let board = match state {
+    Board/new: 
+      state
+  }: Board 
+
+  (Board/draw board)
 
 
-  // Draws the planets
-  let pl = match state {
-    List/nil: [] // unreachable
-    List/cons: (List/flatten _ (List/map _ _ state λplanet(
-      match planet {
-        Planet/new:
-          let pos = (V2/sub planet.pos sun_pos)
-          let pos = (V2/add pos (V2/new 256000 256000))
-          let vel = planet.vel
-          let rad = planet.rad
-          let pnt = (Planet/new pos vel rad)
-          (Planet/draw pnt)
-      }
-    )))
-  }: (List Shape)
-
-  let board = (Board/new [])
-  let board_list = (Board/draw board)
-  (List/concat _ board_list pl)
-  //aa
-
-
-//use draw = λstate
-  //?draw
-  //(QuadTree/draw t (V2/new 256 256) 256) 
-
-use when = λkey λstate
-  state
-  //match state {
-    //V2/new:
-      //(U48/if _ (== key 'W') (V2/new state.x (- state.y 16))
-      //(U48/if _ (== key 'S') (V2/new state.x (+ state.y 16))
-      //(U48/if _ (== key 'A') (V2/new (- state.x 16) state.y)
-      //(U48/if _ (== key 'D') (V2/new (+ state.x 16) state.y)
-      //state))))
-  //}
-
-(App/new _ init tick draw when)
+(App/new _ init tick draw Board/when)
 
 
 
