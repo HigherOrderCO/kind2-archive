@@ -1,7 +1,7 @@
 use Nat/{succ,zero}
 use Bool/{true,false}
 
-is_gtn_or_eql
+is_gte
 - a: Nat
 - b: Nat
 : Bool
@@ -13,6 +13,6 @@ match a {
   }
   succ: match b {
     zero: true
-    succ: (is_gtn_or_eql a.pred b.pred)
+    succ: (is_gte a.pred b.pred)
   }
 }

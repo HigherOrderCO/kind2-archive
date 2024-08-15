@@ -3,6 +3,7 @@
 
 use clap::{Arg, ArgAction, Command};
 use std::fs;
+use std::path::Path;
 use std::io::Write;
 use std::process::Command as SysCommand;
 
@@ -14,7 +15,6 @@ mod term;
 
 use book::*;
 use info::*;
-use show::*;
 use sugar::*;
 use term::*;
 
@@ -61,17 +61,6 @@ fn normal(name: &str, _level: u32) {
   eprintln!("{stderr}");
 }
 
-fn auto_format(file_name: &str) {
-  let base = std::env::current_dir().expect("failed to get current directory");
-  let file = base.join(format!("{file_name}.kind2"));
-  let text = std::fs::read_to_string(&file).expect("failed to read file");
-  let fid  = Book::new().get_file_id(&file.to_str().unwrap().to_string());
-  let book = KindParser::new(&text).parse_book(file_name, fid).expect("failed to parse book");
-  let form = book.defs.iter().map(|(name, term)| book.format_def(name, term)).collect();
-  let form = Show::pile("\n\n", form).flatten(Some(60));
-  std::fs::write(&file, form).expect(&format!("failed to write to file '{}'", file_name));
-}
-
 fn load_book(name: &str) -> Book {
   let cwd = std::env::current_dir().expect("failed to get current directory");
   Book::boot(cwd.to_str().unwrap(), name).unwrap_or_else(|e| {
@@ -104,6 +93,14 @@ fn compile_to_js(name: &str) {
   println!("{}", code);
 }
 
+fn strip_extension(filename: &str) -> String {
+    Path::new(filename)
+        .with_extension("")
+        .to_str()
+        .unwrap_or(filename)
+        .to_string()
+}
+
 fn main() {
   let matches = Command::new("kind2")
     .about("The Kind2 Programming Language")
@@ -120,9 +117,6 @@ fn main() {
         .short('l')
         .action(ArgAction::Set)
         .value_parser(clap::value_parser!(u32))))
-    .subcommand(Command::new("format")
-      .about("Auto-formats a file")
-      .arg(Arg::new("name").required(true)))
     .subcommand(Command::new("deps")
       .about("Lists all dependencies of a symbol")
       .arg(Arg::new("name").required(true)))
@@ -136,29 +130,25 @@ fn main() {
 
   match matches.subcommand() {
     Some(("check", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      check(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      check(&name);
     }
     Some(("normal", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
       let level = sub_matches.get_one::<u32>("level").copied().unwrap_or(0);
-      normal(name, level);
-    }
-    Some(("format", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      auto_format(name);
+      normal(&name, level);
     }
     Some(("deps", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      deps(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      deps(&name);
     }
     Some(("to-kindc", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      compile_to_kindc(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      compile_to_kindc(&name);
     }
     Some(("to-js", sub_matches)) => {
-      let name = sub_matches.get_one::<String>("name").expect("required");
-      compile_to_js(name);
+      let name = strip_extension(sub_matches.get_one::<String>("name").expect("required"));
+      compile_to_js(&name);
     }
     _ => unreachable!(),
   }

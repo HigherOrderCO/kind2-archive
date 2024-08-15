@@ -1,0 +1,22 @@
+///  Normalizes a vector
+///
+/// # Input
+///
+/// * `a` - The first V2 vector
+///
+/// # Output
+///
+/// The normalized V2 vector `a`
+/// Obs: this function does NOT check if its possible normalize (vector should be != (0, 0)). This operation also makes more sense with Floats.
+
+use V2/{new,length}
+
+normalize
+- a: V2
+: V2
+
+match a {
+  new:
+    let len = (length a)
+    (new (/ a.x len) (/ a.y len))
+}

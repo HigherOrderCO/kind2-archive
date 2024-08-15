@@ -1,4 +1,4 @@
-String.Chunk.concat
-: ∀(xs: String.Chunk) ∀(ys: String.Chunk)
-  String.Chunk
-= (List.Chunk.concat Char)
+concat
+: ∀(xs: String/Chunk) ∀(ys: String/Chunk)
+  String/Chunk
+= (List/Chunk/concat Char)

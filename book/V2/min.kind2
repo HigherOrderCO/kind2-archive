@@ -1,0 +1,41 @@
+/// Get the min vector between two V2 vectors component-wise.
+///
+/// # Input
+///
+/// * `a` - The first V2 vector
+/// * `b` - The second V2 vector
+///
+/// # Output
+///
+/// A new V2 vector representing the min vector between those two.
+/// Example: a = (3 , 7) b = (5 , 2) -> out = (3 , 2)
+
+use V2/{new}
+use Cmp/{is_gtn}
+use Bool/{true,false}
+use V2/{get_x,get_y}
+
+min
+- a: V2
+- b: V2
+: V2
+
+let ax = (get_x a)
+let ay = (get_y a)
+
+let bx = (get_x b)
+let by = (get_y b)
+
+let x = (U48/to_bool (< ax bx))
+let y = (U48/to_bool (< ay by))
+
+match x with (y: Bool) {
+  true: match y {
+    true: (V2/new ax ay)
+    false: (V2/new ax by)
+  }
+  false: match y {
+    true: (V2/new bx ay)
+    false: (V2/new bx by)
+  }
+}

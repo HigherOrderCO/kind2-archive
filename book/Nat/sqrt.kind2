@@ -1,0 +1,26 @@
+use U48/{to_nat,from_nat}
+use Nat/{add,half,equal}
+use Bool/{true,false}
+
+sqrt
+- n: Nat
+- guess: Nat
+- old_guess: Nat
+: Nat
+
+let n_u48 = (from_nat n)
+let guess_u48 = (from_nat guess)
+
+let n_div_guess = (to_nat (/ n_u48 guess_u48))
+let guess_plus_n_div = (add n_div_guess guess)
+
+let new_guess = (half guess_plus_n_div)
+
+let eq = (equal new_guess old_guess)
+
+match eq {
+  true: new_guess
+  false: (Nat/sqrt n new_guess guess)
+}
+
+

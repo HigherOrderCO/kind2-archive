@@ -92,6 +92,7 @@ impl<'i> KindParser<'i> {
       }
       self.skip_spaces();
       self.consume("(")?;
+      let era = self.consume("-").is_ok();
       let nam = self.parse_name()?;
       self.consume(":")?;
       let inp = Box::new(self.parse_term(fid, uses)?);
@@ -99,7 +100,7 @@ impl<'i> KindParser<'i> {
       let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
-      return Ok(Term::Src { src, val: Box::new(Term::All { era: false, nam, inp, bod }) });
+      return Ok(Term::Src { src, val: Box::new(Term::All { era, nam, inp, bod }) });
     }
 
     // LAM ::= λ<name> <term>
@@ -115,6 +116,7 @@ impl<'i> KindParser<'i> {
       // Annotated
       if self.peek_one() == Some('(') {
         self.consume("(")?;
+        let era = self.consume("-").is_ok();
         let nam = self.parse_name()?;
         self.consume(":")?;
         let typ = Box::new(self.parse_term(fid, uses)?);
@@ -122,14 +124,14 @@ impl<'i> KindParser<'i> {
         let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
         let end = *self.index() as u64;
         let src = Src::new(fid, ini, end);
-        let typ = Box::new(Term::All { era: false, nam: nam.clone(), inp: typ, bod: Box::new(Term::Met {}) });
-        let val = Box::new(Term::Lam { era: false, nam: nam.clone(), bod });
+        let typ = Box::new(Term::All { era, nam: nam.clone(), inp: typ, bod: Box::new(Term::Met {}) });
+        let val = Box::new(Term::Lam { era, nam: nam.clone(), bod });
         let val = Box::new(Term::Ann { chk: true, typ, val });
         return Ok(Term::Src { src, val });
       }
       // Untyped
+      let era = self.consume("-").is_ok();
       let nam = self.parse_name()?;
-      let era = false;
       let bod = Box::new(self.parse_term(fid, &shadow(&nam, uses))?);
       let end = *self.index() as u64;
       let src = Src::new(fid, ini, end);
