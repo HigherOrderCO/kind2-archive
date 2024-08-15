@@ -1,3 +1,16 @@
+/// Checks if two characters are equal.
+///
+/// # Inputs
+///
+/// * `a` - The first character to compare.
+/// * `b` - The second character to compare.
+///
+/// # Output
+///
+/// Returns `true` if the characters are equal, `false` otherwise.
+
+use Bool/{true,false}
+
 equal
 - a: Char
 - b: Char

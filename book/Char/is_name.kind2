@@ -5,10 +5,10 @@ is_name
 - a: Char
 : Bool
 
-(or (is_between 97 122 a)
-(or (is_between 65 90 a)
-(or (is_between 48 57 a)
-(or (equal 95 a)
-(or (equal 46 a)
-(or (equal 45 a)
+(or (is_between 'a' 'z' a)
+(or (is_between 'A' 'Z' a)
+(or (is_between '0' '9' a)
+(or (equal '_' a)
+(or (equal '.' a)
+(or (equal '-' a)
 false))))))

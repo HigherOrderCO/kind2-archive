@@ -1,3 +1,13 @@
+/// Converts a Bool value to its string representation.
+///
+/// # Input
+///
+/// * `x` - The Bool value to convert.
+///
+/// # Output
+///
+/// A String representing the Bool value: "true" for true, "false" for false.
+
 use Bool/{true,false}
 
 show

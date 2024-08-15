@@ -1,8 +1,19 @@
+/// Concatenates two strings.
+///
+/// # Input
+///
+/// * `xs` - The first string to concatenate.
+/// * `ys` - The second string to concatenate.
+///
+/// # Output
+///
+/// A new string containing all characters from `xs` followed by all characters from `ys`.
+
 use List/{concat}
 
 concat
-- xs: (List Char)
-- ys: (List Char)
-: (List Char)
+- xs: String
+- ys: String
+: String
 
-(concat xs ys)
+(concat _ xs ys)

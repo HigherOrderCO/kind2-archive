@@ -1,9 +1,28 @@
+/// Checks if a character is within a specified range (inclusive).
+///
+/// # Inputs
+///
+/// * `min` - The lower bound of the range (inclusive).
+/// * `max` - The upper bound of the range (inclusive).
+/// * `chr` - The character to check.
+///
+/// # Output
+///
+/// Returns `true` if `chr` is within the range [`min`, `max`], `false` otherwise.
+///
+/// # Example
+///
+/// ```kind2
+/// (Char/is_between 'a' 'z' 'k') // Returns true
+/// (Char/is_between 'A' 'Z' 'k') // Returns false
+/// ```
+
 is_between
 - min: Char
 - max: Char
 - chr: Char
 : Bool
 
-(Bool/and
-  (U48/to_bool (>= chr min))
-  (U48/to_bool (<= chr max)))
+let gte_min = (U48/to_bool (>= chr min))
+let lte_max = (U48/to_bool (<= chr max))
+(Bool/and gte_min lte_max)

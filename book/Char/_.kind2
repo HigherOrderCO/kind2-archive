@@ -1,3 +1,17 @@
+/// Represents a Unicode character.
+///
+/// In Kind2, a character is represented as a 48-bit unsigned integer (U48),
+/// which can encode the full range of Unicode code points.
+///
+/// # Definition
+///
+/// A `Char` is an alias for `U48`, allowing it to represent any Unicode character.
+///
+/// # Usage
+///
+/// Characters can be used in string operations, parsing, and other text-related tasks.
+/// Various utility functions are provided in the `Char` namespace for character manipulation and checking.
+
 Char
 : *
 = U48

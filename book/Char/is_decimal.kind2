@@ -1,5 +1,22 @@
+/// Checks if a character is a decimal digit (0-9).
+///
+/// # Input
+///
+/// * `a` - The character to check.
+///
+/// # Output
+///
+/// Returns `true` if the character is a decimal digit, `false` otherwise.
+///
+/// # Example
+///
+/// ```kind2
+/// (Char/is_decimal '5') // Returns true
+/// (Char/is_decimal 'A') // Returns false
+/// ```
+
 is_decimal
 - a: Char
 : Bool
 
-(Char/is_between 48 57 a)
+(Char/is_between '0' '9' a)

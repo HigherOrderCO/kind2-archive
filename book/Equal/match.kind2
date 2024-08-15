@@ -1,3 +1,34 @@
+/// Provides a way to pattern match on equality proofs.
+///
+/// This function allows for the elimination of equality proofs, which is a fundamental
+/// operation in dependently typed programming and theorem proving.
+///
+/// # Type Parameters
+///
+/// * `T` - The type of the values being compared.
+///
+/// # Value Parameters
+///
+/// * `a` - The first value in the equality.
+/// * `b` - The second value in the equality.
+///
+/// # Inputs
+///
+/// * `P` - The motive of the elimination. It's a type family indexed by two values of type `T`
+///         and an equality proof between them.
+/// * `refl` - The case for when the equality proof is reflexivity. This is the only
+///            possible case, as all equality proofs are fundamentally based on reflexivity.
+/// * `e` - The equality proof to match on.
+///
+/// # Output
+///
+/// The result of the elimination, which has type `(P a b e)`.
+///
+/// # Usage
+///
+/// This function is typically used in proofs to transform expressions based on
+/// known equalities or to extract information from equality proofs.
+
 match <T: *> <a: T> <b: T> 
 - P: ∀(a:T) ∀(b:T) ∀(e: (Equal T a b)) *
 - refl: ∀(x: T) (P x x (Equal/refl T x))

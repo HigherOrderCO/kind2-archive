@@ -1,1 +1,19 @@
+/// Defines the Empty type, which has no constructors.
+///
+/// The Empty type, also known as the bottom type or the uninhabited type,
+/// is a type that has no values. It is often used to represent impossibility
+/// or to prove that certain cases cannot occur.
+///
+/// # Usage
+///
+/// The Empty type is commonly used in the following scenarios:
+/// 1. To represent impossible cases in algebraic data types.
+/// 2. In type-level programming to express constraints.
+/// 3. In proofs by contradiction or to show that certain propositions are false.
+///
+/// # Note
+///
+/// Because Empty has no constructors, it's impossible to create a value of this type.
+/// This property makes it useful in various logical and type-level computations.
+
 data Empty

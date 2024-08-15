@@ -21,10 +21,6 @@ concat <T>
 : (List T)
 
 match xs {
-  cons: 
-    // If `xs` is non-empty, add its head to the result and recurse on the tail
-    (cons _ xs.head (concat _ xs.tail ys))
-  nil: 
-    // If `xs` is empty, return `ys`
-    ys
+  cons: (cons _ xs.head (concat _ xs.tail ys))
+  nil: ys
 }

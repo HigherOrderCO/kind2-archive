@@ -1,17 +1,7 @@
 use List/{cons,nil}
 
-reverse/go <A>
-- list: (List A)
-- result: (List A)
-: (List A)
-
-match list {
-  nil: result
-  cons: (reverse/go _ list.tail (cons _ list.head result))
-}
-
 reverse <A>
 - list: (List A)
 : (List A)
 
-(reverse/go _ list (nil _))
+(List/reverse/go _ list (nil _))

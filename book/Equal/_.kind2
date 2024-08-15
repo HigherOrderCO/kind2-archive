@@ -1,3 +1,26 @@
+/// Defines propositional equality between two values of the same type.
+///
+/// The Equal type represents a proof that two values of the same type are equal.
+/// It is a fundamental concept in type theory and is used extensively in theorem proving.
+///
+/// # Type Parameters
+///
+/// * `T` - The type of the values being compared.
+///
+/// # Value Parameters
+///
+/// * `a` - The first value.
+/// * `b` - The second value.
+///
+/// # Constructor
+///
+/// * `refl` - Represents reflexivity, i.e., that `a` equals itself.
+///
+/// # Usage
+///
+/// Equal is typically used in proofs to establish equality between values or to
+/// transform expressions based on known equalities.
+
 data Equal <T> (a: T) (b: T)
 | refl (a: T) : (Equal T a a)
 

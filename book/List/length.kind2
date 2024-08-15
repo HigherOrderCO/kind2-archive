@@ -1,5 +1,19 @@
-use List/{cons,nil}
+/// Computes the length of a list.
+///
+/// # Parameters
+///
+/// * `A` - The type of elements in the list.
+///
+/// # Input
+///
+/// * `xs` - The list whose length is to be computed.
+///
+/// # Output
+///
+/// The length of the list `xs`.
+
 use Nat/{succ,zero}
+use List/{cons,nil}
 
 length <A>
 - xs: (List A)
