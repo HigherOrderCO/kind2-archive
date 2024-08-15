@@ -164,103 +164,6 @@ impl Term {
     }
   }
 
-  // FIXME: remove this comment \/
-  // Implement a function that renames shadowed variable to have unique names
-  // Have an immutable map from name to new name
-  // Have a depth counter
-  // On binders, add a mapping: name => name_{depth}
-  // On variables, just retrieve
-  // Receive a mutable term
-  
-  //pub fn overshadow(&mut self, name_map: &mut BTreeMap<String, String>, depth: &mut u64) {
-    //match self {
-      //Term::All { era: _, nam, inp, bod } => {
-        //inp.overshadow(name_map, depth);
-        //*depth += 1;
-        //let new_name = format!("{}_{}", nam, depth);
-        //name_map.insert(nam.clone(), new_name.clone());
-        //*nam = new_name;
-        //bod.overshadow(name_map, depth);
-        //*depth -= 1;
-      //},
-      //Term::Lam { era: _, nam, bod } => {
-        //*depth += 1;
-        //let new_name = format!("{}_{}", nam, depth);
-        //name_map.insert(nam.clone(), new_name.clone());
-        //*nam = new_name;
-        //bod.overshadow(name_map, depth);
-        //*depth -= 1;
-      //},
-      //Term::App { era: _, fun, arg } => {
-        //fun.overshadow(name_map, depth);
-        //arg.overshadow(name_map, depth);
-      //},
-      //Term::Ann { chk: _, val, typ } => {
-        //val.overshadow(name_map, depth);
-        //typ.overshadow(name_map, depth);
-      //},
-      //Term::Slf { nam, typ, bod } => {
-        //typ.overshadow(name_map, depth);
-        //*depth += 1;
-        //let new_name = format!("{}_{}", nam, depth);
-        //name_map.insert(nam.clone(), new_name.clone());
-        //*nam = new_name;
-        //bod.overshadow(name_map, depth);
-        //*depth -= 1;
-      //},
-      //Term::Ins { val } => {
-        //val.overshadow(name_map, depth);
-      //},
-      //Term::Op2 { opr: _, fst, snd } => {
-        //fst.overshadow(name_map, depth);
-        //snd.overshadow(name_map, depth);
-      //},
-      //Term::Swi { nam, x, z, s, p } => {
-        //x.overshadow(name_map, depth);
-        //z.overshadow(name_map, depth);
-        //*depth += 1;
-        //let new_name = format!("{}_{}-1", nam, depth);
-        //name_map.insert(format!("{}-1",nam), new_name.clone());
-        //*nam = new_name;
-        //s.overshadow(name_map, depth);
-        //p.overshadow(name_map, depth);
-        //*depth -= 1;
-      //},
-      //Term::Let { nam, val, bod } => {
-        //val.overshadow(name_map, depth);
-        //*depth += 1;
-        //let new_name = format!("{}_{}", nam, depth);
-        //name_map.insert(nam.clone(), new_name.clone());
-        //*nam = new_name;
-        //bod.overshadow(name_map, depth);
-        //*depth -= 1;
-      //},
-      //Term::Use { nam, val, bod } => {
-        //val.overshadow(name_map, depth);
-        //*depth += 1;
-        //let new_name = format!("{}_{}", nam, depth);
-        //name_map.insert(nam.clone(), new_name.clone());
-        //*nam = new_name;
-        //bod.overshadow(name_map, depth);
-        //*depth -= 1;
-      //},
-      //Term::Var { nam } => {
-        //if let Some(new_name) = name_map.get(nam) {
-          //*nam = new_name.clone();
-        //}
-      //},
-      //Term::Src { src: _, val } => {
-        //val.overshadow(name_map, depth);
-      //},
-      //_ => {}
-    //}
-  //}
-  
-  // this function has a bug:
-  // it uses a mutable map instead of an immutable one to add new variables to the context
-  // it should use an immutable one like the expand_implicits function
-  // refactor it to fix that bug
-  // do it now
   
   pub fn overshadow(&mut self, name_map: &im::HashMap<String, String>, depth: &mut u64) {
     match self {
@@ -346,7 +249,6 @@ impl Term {
     }
   }
 
-  // Removes Src's
   pub fn clean(&self) -> Term {
     match self {
       Term::All { era, nam, inp, bod } => {
