@@ -1,3 +1,10 @@
+// Binds a Parser with a function that returns a Parser
+// - A: The type of the value in the input Parser
+// - B: The type of the value in the output Parser
+// - pa: The input Parser
+// - f: A function that takes a value of type A and returns a Parser B
+// = A new Parser of type B
+
 use Parser/Result/{done,fail}
 
 bind <A> <B>

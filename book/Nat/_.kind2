@@ -1,18 +1,16 @@
+// Defines the natural numbers as an inductive datatype
+// Constructors:
+// - succ: Represents the successor of a natural number (x+1)
+// - zero: Represents the natural number zero (0)
+
 data Nat
 | succ (pred: Nat)
 | zero
 
-//Nat
-//: *
-//= $(self: Nat)
-  //∀(P: ∀(n: Nat) *)
-  //∀(succ: ∀(n: Nat) (P (Nat/succ n)))
-  //∀(zero: (P Nat/zero))
-  //(P self)
-
-
-
-
-
-
-
+Nat
+: *
+= $(self: Nat)
+  ∀(P: ∀(n: Nat) *)
+  ∀(succ: ∀(n: Nat) (P (Nat/succ n)))
+  ∀(zero: (P Nat/zero))
+  (P self)

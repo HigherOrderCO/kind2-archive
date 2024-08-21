@@ -1,17 +1,11 @@
-use Tree/{node,leaf}
-
 // Sums a binary tree in parallel, using fold
-//     __(1)__             
-//    /       \           __(1)__
-//   (1)     (2)    =>   /       \   =>  (14)
-//  /   \   /   \       (4)     (9)
-// (1) (2) (3) (4)       
+// - x: The binary tree of U48 values to sum
+// = The sum of all values in the tree
+
+use Tree/{node,leaf}
 
 sum
 - x: (Tree U48)
 : U48
 
-fold x {
-  node: (+ x.val (+ x.lft x.rgt))
-  leaf: 0
-}
+(Tree/fold _ _ (λval λlft λrgt (+ val (+ lft rgt))) 0 x)

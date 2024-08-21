@@ -1,3 +1,7 @@
+// Checks if a character is a newline
+// - a: The character to check
+// = `true` if the character is a newline (ASCII 10), `false` otherwise
+
 is_newline
 - a: Char
 : Bool

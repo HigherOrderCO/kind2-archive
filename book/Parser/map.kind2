@@ -1,3 +1,10 @@
+// Maps a function over a Parser
+// - A: The type of the input Parser's value
+// - B: The type of the output Parser's value
+// - f: The function to apply to the parsed value
+// - p: The input Parser
+// = A new Parser that applies `f` to the result of `p`
+
 use Parser/Result/{done,fail}
 
 map <A> <B>

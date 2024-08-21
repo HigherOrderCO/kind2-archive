@@ -1,3 +1,7 @@
+// Skips whitespace and comments in a string
+// - str: The input string
+// = The string with whitespace and comments removed
+
 skip
 : ∀(str: String) String
 

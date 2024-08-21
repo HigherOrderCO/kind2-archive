@@ -1,13 +1,8 @@
-///  Normalizes a vector
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-///
-/// # Output
-///
-/// The normalized V2 vector `a`
-/// Obs: this function does NOT check if its possible normalize (vector should be != (0, 0)). This operation also makes more sense with Floats.
+// Normalizes a vector
+// - a: The V2 vector to normalize
+// = The normalized V2 vector
+// Note: This function does not check if normalization is possible (vector should be != (0, 0))
+// Note: This operation is more suitable for floating-point numbers
 
 use V2/{new,length}
 

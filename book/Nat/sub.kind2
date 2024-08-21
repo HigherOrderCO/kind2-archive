@@ -1,6 +1,6 @@
 // Subtracts one natural number from another
-// - a: The minuend (the number to subtract from)
-// - b: The subtrahend (the number to subtract)
+// - a: The minuend
+// - b: The subtrahend
 // = The difference between `a` and `b`, or 0 if `b` > `a`
 
 use Nat/{succ,zero}

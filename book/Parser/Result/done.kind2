@@ -1,2 +1,7 @@
+// Constructs a successful parse result
+// - T: The type of the successfully parsed value
+// - code: The remaining unparsed input
+// - value: The successfully parsed value
+// = A successful parse result of type `(Parser/Result T)`
 Parser/Result/done <T> (code: String) (value: T) : (Parser/Result T) =
   (Parser/Result/done _ code value)

@@ -1,3 +1,8 @@
+// Creates a Parser that always fails
+// - A: The type of the expected parsed value
+// - error: The error message for the failure
+// = A Parser that always fails with the given error message
+
 fail <A>
 - error: String
 : (Parser A)

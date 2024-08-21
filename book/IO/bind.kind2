@@ -1,3 +1,10 @@
+// Binds two IO operations together
+// - A: The type of the value returned by the first IO operation
+// - B: The type of the value returned by the second IO operation
+// - a: The first IO operation
+// - b: A function that takes the result of the first operation and returns a new IO operation
+// = A new IO operation that combines the effects of both operations
+
 bind <A> <B>
 - a: (IO A)
 - b: A -> (IO B)

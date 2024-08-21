@@ -1,12 +1,6 @@
-/// Determines if a natural number is even.
-///
-/// # Input
-///
-/// * `n` - The natural number to check.
-///
-/// # Output
-///
-/// `true` if `n` is even, `false` otherwise.
+// Determines if a natural number is even
+// - n: The natural number to check
+// = `true` if `n` is even, `false` otherwise
 
 use Nat/{succ,zero}
 use Bool/{true,false}

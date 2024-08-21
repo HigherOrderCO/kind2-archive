@@ -1,12 +1,6 @@
-/// Constructs a Bits value with a one bit followed by more bits.
-///
-/// # Input
-///
-/// * `tail` - The remaining bits after the one bit.
-///
-/// # Output
-///
-/// A new Bits value with a one bit followed by `tail`.
+// Constructs a Bits value with a one bit followed by more bits
+// - tail: The remaining bits after the one bit
+// = A new Bits value with a one bit followed by `tail`
 
 I
 - tail: Bits

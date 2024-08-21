@@ -1,3 +1,7 @@
+// Returns the input string if it's empty or has one character, otherwise removes the last character
+// - str: The input string (list of characters)
+// = The input string without the last character, or the original string if it's empty or has one character
+
 use List/{cons,nil}
 
 begin

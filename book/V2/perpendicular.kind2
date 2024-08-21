@@ -1,12 +1,6 @@
-/// Finds a V2 vector perpendicular to the input V2 vector `a`. 
-///
-/// # Input
-///
-/// * `a` - A V2 vector
-///
-/// # Output
-///
-/// A V2 vector perpendicular to A
+// Finds a V2 vector perpendicular to the input V2 vector
+// - a: The input V2 vector
+// = A V2 vector perpendicular to `a`
 
 use V2/{new}
 

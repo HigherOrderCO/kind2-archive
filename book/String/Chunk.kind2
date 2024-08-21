@@ -1,2 +1,5 @@
+// Represents a chunk of a string, which can be efficiently concatenated
+// = A function that takes a nil string and returns a complete string
+
 Chunk : * =
   (List/Chunk Char)

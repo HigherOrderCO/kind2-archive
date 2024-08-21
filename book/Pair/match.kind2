@@ -1,3 +1,11 @@
+// Provides a way to pattern match on pairs
+// - A: The type of the first element
+// - B: The type of the second element
+// - P: The motive of the elimination
+// - new: The case for when the pair is constructed
+// - pair: The pair to match on
+// = The result of the elimination
+
 match <A> <B>
 - P: (Pair A B) -> *
 - new: ∀(fst: A) ∀(snd: B) (P (Pair/new A B fst snd))

@@ -1,3 +1,8 @@
+// Lifts a value into the Maybe monad
+// - T: The type of the value
+// - x: The value to lift
+// = A Maybe containing the value
+
 pure <T>
 - x: T
 : (Maybe T)

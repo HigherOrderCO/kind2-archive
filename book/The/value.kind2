@@ -1,3 +1,8 @@
+// Constructs a new instance of The type
+// - A: The type of the wrapped value
+// - x: The value to be wrapped
+// = A new instance of The type wrapping `x`
+
 value <A>
 - x: A
 : (The A x)

@@ -1,3 +1,7 @@
+// Constructs an empty vector
+// - T: The type of elements in the vector
+// = An empty vector of type `(Vector T Nat/zero)`
+
 nil <T>
 : (Vector T Nat/zero)
 

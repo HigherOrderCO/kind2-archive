@@ -1,3 +1,8 @@
+// Checks if the first natural number is greater than or equal to the second
+// - a: The first natural number
+// - b: The second natural number
+// = `true` if `a` is greater than or equal to `b`, `false` otherwise
+
 use Nat/{succ,zero}
 use Bool/{true,false}
 

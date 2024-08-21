@@ -1,14 +1,6 @@
-/// Constructs a variable term in the untyped lambda calculus.
-///
-/// This function creates a new Term representing a variable with a given index.
-///
-/// # Input
-///
-/// * `idx` - The index of the variable (represented as a U48).
-///
-/// # Output
-///
-/// A new Term representing the variable with the given index.
+// Constructs a variable term in the untyped lambda calculus
+// - idx: The index of the variable
+// = A new Term representing the variable with the given index
 
 var
 - idx: U48

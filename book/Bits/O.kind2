@@ -1,12 +1,6 @@
-/// Constructs a Bits value with a zero bit followed by more bits.
-///
-/// # Input
-///
-/// * `tail` - The remaining bits after the zero bit.
-///
-/// # Output
-///
-/// A new Bits value with a zero bit followed by `tail`.
+// Constructs a Bits value with a zero bit followed by more bits
+// - tail: The remaining bits after the zero bit
+// = A new Bits value with a zero bit followed by `tail`
 
 O
 - tail: Bits

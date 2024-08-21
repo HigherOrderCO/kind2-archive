@@ -1,3 +1,8 @@
+// Joins a list of List/Chunks into a single List/Chunk
+// - T: The type of elements in the chunks
+// - xs: A list of List/Chunks to be joined
+// = A single List/Chunk containing all elements from the input chunks
+
 use List/{cons,nil}
 
 join <T> (xs: (List (List/Chunk T))) : (List/Chunk T) =

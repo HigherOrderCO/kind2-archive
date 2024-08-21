@@ -1,2 +1,5 @@
+// A guarded parser
+// - A: The type of the parsed value
+// = A pair of a boolean parser (guard) and a value parser
 Parser/Guard <A: *> : * =
   (Pair (Parser Bool) (Parser A))

@@ -1,5 +1,14 @@
+// Removes the first and last characters of a string if they match the given characters
+// - fst: The character to match at the beginning of the string
+// - lst: The character to match at the end of the string
+// - str: The input string
+// = The input string without the first and last characters if they match, otherwise the original string
+
 unpar
-: ∀(fst: Char) ∀(lst: Char) ∀(str: String) String
+- fst: Char
+- lst: Char
+- str: String
+: String
 
 λfst λlst λstr
 use P = λx String

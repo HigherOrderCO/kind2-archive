@@ -1,21 +1,8 @@
-/// Checks if a character is within a specified range (inclusive).
-///
-/// # Inputs
-///
-/// * `min` - The lower bound of the range (inclusive).
-/// * `max` - The upper bound of the range (inclusive).
-/// * `chr` - The character to check.
-///
-/// # Output
-///
-/// Returns `true` if `chr` is within the range [`min`, `max`], `false` otherwise.
-///
-/// # Example
-///
-/// ```kind2
-/// (Char/is_between 'a' 'z' 'k') // Returns true
-/// (Char/is_between 'A' 'Z' 'k') // Returns false
-/// ```
+// Checks if a character is within a specified range (inclusive)
+// - min: The lower bound of the range (inclusive)
+// - max: The upper bound of the range (inclusive)
+// - chr: The character to check
+// = `true` if `chr` is within the range [`min`, `max`], `false` otherwise
 
 is_between
 - min: Char

@@ -1,3 +1,8 @@
+// Generates a binary tree of U48 values
+// - n: The depth of the tree
+// - x: The starting value for the root node
+// = A binary tree of U48 values
+
 use Tree/{node,leaf}
 
 gen

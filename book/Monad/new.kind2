@@ -1,3 +1,9 @@
+// Creates a new Monad instance
+// - M: The type constructor for the monad
+// - bind: The bind operation for the monad
+// - pure: The pure operation for the monad
+// = A new Monad instance with the given bind and pure operations
+
 new
 : ∀(M: ∀(T: *) *)
   ∀(bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: ∀(a: A) (M B)) (M B))

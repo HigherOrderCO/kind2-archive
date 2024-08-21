@@ -1,14 +1,8 @@
-/// Get the min vector between two V2 vectors component-wise.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-/// * `b` - The second V2 vector
-///
-/// # Output
-///
-/// A new V2 vector representing the min vector between those two.
-/// Example: a = (3 , 7) b = (5 , 2) -> out = (3 , 2)
+// Gets the min vector between two V2 vectors component-wise
+// - a: The first V2 vector
+// - b: The second V2 vector
+// = A new V2 vector representing the min vector between those two
+//   Example: a = (3, 7) b = (5, 2) -> out = (3, 2)
 
 use V2/{new}
 use Cmp/{is_gtn}

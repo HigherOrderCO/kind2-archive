@@ -1,2 +1,5 @@
+// Represents a chunk of a list, which can be efficiently concatenated
+// - T: The type of elements in the chunk
+// = A function that takes a nil list and returns a complete list
 List/Chunk <T> : * =
   ∀(nil: (List T)) (List T)

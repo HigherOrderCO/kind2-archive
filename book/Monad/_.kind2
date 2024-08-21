@@ -1,3 +1,8 @@
+// Defines the Monad typeclass
+// - M: The type constructor for the monad
+// Constructor:
+// - new: Creates a new Monad instance with bind and pure operations
+
 data Monad <M: * -> *>
 | new
     (bind: ∀(A: *) ∀(B: *) ∀(a: (M A)) ∀(b: A -> (M B)) (M B))

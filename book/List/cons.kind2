@@ -1,3 +1,9 @@
+// Constructs a new list by adding an element to the front of an existing list
+// - T: The type of elements in the list
+// - head: The element to add to the front of the list
+// - tail: The existing list
+// = A new list with `head` as its first element, followed by the elements of `tail`
+
 cons <T>
 - head: T
 - tail: (List T)

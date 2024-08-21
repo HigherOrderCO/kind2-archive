@@ -1,3 +1,9 @@
+// Defines a dependent pair type, also known as a sigma type
+// - A: The type of the first component
+// - B: A function type `A -> *` that determines the type of the second component based on the first
+// Constructor:
+// - new: Creates a new sigma type instance
+
 data Sigma <A: *> <B: A -> *>
 | new (fst: A) (snd: (B fst))
 

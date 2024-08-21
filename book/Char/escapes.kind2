@@ -1,13 +1,18 @@
+// Defines a list of character escape sequences
+// Each pair represents (escaped_char, actual_char)
+// Used for parsing and handling special characters in strings
+// Example: '\n' is represented as (Pair/new _ _ 110 10)
+
 escapes : (List (Pair Char Char)) =
   [
-    (Pair/new _ _ 98 8)
-    (Pair/new _ _ 102 12)
-    (Pair/new _ _ 110 10)
-    (Pair/new _ _ 114 13)
-    (Pair/new _ _ 116 9)
-    (Pair/new _ _ 118 11)
-    (Pair/new _ _ 92 92)
-    (Pair/new _ _ 34 34)
-    (Pair/new _ _ 48 0)
-    (Pair/new _ _ 39 39)
+    (Pair/new _ _ 98 8)   // '\b' (backspace)
+    (Pair/new _ _ 102 12) // '\f' (form feed)
+    (Pair/new _ _ 110 10) // '\n' (line feed)
+    (Pair/new _ _ 114 13) // '\r' (carriage return)
+    (Pair/new _ _ 116 9)  // '\t' (horizontal tab)
+    (Pair/new _ _ 118 11) // '\v' (vertical tab)
+    (Pair/new _ _ 92 92)  // '\\' (backslash)
+    (Pair/new _ _ 34 34)  // '\"' (double quote)
+    (Pair/new _ _ 48 0)   // '\0' (null character)
+    (Pair/new _ _ 39 39)  // '\'' (single quote)
   ]

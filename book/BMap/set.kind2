@@ -1,18 +1,9 @@
-/// Sets a value in the binary map for a given key.
-///
-/// # Type Parameters
-///
-/// * `A` - The type of values stored in the binary map.
-///
-/// # Inputs
-///
-/// * `map` - The binary map to update.
-/// * `key` - The key represented as Bits.
-/// * `val` - The value to be set, wrapped in a Maybe.
-///
-/// # Output
-///
-/// A new BMap with the value set for the given key.
+// Sets a value in the binary map for a given key
+// - A: The type of values stored in the binary map
+// - map: The binary map to update
+// - key: The key represented as Bits
+// - val: The value to be set, wrapped in a Maybe
+// = A new BMap with the value set for the given key
 
 use BMap/{node,leaf}
 use Bits/{O,I,E}

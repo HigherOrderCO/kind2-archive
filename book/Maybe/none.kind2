@@ -1,3 +1,7 @@
+// Constructs a None value for Maybe
+// - T: The type parameter for Maybe
+// = An empty Maybe value of type `(Maybe T)`
+
 none <T>
 : (Maybe T)
 

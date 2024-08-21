@@ -1,18 +1,9 @@
-/// Returns the head of a list, or None if the list is empty.
-///
-/// # Parameters
-///
-/// * `A` - The type of elements in the list.
-///
-/// # Input
-///
-/// * `xs` - The input list.
-///
-/// # Output
-///
-/// Returns `(Maybe A)`:
-/// - `(Maybe/some A head)` if the list is non-empty
-/// - `(Maybe/none A)` if the list is empty
+// Returns the head of a list, or None if the list is empty
+// - A: The type of elements in the list
+// - xs: The input list
+// = (Maybe A), where:
+//   - (Maybe/some A head) if the list is non-empty
+//   - (Maybe/none A) if the list is empty
 
 use List/{cons,nil}
 use Maybe/{some,none}

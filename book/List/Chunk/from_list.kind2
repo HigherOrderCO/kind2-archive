@@ -1,8 +1,16 @@
+// Converts a List to a List/Chunk
+// - T: The type of elements in the list
+// - xs: The input List to convert
+// = A List/Chunk containing all elements from the input List
+
 use List/{cons,nil}
 use List/Chunk
 
-from_list <T> (xs: (List T)) : (List/Chunk T) =
-  match xs {
-    cons: λk (cons _ xs.head (from_list _ xs.tail k))
-    nil: λk k
-  }
+from_list <T>
+- xs: (List T)
+: (List/Chunk T)
+
+match xs {
+  cons: λk (cons _ xs.head (from_list _ xs.tail k))
+  nil: λk k
+}

@@ -2,6 +2,7 @@
 // - bits: The input bitstring to be reversed
 // - acc: The accumulator storing the reversed bits
 // = The reversed bitstring
+
 use Bits/{O,I,E}
 
 go

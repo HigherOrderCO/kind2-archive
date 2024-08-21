@@ -1,3 +1,9 @@
+// Wraps a string with an initial and ending string
+// - ini: The initial string to prepend
+// - str: The string to be wrapped
+// - end: The ending string to append
+// = The wrapped string with `ini` prepended and `end` appended
+
 wrap
 - ini: String
 - str: String

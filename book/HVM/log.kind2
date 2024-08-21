@@ -1,6 +1,13 @@
-log <A> <B> (msg: A) (ret: B) : B =
-  ret
+// Logs a message and returns a value
+// - A: The type of the message
+// - B: The type of the return value
+// - msg: The message to log
+// - ret: The value to return
+// = The value `ret`
 
-//HVM.log
-//: ∀(A: *) ∀(B: *) ∀(msg: A) ∀(ret: B) B
-//= λA λB λmsg λret ret
+log <A> <B>
+- msg: A
+- ret: B
+: B
+
+ret

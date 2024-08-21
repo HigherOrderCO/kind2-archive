@@ -1,3 +1,11 @@
+// Pattern matches on Tree values
+// - A: The type of values in the tree
+// - P: The motive of the elimination
+// - n: The node case
+// - l: The leaf case
+// - t: The Tree to match on
+// = The result of the elimination
+
 match <A>
 - P: (Tree A) -> *
 - n: ∀(val: A) ∀(lft: (Tree A)) ∀(rgt: (Tree A)) (P (Tree/node A val lft rgt))

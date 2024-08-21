@@ -1,6 +1,11 @@
 use Parser/until/go
 use List/{nil}
 
+// Parses elements until a condition is met
+// - A: The type of elements being parsed
+// - until: Parser that checks if parsing should stop
+// - parse: Parser for individual elements
+// = Parser that returns the list of parsed terms
 until <A>
 - until: (Parser Bool)
 - parse: (Parser A)

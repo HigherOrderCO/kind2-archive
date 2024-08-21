@@ -1,8 +1,5 @@
+// Loads a file and returns its contents as an IO String
+// - file: The name of the file to load
+// = An IO operation that returns the file contents as a String
 do (file: String) : (IO String) =
   (IO/load String file λx (IO/done String x))
-
-
-
-//IO.load.do
-//: ∀(file: String) (IO String)
-//= λfile (IO.load String file λx (IO.done String x))

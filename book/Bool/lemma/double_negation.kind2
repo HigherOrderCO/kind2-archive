@@ -1,7 +1,15 @@
-use Bool/{true,false,not}
+// Proves that double negation of a boolean is equivalent to the original boolean
+// - x: The boolean value to double negate
+// = A proof that (not (not x)) equals x
 
-double_negation (x: Bool) : (Equal Bool (not (not x)) x) =
-  match x {
-    true: (Equal/refl/ Bool/true)
-    false: (Equal/refl/ Bool/false)
-  }
+use Bool/{true,false,not}
+use Equal/refl
+
+double_negation
+- x: Bool
+: (Equal Bool (not (not x)) x)
+
+match x {
+  true: (refl Bool true)
+  false: (refl Bool false)
+}

@@ -1,3 +1,9 @@
+// Defines a type that wraps a value of a given type
+// - A: The type of the wrapped value
+// - x: The specific value being wrapped
+// Constructor:
+// - value: Creates a new instance of The type
+
 data The <A: *> (x: A)
 | value (x: A) : (The A x)
 

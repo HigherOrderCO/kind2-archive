@@ -1,2 +1,5 @@
+// Constructs an empty Church-encoded list
+// - T: The type of elements in the list
+// = An empty Church-encoded list of type `(List/Church T)`
 List/Church/nil <T> : (List/Church T) =
   (λP (λcons (λnil nil)))

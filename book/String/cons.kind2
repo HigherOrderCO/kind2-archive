@@ -1,3 +1,8 @@
+// Constructs a new string by adding a character to the front of an existing string
+// - head: The character to add to the front of the string
+// - tail: The existing string
+// = A new string with `head` as its first character, followed by the characters of `tail`
+
 String/cons
 - head: Char
 - tail: String

@@ -1,3 +1,8 @@
+// Defines an optional value
+// - T: The type of the contained value
+// Constructors:
+// - some: Represents a present value
+// - none: Represents the absence of a value
 data Maybe <T: *>
 | some (value: T)
 | none

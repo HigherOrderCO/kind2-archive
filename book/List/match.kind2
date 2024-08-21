@@ -1,3 +1,11 @@
+// Provides a way to pattern match on lists
+// - A: The type of elements in the list
+// - P: The motive of the elimination
+// - c: The cons case
+// - n: The nil case
+// - xs: The list to match on
+// = The result of the elimination
+
 match <A>
 - P: (List A) -> *
 - c: ∀(head: A) ∀(tail: (List A)) (P (List/cons A head tail))

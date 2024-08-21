@@ -1,15 +1,9 @@
-/// Performs the logical AND operation on two boolean values.
-///
-/// # Inputs
-///
-/// * `a` - The first boolean value.
-/// * `b` - The second boolean value.
-///
-/// # Output
-///
-/// Returns `true` if both `a` and `b` are `true`, otherwise returns `false`.
+// Performs the logical AND operation on two boolean values
+// - a: The first boolean value
+// - b: The second boolean value
+// = `true` if both `a` and `b` are `true`, `false` otherwise
 
-use Bool/{true,false,and}
+use Bool/{true,false}
 
 and
 - a: Bool

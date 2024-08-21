@@ -1,14 +1,8 @@
-/// Get the max vector between two V2 vectors component-wise.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-/// * `b` - The second V2 vector
-///
-/// # Output
-///
-/// A new V2 vector representing the min vector between those two.
-/// Example: a = (3 , 7) b = (5 , 2) -> out = (5 , 7)
+// Gets the max vector between two V2 vectors component-wise
+// - a: The first V2 vector
+// - b: The second V2 vector
+// = A new V2 vector representing the max vector between those two
+//   Example: a = (3, 7) b = (5, 2) -> out = (5, 7)
 
 use V2/{new}
 use Cmp/{is_gtn}
@@ -22,20 +16,17 @@ max
 
 let ax = (get_x a)
 let ay = (get_y a)
-
 let bx = (get_x b)
 let by = (get_y b)
-
-let x = (U48/to_bool (< ax bx))
-let y = (U48/to_bool (< ay by))
-
+let x = (is_gtn (U48/cmp ax bx))
+let y = (is_gtn (U48/cmp ay by))
 match x with (y: Bool) {
   true: match y {
-    true: (V2/new bx by)
-    false: (V2/new bx ay)
+    true: (new ax ay)
+    false: (new ax by)
   }
   false: match y {
-    true: (V2/new ax by)
-    false: (V2/new ax ay)
+    true: (new bx ay)
+    false: (new bx by)
   }
 }

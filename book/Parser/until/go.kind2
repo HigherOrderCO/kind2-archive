@@ -2,17 +2,28 @@ use Parser/Result/{done,fail}
 use List/{cons,nil}
 use Bool/{true,false}
 
-go <A> (until: (Parser Bool)) (parse: (Parser A)) (terms: (List A)) : (Parser (List A)) =
-  λcode
-    match result = (until code) {
-      done:
-        match result.value {
-          true: (done _ result.code terms)
-          false:
-            match parse_result = (parse result.code) {
-              done: (go _ until parse (cons _ parse_result.value terms) parse_result.code)
-              fail: (fail _ parse_result.error)
-            }
-        }
-      fail: (fail _ result.error)
-    }
+// Recursively parses elements until a condition is met
+// - A: The type of elements being parsed
+// - until: A parser that checks if parsing should stop
+// - parse: A parser for individual elements
+// - terms: The list of already parsed terms
+// = A parser that returns the list of parsed terms
+go <A>
+- until: (Parser Bool)
+- parse: (Parser A)
+- terms: (List A)
+: (Parser (List A))
+
+λcode
+  match result = (until code) {
+    done:
+      match result.value {
+        true: (done _ result.code terms)
+        false:
+          match parse_result = (parse result.code) {
+            done: (go _ until parse (cons _ parse_result.value terms) parse_result.code)
+            fail: (fail _ parse_result.error)
+          }
+      }
+    fail: (fail _ result.error)
+  }

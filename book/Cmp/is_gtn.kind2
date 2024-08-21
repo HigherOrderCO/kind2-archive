@@ -1,3 +1,7 @@
+// Checks if a comparison value is 'greater than'
+// - cmp: The comparison value to check
+// = true if the comparison is 'greater than', false otherwise
+
 use Bool/{true,false}
 use Cmp/{ltn,eql,gtn}
 

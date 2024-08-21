@@ -1,3 +1,7 @@
+// Recursively wraps a string with an ending string
+// - str: The string to be wrapped
+// - end: The ending string to append
+// = The wrapped string with `end` appended
 go
 : ∀(str: String) ∀(end: String) String
 = λstr λend

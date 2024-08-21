@@ -1,20 +1,6 @@
-/// Computes half of a natural number, rounding down.
-///
-/// # Input
-///
-/// * `n` - The natural number to halve.
-///
-/// # Output
-///
-/// Half of `n`, rounded down to the nearest natural number.
-///
-/// # Examples
-///
-/// * `(half 0) = 0`
-/// * `(half 1) = 0`
-/// * `(half 2) = 1`
-/// * `(half 3) = 1`
-/// * `(half 4) = 2`
+// Computes half of a natural number, rounding down
+// - n: The natural number to halve
+// = Half of `n`, rounded down to the nearest natural number
 
 use Nat/{succ,zero}
 

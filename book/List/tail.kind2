@@ -1,18 +1,9 @@
-/// Returns the tail of a list, or None if the list is empty.
-///
-/// # Parameters
-///
-/// * `A` - The type of elements in the list.
-///
-/// # Input
-///
-/// * `xs` - The input list.
-///
-/// # Output
-///
-/// Returns `(Maybe (List A))`:
-/// - `(Maybe/some (List A) tail)` if the list is non-empty
-/// - `(Maybe/none (List A))` if the list is empty
+// Returns the tail of a list, or None if the list is empty
+// - A: The type of elements in the list
+// - xs: The input list
+// = (Maybe (List A)), where:
+//   - (Maybe/some (List A) tail) if the list is non-empty
+//   - (Maybe/none (List A)) if the list is empty
 
 use List/{cons,nil}
 use Maybe/{some,none}

@@ -1,3 +1,6 @@
+// Parses a valid name string
+// = A Parser that returns a String containing valid name characters
+
 use Char/{is_name}
 use Parser/pick_while
 

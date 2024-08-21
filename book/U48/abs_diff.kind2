@@ -1,3 +1,8 @@
+// Computes the absolute difference between two U48 numbers
+// - a: The first U48 number
+// - b: The second U48 number
+// = The absolute difference between `a` and `b`
+
 use Bool/{true,false}
 
 abs_diff

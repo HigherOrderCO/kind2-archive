@@ -1,8 +1,19 @@
+// Compares two U48 values
+// - a: The first U48 value
+// - b: The second U48 value
+// = A Cmp value representing the comparison result
+
+use Cmp/{ltn,eql,gtn}
+
 cmp
 - a: U48
 - b: U48
 : Cmp
 
-(U48/if/ (== a b)
-  (U48/if/ (< a b) Cmp/gtn Cmp/ltn)
-  Cmp/eql)
+switch x = (== a b) {
+  0: switch y = (< a b) {
+    0: gtn
+    _: ltn
+  }
+  _: eql
+}

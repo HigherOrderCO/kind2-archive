@@ -1,3 +1,6 @@
+// Constructs the 'less than' comparison value
+// = The 'less than' comparison value
+
 Cmp/ltn : Cmp
 
 ~λP λltn λeql λgtn ltn

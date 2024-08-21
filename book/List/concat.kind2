@@ -1,17 +1,8 @@
-/// Concatenates two lists of the same type.
-///
-/// # Parameters
-///
-/// * `T` - The type of elements in both lists.
-///
-/// # Inputs
-///
-/// * `xs` - The first list to concatenate.
-/// * `ys` - The second list to concatenate.
-///
-/// # Output
-///
-/// A new list containing all elements from `xs` followed by all elements from `ys`.
+// Concatenates two lists of the same type
+// - T: The type of elements in both lists
+// - xs: The first list to concatenate
+// - ys: The second list to concatenate
+// = A new list containing all elements from `xs` followed by all elements from `ys`
 
 use List/{cons,nil}
 

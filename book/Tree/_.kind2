@@ -1,3 +1,9 @@
+// Defines a binary tree datatype
+// - A: The type of values stored in the tree
+// Constructors:
+// - node: Creates a tree node with a value and left and right subtrees
+// - leaf: Represents an empty tree or a leaf node
+
 data Tree <A>
 | node (val: A) (lft: (Tree A)) (rgt: (Tree A))
 | leaf

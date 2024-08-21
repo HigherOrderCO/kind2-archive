@@ -1,13 +1,7 @@
-/// Adds two V2 vectors.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-/// * `b` - The second V2 vector
-///
-/// # Output
-///
-/// A new V2 vector representing the sum of `a` and `b`
+// Adds two V2 vectors
+// - a: The first V2 vector
+// - b: The second V2 vector
+// = A new V2 vector representing the sum of `a` and `b`
 
 use V2/{new}
 

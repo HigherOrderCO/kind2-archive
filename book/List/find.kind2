@@ -1,3 +1,9 @@
+// Finds the first element in a list that satisfies a given condition
+// - A: The type of elements in the list
+// - fn: A function that takes an element of type A and returns a Bool
+// - xs: The input list of type (List A)
+// = (Maybe A) containing the first element that satisfies the condition, or None if no such element exists
+
 use Bool/{true,false}
 use List/{cons,nil}
 use Maybe/{some,none}

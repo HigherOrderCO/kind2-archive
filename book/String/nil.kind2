@@ -1,3 +1,6 @@
+// Constructs an empty string
+// = An empty string of type `String`
+
 String/nil
 : String
 

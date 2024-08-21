@@ -1,12 +1,6 @@
-/// Represents a leaf node in the binary map (BMap) data structure.
-///
-/// # Type Parameters
-///
-/// * `A` - The type of values that would be stored in the BMap.
-///
-/// # Output
-///
-/// An empty BMap (leaf node) of type `(BMap A)`.
+// Creates a leaf node in the binary map (BMap) data structure
+// - A: The type of values that would be stored in the BMap
+// = An empty BMap (leaf node) of type `(BMap A)`
 
 BMap/leaf
 : ∀(A: *) (BMap A)

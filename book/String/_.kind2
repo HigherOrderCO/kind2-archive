@@ -1,2 +1,5 @@
+// Defines a string as a list of characters
+// = A list of Unicode characters (Char)
+
 String : * =
   (List Char)

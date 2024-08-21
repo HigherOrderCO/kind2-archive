@@ -1,3 +1,9 @@
+// Returns the second element of a pair
+// - A: The type of the first element
+// - B: The type of the second element
+// - p: The pair to extract from
+// = The second element of the pair
+
 use Pair/{new}
 
 snd <A> <B>

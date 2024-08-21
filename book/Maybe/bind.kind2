@@ -1,3 +1,10 @@
+// Binds a Maybe value with a function that returns a Maybe
+// - A: The type of the value in the input Maybe
+// - B: The type of the value in the output Maybe
+// - ma: The input Maybe value
+// - f: A function that takes a value of type A and returns a Maybe B
+// = A new Maybe value of type B
+
 use Maybe/{some,none}
 
 bind <A> <B>

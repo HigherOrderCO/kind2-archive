@@ -1,13 +1,7 @@
-/// Multiplies two V2 vectors component-wise.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-/// * `b` - The second V2 vector
-///
-/// # Output
-///
-/// A new V2 vector representing the component-wise product of `a` and `b`
+// Multiplies two V2 vectors component-wise
+// - a: The first V2 vector
+// - b: The second V2 vector
+// = A new V2 vector representing the component-wise product of `a` and `b`
 
 use V2/{new}
 

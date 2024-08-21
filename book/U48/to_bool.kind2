@@ -1,3 +1,7 @@
+// Converts a U48 value to a Bool
+// - x: The U48 value to convert
+// = `true` if `x` is non-zero, `false` otherwise
+
 use Bool/{true,false}
 
 to_bool

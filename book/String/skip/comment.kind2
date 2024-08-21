@@ -1,3 +1,6 @@
+// Skips a comment in a string
+// - str: The input string
+// = The string with the comment removed
 comment
 : ∀(str: String) String
 = λstr

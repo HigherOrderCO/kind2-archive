@@ -1,17 +1,8 @@
-/// Provides a way to pattern match on V2 vectors.
-///
-/// # Parameters
-///
-/// * `P` - The motive of the elimination.
-///
-/// # Inputs
-///
-/// * `n` - The function to apply in the case of a V2 vector.
-/// * `v` - The V2 vector to match on.
-///
-/// # Output
-///
-/// The result of the elimination.
+// Provides a way to pattern match on V2 vectors
+// - P: The motive of the elimination
+// - n: The function to apply in the case of a V2 vector
+// - v: The V2 vector to match on
+// = The result of the elimination
 
 match
 - P: V2 -> *

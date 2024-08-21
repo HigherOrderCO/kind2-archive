@@ -1,3 +1,6 @@
+// Constructs the 'equal' comparison value
+// = The 'equal' comparison value
+
 eql : Cmp
 
 ~λP λltn λeql λgtn eql

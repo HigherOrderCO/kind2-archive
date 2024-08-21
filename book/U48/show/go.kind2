@@ -1,5 +1,12 @@
-go (n: U48) : String/Chunk =
-  switch x = (< n 10) {
-    0: λnil (go (/ n 10) (String/cons (+ 48 (% n 10)) nil))
-    _: λnil (String/cons (+ 48 n) nil) 
-  }
+// Recursively converts a U48 number to a String/Chunk
+// - n: The U48 number to convert
+// = A String/Chunk representation of the number
+
+go
+- n: U48
+: String/Chunk
+
+switch x = (< n 10) {
+  0: λnil (String/Chunk/concat (go (/ n 10)) (λnil (String/cons (+ 48 (% n 10)) nil)))
+  _: λnil (String/cons (+ 48 n) nil)
+}

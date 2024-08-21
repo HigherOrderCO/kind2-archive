@@ -1,4 +1,6 @@
-// TODO: auto refactored by Sonnet; review
+// Tests if a string matches the beginning of the input
+// - test_str: The string to match against
+// = A parser that returns true if the input starts with test_str, false otherwise
 
 use List/{cons,nil}
 use Parser/Result/{done,fail}

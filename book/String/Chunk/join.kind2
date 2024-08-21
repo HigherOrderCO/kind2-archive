@@ -1,3 +1,8 @@
+// Joins a list of String/Chunks into a single String/Chunk
+// - xs: A list of String/Chunks to be joined
+// = A single String/Chunk containing all characters from the input chunks
 join
-: ∀(xs: (List String/Chunk)) String/Chunk
-= (List/Chunk/join Char)
+- xs: (List String/Chunk)
+: String/Chunk
+
+(List/Chunk/join Char xs)

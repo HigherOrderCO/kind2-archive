@@ -1,3 +1,11 @@
+// Provides a way to pattern match on comparison values
+// - P: The motive of the elimination
+// - l: The case for 'less than'
+// - e: The case for 'equal'
+// - g: The case for 'greater than'
+// - c: The comparison value to match on
+// = The result of the elimination
+
 Cmp/match
 - P: Cmp -> *
 - l: (P Cmp/ltn)

@@ -1,19 +1,6 @@
-/// Checks if a character is a decimal digit (0-9).
-///
-/// # Input
-///
-/// * `a` - The character to check.
-///
-/// # Output
-///
-/// Returns `true` if the character is a decimal digit, `false` otherwise.
-///
-/// # Example
-///
-/// ```kind2
-/// (Char/is_decimal '5') // Returns true
-/// (Char/is_decimal 'A') // Returns false
-/// ```
+// Checks if a character is a decimal digit (0-9)
+// - a: The character to check
+// = `true` if `a` is a decimal digit, `false` otherwise
 
 is_decimal
 - a: Char

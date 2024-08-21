@@ -1,13 +1,7 @@
-/// Multiplies two natural numbers.
-///
-/// # Inputs
-///
-/// * `a` - The first natural number.
-/// * `b` - The second natural number.
-///
-/// # Output
-///
-/// The product of `a` and `b`.
+// Multiplies two natural numbers
+// - a: The first natural number
+// - b: The second natural number
+// = The product of `a` and `b`
 
 use Nat/{succ,zero}
 

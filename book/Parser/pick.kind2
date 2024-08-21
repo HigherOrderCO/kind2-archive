@@ -1,6 +1,8 @@
 use Parser/Result/{done,fail}
 use List/{cons,nil}
 
+// Parses and returns the next character from the input string
+// = The next character if input is non-empty, or fails if empty
 pick
 : (Parser Char)
 

@@ -1,7 +1,7 @@
-// Defines the App type for creating interactive applications
-// - S: The type of the application state
+// Defines the App type for interactive applications
+// - S: The application state type
 // Constructors:
-// - new: Creates a new App instance with initial state and behavior functions
+// - new: Creates an App instance with initial state and behavior functions
 
 data App <S: *>
 | new
@@ -9,3 +9,13 @@ data App <S: *>
   (tick: S -> S)
   (draw: S -> (List Shape))
   (when: U48 -> S -> S)
+
+// App (S: *) : * =
+//   $(self: (App S))
+//   ∀(P: (App S) -> *)
+//   ∀(new: ∀(init: S)
+//            ∀(tick: S -> S)
+//            ∀(draw: S -> (List Shape))
+//            ∀(when: U48 -> S -> S)
+//            (P (App/new S init tick draw when)))
+//   (P self)

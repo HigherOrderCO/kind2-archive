@@ -1,3 +1,8 @@
+// Converts a String to a String/Chunk
+// - xs: The input String to convert
+// = A String/Chunk containing all characters from the input String
 from_string
-: ∀(xs: String) String/Chunk
-= (List/Chunk/from_list Char)
+- xs: String
+: String/Chunk
+
+(List/Chunk/from_list Char xs)

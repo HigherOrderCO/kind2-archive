@@ -1,5 +1,9 @@
+// Checks if a character is a slash ('/')
+// - a: The character to check
+// = `true` if the character is a slash, `false` otherwise
+
 is_slash
 - a: Char
 : Bool
 
-(Char/equal a 47)
+(Char/equal a Char/slash)

@@ -1,3 +1,6 @@
+// Parses a string of decimal digits
+// = A Parser that returns a String of consecutive decimal digits
+
 use Char/{is_decimal}
 use Parser/pick_while
 

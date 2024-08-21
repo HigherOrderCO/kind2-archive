@@ -1,12 +1,7 @@
-/// Converts a U48 number to its binary representation as Bits.
-///
-/// # Input
-///
-/// * `n` - The U48 number to convert.
-///
-/// # Output
-///
-/// The Bits representation of the input number.
+// Converts a U48 number to its binary representation as Bits
+// - d: The depth of recursion (initially the U48 number to convert)
+// - n: The U48 number being processed
+// = The Bits representation of the input number
 
 use Bits/{O,I,E}
 

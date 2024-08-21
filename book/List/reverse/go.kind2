@@ -1,3 +1,8 @@
+// Helper function for reversing a list
+// - A: The type of elements in the list
+// - list: The input list to be reversed
+// - result: The accumulator for the reversed elements
+// = The reversed list
 use List/{cons,nil}
 
 go <A>
@@ -9,4 +14,3 @@ match list {
   nil: result
   cons: (go _ list.tail (cons _ list.head result))
 }
-

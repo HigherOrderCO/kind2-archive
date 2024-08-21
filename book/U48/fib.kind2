@@ -1,3 +1,7 @@
+// Computes the nth Fibonacci number
+// - n: The index of the Fibonacci number to compute
+// = The nth Fibonacci number
+
 fib
 - n: U48
 : U48

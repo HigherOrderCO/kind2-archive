@@ -1,3 +1,9 @@
+// Drops the first n elements from a list
+// - A: The type of elements in the list
+// - n: The number of elements to drop
+// - list: The input list
+// = The list with the first n elements removed
+
 use List/{cons,nil}
 use Nat/{succ,zero}
 

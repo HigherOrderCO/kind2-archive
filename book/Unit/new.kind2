@@ -1,3 +1,6 @@
+// Constructs the single value of the Unit type
+// = The Unit value
+
 Unit/new : Unit
 
 ~λP λone one

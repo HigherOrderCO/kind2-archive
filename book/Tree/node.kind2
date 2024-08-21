@@ -1,3 +1,10 @@
+// Constructs a tree node with a value and left and right subtrees
+// - A: The type of values in the tree
+// - val: The value stored in this node
+// - lft: The left subtree
+// - rgt: The right subtree
+// = A new tree node of type `(Tree A)`
+
 node <A>
 - val: A
 - lft: (Tree A)

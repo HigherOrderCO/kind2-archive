@@ -1,4 +1,10 @@
+// Concatenates two String/Chunks
+// - xs: The first String/Chunk
+// - ys: The second String/Chunk
+// = A new String/Chunk containing all characters from xs followed by all characters from ys
 concat
-: ∀(xs: String/Chunk) ∀(ys: String/Chunk)
-  String/Chunk
-= (List/Chunk/concat Char)
+- xs: String/Chunk
+- ys: String/Chunk
+: String/Chunk
+
+(List/Chunk/concat Char xs ys)

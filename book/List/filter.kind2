@@ -1,17 +1,8 @@
-/// Filters a list, keeping only elements that satisfy the given condition.
-///
-/// # Parameters
-///
-/// * `A` - The type of elements in the list.
-///
-/// # Inputs
-///
-/// * `cond` - A function that takes an element of type A and returns a Bool.
-/// * `list` - The input list of type (List A).
-///
-/// # Output
-///
-/// A new list containing only the elements for which `cond` returns `true`.
+// Filters a list, keeping only elements that satisfy the given condition
+// - A: The type of elements in the list
+// - cond: A function that takes an element of type A and returns a Bool
+// - list: The input list of type (List A)
+// = A new list containing only the elements for which `cond` returns `true`
 
 use List/{cons,nil}
 use Bool/{true,false}

@@ -1,17 +1,8 @@
-/// Retrieves a value from the binary map for a given key.
-///
-/// # Type Parameters
-///
-/// * `A` - The type of values stored in the binary map.
-///
-/// # Inputs
-///
-/// * `map` - The binary map to search in.
-/// * `key` - The key represented as Bits.
-///
-/// # Output
-///
-/// A Maybe value containing the value associated with the key, or none if not found.
+// Retrieves a value from the binary map for a given key
+// - A: The type of values stored in the binary map
+// - map: The binary map to search in
+// - key: The key represented as Bits
+// = A Maybe value containing the value associated with the key, or none if not found
 
 use BMap/{node,leaf}
 use Bits/{O,I,E}
@@ -36,4 +27,3 @@ match key {
     leaf: (Maybe/none _)
   }
 }
-

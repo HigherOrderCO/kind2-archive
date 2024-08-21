@@ -1,3 +1,8 @@
+// Constructs a Some value for Maybe
+// - T: The type of the contained value
+// - value: The value to wrap in Maybe
+// = A Maybe value containing the given value
+
 some <T>
 - value: T
 : (Maybe T)

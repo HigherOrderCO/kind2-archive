@@ -1,16 +1,7 @@
-/// Checks if a list is empty.
-///
-/// # Parameters
-///
-/// * `A` - The type of elements in the list.
-///
-/// # Input
-///
-/// * `xs` - The list to check.
-///
-/// # Output
-///
-/// Returns `true` if the list is empty, `false` otherwise.
+// Checks if a list is empty
+// - A: The type of elements in the list
+// - xs: The list to check
+// = `true` if the list is empty, `false` otherwise
 
 use List/{cons,nil}
 use Bool/{true,false}

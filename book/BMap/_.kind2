@@ -1,13 +1,8 @@
-/// Represents a binary map (binary search tree) data structure.
-///
-/// # Type Parameters
-///
-/// * `A` - The type of values stored in the binary map.
-///
-/// # Constructors
-///
-/// * `node` - An internal node of the binary map, containing a value and two subtrees.
-/// * `leaf` - A leaf node, representing an empty subtree.
+// Represents a binary map (binary search tree) data structure
+// - A: The type of values stored in the binary map
+// Constructors:
+// - node: An internal node of the binary map, containing a value and two subtrees
+// - leaf: A leaf node, representing an empty subtree
 
 data BMap <A>
 | node (lft: (BMap A)) (val: (Maybe A)) (rgt: (BMap A))

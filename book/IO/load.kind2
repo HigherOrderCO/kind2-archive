@@ -1,3 +1,9 @@
+// Loads a file and continues with the next IO operation
+// - A: The type of the value returned by the IO operation
+// - file: The name of the file to load
+// - then: The continuation function that takes the file contents and returns the next IO operation
+// = An IO operation that loads a file and continues with the given function
+
 IO/load
 : ∀(A: *)
   ∀(file: String)

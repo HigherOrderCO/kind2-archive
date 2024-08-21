@@ -1,2 +1,8 @@
+// Defines a pair of two values
+// - A: The type of the first value
+// - B: The type of the second value
+// Constructor:
+// - new: Creates a new pair
+
 data Pair <A: *> <B: *>
 | new (fst: A) (snd: B) : (Pair A B)

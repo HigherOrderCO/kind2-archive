@@ -1,3 +1,9 @@
+// Prints multiple messages and returns a value
+// - A: The type of the return value
+// - msgs: A list of strings to be printed
+// - ret: The value to be returned after printing
+// = The return value after printing all messages
+
 use List/{cons,nil}
 
 many <A> (msgs: (List String)) (ret: A) : A =
@@ -5,14 +11,3 @@ many <A> (msgs: (List String)) (ret: A) : A =
     cons: (HVM/print/ msgs.head (HVM/print/many/ msgs.tail ret))
     nil: ret
   }
-
-
-
-//HVM.print.many
-//: ∀(A: *) ∀(msgs: (List String)) ∀(ret: A) A
-//= λA λmsgs λret
-  //use P = λx A
-  //use cons = λmsg λmsgs
-    //(HVM.print A msg (HVM.print.many A msgs ret))
-  //use nil = ret
-  //(~msgs P cons nil)

@@ -3,7 +3,17 @@
 // - O: Represents a zero bit followed by more bits
 // - I: Represents a one bit followed by more bits
 // - E: Represents the end of the bit sequence (empty)
+
 data Bits
 | O (tail: Bits)
 | I (tail: Bits)
 | E
+
+// Bits
+// : *
+// = $(self: Bits)
+//   ∀(P: ∀(b: Bits) *)
+//   ∀(o: ∀(tail: Bits) (P (Bits/O tail)))
+//   ∀(i: ∀(tail: Bits) (P (Bits/I tail)))
+//   ∀(e: (P Bits/E))
+//   (P self)

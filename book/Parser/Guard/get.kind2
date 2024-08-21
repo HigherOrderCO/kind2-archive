@@ -1,3 +1,9 @@
+// Gets the components of a guarded parser
+// - A: The type of the parsed value
+// - p: The guarded parser
+// - P: The return type of the function `f`
+// - f: A function that takes the guard and value parsers and returns a value of type P
+// = The result of applying `f` to the components of the guarded parser
 get <A> (p: (Parser/Guard A)) <P> (f: (Parser Bool) -> (Parser A) -> P) : P =
   match p {
     Pair/new: (f p.fst p.snd)

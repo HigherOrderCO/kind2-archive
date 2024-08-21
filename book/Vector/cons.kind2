@@ -1,3 +1,10 @@
+// Adds an element to the front of a vector
+// - T: The type of elements in the vector
+// - len: The length of the tail vector
+// - head: The element to add to the front
+// - tail: The existing vector
+// = A new vector with `head` as its first element, followed by `tail`
+
 cons <T>
 - len: Nat
 - head: T

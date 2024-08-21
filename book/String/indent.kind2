@@ -1,5 +1,10 @@
+// Creates an indentation string
+// - tab: The number of indentation levels
+// = A string with 2 spaces per indentation level
+
 indent
-: ∀(tab: Nat) String
+- tab: Nat
+: String
 
 λtab
 use P    = λx String

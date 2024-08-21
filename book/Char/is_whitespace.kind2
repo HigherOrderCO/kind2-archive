@@ -1,28 +1,9 @@
-/// Checks if a character is a blank space.
-///
-/// This function determines whether the given character is considered a blank space.
-/// It checks for two specific characters:
-/// - ASCII 10 (Line Feed, '\n')
-/// - ASCII 32 (Space, ' ')
-///
-/// # Input
-///
-/// * `a` - The character to check.
-///
-/// # Output
-///
-/// Returns `true` if the character is a blank space (newline or space), `false` otherwise.
-///
-/// # Example
-///
-/// ```kind2
-/// (Char/is_blank ' ')  // Returns true
-/// (Char/is_blank '\n') // Returns true
-/// (Char/is_blank 'a')  // Returns false
-/// ```
+// Checks if a character is whitespace
+// - a: The character to check
+// = `true` if the character is whitespace (space or newline), `false` otherwise
 
-is_blank
+is_whitespace
 - a: Char
 : Bool
 
-(Bool/or (Char/equal a 10) (Char/equal a 32))
+(Bool/or (Char/equal a 32) (Char/is_newline a))

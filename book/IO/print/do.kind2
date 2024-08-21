@@ -1,8 +1,5 @@
+// Prints a string and returns a Unit value in the IO monad
+// - text: The string to be printed
+// = An IO operation that prints the text and returns Unit
 do (text: String) : (IO Unit) =
   (IO/print Unit text λx (IO/done Unit x))
-
-
-
-//IO.print.do
-//: ∀(text: String) (IO Unit)
-//= λtext (IO.print Unit text λx (IO.done Unit x))

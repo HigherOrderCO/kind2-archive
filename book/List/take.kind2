@@ -1,3 +1,9 @@
+// Takes the first n elements from a list
+// - A: The type of elements in the list
+// - n: The number of elements to take
+// - list: The input list
+// = A new list containing the first n elements of the input list
+
 use List/{cons,nil}
 use Nat/{succ,zero}
 

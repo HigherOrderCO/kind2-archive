@@ -1,2 +1,11 @@
-new <A> (guard: (Parser Bool)) (value: (Parser A)) : (Parser/Guard A) =
-  (Pair/new _ _ guard value)
+// Creates a new guarded parser
+// - A: The type of the parsed value
+// - guard: The boolean parser acting as a guard
+// - value: The parser for the actual value
+// = A new Parser/Guard combining the guard and value parsers
+new <A>
+- guard: (Parser Bool)
+- value: (Parser A)
+: (Parser/Guard A)
+
+(Pair/new _ _ guard value)

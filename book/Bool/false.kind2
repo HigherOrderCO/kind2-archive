@@ -1,8 +1,5 @@
-/// Represents the 'false' boolean value.
-///
-/// # Output
-///
-/// The 'false' value of type Bool.
+// Represents the 'false' boolean value
+// = The 'false' value of type Bool
 
 false
 : Bool

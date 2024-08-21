@@ -1,3 +1,9 @@
+// Repeats a parser a specified number of times
+// - A: The type of elements parsed
+// - n: Number of times to repeat the parser
+// - p: The parser to repeat
+// = A parser that produces a list of parsed elements
+
 use Parser/bind
 use Parser/pure
 use List/{cons,nil}
@@ -11,7 +17,7 @@ repeat <A>
 match n {
   zero: (pure _ (nil _))
   succ: 
-    (bind _ _ p (λhead
-      (bind _ _ (repeat _ n.pred p) (λtail
-        (pure _ (cons _ head tail))))))
+    (bind _ _ p λhead
+      (bind _ _ (repeat _ n.pred p) λtail
+        (pure _ (cons _ head tail))))
 }

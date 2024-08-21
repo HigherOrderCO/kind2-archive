@@ -1,13 +1,8 @@
-/// Defines a generic list datatype.
-///
-/// # Parameters
-///
-/// * `T` - The type of elements in the list.
-///
-/// # Constructors
-///
-/// * `cons` - Adds an element to the front of a list.
-/// * `nil` - Represents an empty list.
+// Defines a generic list datatype
+// - T: The type of elements in the list
+// Constructors:
+// - cons: Adds an element to the front of a list
+// - nil: Represents an empty list
 
 data List <T>
 | cons (head: T) (tail: (List T))

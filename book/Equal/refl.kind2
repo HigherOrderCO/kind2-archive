@@ -1,24 +1,7 @@
-/// Constructs a proof of reflexivity for propositional equality.
-///
-/// This function creates a proof that a value is equal to itself, which is the
-/// fundamental basis of equality in type theory.
-///
-/// # Type Parameters
-///
-/// * `A` - The type of the value.
-///
-/// # Input
-///
-/// * `x` - The value for which to construct the reflexivity proof.
-///
-/// # Output
-///
-/// A proof that `x` is equal to itself, of type `(Equal A x x)`.
-///
-/// # Usage
-///
-/// This function is often used as the base case in equality proofs or when
-/// establishing the equality of two identical expressions.
+// Constructs a proof of reflexivity for propositional equality
+// - A: The type of the value
+// - x: The value for which to construct the reflexivity proof
+// = A proof that `x` is equal to itself
 
 refl <A>
 - x: A

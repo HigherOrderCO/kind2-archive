@@ -1,7 +1,11 @@
+// Loads a file and applies a continuation function to its contents
+// - A: The return type of the continuation function
+// - file: The name of the file to load
+// - cont: A function that takes the file contents as a String and returns a value of type A
+// = The result of applying the continuation to the file contents
+
 load <A> (file: String) (cont: String -> A) : A =
   (cont String/nil)
-
-
 
 //HVM.load
 //: ∀(A: *) ∀(file: String) ∀(cont: ∀(x: String) A) A

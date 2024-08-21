@@ -1,3 +1,10 @@
+// Pattern matches on Parser/Result values
+// - A: The type of the successfully parsed value
+// - P: The motive of the elimination
+// - d: The done case
+// - f: The fail case
+// - result: The Parser/Result value to match on
+// = The result of the elimination
 match <A>
   (P: (Parser/Result A) -> *)
   (d: ∀(code: String) ∀(value: A) (P (Parser/Result/done A code value)))

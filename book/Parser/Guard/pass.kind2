@@ -1,2 +1,9 @@
-pass <A> (then: (Parser A)) : (Parser/Guard A) =
-  (Parser/Guard/new _ (Parser/pure _ Bool/true) then)
+// Creates a guarded parser that always passes
+// - A: The type of the parsed value
+// - then: The parser to be executed after the guard
+// = A guarded parser that always passes and then executes 'then'
+pass <A>
+- then: (Parser A)
+: (Parser/Guard A)
+
+(Parser/Guard/new _ (Parser/pure _ Bool/true) then)

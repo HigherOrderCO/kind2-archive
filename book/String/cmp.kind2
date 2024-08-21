@@ -1,3 +1,8 @@
+// Compares two strings lexicographically
+// - a: The first string to compare
+// - b: The second string to compare
+// = The comparison result: Cmp/ltn if a < b, Cmp/eql if a = b, Cmp/gtn if a > b
+
 String/cmp
 : ∀(a: String) ∀(b: String) Cmp
 

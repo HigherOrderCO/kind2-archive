@@ -1,3 +1,11 @@
+// Folds a list from left to right
+// - A: The type of elements in the list
+// - P: The type of the accumulator and result
+// - c: The function to apply to each element and the accumulator
+// - n: The initial value of the accumulator
+// - xs: The list to fold
+// = The result of folding the list
+
 use List/{cons,nil}
 
 List/fold <A> (P: *)

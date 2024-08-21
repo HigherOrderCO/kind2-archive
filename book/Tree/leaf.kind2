@@ -1,3 +1,7 @@
+// Constructs an empty tree or a leaf node
+// - A: The type of values in the tree
+// = An empty tree of type `(Tree A)`
+
 leaf <A>
 : (Tree A)
 

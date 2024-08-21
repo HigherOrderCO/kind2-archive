@@ -1,3 +1,8 @@
+// Tries multiple parsers in sequence until one succeeds
+// - A: The type of the parsed value
+// - variants: A list of guarded parsers to try
+// = A parser that succeeds if any of the variants succeed
+
 use List/{cons,nil}
 use Pair/{fst,snd}
 use Parser/bind

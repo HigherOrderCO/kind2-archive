@@ -1,13 +1,7 @@
-/// Calculates the squared distance between two V2 vectors.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-/// * `b` - The second V2 vector
-///
-/// # Output
-///
-/// The squared distance between `a` and `b` as a U48
+// Calculates the squared distance between two V2 vectors
+// - a: The first V2 vector
+// - b: The second V2 vector
+// = The squared distance between `a` and `b` as a U48
 
 use V2/{new}
 
@@ -19,8 +13,8 @@ sqr_dist
 match a {
   new: match b {
     new:
-      let dx = (- a.x b.x)
-      let dy = (- a.y b.y)
+      let dx = (U48/abs_diff a.x b.x)
+      let dy = (U48/abs_diff a.y b.y)
       (+ (* dx dx) (* dy dy))
   }
 }

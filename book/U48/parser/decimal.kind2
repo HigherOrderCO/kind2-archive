@@ -1,6 +1,12 @@
+// Parses a decimal string into a U48
+// = A Parser that returns a U48 value
 use Parser/{bind,pure}
 use Parser/decimal
 use List/{cons,nil}
 
 decimal : (Parser U48) =
-  ?TODO
+  (bind decimal λstr
+    match str {
+      nil: (pure 0)
+      cons: (pure (U48/from_nat (Nat/from_decimal_string str)))
+    })

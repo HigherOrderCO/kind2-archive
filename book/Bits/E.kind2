@@ -1,8 +1,8 @@
-/// Constructs an empty Bits value.
+/// Constructs an empty Bits value
 ///
 /// # Output
 ///
-/// An empty Bits value, representing the end of a bit sequence.
+/// An empty Bits value, representing the end of a bit sequence
 
 E
 : Bits

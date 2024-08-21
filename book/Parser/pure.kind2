@@ -1,3 +1,8 @@
+// Lifts a value into the Parser monad
+// - A: The type of the value to lift
+// - value: The value to lift
+// = A Parser that always succeeds with the given value
+
 pure <A>
 - value: A
 : (Parser A)

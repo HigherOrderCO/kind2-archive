@@ -1,3 +1,10 @@
+// Constructs a new pair
+// - A: The type of the first value
+// - B: The type of the second value
+// - a: The first value
+// - b: The second value
+// = A new pair containing `a` and `b`
+
 new <A> <B>
 - a: A
 - b: B

@@ -1,5 +1,13 @@
-Sigma/new
-: ∀(A: *) ∀(B: ∀(x: A) *) ∀(a: A) ∀(b: (B a))
-  (Sigma A B)
+// Constructs a new Sigma type instance
+// - A: The type of the first component
+// - B: A function type `A -> *` that determines the type of the second component
+// - a: The first component value
+// - b: The second component value, of type `(B a)`
+// = A new Sigma type instance containing `a` and `b`
 
-λA λB λa λb ~λP λnew (new a b)
+Sigma/new <A: *> <B: A -> *>
+- a: A
+- b: (B a)
+: (Sigma A B)
+
+~λP λnew (new a b)

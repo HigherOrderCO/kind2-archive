@@ -1,3 +1,10 @@
+// Saves a string to a file and continues with the next IO operation
+// - A: The type of the value returned by the IO operation
+// - file: The name of the file to save
+// - text: The string content to be saved
+// - then: The continuation function after saving
+// = An IO operation that saves the text and continues with 'then'
+
 IO/save
 : ∀(A: *)
   ∀(file: String)

@@ -1,3 +1,6 @@
+// Represents the zero natural number
+// = The zero natural number
+
 zero
 : Nat
 

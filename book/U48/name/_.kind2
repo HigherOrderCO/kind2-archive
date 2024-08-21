@@ -1,5 +1,8 @@
 use String/Chunk/{build}
 use U48/name/{go}
 
+// Converts a U48 number to a string name
+// - n: The U48 number to convert
+// = A string representation of the number as a name
 name (n: U48) : String =
   (build (go (+ n 1)))

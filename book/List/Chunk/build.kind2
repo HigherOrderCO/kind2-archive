@@ -1,2 +1,9 @@
-build <T> (x: (List/Chunk T)) : (List T) =
-  (x [])
+// Builds a list from a List/Chunk
+// - T: The type of elements in the list
+// - x: The List/Chunk to build from
+// = The resulting List
+build <T>
+- x: (List/Chunk T)
+: (List T)
+
+(x [])

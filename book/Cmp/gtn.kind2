@@ -1,3 +1,6 @@
+// Constructs the 'greater than' comparison value
+// = The 'greater than' comparison value
+
 Cmp/gtn : Cmp
 
 ~λP λltn λeql λgtn gtn

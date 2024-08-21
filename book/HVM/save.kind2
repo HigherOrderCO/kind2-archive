@@ -1,7 +1,11 @@
+// Saves data to a file and applies a continuation
+// - A: The return type of the continuation
+// - file: The name of the file to save
+// - data: The string data to be saved to the file
+// - cont: The continuation value to be returned
+// = The result of the continuation
 save <A> (file: String) (data: String) (cont: A) : A =
   cont
-
-
 
 //HVM.save
 //: ∀(A: *) ∀(file: String) ∀(data: String) ∀(cont: A)

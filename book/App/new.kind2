@@ -1,10 +1,10 @@
 // Creates a new App instance
-// - S: The type of the application state
-// - init: The initial state of the application
-// - tick: Function to update the state on each tick
-// - draw: Function to convert state to a list of shapes for rendering
-// - when: Function to update state based on keyboard input
-// = A new App instance with the specified behaviors
+// - S: The application state type
+// - init: Initial state
+// - tick: State update function
+// - draw: State to shapes conversion function
+// - when: Keyboard input handler function
+// = New App instance with specified behaviors
 
 new <S>
 - init: S

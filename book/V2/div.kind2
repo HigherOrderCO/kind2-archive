@@ -1,14 +1,8 @@
-/// Divides two V2 vectors component-wise.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector (dividend)
-/// * `b` - The second V2 vector (divisor)
-///
-/// # Output
-///
-/// A new V2 vector representing the component-wise division of `a` by `b`
-/// Note: This function does not handle division by zero.
+// Divides two V2 vectors component-wise
+// - a: The first V2 vector (dividend)
+// - b: The second V2 vector (divisor)
+// = A new V2 vector representing the component-wise division of `a` by `b`
+// Note: This function does not handle division by zero
 
 use V2/{new}
 

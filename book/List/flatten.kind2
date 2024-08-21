@@ -1,16 +1,7 @@
-/// Flattens a list of lists into a single list.
-///
-/// # Parameters
-///
-/// * `T` - The type of elements in the inner lists.
-///
-/// # Input
-///
-/// * `xss` - A list of lists to be flattened.
-///
-/// # Output
-///
-/// A single list containing all elements from the inner lists.
+// Flattens a list of lists into a single list
+// - T: The type of elements in the inner lists
+// - xss: A list of lists to be flattened
+// = A single list containing all elements from the inner lists
 
 use List/{cons,nil}
 use List/concat

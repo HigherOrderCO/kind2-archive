@@ -1,2 +1,5 @@
+// Represents the slash character ('/')
+// = The Unicode code point for the slash character
+
 slash : Char =
   47

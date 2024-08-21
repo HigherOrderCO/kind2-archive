@@ -1,25 +1,8 @@
-/// Performs an absurd elimination on the Empty type.
-///
-/// This function allows us to derive any type from a value of the Empty type.
-/// Since Empty has no constructors, it's impossible to create a value of this type.
-/// Therefore, if we have a value of type Empty, we can conclude anything.
-///
-/// # Parameters
-///
-/// * `P` - The type we want to derive (can be any type).
-///
-/// # Inputs
-///
-/// * `e` - A value of type Empty (which cannot exist).
-///
-/// # Output
-///
-/// A value of type P.
-///
-/// # Note
-///
-/// This function is primarily used in proofs by contradiction or to handle
-/// impossible cases in pattern matching.
+// Performs an absurd elimination on the Empty type
+// - P: The type we want to derive (can be any type)
+// - e: A value of type Empty (which cannot exist)
+// = A value of type P
+// Note: Used in proofs by contradiction or to handle impossible cases
 
 absurd
 - e: Empty

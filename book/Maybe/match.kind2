@@ -1,3 +1,11 @@
+// Pattern matches on Maybe values
+// - A: The type of the value in Maybe
+// - P: The motive of the elimination
+// - s: The some case
+// - n: The none case
+// - ma: The Maybe value to match on
+// = The result of the elimination
+
 match <A>
 - P: (Maybe A) -> *
 - s: ∀(value: A) (P (Maybe/some A value))

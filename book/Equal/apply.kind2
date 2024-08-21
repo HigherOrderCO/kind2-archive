@@ -1,28 +1,11 @@
-/// Applies a function to both sides of an equality proof.
-///
-/// This function takes a proof of equality between two values of type A and a function
-/// from A to B, and produces a proof that the function applied to both sides of the
-/// equality results in equal values of type B.
-///
-/// # Parameters
-///
-/// * `A` - The type of the original values being compared.
-/// * `B` - The type of the values after applying the function.
-/// * `a` - The first value of type A.
-/// * `b` - The second value of type A.
-///
-/// # Inputs
-///
-/// * `f` - A function from A to B.
-/// * `e` - A proof of equality between `a` and `b` of type A.
-///
-/// # Output
-///
-/// A proof that `(f a)` is equal to `(f b)` in type B.
-///
-/// # Example
-///
-/// If we have a proof that `x = y` and a function `f`, then `apply` gives us a proof that `f(x) = f(y)`.
+// Applies a function to both sides of an equality proof
+// - A: The type of the compared values
+// - B: The type of the compared values after applying the function
+// - a: The first compared value
+// - b: The second compared value
+// - f: The function to apply to both sides of the equality
+// - e: The proof of equality between `a` and `b`
+// = A proof that `(f a)` is equal to `(f b)`
 
 use Equal/refl
 

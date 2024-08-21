@@ -1,3 +1,8 @@
+// Returns the maximum of two U48 values
+// - a: The first U48 value
+// - b: The second U48 value
+// = The larger of `a` and `b`
+
 max
 - a: U48
 - b: U48

@@ -1,3 +1,9 @@
+// Defines a comparison type
+// Constructors:
+// - ltn: Less than
+// - eql: Equal
+// - gtn: Greater than
+
 data Cmp
 | ltn
 | eql

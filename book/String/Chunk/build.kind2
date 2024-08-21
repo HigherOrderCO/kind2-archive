@@ -1,3 +1,8 @@
+// Builds a string from a String/Chunk
+// - x: The String/Chunk to build from
+// = The resulting String
 String/Chunk/build
-: ∀(x: String/Chunk) String
-= (List/Chunk/build Char)
+- x: String/Chunk
+: String
+
+(List/Chunk/build Char x)

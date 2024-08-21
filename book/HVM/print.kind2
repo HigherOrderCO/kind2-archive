@@ -1,8 +1,12 @@
-print <A> (msg: String) (ret: A) : A =
-  ret
+// Prints a message and returns a value
+// - A: The type of the return value
+// - msg: The message to print
+// - ret: The value to return
+// = The value `ret`
 
+print <A>
+- msg: String
+- ret: A
+: A
 
-
-//HVM.print
-//: ∀(A: *) ∀(msg: String) ∀(ret: A) A
-//= λA λmsg λret ret
+ret

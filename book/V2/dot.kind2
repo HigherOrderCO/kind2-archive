@@ -1,13 +1,7 @@
-/// Computes the dot product of two V2 vectors.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-/// * `b` - The second V2 vector
-///
-/// # Output
-///
-/// The dot product of `a` and `b` as a U48
+// Computes the dot product of two V2 vectors
+// - a: The first V2 vector
+// - b: The second V2 vector
+// = The dot product of `a` and `b` as a U48
 
 use V2/{new}
 

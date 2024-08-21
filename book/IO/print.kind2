@@ -1,3 +1,9 @@
+// Prints a string and continues with the next IO operation
+// - A: The type of the value returned by the IO operation
+// - text: The string to print
+// - then: The next IO operation to execute after printing
+// = An IO operation that prints the text and continues with 'then'
+
 IO/print
 : ∀(A: *) ∀(text: String) ∀(then: ∀(x: Unit) (IO A))
   (IO A)

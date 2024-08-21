@@ -1,3 +1,11 @@
+// Folds a binary tree
+// - A: The type of values in the tree
+// - P: The type of the result
+// - nd: Function to apply at each node
+// - lf: Value for leaf nodes
+// - bm: The tree to fold
+// = The result of folding the tree
+
 use Tree/{node,leaf}
 
 Tree/fold <A> (P: *)

@@ -1,2 +1,6 @@
+// Constructs a failed parse result
+// - T: The type of the expected parsed value
+// - error: The error message describing the parse failure
+// = A failed parse result of type `(Parser/Result T)`
 Parser/Result/fail <T> (error: String) : (Parser/Result T) =
   (Parser/Result/fail _ error)

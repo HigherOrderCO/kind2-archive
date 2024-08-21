@@ -1,2 +1,7 @@
+// Constructs a new Church-encoded list by adding an element to the front
+// - T: The type of elements in the list
+// - head: The element to add to the front of the list
+// - tail: The existing Church-encoded list
+// = A new Church-encoded list with `head` as its first element, followed by the elements of `tail`
 List/Church/cons <T> (head: T) (tail: (List/Church T)) : (List/Church T) =
   (λP (λcons (λnil (cons head (tail P cons nil)))))

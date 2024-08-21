@@ -1,3 +1,8 @@
+// Returns the minimum of two U48 values
+// - a: The first U48 value
+// - b: The second U48 value
+// = The smaller of `a` and `b`
+
 min
 - a: U48
 - b: U48

@@ -1,3 +1,7 @@
+// Takes a specified number of characters from the input
+// - n: Number of characters to take
+// = A parser that returns a string of n characters
+
 use Parser/repeat
 use Parser/char
 

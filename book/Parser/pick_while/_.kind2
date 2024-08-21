@@ -1,3 +1,6 @@
+// Parses a string of characters that satisfy a given condition
+// - cond: A function that takes a Char and returns a Bool
+// = A parser that returns the matched string
 use Parser/pick_while/{go}
 
 pick_while (cond: Char -> Bool) : (Parser String) =

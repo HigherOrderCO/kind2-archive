@@ -1,3 +1,11 @@
+// Applies a function to both elements of a pair
+// - A: The type of the first element
+// - B: The type of the second element
+// - P: The return type of the function
+// - p: The pair to apply the function to
+// - f: The function to apply to the pair elements
+// = The result of applying the function to the pair elements
+
 use Pair/{new}
 
 get <A> <B> <P>

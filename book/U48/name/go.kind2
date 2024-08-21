@@ -1,3 +1,6 @@
+// Generates a string chunk from a U48 number
+// - n: The U48 number to convert
+// = A String/Chunk representing the number as a string
 use String/{cons}
 
 go (n: U48) : String/Chunk =

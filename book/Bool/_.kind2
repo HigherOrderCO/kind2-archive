@@ -1,14 +1,7 @@
-// Defines the Boolean type with two constructors: true and false.
-//
-// The Boolean type is a fundamental data type in programming and logic,
-// representing a value that can be either true or false.
-//
+// Defines the Boolean type
 // Constructors:
-// - true: Represents the logical true value.
-// - false: Represents the logical false value.
-//
-// Boolean values are commonly used in conditional statements, logical operations,
-// and as flags to represent binary states in various algorithms and data structures.
+// - true: The logical true value
+// - false: The logical false value
 
 data Bool
 | true

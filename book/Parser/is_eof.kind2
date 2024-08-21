@@ -1,3 +1,6 @@
+// Checks if the input string is empty (End of File)
+// = A parser that returns true if the input is empty, false otherwise
+
 use Parser/Result/{done}
 use Bool/{true,false}
 use List/{cons,nil}

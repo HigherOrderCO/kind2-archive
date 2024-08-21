@@ -1,12 +1,6 @@
-/// Doubles a natural number.
-///
-/// # Input
-///
-/// * `n` - The natural number to be doubled.
-///
-/// # Output
-///
-/// The result of doubling `n`.
+// Doubles a natural number
+// - n: The natural number to be doubled
+// = The result of doubling `n`
 
 use Nat/{succ,zero}
 

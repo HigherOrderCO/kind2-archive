@@ -1,3 +1,7 @@
+// Converts a U48 to a natural number
+// - n: The U48 to convert
+// = The Nat representation of the U48
+
 use Nat/{succ,zero}
 
 to_nat

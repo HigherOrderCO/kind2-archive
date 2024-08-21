@@ -1,8 +1,14 @@
+// Sums all elements in a list of U48 numbers
+// - xs: The input list of U48 numbers
+// = The sum of all elements in the list
+
+use List/{cons,nil}
+
 sum
 - xs: (List U48)
 : U48
 
 match xs {
-  ++: (+ xs.head (sum xs.tail))
-  []: 0
+  cons: (+ xs.head (sum xs.tail))
+  nil: 0
 }

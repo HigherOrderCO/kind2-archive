@@ -1,7 +1,13 @@
+// Provides a way to pattern match on Unit values
+// - P: The motive of the elimination
+// - new: The case for the single constructor of Unit
+// - x: The Unit value to match on
+// = The result of the elimination
+
 match
-- x: Unit
 - P: Unit -> *
 - new: (P Unit/new)
+- x: Unit
 : (P x)
 
 (~x P new)

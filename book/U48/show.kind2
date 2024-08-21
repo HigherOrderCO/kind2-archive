@@ -1,3 +1,7 @@
+// Converts a U48 number to a String
+// - n: The U48 number to convert
+// = A String representation of the number
+
 U48/show
 - n: U48
 : String

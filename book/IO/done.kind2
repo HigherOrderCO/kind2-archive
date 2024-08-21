@@ -1,3 +1,8 @@
+// Terminates an IO operation with a value
+// - A: The type of the value returned
+// - term: The value to return
+// = An IO operation that terminates with the given value
+
 IO/done
 : ∀(A: *) ∀(term: A) (IO A)
 

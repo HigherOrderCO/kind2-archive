@@ -1,5 +1,14 @@
+// Applies a parser without consuming its result
+// - A: The type of the value parsed by the input parser
+// - parser: The parser to apply
+// = A parser that applies the input parser but returns the original input
+
 skip <A>
 - parser: (Parser A)
 : (Parser A)
 
-λcode (parser code)
+λcode
+  match result = (parser code) {
+    done: (Parser/Result/done _ result.code result.value)
+    fail: (Parser/Result/fail _ result.error)
+  }

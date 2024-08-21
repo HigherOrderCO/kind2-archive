@@ -1,3 +1,7 @@
+// Constructs the successor of a natural number
+// - n: The natural number to which we add 1
+// = The successor of `n`
+
 succ
 - n: Nat
 : Nat

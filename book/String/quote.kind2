@@ -1,3 +1,6 @@
+// Returns a list containing a single double quote character
+// = A list with one element: the double quote character ('"')
+
 use List/{cons,nil}
 
 quote

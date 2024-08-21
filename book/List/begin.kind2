@@ -1,3 +1,8 @@
+// Rotates the first two elements of a list to the end
+// - A: The type of elements in the list
+// - xs: The input list
+// = A new list with the first two elements moved to the end, if possible
+
 use List/{cons,nil}
 
 begin <A>

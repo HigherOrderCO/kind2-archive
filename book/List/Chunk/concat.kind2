@@ -1,3 +1,8 @@
+// Concatenates two List/Chunks
+// - T: The type of elements in the chunks
+// - xs: The first List/Chunk
+// - ys: The second List/Chunk
+// = A new List/Chunk containing all elements from xs followed by all elements from ys
 concat <T>
   (xs: (List/Chunk T))
   (ys: (List/Chunk T))

@@ -1,3 +1,7 @@
+// Defines a Church-encoded list type
+// - T: The type of elements in the list
+// = A Church-encoded list of type T
+
 List/Church <T> : * =
   ∀(P: *)
   ∀(cons: T -> P -> P)

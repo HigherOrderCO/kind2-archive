@@ -1,3 +1,7 @@
+// Parses a specific text string
+// - txt: The string to parse
+// = A parser that succeeds if the input starts with 'txt', fails otherwise
+
 use Parser/skip
 use Parser/bind
 use Parser/test

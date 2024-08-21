@@ -1,5 +1,9 @@
+// Computes the length of a string
+// - s: The input string
+// = The number of characters in the string
+
 length
-- s: (List Char)
+- s: String
 : Nat
 
-(List/length/ s)
+(List/length _ s)

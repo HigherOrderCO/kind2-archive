@@ -1,3 +1,6 @@
+// Parses a sequence of operator characters
+// = A Parser that returns a String of operator characters
+
 use Char/{is_oper}
 use Parser/pick_while
 

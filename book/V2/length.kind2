@@ -1,12 +1,6 @@
-/// Calculates the length (magnitude) of a V2 vector using Euclidean norm.
-///
-/// # Input
-///
-/// * `a` - The first V2 vector
-///
-/// # Output
-///
-/// The length of the V2 vector `a` as a U48
+// Calculates the length (magnitude) of a V2 vector using Euclidean norm
+// - a: The V2 vector
+// = The length of the vector as a U48
 
 use V2/{new}
 use U48/{sqrt}

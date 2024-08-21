@@ -1,3 +1,8 @@
+// Creates a guarded parser that matches a specific text before parsing a value
+// - A: The type of the parsed value
+// - txt: The text to match before parsing
+// - then: The parser to apply after matching the text
+// = A guarded parser that combines text matching and value parsing
 use Parser/Guard/new
 use Parser/skip
 use Parser/test

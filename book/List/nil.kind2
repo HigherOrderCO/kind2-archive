@@ -1,3 +1,7 @@
+// Constructs an empty list
+// - T: The type of elements in the list
+// = An empty list of type `(List T)`
+
 nil <T>
 : (List T)
 

@@ -1,12 +1,7 @@
-/// Performs a logical OR operation on a list of booleans.
-///
-/// # Input
-///
-/// * `list` - A list of boolean values.
-///
-/// # Output
-///
-/// The result of applying OR to all elements in the list.
+// Performs a logical OR operation on a list of booleans
+// - list: A list of boolean values
+// = `true` if any element in the list is `true`, otherwise `false`
+//   An empty list returns `false` (vacuous falsehood)
 
 use List/{cons,nil}
 use Bool/{false}

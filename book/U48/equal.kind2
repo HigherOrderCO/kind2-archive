@@ -1,3 +1,8 @@
+// Checks if two U48 values are equal
+// - a: The first U48 value
+// - b: The second U48 value
+// = `true` if `a` equals `b`, `false` otherwise
+
 use Bool/{true,false}
 
 equal

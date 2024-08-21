@@ -1,3 +1,11 @@
+// Concatenates two vectors
+// - T: The type of elements in the vectors
+// - xs_len: The length of the first vector
+// - ys_len: The length of the second vector
+// - xs: The first vector
+// - ys: The second vector
+// = A new vector containing all elements from `xs` followed by all elements from `ys`
+
 use Vector/{cons,nil}
 use Nat/{succ,zero,add}
 
@@ -7,6 +15,6 @@ concat <T> <xs_len: Nat> <ys_len: Nat>
 : (Vector T (add xs_len ys_len))
 
 match xs {
-  cons: (Vector/cons/ (add xs.len ys_len) xs.head (Vector/concat/ xs.tail ys))
+  cons: (cons _ (add xs.len ys_len) xs.head (concat _ _ _ xs.tail ys))
   nil: ys
 }: (Vector T (add xs.len ys_len))

@@ -1,6 +1,8 @@
 use Parser/Result/{done,fail}
 use List/{cons,nil}
 
+// Parses a single character from the input string
+// = A parser that returns the next character or fails if the input is empty
 char
 : (Parser Char)
 

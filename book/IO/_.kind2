@@ -1,16 +1,13 @@
+// Defines the IO monad for handling side effects
+// - A: The type of the value returned by the IO operation
+// Constructors:
+// - print: Prints a string and continues with the next IO operation
+// - load: Loads a file and continues with the next IO operation
+// - save: Saves a string to a file and continues with the next IO operation
+// - done: Terminates the IO operation with a value
+
 data IO <A>
 | print (text: String) (then: ∀(x: Unit) (IO A))
 | load (file: String) (then: ∀(x: String) (IO A))
 | save (file: String) (text: String) (then: ∀(x: Unit) (IO A))
 | done (term: A)
-
-//IO
-//: ∀(A: *) *
-//= λA
-//  $(self: (IO A))
-//  ∀(P: ∀(x: (IO A)) *)
-//  ∀(print: ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO/print A text then)))
-//  ∀(load: ∀(file: String) ∀(then: ∀(x: String) (IO A)) (P (IO/load A file then)))
-//  ∀(save: ∀(file: String) ∀(text: String) ∀(then: ∀(x: Unit) (IO A)) (P (IO/save A file text then)))
-//  ∀(done: ∀(term: A) (P (IO/done A term)))
-//  (P self)

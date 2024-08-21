@@ -1,3 +1,5 @@
+// Creates a string containing a single newline character
+// = A string with only a newline character (ASCII 10)
 newline
 : String
 

@@ -2,6 +2,9 @@ use List/{cons,nil}
 use Bool/{true,false}
 use Parser/Result/{done,fail}
 
+// Parses a string while a condition holds for each character
+// - cond: A function that takes a Char and returns a Bool
+// = A Parser that returns the parsed String
 go (cond: Char -> Bool) : (Parser String) =
   λcode
     match code {
