@@ -29,19 +29,3 @@ match n {
   }
   zero: zero
 }
-
-
-//half 0 == 1 wrong
-//half 1 == 1 wrong
-//half 2 == correct
-//half 3 == correct
-//half 4 == correct
-//half 5 == correct
-
-
-
-
-
-
-
-

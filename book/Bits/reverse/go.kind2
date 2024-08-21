@@ -1,17 +1,7 @@
-/// Reverses a bitstring using an accumulator.
-///
-/// This function recursively processes the input bitstring, building
-/// the reversed version in the accumulator.
-///
-/// # Inputs
-///
-/// * `bits` - The input bitstring to be reversed.
-/// * `acc` - The accumulator storing the reversed bits.
-///
-/// # Output
-///
-/// The reversed bitstring.
-
+// Reverses a bitstring using an accumulator
+// - bits: The input bitstring to be reversed
+// - acc: The accumulator storing the reversed bits
+// = The reversed bitstring
 use Bits/{O,I,E}
 
 go

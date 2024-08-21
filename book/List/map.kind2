@@ -1,18 +1,19 @@
-/// Maps a function over a list, transforming each element.
+/// Applies a function to each element of a list, producing a new list.
 ///
-/// # Parameters
+/// # Type Parameters
 ///
 /// * `A` - The type of elements in the input list.
 /// * `B` - The type of elements in the output list.
 ///
-/// # Inputs
+/// # Parameters
 ///
-/// * `xs` - The input list of type (List A).
-/// * `fn` - A function that transforms elements from type A to type B.
+/// * `xs` - The input list to be mapped over.
+/// * `fn` - The function to apply to each element of the list.
 ///
-/// # Output
+/// # Returns
 ///
-/// A new list of type (List B) with the function applied to each element.
+/// A new list where each element is the result of applying `fn` to the
+/// corresponding element in the input list.
 
 use List/{cons,nil}
 
@@ -23,9 +24,13 @@ map <A> <B>
 
 match xs {
   cons:
+    // Apply the function to the head of the list
     let head = (fn xs.head)
+    // Recursively map over the tail of the list
     let tail = (List/map _ _ xs.tail fn)
+    // Construct a new cons cell with the mapped head and tail
     (cons _ head tail)
   nil:
+    // For an empty list, return an empty list of type B
     (nil _)
 }

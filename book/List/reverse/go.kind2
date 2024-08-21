@@ -1,0 +1,12 @@
+use List/{cons,nil}
+
+go <A>
+- list: (List A)
+- result: (List A)
+: (List A)
+
+match list {
+  nil: result
+  cons: (go _ list.tail (cons _ list.head result))
+}
+

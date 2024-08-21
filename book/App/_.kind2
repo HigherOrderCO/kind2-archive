@@ -1,18 +1,7 @@
-/// Defines the App type, representing an application with state management and rendering.
-///
-/// # Type Parameters
-///
-/// * `S` - The type of the application state.
-///
-/// # Constructor
-///
-/// * `new` - Creates a new App instance with the following components:
-///
-/// # Fields
-///
-/// * `tick` - A function that updates the state on each tick.
-/// * `draw` - A function that converts the state to a list of shapes for rendering.
-/// * `when` - A function that updates the state based on keyboard input.
+// Defines the App type for creating interactive applications
+// - S: The type of the application state
+// Constructors:
+// - new: Creates a new App instance with initial state and behavior functions
 
 data App <S: *>
 | new

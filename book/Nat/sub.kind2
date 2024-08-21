@@ -1,0 +1,19 @@
+// Subtracts one natural number from another
+// - a: The minuend (the number to subtract from)
+// - b: The subtrahend (the number to subtract)
+// = The difference between `a` and `b`, or 0 if `b` > `a`
+
+use Nat/{succ,zero}
+
+sub
+- a: Nat
+- b: Nat
+: Nat
+
+match a with (b: Nat) {
+  succ: match b {
+    succ: (sub a.pred b.pred)
+    zero: a
+  }
+  zero: zero
+}
