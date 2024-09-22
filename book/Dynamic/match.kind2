@@ -1,0 +1,7 @@
+match <A>
+- P: (Dynamic A) -> *
+- n: ∀(value: A) (P (Dynamic/new A value))
+- dyn: (Dynamic A)
+: (P dyn)
+
+(~dyn P n)
