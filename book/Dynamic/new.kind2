@@ -1,5 +1,0 @@
-new <T>
-- value: T
-: (Dynamic T)
-
-~λP λnew λvalue value

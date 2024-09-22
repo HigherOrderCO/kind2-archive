@@ -1,5 +1,0 @@
-type_of <T>
-- dyn: (Dynamic T)
-: *
-
-T

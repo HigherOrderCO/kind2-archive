@@ -1,3 +1,0 @@
-data Dynamic <T>
-| new (value: T)
-

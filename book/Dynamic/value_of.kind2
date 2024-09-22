@@ -1,9 +1,0 @@
-use Dynamic/new
-
-value_of <T>
-- dyn: (Dynamic T)
-: T
-
-match dyn {
-  new: dyn.value
-}
