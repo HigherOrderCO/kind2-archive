@@ -7,10 +7,10 @@ data Nat
 | succ (pred: Nat)
 | zero
 
-Nat
-: *
-= $(self: Nat)
-  ∀(P: ∀(n: Nat) *)
-  ∀(succ: ∀(n: Nat) (P (Nat/succ n)))
-  ∀(zero: (P Nat/zero))
-  (P self)
+//Nat
+//: *
+//= $(self: Nat)
+  //∀(P: ∀(n: Nat) *)
+  //∀(succ: ∀(n: Nat) (P (Nat/succ n)))
+  //∀(zero: (P Nat/zero))
+  //(P self)
