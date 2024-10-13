@@ -1,0 +1,30 @@
+data Dynamic <T>
+| new (value: T)
+
+Dynamic/new <T>
+- value: T
+: (Dynamic T)
+= ~λP λnew λvalue value
+
+
+Dynamic/match <A>
+- P: (Dynamic A) -> *
+- n: ∀(value: A) (P (Dynamic/new A value))
+- dyn: (Dynamic A)
+: (P dyn)
+= (~dyn P n)
+
+
+Dynamaic/type_of <T>
+- dyn: (Dynamic T)
+: *
+= T
+
+
+Dynamic/value_of <T>
+- dyn: (Dynamic T)
+: T
+
+match dyn {
+  Dynamic/new: dyn.value
+}
